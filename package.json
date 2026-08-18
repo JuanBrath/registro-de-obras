@@ -1,0 +1,15 @@
+{
+  "name": "registro-de-obras",
+  "private": true,
+  "version": "0.0.0",
+  "packageManager": "pnpm@11.21.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "core:test": "pnpm --filter @registro/core test",
+    "app:dev": "pnpm --filter @registro/app dev",
+    "app:build": "pnpm --filter @registro/app build",
+    "desktop:dev": "pnpm --filter desktop tauri dev"
+  }
+}

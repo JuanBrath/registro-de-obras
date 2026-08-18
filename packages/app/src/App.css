@@ -1,0 +1,1065 @@
+/* En cualquier formulario con labels en columna (que estiran sus inputs al
+   ancho completo por defecto), los campos de fecha deben ocupar solo el
+   espacio que necesitan en vez de todo el ancho de la ventana. */
+input[type="date"] {
+  align-self: flex-start;
+  width: auto;
+  flex: 0 0 auto;
+}
+
+
+.settings-idioma-fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.settings-idioma-fieldset label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.settings-gear-button {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  color: var(--text-h);
+  cursor: pointer;
+}
+
+.brand-header {
+  display: inline-flex;
+  align-items: center;
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.brand-header:hover {
+  opacity: 0.85;
+}
+
+.brand-header-icon {
+  display: block;
+  flex-shrink: 0;
+}
+
+.brand-header-text {
+  font-family: var(--brand-font);
+  font-weight: 800;
+  color: var(--galeris-gold);
+  line-height: 1;
+  display: inline-flex;
+  align-items: baseline;
+}
+
+.brand-header-suffix {
+  font-family: var(--sans);
+  font-weight: 500;
+  color: var(--text);
+  margin-left: 0.4em;
+}
+
+.brand-header-navbar {
+  gap: 10px;
+}
+
+.brand-header-navbar .brand-header-icon {
+  width: 30px;
+  height: 30px;
+}
+
+.brand-header-navbar .brand-header-text {
+  font-size: 20px;
+}
+
+.brand-header-navbar .brand-header-suffix {
+  font-size: 13px;
+}
+
+.brand-header-splash {
+  gap: 12px;
+}
+
+.brand-header-splash .brand-header-icon {
+  width: 64px;
+  height: 64px;
+}
+
+.brand-header-splash .brand-header-text {
+  font-size: 32px;
+}
+
+.brand-header-splash .brand-header-suffix {
+  font-size: 21px;
+}
+
+/* Franja fija: no se mueve con el scroll de la pantalla activa, asi el
+   logo/nombre y el engranaje de configuracion nunca quedan tapados ni tapan
+   contenido al desplazarse (ver #root padding-top en index.css). */
+.app-topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--topbar-height);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.workspace-picker-brand {
+  margin: 24px 0;
+}
+
+.workspace-picker {
+  max-width: 480px;
+  margin: 4rem auto;
+  text-align: center;
+}
+
+.workspace-picker-options {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.obra-form {
+  max-width: 640px;
+  margin: 2rem auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  text-align: left;
+}
+
+.obra-form fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* El texto del label y el ícono de ayuda siempre van en la misma fila (el
+   ícono a la derecha del texto, nunca abajo); el input/select/textarea del
+   campo se fuerza a ancho completo (flex-basis:100%) para que arranque en su
+   propia fila debajo, en vez de heredar flex-direction:column y apilar cada
+   hijo (texto, ícono, control) en una fila separada. */
+.obra-form label {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  gap: 0.5rem 0.25rem;
+}
+
+.obra-form label > *:not(.help-icon-wrapper):not([type="checkbox"]) {
+  flex: 1 1 100%;
+}
+
+/* Fuerza el nombre del campo a su propia fila arriba del control (en vez de
+   depender de que el motor trate el texto suelto del label como un item de
+   flex separado, que algunos WebKit no hacen de forma consistente). */
+.field-label {
+  display: block;
+  width: 100%;
+}
+
+/* El Registro Personal usa un ancho relativo a la ventana (en vez del
+   max-width fijo de .obra-form) para que sus campos se ensanchen cuando la
+   ventana esta maximizada, sin afectar el resto de los formularios que
+   comparten .obra-form. */
+.obra-form.profile-form {
+  max-width: min(97vw, 1800px);
+}
+
+.field-note {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+}
+
+.file-path-field {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.file-path-field input {
+  flex: 1;
+}
+
+.image-file-field {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.image-file-field-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.image-file-field-input {
+  display: none;
+}
+
+.image-file-field-name {
+  opacity: 0.8;
+  overflow-wrap: anywhere;
+}
+
+.obra-form-saved {
+  max-width: 640px;
+  margin: 2rem auto;
+  text-align: center;
+}
+
+.obra-form-saved-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.help-icon-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.help-icon {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 0.9em;
+  color: #000;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .help-icon {
+    color: var(--text);
+  }
+}
+
+:root[data-theme="dark"] .help-icon {
+  color: var(--text);
+}
+
+.help-icon-tooltip {
+  position: absolute;
+  z-index: 10;
+  top: 50%;
+  left: 1.6em;
+  transform: translateY(-50%);
+  width: 240px;
+  padding: 0.5rem;
+  border: 1px solid #2f6fed;
+  border-radius: 6px;
+  background: #222;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: normal;
+  text-align: left;
+}
+
+.help-icon-tooltip-wide {
+  width: 380px;
+}
+
+.help-icon-linea {
+  display: block;
+  margin-bottom: 0.45rem;
+}
+
+.help-icon-linea:last-child {
+  margin-bottom: 0;
+}
+
+.success,
+.error {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  margin-top: 1rem;
+}
+
+.success {
+  color: #1b5e20;
+  background: #e8f5e9;
+  border: 1px solid #2e7d32;
+}
+
+.error {
+  color: #b71c1c;
+  background: #fdecea;
+  border: 1px solid #c62828;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .success {
+    color: #a5d6a7;
+    background: rgba(46, 125, 50, 0.18);
+    border-color: #4caf50;
+  }
+
+  :root:not([data-theme="light"]) .error {
+    color: #ef9a9a;
+    background: rgba(198, 40, 40, 0.18);
+    border-color: #e57373;
+  }
+}
+
+:root[data-theme="dark"] .success {
+  color: #a5d6a7;
+  background: rgba(46, 125, 50, 0.18);
+  border-color: #4caf50;
+}
+
+:root[data-theme="dark"] .error {
+  color: #ef9a9a;
+  background: rgba(198, 40, 40, 0.18);
+  border-color: #e57373;
+}
+
+.obra-form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.workspace-home {
+  max-width: 480px;
+  margin: 4rem auto;
+  text-align: center;
+}
+
+.workspace-home-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.obras-list,
+.obra-detail {
+  max-width: 900px;
+  margin: 2rem auto;
+  text-align: left;
+}
+
+.obras-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.obras-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+  background: var(--bg-panel);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.obra-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+
+.obra-card img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  display: block;
+}
+
+.galeria-fotos-grid {
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+}
+
+.galeria-foto-thumb-button {
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--bg);
+  line-height: 0;
+}
+
+.galeria-foto-thumb-button img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  display: block;
+}
+
+.galeria-foto-thumb-wrapper,
+.obra-card-wrapper {
+  position: relative;
+}
+
+/* El badge de marcado se ancla al borde superior derecho pero se ubica por
+   fuera del rectángulo de la imagen (offset negativo), nunca tapando la foto. */
+.marcar-badge {
+  position: absolute;
+  top: -0.5rem;
+  right: -0.1rem;
+  z-index: 1;
+  width: 1.3rem;
+  height: 1.3rem;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid #0a1730;
+  background: #16274d;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+.marcar-badge.marcada {
+  color: #f5c542;
+}
+
+.marcar-badge-lightbox {
+  position: static;
+  margin-right: 0.4rem;
+}
+
+.galeria-filtro-marcadas {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 1rem;
+  cursor: pointer;
+}
+
+.link-field-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.link-field-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.link-icon-button {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.lightbox-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.lightbox-caption {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.lightbox-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.lightbox-arrow-left {
+  left: 0.75rem;
+}
+
+.lightbox-arrow-right {
+  right: 0.75rem;
+}
+
+/* Deja un margen fijo a los costados de la imagen para que las flechas,
+   ancladas a los bordes del modal, nunca queden superpuestas sobre la foto. */
+.lightbox-content .obra-full-image {
+  max-width: calc(100% - 7rem);
+}
+
+.tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.25rem;
+}
+
+.tag-chip {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-size: 0.8rem;
+  border: 1px solid var(--accent-border);
+}
+
+.tag-chip-button {
+  cursor: pointer;
+  font: inherit;
+}
+
+.tag-chip-button.tag-chip-active {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.obras-list-buscador {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  margin-top: 1rem;
+}
+
+.galeria-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.galeria-filtros-selects {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.galeria-filtro-artista {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  margin-top: 1rem;
+  max-width: 320px;
+}
+
+.obras-filtro-etiquetas {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.tag-picker {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem;
+  background: var(--bg-panel);
+}
+
+.tag-picker .tags-list {
+  margin-bottom: 0.75rem;
+}
+
+.tag-picker-input-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tag-picker-input-row input {
+  flex: 1;
+}
+
+.tag-chip-removable {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.tag-chip-removable button {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.obra-card-placeholder {
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-panel);
+  color: var(--text);
+  font-size: 0.85rem;
+}
+
+.obra-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0 0.75rem 0.75rem;
+}
+
+.obra-card-estado {
+  display: inline-block;
+  width: fit-content;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  text-transform: capitalize;
+}
+
+.obra-card-estado-disponible,
+.obra-card-estado-en_stock,
+.obra-card-estado-consignacion,
+.obra-card-estado-exhibicion {
+  background: #e8f5e9;
+  color: #1b5e20;
+}
+
+.obra-card-estado-vendida,
+.obra-card-estado-reservada,
+.obra-card-estado-coleccion_autor,
+.obra-card-estado-descartada,
+.obra-card-estado-destruida {
+  background: #fdecea;
+  color: #b71c1c;
+}
+
+.obra-card-estado-en_produccion {
+  background: #fff8e1;
+  color: #f57f17;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .obra-card-estado-disponible,
+  :root:not([data-theme="light"]) .obra-card-estado-en_stock,
+  :root:not([data-theme="light"]) .obra-card-estado-consignacion,
+  :root:not([data-theme="light"]) .obra-card-estado-exhibicion {
+    color: #a5d6a7;
+    background: rgba(46, 125, 50, 0.25);
+  }
+
+  :root:not([data-theme="light"]) .obra-card-estado-vendida,
+  :root:not([data-theme="light"]) .obra-card-estado-reservada,
+  :root:not([data-theme="light"]) .obra-card-estado-coleccion_autor,
+  :root:not([data-theme="light"]) .obra-card-estado-descartada,
+  :root:not([data-theme="light"]) .obra-card-estado-destruida {
+    color: #ef9a9a;
+    background: rgba(198, 40, 40, 0.25);
+  }
+
+  :root:not([data-theme="light"]) .obra-card-estado-en_produccion {
+    color: #ffcc80;
+    background: rgba(245, 127, 23, 0.25);
+  }
+}
+
+:root[data-theme="dark"] .obra-card-estado-disponible,
+:root[data-theme="dark"] .obra-card-estado-en_stock,
+:root[data-theme="dark"] .obra-card-estado-consignacion,
+:root[data-theme="dark"] .obra-card-estado-exhibicion {
+  color: #a5d6a7;
+  background: rgba(46, 125, 50, 0.25);
+}
+
+:root[data-theme="dark"] .obra-card-estado-vendida,
+:root[data-theme="dark"] .obra-card-estado-reservada,
+:root[data-theme="dark"] .obra-card-estado-coleccion_autor,
+:root[data-theme="dark"] .obra-card-estado-descartada,
+:root[data-theme="dark"] .obra-card-estado-destruida {
+  color: #ef9a9a;
+  background: rgba(198, 40, 40, 0.25);
+}
+
+:root[data-theme="dark"] .obra-card-estado-en_produccion {
+  color: #ffcc80;
+  background: rgba(245, 127, 23, 0.25);
+}
+
+.obra-detail-header {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  margin-top: 1rem;
+}
+
+.obra-detail-thumbnail {
+  width: 160px;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+}
+
+.obra-edit-imagen-actual {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: var(--bg-panel);
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.obra-detail-thumbnail-button {
+  padding: 0.5rem;
+  border: none;
+  background: var(--bg-panel);
+  cursor: pointer;
+  border-radius: 8px;
+  line-height: 0;
+}
+
+.obra-full-image {
+  display: block;
+  max-width: 100%;
+  max-height: 85vh;
+  object-fit: contain;
+  margin: 0 auto;
+}
+
+.modal-content-image {
+  background: var(--bg-panel);
+}
+
+.ejemplares-list {
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.obra-venta-section {
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.ejemplar-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.ejemplar-row-editing {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.ejemplar-row-editing label {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  gap: 0.5rem 0.25rem;
+}
+
+.ejemplar-row-editing label > *:not(.help-icon-wrapper):not([type="checkbox"]) {
+  flex: 1 1 100%;
+}
+
+.ejemplar-row-editing input[type="text"] {
+  width: 100%;
+  max-width: 420px;
+  box-sizing: border-box;
+}
+
+.venta-form {
+  max-width: 480px;
+  margin: 1.5rem auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  text-align: left;
+  padding: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.venta-form label {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  gap: 0.5rem 0.25rem;
+}
+
+.venta-form label > *:not(.help-icon-wrapper):not([type="checkbox"]) {
+  flex: 1 1 100%;
+}
+
+.venta-form-valor-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+.venta-form-valor-row label:first-child {
+  flex: 0 0 auto;
+}
+
+.venta-form-valor-row label:last-child {
+  flex: 1;
+}
+
+.artista-selector-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.artista-selector-new {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.confirm-box {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #c62828;
+  border-radius: 8px;
+  background: var(--bg-panel);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.estado-tras-anular-opcion {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+}
+
+.ficha-pdf-alcance-opcion {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  cursor: pointer;
+}
+
+.ficha-pdf-series-checklist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 0.75rem 0;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.ficha-pdf-serie-opcion {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+}
+
+.artistas-list {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.artista-foto-preview {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 999px;
+  background: var(--bg-panel);
+  align-self: center;
+}
+
+.artista-foto-thumb {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 999px;
+  background: var(--bg-panel);
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+}
+
+.modal-content {
+  position: relative;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  max-width: 520px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow);
+  padding: 2.5rem 1rem 1rem;
+}
+
+.modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.modal-content .venta-form {
+  margin: 0;
+  border: none;
+  box-shadow: none;
+}
+
+.modal-content-wide {
+  max-width: 90vw;
+}
+
+.ventas-report-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.ventas-report-filtros label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* Las fechas por defecto (mes actual) se muestran atenuadas para que se note
+   que son una sugerencia, no una eleccion del usuario, hasta que las toque. */
+.ventas-fecha-default {
+  opacity: 0.45;
+}
+
+.ventas-report-tabla-wrapper {
+  margin-top: 1.5rem;
+  overflow-x: auto;
+}
+
+.ventas-report-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.ventas-report-tabla th,
+.ventas-report-tabla td {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.ventas-report-tabla tfoot td {
+  font-weight: bold;
+  border-top: 2px solid var(--border);
+  border-bottom: none;
+}

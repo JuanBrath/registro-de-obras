@@ -1,0 +1,161 @@
+import { useEffect, useState, type ReactNode } from "react";
+import "./App.css";
+import { useWorkspace, WorkspaceProvider } from "./state/WorkspaceContext.js";
+import { EdicionProvider, useEdicion } from "./state/EdicionContext.js";
+import { ThemeProvider } from "./state/ThemeContext.js";
+import { NavigationProvider, useRegisterGoHome } from "./state/NavigationContext.js";
+import { LanguageProvider, useLanguage } from "./i18n/LanguageContext.js";
+import { isTauri } from "./adapters/detectPlatform.js";
+import { useForceReflowOnResize } from "./utils/useForceReflowOnResize.js";
+import { BrandHeader } from "./components/BrandHeader.js";
+import { WorkspacePicker } from "./screens/WorkspacePicker.js";
+import { WorkspaceHome } from "./screens/WorkspaceHome.js";
+import { ObraForm } from "./screens/ObraForm.js";
+import { ObrasList } from "./screens/ObrasList.js";
+import { ObraDetail } from "./screens/ObraDetail.js";
+import { PersonalProfileForm } from "./screens/PersonalProfileForm.js";
+import { ArtistasScreen } from "./screens/ArtistasScreen.js";
+import { GaleriaFotos } from "./screens/GaleriaFotos.js";
+import { SettingsModal } from "./screens/SettingsModal.js";
+import { VentasReport } from "./screens/VentasReport.js";
+
+type Screen =
+  | { name: "home" }
+  | { name: "profile" }
+  | { name: "nueva-obra" }
+  | { name: "obras" }
+  | { name: "obra-detail"; obraId: number }
+  | { name: "artistas" }
+  | { name: "galeria-fotos" }
+  | { name: "ventas" };
+
+function WorkspaceScreens() {
+  const { context, personalArtista, close } = useWorkspace();
+  const [screen, setScreen] = useState<Screen>({ name: "home" });
+
+  if (!context) return null;
+
+  // Si ya estamos en "home", no dispara un cambio de estado: evita un
+  // re-render innecesario cuando BrandHeader lo llama estando ya ahi.
+  const goHome = () => setScreen((prev) => (prev.name === "home" ? prev : { name: "home" }));
+  // BrandHeader vive en la franja fija de AppShell, fuera de este subarbol:
+  // publica goHome en el NavigationContext para que pueda llamarlo igual.
+  useRegisterGoHome(goHome);
+  const needsPersonalProfile = context.workspace === "personal" && !personalArtista;
+  const activeScreen: Screen = needsPersonalProfile ? { name: "profile" } : screen;
+
+  let content: ReactNode;
+  switch (activeScreen.name) {
+    case "profile":
+      // Sin perfil todavia no hay "home" al que volver dentro del workspace
+      // (needsPersonalProfile fuerza esta pantalla): la unica salida real es
+      // cerrar el workspace y volver al selector Personal/Galeria.
+      content = (
+        <PersonalProfileForm
+          onExit={needsPersonalProfile ? close : goHome}
+          onCancel={needsPersonalProfile ? close : goHome}
+        />
+      );
+      break;
+    case "nueva-obra":
+      content = (
+        <ObraForm
+          onCancel={goHome}
+          onViewObra={(obraId) => setScreen({ name: "obra-detail", obraId })}
+          onVerObras={() => setScreen({ name: "obras" })}
+          onEditProfile={context.workspace === "personal" ? () => setScreen({ name: "profile" }) : undefined}
+        />
+      );
+      break;
+    case "obras":
+      content = (
+        <ObrasList
+          onBack={goHome}
+          onOpenObra={(obraId) => setScreen({ name: "obra-detail", obraId })}
+          onNuevaObra={() => setScreen({ name: "nueva-obra" })}
+        />
+      );
+      break;
+    case "obra-detail":
+      content = <ObraDetail obraId={activeScreen.obraId} onBack={() => setScreen({ name: "obras" })} />;
+      break;
+    case "artistas":
+      content = <ArtistasScreen onBack={goHome} />;
+      break;
+    case "galeria-fotos":
+      content = <GaleriaFotos onBack={goHome} />;
+      break;
+    case "ventas":
+      content = <VentasReport onBack={goHome} />;
+      break;
+    case "home":
+    default:
+      content = (
+        <WorkspaceHome
+          onEditProfile={() => setScreen({ name: "profile" })}
+          onVerObras={() => setScreen({ name: "obras" })}
+          onArtistas={() => setScreen({ name: "artistas" })}
+          onGaleriaFotos={() => setScreen({ name: "galeria-fotos" })}
+          onVentas={() => setScreen({ name: "ventas" })}
+        />
+      );
+  }
+
+  return content;
+}
+
+function AppShell() {
+  const { context, close } = useWorkspace();
+  const { edicion } = useEdicion();
+  const { t } = useLanguage();
+  const [showSettings, setShowSettings] = useState(false);
+  useForceReflowOnResize();
+  // En desktop el idioma se elige desde el menú nativo de la app (barra
+  // superior); el botón flotante solo hace falta donde no hay menú nativo.
+  const necesitaBotonFlotante = !isTauri();
+
+  // El menú "Edición (prueba)" es solo para previsualizar que mostraría cada
+  // nivel de suscripción — cambiarlo mientras hay un workspace abierto tiene
+  // que devolver a la pantalla de selección para ver el efecto ahí mismo, ya
+  // que ningún otro lugar de la app lee "edicion".
+  useEffect(() => {
+    if (context) close();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [edicion]);
+
+  return (
+    <NavigationProvider>
+      <div className="app-topbar">
+        <BrandHeader size="navbar" />
+        {necesitaBotonFlotante && (
+          <button
+            type="button"
+            className="settings-gear-button"
+            onClick={() => setShowSettings(true)}
+            aria-label={t("common.settings")}
+          >
+            ⚙
+          </button>
+        )}
+      </div>
+      {context ? <WorkspaceScreens key={context.workspace} /> : <WorkspacePicker />}
+      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
+    </NavigationProvider>
+  );
+}
+
+function App() {
+  return (
+    <LanguageProvider>
+      <ThemeProvider>
+        <EdicionProvider>
+          <WorkspaceProvider>
+            <AppShell />
+          </WorkspaceProvider>
+        </EdicionProvider>
+      </ThemeProvider>
+    </LanguageProvider>
+  );
+}
+
+export default App;

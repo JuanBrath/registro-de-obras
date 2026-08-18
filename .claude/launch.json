@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "registro-app-dev",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@registro/app", "dev"],
+      "port": 5173
+    }
+  ]
+}

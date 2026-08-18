@@ -1,0 +1,408 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import { parseTags, type CategoriaObra } from "@registro/core";
+import { useWorkspace } from "../state/WorkspaceContext.js";
+import { bytesToObjectUrl } from "../utils/imageObjectUrl.js";
+import { Modal } from "../components/Modal.js";
+import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
+import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
+
+interface FotoRow {
+  id: number;
+  titulo: string;
+  miniatura_path: string | null;
+  imagen_alta_resolucion_path: string | null;
+  tags: string | null;
+  artista_id: number | null;
+  nombre_completo: string | null;
+  categoria_obra: CategoriaObra;
+  subtipo_fotografia: string | null;
+  subtipo_pintura: string | null;
+  marcada: number;
+}
+
+export function GaleriaFotos({ onBack }: { onBack: () => void }) {
+  const { context } = useWorkspace();
+  const { t } = useLanguage();
+  const esGaleria = context?.workspace === "galeria";
+  const [fotos, setFotos] = useState<FotoRow[]>([]);
+  const [thumbnails, setThumbnails] = useState<Record<number, string>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  useEscapeToDismiss(error, setError);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [selectedArtistaId, setSelectedArtistaId] = useState<number | null>(null);
+  const [selectedCategoria, setSelectedCategoria] = useState<CategoriaObra | null>(null);
+  const [selectedSubtipo, setSelectedSubtipo] = useState<string | null>(null);
+  const [soloMarcadas, setSoloMarcadas] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [loadingLightbox, setLoadingLightbox] = useState(false);
+  const objectUrlsRef = useRef<string[]>([]);
+  const lightboxUrlRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!context) return;
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const rows = await context!.db.query<FotoRow>(
+          `SELECT obra.id, obra.titulo, obra.miniatura_path, obra.imagen_alta_resolucion_path, obra.tags, obra.artista_id,
+                  obra.categoria_obra, obra.marcada, artista.nombre_completo,
+                  obra_fotografia.subtipo_fotografia, obra_pintura.subtipo_pintura
+           FROM obra
+           LEFT JOIN artista ON artista.id = obra.artista_id
+           LEFT JOIN obra_fotografia ON obra_fotografia.obra_id = obra.id
+           LEFT JOIN obra_pintura ON obra_pintura.obra_id = obra.id
+           WHERE obra.miniatura_path IS NOT NULL ORDER BY obra.titulo COLLATE NOCASE ASC`,
+        );
+        if (cancelled) return;
+        setFotos(rows);
+
+        const urls: Record<number, string> = {};
+        for (const foto of rows) {
+          if (!foto.miniatura_path) continue;
+          try {
+            const bytes = await context!.fs.readFile(foto.miniatura_path);
+            const url = bytesToObjectUrl(bytes);
+            objectUrlsRef.current.push(url);
+            urls[foto.id] = url;
+          } catch {
+            // Falta el archivo; se omite sin romper la galería.
+          }
+        }
+        if (!cancelled) setThumbnails(urls);
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : String(err));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
+
+    return () => {
+      cancelled = true;
+      for (const url of objectUrlsRef.current) URL.revokeObjectURL(url);
+      objectUrlsRef.current = [];
+    };
+  }, [context]);
+
+  const allTags = useMemo(() => {
+    const set = new Set<string>();
+    for (const foto of fotos) for (const tag of parseTags(foto.tags)) set.add(tag);
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [fotos]);
+
+  const allArtistas = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const foto of fotos) {
+      if (foto.artista_id != null && foto.nombre_completo != null) map.set(foto.artista_id, foto.nombre_completo);
+    }
+    return Array.from(map.entries())
+      .map(([id, nombre]) => ({ id, nombre }))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre));
+  }, [fotos]);
+
+  const allCategorias = useMemo(() => {
+    const set = new Set<CategoriaObra>();
+    for (const foto of fotos) set.add(foto.categoria_obra);
+    return Array.from(set).sort();
+  }, [fotos]);
+
+  const allSubtipos = useMemo(() => {
+    const map = new Map<string, { categoria: "Fotografia" | "Pintura"; subtipo: string }>();
+    for (const foto of fotos) {
+      if (selectedCategoria && foto.categoria_obra !== selectedCategoria) continue;
+      if (foto.subtipo_fotografia) {
+        map.set(`Fotografia:${foto.subtipo_fotografia}`, { categoria: "Fotografia", subtipo: foto.subtipo_fotografia });
+      }
+      if (foto.subtipo_pintura) {
+        map.set(`Pintura:${foto.subtipo_pintura}`, { categoria: "Pintura", subtipo: foto.subtipo_pintura });
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => a.subtipo.localeCompare(b.subtipo));
+  }, [fotos, selectedCategoria]);
+
+  const filteredFotos = useMemo(
+    () =>
+      fotos.filter((f) => {
+        const tagMatch = selectedTag === null || parseTags(f.tags).includes(selectedTag);
+        const artistaMatch = !esGaleria || selectedArtistaId === null || f.artista_id === selectedArtistaId;
+        const categoriaMatch = selectedCategoria === null || f.categoria_obra === selectedCategoria;
+        const subtipoMatch =
+          selectedSubtipo === null ||
+          f.subtipo_fotografia === selectedSubtipo ||
+          f.subtipo_pintura === selectedSubtipo;
+        const marcadaMatch = !soloMarcadas || f.marcada !== 0;
+        return tagMatch && artistaMatch && categoriaMatch && subtipoMatch && marcadaMatch;
+      }),
+    [fotos, selectedTag, selectedArtistaId, selectedCategoria, selectedSubtipo, soloMarcadas, esGaleria],
+  );
+
+  const hayMarcadas = useMemo(() => fotos.some((f) => f.marcada !== 0), [fotos]);
+
+  async function handleToggleMarcada(fotoId: number, current: number) {
+    const nuevoValor = current ? 0 : 1;
+    setFotos((prev) => prev.map((f) => (f.id === fotoId ? { ...f, marcada: nuevoValor } : f)));
+    try {
+      await context!.db.execute("UPDATE obra SET marcada = ? WHERE id = ?", [nuevoValor, fotoId]);
+    } catch (err) {
+      setFotos((prev) => prev.map((f) => (f.id === fotoId ? { ...f, marcada: current } : f)));
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  async function handleDesmarcarTodas() {
+    const previo = fotos;
+    setFotos((prev) => prev.map((f) => ({ ...f, marcada: 0 })));
+    try {
+      await context!.db.execute("UPDATE obra SET marcada = 0 WHERE marcada = 1");
+      setSoloMarcadas(false);
+    } catch (err) {
+      setFotos(previo);
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  function handleTagChange(value: string) {
+    setSelectedTag(value === "" ? null : value);
+    closeLightbox();
+  }
+
+  function handleArtistaChange(value: string) {
+    setSelectedArtistaId(value === "" ? null : Number(value));
+    closeLightbox();
+  }
+
+  function handleCategoriaChange(value: string) {
+    setSelectedCategoria(value === "" ? null : (value as CategoriaObra));
+    setSelectedSubtipo(null);
+    closeLightbox();
+  }
+
+  function handleSubtipoChange(value: string) {
+    setSelectedSubtipo(value === "" ? null : value);
+    closeLightbox();
+  }
+
+  useEffect(() => {
+    if (lightboxIndex === null || !context) return;
+    const foto = filteredFotos[lightboxIndex];
+    const path = foto?.imagen_alta_resolucion_path || foto?.miniatura_path;
+    if (!path) return;
+
+    let cancelled = false;
+    setLoadingLightbox(true);
+    context.fs
+      .readFile(path)
+      .then((bytes) => {
+        if (cancelled) return;
+        if (lightboxUrlRef.current) URL.revokeObjectURL(lightboxUrlRef.current);
+        const url = bytesToObjectUrl(bytes);
+        lightboxUrlRef.current = url;
+        setLightboxUrl(url);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : String(err));
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingLightbox(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lightboxIndex, context]);
+
+  function closeLightbox() {
+    setLightboxIndex(null);
+    setLightboxUrl(null);
+  }
+
+  function showNext() {
+    setLightboxIndex((i) => (i === null || filteredFotos.length === 0 ? null : (i + 1) % filteredFotos.length));
+  }
+
+  function showPrev() {
+    setLightboxIndex((i) =>
+      i === null || filteredFotos.length === 0 ? null : (i - 1 + filteredFotos.length) % filteredFotos.length,
+    );
+  }
+
+  if (!context) return null;
+
+  return (
+    <div className="obras-list">
+      <div className="obras-list-header">
+        <h1>{t("galeria.title")}</h1>
+        <div className="header-actions">
+          {hayMarcadas && (
+            <button type="button" onClick={handleDesmarcarTodas}>
+              {t("galeria.desmarcarTodas")}
+            </button>
+          )}
+          <button type="button" onClick={onBack}>
+            {t("common.back")}
+          </button>
+        </div>
+      </div>
+
+      {loading && <p>{t("common.loading")}</p>}
+      {error && (
+        <p className="error" role="alert">
+          ⚠️ {error}
+        </p>
+      )}
+      {!loading && fotos.length === 0 && <p>{t("galeria.sinFotos")}</p>}
+
+      <div className="galeria-filtros-selects">
+        {esGaleria && allArtistas.length > 0 && (
+          <label className="galeria-filtro-artista">
+            {t("obraForm.artistaLabel")}
+            <select value={selectedArtistaId ?? ""} onChange={(e) => handleArtistaChange(e.target.value)}>
+              <option value="">{t("galeria.todosArtistas")}</option>
+              {allArtistas.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.nombre}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+
+        {allCategorias.length > 0 && (
+          <label className="galeria-filtro-artista">
+            {t("obraForm.categoriaLabel")}
+            <select value={selectedCategoria ?? ""} onChange={(e) => handleCategoriaChange(e.target.value)}>
+              <option value="">{t("galeria.todasCategorias")}</option>
+              {allCategorias.map((cat) => (
+                <option key={cat} value={cat}>
+                  {t(`categoria.${cat}` as TranslationKey)}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+
+        {allSubtipos.length > 0 && (
+          <label className="galeria-filtro-artista">
+            {t("field.subtipo")}
+            <select value={selectedSubtipo ?? ""} onChange={(e) => handleSubtipoChange(e.target.value)}>
+              <option value="">{t("galeria.todosSubtipos")}</option>
+              {allSubtipos.map((entry) => (
+                <option key={`${entry.categoria}:${entry.subtipo}`} value={entry.subtipo}>
+                  {t(
+                    `fields.${entry.categoria === "Fotografia" ? "fotografia" : "pintura"}.subtipo${entry.subtipo}` as TranslationKey,
+                  )}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+
+        {allTags.length > 0 && (
+          <label className="galeria-filtro-artista">
+            {t("obraForm.etiquetasLabel")}
+            <select value={selectedTag ?? ""} onChange={(e) => handleTagChange(e.target.value)}>
+              <option value="">{t("obrasList.todas")}</option>
+              {allTags.map((tag) => (
+                <option key={tag} value={tag}>
+                  {tag}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+
+        {hayMarcadas && (
+          <label className="galeria-filtro-marcadas">
+            <input
+              type="checkbox"
+              checked={soloMarcadas}
+              onChange={(e) => {
+                setSoloMarcadas(e.target.checked);
+                closeLightbox();
+              }}
+            />
+            {t("galeria.soloMarcadas")}
+          </label>
+        )}
+      </div>
+
+      <div className="obras-grid galeria-fotos-grid">
+        {filteredFotos.map(
+          (foto, i) =>
+            thumbnails[foto.id] && (
+              <div className="galeria-foto-thumb-wrapper" key={foto.id}>
+                <button type="button" className="galeria-foto-thumb-button" onClick={() => setLightboxIndex(i)}>
+                  <img src={thumbnails[foto.id]} alt={foto.titulo} />
+                </button>
+                <button
+                  type="button"
+                  className={`marcar-badge${foto.marcada ? " marcada" : ""}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleToggleMarcada(foto.id, foto.marcada);
+                  }}
+                  aria-label={t(foto.marcada ? "galeria.desmarcar" : "galeria.marcar")}
+                  title={t(foto.marcada ? "galeria.desmarcar" : "galeria.marcar")}
+                >
+                  {foto.marcada ? "★" : "☆"}
+                </button>
+              </div>
+            ),
+        )}
+      </div>
+      {!loading && fotos.length > 0 && filteredFotos.length === 0 && <p>{t("galeria.ningunaConEtiqueta")}</p>}
+
+      {lightboxIndex !== null && (
+        <Modal onClose={closeLightbox} wide className="modal-content-image">
+          {filteredFotos.length > 1 && (
+            <button
+              type="button"
+              className="lightbox-arrow lightbox-arrow-left"
+              onClick={showPrev}
+              aria-label={t("galeria.anterior")}
+            >
+              ‹
+            </button>
+          )}
+          {filteredFotos.length > 1 && (
+            <button
+              type="button"
+              className="lightbox-arrow lightbox-arrow-right"
+              onClick={showNext}
+              aria-label={t("galeria.siguiente")}
+            >
+              ›
+            </button>
+          )}
+          <div className="lightbox-content">
+            {loadingLightbox && !lightboxUrl && <p>{t("common.loading")}</p>}
+            {lightboxUrl && (
+              <img src={lightboxUrl} alt={filteredFotos[lightboxIndex]?.titulo} className="obra-full-image" />
+            )}
+            <p className="lightbox-caption">
+              {filteredFotos[lightboxIndex] && (
+                <button
+                  type="button"
+                  className={`marcar-badge marcar-badge-lightbox${filteredFotos[lightboxIndex].marcada ? " marcada" : ""}`}
+                  onClick={() => handleToggleMarcada(filteredFotos[lightboxIndex].id, filteredFotos[lightboxIndex].marcada)}
+                  aria-label={t(filteredFotos[lightboxIndex].marcada ? "galeria.desmarcar" : "galeria.marcar")}
+                  title={t(filteredFotos[lightboxIndex].marcada ? "galeria.desmarcar" : "galeria.marcar")}
+                >
+                  {filteredFotos[lightboxIndex].marcada ? "★" : "☆"}
+                </button>
+              )}
+              {filteredFotos[lightboxIndex]?.titulo} — {lightboxIndex + 1} / {filteredFotos.length}
+            </p>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
