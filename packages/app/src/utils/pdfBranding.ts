@@ -91,3 +91,31 @@ export async function drawPdfHeader(
 
   return dividerY + 6;
 }
+
+/**
+ * Escribe texto largo (una o varias lineas ya separadas por el llamador)
+ * agregando paginas nuevas automaticamente cuando el contenido no entra en
+ * la hoja actual, para que ningun informe quede cortado. Devuelve el Y (mm)
+ * donde termino de escribir.
+ */
+export function writeWrappedText(
+  doc: jsPDF,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  { lineHeight = 5, marginTop = 20, marginBottom = 20 }: { lineHeight?: number; marginTop?: number; marginBottom?: number } = {},
+): number {
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const wrapped = doc.splitTextToSize(text, maxWidth) as string[];
+  let cursorY = y;
+  for (const line of wrapped) {
+    if (cursorY + lineHeight > pageHeight - marginBottom) {
+      doc.addPage();
+      cursorY = marginTop;
+    }
+    doc.text(line, x, cursorY);
+    cursorY += lineHeight;
+  }
+  return cursorY;
+}

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { calcularPorcentajeComision, type Moneda, type TipoVenta } from "@registro/core";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { HelpIcon } from "./HelpIcon.js";
@@ -11,6 +11,7 @@ const MONEDAS: Moneda[] = ["ARS", "USD", "EUR"];
 export interface VentaExistente {
   id: number;
   tipo: TipoVenta;
+  clienteId: number | null;
   compradorNombre: string;
   compradorEmail: string | null;
   compradorTelefono: string | null;
@@ -22,6 +23,13 @@ export interface VentaExistente {
   porcentajeComision: number | null;
   montoComision: number | null;
   numeroCertificado: number | null;
+}
+
+interface ClienteOption {
+  id: number;
+  nombre: string;
+  email: string | null;
+  telefono: string | null;
 }
 
 function redondearMonto(n: number): number {
@@ -59,6 +67,8 @@ export function VentaForm({
   const esDonacion = tipo === "donacion";
   const esReserva = tipo === "reserva";
 
+  const [clientes, setClientes] = useState<ClienteOption[]>([]);
+  const [clienteId, setClienteId] = useState<number | null>(existingVenta?.clienteId ?? null);
   const [compradorNombre, setCompradorNombre] = useState(existingVenta?.compradorNombre ?? "");
   const [compradorEmail, setCompradorEmail] = useState(existingVenta?.compradorEmail ?? "");
   const [compradorTelefono, setCompradorTelefono] = useState(existingVenta?.compradorTelefono ?? "");
@@ -78,7 +88,31 @@ export function VentaForm({
   const [error, setError] = useState<string | null>(null);
   useEscapeToDismiss(error, setError);
 
+  useEffect(() => {
+    if (!context) return;
+    context.db
+      .query<ClienteOption>("SELECT id, nombre, email, telefono FROM cliente ORDER BY nombre")
+      .then(setClientes)
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [context]);
+
   if (!context) return null;
+
+  function handleClienteChange(value: string) {
+    if (!value) {
+      setClienteId(null);
+      return;
+    }
+    const id = Number(value);
+    const cliente = clientes.find((c) => c.id === id);
+    setClienteId(id);
+    if (cliente) {
+      setCompradorNombre(cliente.nombre);
+      setCompradorEmail(cliente.email ?? "");
+      setCompradorTelefono(cliente.telefono ?? "");
+    }
+  }
 
   function handlePorcentajeChange(nuevoPorcentaje: string) {
     setPorcentajeComision(nuevoPorcentaje);
@@ -111,8 +145,9 @@ export function VentaForm({
       if (existingVenta) {
         await db.transaction(async (tx) => {
           await tx.execute(
-            `UPDATE venta SET comprador_nombre = ?, comprador_email = ?, comprador_telefono = ?, fecha_venta = ?, lugar_venta = ?, valor_venta = ?, moneda = ?, aplica_comision = ?, porcentaje_comision = ?, monto_comision = ?, monto_neto_artista = ? WHERE id = ?`,
+            `UPDATE venta SET cliente_id = ?, comprador_nombre = ?, comprador_email = ?, comprador_telefono = ?, fecha_venta = ?, lugar_venta = ?, valor_venta = ?, moneda = ?, aplica_comision = ?, porcentaje_comision = ?, monto_comision = ?, monto_neto_artista = ? WHERE id = ?`,
             [
+              clienteId,
               compradorNombre,
               compradorEmail || null,
               compradorTelefono || null,
@@ -144,12 +179,13 @@ export function VentaForm({
           }
 
           const insertVenta = await tx.execute(
-            `INSERT INTO venta (obra_id, ejemplar_id, tipo, comprador_nombre, comprador_email, comprador_telefono, fecha_venta, lugar_venta, valor_venta, moneda, aplica_comision, porcentaje_comision, monto_comision, monto_neto_artista, numero_certificado)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO venta (obra_id, ejemplar_id, tipo, cliente_id, comprador_nombre, comprador_email, comprador_telefono, fecha_venta, lugar_venta, valor_venta, moneda, aplica_comision, porcentaje_comision, monto_comision, monto_neto_artista, numero_certificado)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               obraId,
               ejemplarId,
               tipo,
+              clienteId,
               compradorNombre,
               compradorEmail || null,
               compradorTelefono || null,
@@ -236,9 +272,31 @@ export function VentaForm({
         </label>
       )}
 
+      {clientes.length > 0 && (
+        <label>
+          {t("ventaForm.clienteRegistrado")}
+          <select value={clienteId ?? ""} onChange={(e) => handleClienteChange(e.target.value)}>
+            <option value="">{t("ventaForm.clienteSinRegistrar")}</option>
+            {clientes.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nombre}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+
       <label>
         {esDonacion ? t("ventaForm.destinatarioDonacion") : t("ventaForm.comprador")}
-        <input type="text" required value={compradorNombre} onChange={(e) => setCompradorNombre(e.target.value)} />
+        <input
+          type="text"
+          required
+          value={compradorNombre}
+          onChange={(e) => {
+            setCompradorNombre(e.target.value);
+            setClienteId(null);
+          }}
+        />
       </label>
 
       <label>

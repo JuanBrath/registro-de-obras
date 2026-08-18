@@ -8,6 +8,8 @@ export * from "./models/venta.js";
 export * from "./models/historialEvento.js";
 export * from "./models/textoAyuda.js";
 export * from "./models/workspace.js";
+export * from "./models/galeriaPerfil.js";
+export * from "./models/cliente.js";
 
 export * from "./adapters/DatabaseAdapter.js";
 export * from "./adapters/FileSystemAdapter.js";

@@ -11,7 +11,7 @@ import { savePdfWithDialog } from "../utils/savePdfDialog.js";
 import { formatFechaDDMMYYYY } from "../utils/formatFecha.js";
 import { detectImageFormat } from "../utils/detectImageFormat.js";
 import { focusNextOnEnter } from "../utils/focusNextOnEnter.js";
-import { drawPdfHeader } from "../utils/pdfBranding.js";
+import { drawPdfHeader, writeWrappedText } from "../utils/pdfBranding.js";
 import { buildWebUrl, buildInstagramUrl, buildFacebookUrl, buildXUrl, buildMailtoUrl } from "../utils/socialLinks.js";
 
 interface ArtistaRow {
@@ -67,7 +67,7 @@ async function generarFichaArtistaPdfBytes(t: TFn, fields: FichaArtistaFields, i
   // jsPDF es pesado: se carga recien al generar el PDF (mismo criterio que
   // en PersonalProfileForm/ObraDetail/VentasReport).
   const { default: jsPDF } = await import("jspdf");
-  const doc = new jsPDF();
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
   const marginLeft = 14;
   const startY = await drawPdfHeader(doc, fields.nombreCompleto || t("artistas.title"), { marginLeft });
   const imageBoxSize = 60;
@@ -107,19 +107,15 @@ async function generarFichaArtistaPdfBytes(t: TFn, fields: FichaArtistaFields, i
   if (fields.facebook) lineas.push(`${t("artistas.facebook")}: ${fields.facebook}`);
   if (fields.x) lineas.push(`${t("artistas.x")}: ${fields.x}`);
   for (const linea of lineas) {
-    const wrapped = doc.splitTextToSize(linea, textWidth);
-    doc.text(wrapped, textX, textY);
-    textY += wrapped.length * 5;
+    textY = writeWrappedText(doc, linea, textX, textY, textWidth);
   }
 
   if (fields.bio) {
     textY += 3;
     doc.setFontSize(11);
-    doc.text(t("artistas.bio"), textX, textY);
-    textY += 6;
+    textY = writeWrappedText(doc, t("artistas.bio"), textX, textY, textWidth, { lineHeight: 6 });
     doc.setFontSize(10);
-    const wrappedBio = doc.splitTextToSize(fields.bio, textWidth);
-    doc.text(wrappedBio, textX, textY);
+    writeWrappedText(doc, fields.bio, textX, textY, textWidth);
   }
 
   return new Uint8Array(doc.output("arraybuffer"));

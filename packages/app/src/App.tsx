@@ -18,6 +18,8 @@ import { ArtistasScreen } from "./screens/ArtistasScreen.js";
 import { GaleriaFotos } from "./screens/GaleriaFotos.js";
 import { SettingsModal } from "./screens/SettingsModal.js";
 import { VentasReport } from "./screens/VentasReport.js";
+import { GaleriaProfileForm } from "./screens/GaleriaProfileForm.js";
+import { ClientesScreen } from "./screens/ClientesScreen.js";
 
 type Screen =
   | { name: "home" }
@@ -27,7 +29,9 @@ type Screen =
   | { name: "obra-detail"; obraId: number }
   | { name: "artistas" }
   | { name: "galeria-fotos" }
-  | { name: "ventas" };
+  | { name: "ventas" }
+  | { name: "galeria-perfil" }
+  | { name: "clientes" };
 
 function WorkspaceScreens() {
   const { context, personalArtista, close } = useWorkspace();
@@ -88,6 +92,12 @@ function WorkspaceScreens() {
     case "ventas":
       content = <VentasReport onBack={goHome} />;
       break;
+    case "galeria-perfil":
+      content = <GaleriaProfileForm onBack={goHome} />;
+      break;
+    case "clientes":
+      content = <ClientesScreen onBack={goHome} />;
+      break;
     case "home":
     default:
       content = (
@@ -97,6 +107,8 @@ function WorkspaceScreens() {
           onArtistas={() => setScreen({ name: "artistas" })}
           onGaleriaFotos={() => setScreen({ name: "galeria-fotos" })}
           onVentas={() => setScreen({ name: "ventas" })}
+          onGaleriaPerfil={() => setScreen({ name: "galeria-perfil" })}
+          onClientes={() => setScreen({ name: "clientes" })}
         />
       );
   }

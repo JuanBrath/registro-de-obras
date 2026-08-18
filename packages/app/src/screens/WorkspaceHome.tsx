@@ -7,12 +7,16 @@ export function WorkspaceHome({
   onArtistas,
   onGaleriaFotos,
   onVentas,
+  onGaleriaPerfil,
+  onClientes,
 }: {
   onEditProfile: () => void;
   onVerObras: () => void;
   onArtistas: () => void;
   onGaleriaFotos: () => void;
   onVentas: () => void;
+  onGaleriaPerfil: () => void;
+  onClientes: () => void;
 }) {
   const { context, personalArtista } = useWorkspace();
   const { t } = useLanguage();
@@ -38,6 +42,11 @@ export function WorkspaceHome({
             {t("workspaceHome.artistas")}
           </button>
         )}
+        {!esRegistroPersonal && (
+          <button type="button" onClick={onGaleriaPerfil}>
+            {t("galeriaProfile.titulo")}
+          </button>
+        )}
         <button type="button" onClick={onVerObras}>
           {t("workspaceHome.obras")}
         </button>
@@ -46,6 +55,9 @@ export function WorkspaceHome({
         </button>
         <button type="button" onClick={onVentas}>
           {t("workspaceHome.ventas")}
+        </button>
+        <button type="button" onClick={onClientes}>
+          {t("workspaceHome.clientes")}
         </button>
       </div>
     </div>

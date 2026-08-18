@@ -89,6 +89,7 @@ export const es = {
   "workspaceHome.obras": "Obras",
   "workspaceHome.galeriaFotos": "Galería de obras",
   "workspaceHome.ventas": "Ventas",
+  "workspaceHome.clientes": "Clientes",
 
   // VentasReport
   "ventasReport.title": "Ventas",
@@ -178,6 +179,17 @@ export const es = {
   "artistaSelector.nombreCompleto": "Nombre completo",
   "artistaSelector.artistaAgregado": "Artista agregado con el número {{numero}}.",
 
+  // ClientesScreen
+  "clientes.title": "Clientes",
+  "clientes.nuevoCliente": "Nuevo cliente",
+  "clientes.nuevoClienteTitulo": "Nuevo cliente",
+  "clientes.nombreLabel": "Nombre",
+  "clientes.agregarCliente": "Agregar cliente",
+  "clientes.clientesRegistrados": "Clientes registrados",
+  "clientes.sinClientes": "Todavía no hay clientes registrados.",
+  "clientes.buscarPlaceholder": "Buscar por nombre…",
+  "clientes.confirmarEliminar": "¿Eliminar este cliente? No se puede deshacer.",
+
   // ArtistasScreen
   "artistas.title": "Artistas",
   "artistas.nuevoArtista": "+ Nuevo artista",
@@ -221,6 +233,14 @@ export const es = {
   "profile.salir": "Salir",
   "profile.salirBloqueado": "Hay cambios sin guardar. Guardalos con \"Guardar mis datos\" o, si preferís descartarlos, pulsá \"Cancelar\" para salir.",
   "profile.errorCrearTitular": "No se pudo crear el titular",
+
+  // GaleriaProfileForm
+  "galeriaProfile.titulo": "Datos de la galería",
+  "galeriaProfile.nombreLabel": "Nombre de la galería",
+  "galeriaProfile.guardar": "Guardar datos de la galería",
+  "galeriaProfile.datosGuardados": "Datos de la galería guardados correctamente.",
+  "galeriaProfile.salirBloqueado": "Hay cambios sin guardar. Guardalos con \"Guardar datos de la galería\" antes de volver.",
+  "galeriaProfile.volver": "Volver",
 
   // ObrasList
   "obrasList.title": "Obras",
@@ -277,6 +297,8 @@ export const es = {
   "ventaForm.tituloNuevo": "Venta / Reserva / Donación",
   "ventaForm.tipoLegend": "Tipo",
   "ventaForm.numeroCertificado": "Número de certificado",
+  "ventaForm.clienteRegistrado": "Cliente registrado",
+  "ventaForm.clienteSinRegistrar": "— Sin registrar / cliente nuevo —",
   "ventaForm.comprador": "Comprador",
   "ventaForm.destinatarioDonacion": "Destinatario de la donación",
   "ventaForm.mailComprador": "Mail del comprador",
@@ -318,6 +340,10 @@ export const es = {
   "obraDetail.fichaPdfSeleccionTitulo": "¿Qué series incluir en el archivo?",
   "obraDetail.fichaPdfTodasLasSeries": "Todas las series",
   "obraDetail.fichaPdfSeriesEspecificas": "Elegir series específicas",
+  "obraDetail.generarPresupuesto": "Generar presupuesto",
+  "obraDetail.presupuestoTitulo": "Presupuesto — {{titulo}}",
+  "obraDetail.presupuestoSerieSubtitulo": "Datos de la serie cotizada",
+  "obraDetail.presupuestoPdfGenerado": "Presupuesto generado correctamente.",
   "obraDetail.eliminarObra": "Eliminar obra",
   "obraDetail.confirmarEliminarObra": "¿Eliminar esta obra? No se puede deshacer.",
   "obraDetail.errorTieneVentas":

@@ -102,7 +102,7 @@ export function VentasReport({ onBack }: { onBack: () => void }) {
         import("jspdf"),
         import("jspdf-autotable"),
       ]);
-      const doc = new jsPDF();
+      const doc = new jsPDF({ unit: "mm", format: "a4" });
       const marginLeft = 14;
       const headerBottom = await drawPdfHeader(doc, t("ventasReport.tituloPdf"), { marginLeft });
       doc.text(

@@ -152,6 +152,8 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
       "0027_estado_ampliado",
       "0028_texto_ayuda_estado_ejemplar",
       "0029_estado_en_stock",
+      "0030_galeria_perfil",
+      "0031_cliente",
     ]);
   });
 

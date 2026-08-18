@@ -91,6 +91,7 @@ export const en: Record<keyof typeof es, string> = {
   "workspaceHome.obras": "Artworks",
   "workspaceHome.galeriaFotos": "Artwork gallery",
   "workspaceHome.ventas": "Sales",
+  "workspaceHome.clientes": "Clients",
 
   // VentasReport
   "ventasReport.title": "Sales",
@@ -180,6 +181,17 @@ export const en: Record<keyof typeof es, string> = {
   "artistaSelector.nombreCompleto": "Full name",
   "artistaSelector.artistaAgregado": "Artist added with number {{numero}}.",
 
+  // ClientesScreen
+  "clientes.title": "Clients",
+  "clientes.nuevoCliente": "New client",
+  "clientes.nuevoClienteTitulo": "New client",
+  "clientes.nombreLabel": "Name",
+  "clientes.agregarCliente": "Add client",
+  "clientes.clientesRegistrados": "Registered clients",
+  "clientes.sinClientes": "No clients registered yet.",
+  "clientes.buscarPlaceholder": "Search by name…",
+  "clientes.confirmarEliminar": "Delete this client? This cannot be undone.",
+
   // ArtistasScreen
   "artistas.title": "Artists",
   "artistas.nuevoArtista": "+ New artist",
@@ -224,6 +236,14 @@ export const en: Record<keyof typeof es, string> = {
   "profile.salirBloqueado":
     "You have unsaved changes. Save them with \"Save my info\", or press \"Cancel\" if you'd rather discard them and exit.",
   "profile.errorCrearTitular": "Could not create the owner",
+
+  // GaleriaProfileForm
+  "galeriaProfile.titulo": "Gallery details",
+  "galeriaProfile.nombreLabel": "Gallery name",
+  "galeriaProfile.guardar": "Save gallery details",
+  "galeriaProfile.datosGuardados": "Gallery details saved successfully.",
+  "galeriaProfile.salirBloqueado": "There are unsaved changes. Save them with \"Save gallery details\" before going back.",
+  "galeriaProfile.volver": "Back",
 
   // ObrasList
   "obrasList.title": "Artworks",
@@ -280,6 +300,8 @@ export const en: Record<keyof typeof es, string> = {
   "ventaForm.tituloNuevo": "Sale / Reservation / Donation",
   "ventaForm.tipoLegend": "Type",
   "ventaForm.numeroCertificado": "Certificate number",
+  "ventaForm.clienteRegistrado": "Registered client",
+  "ventaForm.clienteSinRegistrar": "— Not registered / new client —",
   "ventaForm.comprador": "Buyer",
   "ventaForm.destinatarioDonacion": "Donation recipient",
   "ventaForm.mailComprador": "Buyer's email",
@@ -321,6 +343,10 @@ export const en: Record<keyof typeof es, string> = {
   "obraDetail.fichaPdfSeleccionTitulo": "Which series should the file include?",
   "obraDetail.fichaPdfTodasLasSeries": "All series",
   "obraDetail.fichaPdfSeriesEspecificas": "Choose specific series",
+  "obraDetail.generarPresupuesto": "Generate quote",
+  "obraDetail.presupuestoTitulo": "Quote — {{titulo}}",
+  "obraDetail.presupuestoSerieSubtitulo": "Quoted series details",
+  "obraDetail.presupuestoPdfGenerado": "Quote generated successfully.",
   "obraDetail.eliminarObra": "Delete artwork",
   "obraDetail.confirmarEliminarObra": "Delete this artwork? This can't be undone.",
   "obraDetail.errorTieneVentas":

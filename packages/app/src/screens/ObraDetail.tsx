@@ -31,7 +31,7 @@ import { savePdfWithDialog } from "../utils/savePdfDialog.js";
 import { formatFechaDDMMYYYY } from "../utils/formatFecha.js";
 import { detectImageFormat } from "../utils/detectImageFormat.js";
 import { focusNextOnEnter } from "../utils/focusNextOnEnter.js";
-import { drawPdfHeader } from "../utils/pdfBranding.js";
+import { drawPdfHeader, writeWrappedText } from "../utils/pdfBranding.js";
 
 interface ObraRow {
   id: number;
@@ -79,6 +79,7 @@ interface EjemplarRow {
 interface VentaRow {
   id: number;
   tipo: TipoVenta;
+  cliente_id: number | null;
   comprador_nombre: string;
   comprador_email: string | null;
   comprador_telefono: string | null;
@@ -96,6 +97,7 @@ function toVentaExistente(v: VentaRow): VentaExistente {
   return {
     id: v.id,
     tipo: v.tipo,
+    clienteId: v.cliente_id,
     compradorNombre: v.comprador_nombre,
     compradorEmail: v.comprador_email,
     compradorTelefono: v.comprador_telefono,
@@ -108,6 +110,53 @@ function toVentaExistente(v: VentaRow): VentaExistente {
     montoComision: v.monto_comision,
     numeroCertificado: v.numero_certificado,
   };
+}
+
+function buildObraDescripcionLineas(
+  obra: ObraRow,
+  ext: ObraExtRow | null,
+  esRegistroPersonal: boolean,
+  t: (key: TranslationKey, vars?: Record<string, string | number>) => string,
+): string[] {
+  const lineas: string[] = [];
+  lineas.push(t("obraDetail.artista", { nombre: obra.nombre_completo }));
+  lineas.push(t("obraDetail.categoria", { categoria: t(`categoria.${obra.categoria_obra}` as TranslationKey) }));
+  if (ext?.subtipo_fotografia) {
+    lineas.push(
+      t("obraDetail.subtipo", {
+        subtipo: t(`fields.fotografia.subtipo${ext.subtipo_fotografia}` as TranslationKey),
+      }),
+    );
+  }
+  if (ext?.subtipo_pintura) {
+    lineas.push(
+      t("obraDetail.subtipoNoEditable", {
+        subtipo: t(`fields.pintura.subtipo${ext.subtipo_pintura}` as TranslationKey),
+      }),
+    );
+  }
+  lineas.push(Number(obra.es_seriada) === 1 ? t("obraDetail.obraSeriada") : t("obraDetail.obraUnica"));
+  if (esRegistroPersonal && obra.ubicacion_fisica_actual) {
+    lineas.push(`${t("obraDetail.ubicacionArchivoPrefix")} ${obra.ubicacion_fisica_actual}`);
+  }
+  if (ext?.tecnica) lineas.push(t("obraDetail.tecnica", { valor: ext.tecnica }));
+  if (ext?.dimensiones) lineas.push(t("obraDetail.dimensiones", { valor: ext.dimensiones }));
+  if (ext?.peso) lineas.push(t("obraDetail.peso", { valor: ext.peso }));
+  if (ext?.fecha_captura) {
+    lineas.push(`${t("fields.fotografia.fechaCaptura")}: ${formatFechaDDMMYYYY(ext.fecha_captura)}`);
+  }
+  if (ext?.fecha_edicion) {
+    lineas.push(`${t("fields.fotografia.fechaEdicion")}: ${formatFechaDDMMYYYY(ext.fecha_edicion)}`);
+  }
+  if (esRegistroPersonal && ext?.software_edicion) {
+    lineas.push(`${t("fields.fotografia.softwareEdicion")}: ${ext.software_edicion}`);
+  }
+  if (ext?.fecha_creacion) {
+    lineas.push(`${t("field.fechaCreacion")}: ${formatFechaDDMMYYYY(ext.fecha_creacion)}`);
+  }
+  const tags = parseTags(obra.tags);
+  if (tags.length > 0) lineas.push(`${t("obraForm.etiquetasLabel")}: ${tags.join(", ")}`);
+  return lineas;
 }
 
 export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => void }) {
@@ -137,6 +186,9 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
   const [fichaPdfSeleccionAbierta, setFichaPdfSeleccionAbierta] = useState(false);
   const [fichaPdfIncluirTodas, setFichaPdfIncluirTodas] = useState(true);
   const [fichaPdfSeleccionadas, setFichaPdfSeleccionadas] = useState<Set<number>>(new Set());
+  const [generandoPresupuestoId, setGenerandoPresupuestoId] = useState<number | null>(null);
+  const [presupuestoMensaje, setPresupuestoMensaje] = useState<string | null>(null);
+  useEscapeToDismiss(presupuestoMensaje, setPresupuestoMensaje);
   const objectUrlRef = useRef<string | null>(null);
   const fullImageUrlRef = useRef<string | null>(null);
 
@@ -206,7 +258,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       }
 
       const ventaRows = await context.db.query<VentaRow>(
-        `SELECT id, tipo, comprador_nombre, comprador_email, comprador_telefono, fecha_venta, lugar_venta, valor_venta, moneda, aplica_comision, porcentaje_comision, monto_comision, numero_certificado
+        `SELECT id, tipo, cliente_id, comprador_nombre, comprador_email, comprador_telefono, fecha_venta, lugar_venta, valor_venta, moneda, aplica_comision, porcentaje_comision, monto_comision, numero_certificado
          FROM venta WHERE obra_id = ?`,
         [obraId],
       );
@@ -288,7 +340,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
         import("jspdf"),
         import("jspdf-autotable"),
       ]);
-      const doc = new jsPDF();
+      const doc = new jsPDF({ unit: "mm", format: "a4" });
       const marginLeft = 14;
       const startY = await drawPdfHeader(doc, obra.titulo, { marginLeft });
       const imageBoxSize = 70;
@@ -325,54 +377,11 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       const pageWidth = doc.internal.pageSize.getWidth();
       const textWidth = pageWidth - textX - marginLeft;
 
-      const lineas: string[] = [];
-      lineas.push(t("obraDetail.artista", { nombre: obra.nombre_completo }));
-      lineas.push(
-        t("obraDetail.categoria", { categoria: t(`categoria.${obra.categoria_obra}` as TranslationKey) }),
-      );
-      if (ext?.subtipo_fotografia) {
-        lineas.push(
-          t("obraDetail.subtipo", {
-            subtipo: t(`fields.fotografia.subtipo${ext.subtipo_fotografia}` as TranslationKey),
-          }),
-        );
-      }
-      if (ext?.subtipo_pintura) {
-        lineas.push(
-          t("obraDetail.subtipoNoEditable", {
-            subtipo: t(`fields.pintura.subtipo${ext.subtipo_pintura}` as TranslationKey),
-          }),
-        );
-      }
-      lineas.push(Number(obra.es_seriada) === 1 ? t("obraDetail.obraSeriada") : t("obraDetail.obraUnica"));
-      if (esRegistroPersonal && obra.ubicacion_fisica_actual) {
-        lineas.push(`${t("obraDetail.ubicacionArchivoPrefix")} ${obra.ubicacion_fisica_actual}`);
-      }
-      if (ext?.tecnica) lineas.push(t("obraDetail.tecnica", { valor: ext.tecnica }));
-      if (ext?.dimensiones) lineas.push(t("obraDetail.dimensiones", { valor: ext.dimensiones }));
-      if (ext?.peso) lineas.push(t("obraDetail.peso", { valor: ext.peso }));
-      if (ext?.fecha_captura) {
-        lineas.push(`${t("fields.fotografia.fechaCaptura")}: ${formatFechaDDMMYYYY(ext.fecha_captura)}`);
-      }
-      if (ext?.fecha_edicion) {
-        lineas.push(`${t("fields.fotografia.fechaEdicion")}: ${formatFechaDDMMYYYY(ext.fecha_edicion)}`);
-      }
-      if (esRegistroPersonal && ext?.software_edicion) {
-        lineas.push(`${t("fields.fotografia.softwareEdicion")}: ${ext.software_edicion}`);
-      }
-      if (ext?.fecha_creacion) {
-        lineas.push(`${t("field.fechaCreacion")}: ${formatFechaDDMMYYYY(ext.fecha_creacion)}`);
-      }
-      const tags = parseTags(obra.tags);
-      if (tags.length > 0) lineas.push(`${t("obraForm.etiquetasLabel")}: ${tags.join(", ")}`);
+      const lineas = buildObraDescripcionLineas(obra, ext, esRegistroPersonal, t);
 
       let textY = startY;
       for (const linea of lineas) {
-        const wrapped = doc.splitTextToSize(linea, textWidth) as string[];
-        for (const wline of wrapped) {
-          doc.text(wline, textX, textY);
-          textY += 6;
-        }
+        textY = writeWrappedText(doc, linea, textX, textY, textWidth, { lineHeight: 6 });
       }
 
       const tableStartY = Math.max(imageBottom, textY) + 8;
@@ -417,6 +426,101 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setGenerandoFichaPdf(false);
+    }
+  }
+
+  // Documento distinto de la ficha: la ficha describe toda la obra con todas
+  // sus series; el presupuesto es para ofrecer/cotizar una unica serie
+  // puntual, asi que lleva los datos de la obra mas solo esa serie.
+  async function handleGenerarPresupuesto(ejemplar: EjemplarRow) {
+    if (!obra || !context) return;
+    setGenerandoPresupuestoId(ejemplar.id);
+    setError(null);
+    setPresupuestoMensaje(null);
+    try {
+      const { default: jsPDF } = await import("jspdf");
+      const doc = new jsPDF({ unit: "mm", format: "a4" });
+      const marginLeft = 14;
+      const startY = await drawPdfHeader(doc, t("obraDetail.presupuestoTitulo", { titulo: obra.titulo }), {
+        marginLeft,
+      });
+      const imageBoxSize = 70;
+      let textX = marginLeft;
+      let imageBottom = startY;
+
+      const imagenPath = obra.imagen_alta_resolucion_path || obra.miniatura_path;
+      if (imagenPath) {
+        try {
+          const imgBytes = await context.fs.readFile(imagenPath);
+          const formato = detectImageFormat(imgBytes);
+          if (formato) {
+            const blob = new Blob([imgBytes as BlobPart]);
+            const bitmap = await createImageBitmap(blob);
+            let displayW = imageBoxSize;
+            let displayH = imageBoxSize / (bitmap.width / bitmap.height);
+            if (displayH > imageBoxSize) {
+              displayH = imageBoxSize;
+              displayW = imageBoxSize * (bitmap.width / bitmap.height);
+            }
+            bitmap.close();
+            doc.addImage(imgBytes, formato, marginLeft, startY, displayW, displayH);
+            imageBottom = startY + displayH;
+            textX = marginLeft + imageBoxSize + 8;
+          }
+        } catch {
+          // Si falta el archivo o no se puede leer, el presupuesto se genera sin imagen.
+        }
+      }
+
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const textWidth = pageWidth - textX - marginLeft;
+
+      const lineas = buildObraDescripcionLineas(obra, ext, esRegistroPersonal, t);
+
+      let textY = startY;
+      for (const linea of lineas) {
+        textY = writeWrappedText(doc, linea, textX, textY, textWidth, { lineHeight: 6 });
+      }
+
+      const serieLineas: string[] = [];
+      serieLineas.push(`${t("ventasReport.colSerie")}: ${ejemplar.numero}`);
+      serieLineas.push(`${t("obraDetail.estadoLabel")}: ${t(`estado.${ejemplar.estado}` as TranslationKey)}`);
+      if (ejemplar.fecha_impresion) {
+        serieLineas.push(`${t("obraDetail.fechaImpresion")}: ${formatFechaDDMMYYYY(ejemplar.fecha_impresion)}`);
+      }
+      if (ejemplar.tipo_impresion) serieLineas.push(`${t("obraDetail.tipoImpresionLabel")}: ${ejemplar.tipo_impresion}`);
+      if (ejemplar.soporte_impresion) {
+        serieLineas.push(`${t("obraDetail.soporteImpresion")}: ${ejemplar.soporte_impresion}`);
+      }
+      if (ejemplar.taller_impresion) {
+        serieLineas.push(`${t("obraDetail.tallerImpresionLabel")}: ${ejemplar.taller_impresion}`);
+      }
+      if (ejemplar.dimensiones) serieLineas.push(`${t("obraDetail.tamanoEjemplarLabel")}: ${ejemplar.dimensiones}`);
+      if (ejemplar.tipo_enmarcado) serieLineas.push(`${t("obraDetail.tipoEnmarcadoLabel")}: ${ejemplar.tipo_enmarcado}`);
+      if (ejemplar.tamano_final_enmarcado) {
+        serieLineas.push(`${t("obraDetail.tamanoFinalEnmarcadoLabel")}: ${ejemplar.tamano_final_enmarcado}`);
+      }
+      if (ejemplar.notas) serieLineas.push(`${t("obraDetail.notasEjemplarLabel")}: ${ejemplar.notas}`);
+
+      let bottomY = Math.max(imageBottom, textY) + 8;
+      doc.setFont("Inter", "medium");
+      bottomY = writeWrappedText(doc, t("obraDetail.presupuestoSerieSubtitulo"), marginLeft, bottomY, pageWidth - marginLeft * 2, {
+        lineHeight: 6,
+      });
+      doc.setFont("Inter", "normal");
+      bottomY += 2;
+      for (const linea of serieLineas) {
+        bottomY = writeWrappedText(doc, linea, marginLeft, bottomY, pageWidth - marginLeft * 2, { lineHeight: 6 });
+      }
+
+      const bytes = new Uint8Array(doc.output("arraybuffer"));
+      const nombreArchivo = `presupuesto_${obra.titulo.replace(/[^a-zA-Z0-9]+/g, "_")}_${ejemplar.numero.replace(/[^a-zA-Z0-9]+/g, "_")}.pdf`;
+      const guardado = await savePdfWithDialog(bytes, nombreArchivo);
+      if (guardado) setPresupuestoMensaje(t("obraDetail.presupuestoPdfGenerado"));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setGenerandoPresupuestoId(null);
     }
   }
 
@@ -808,8 +912,15 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
               onEditarVenta={(venta) => setVentaTarget({ ejemplarId: ej.id, existingVenta: toVentaExistente(venta) })}
               onAnularVenta={(venta, nuevoEstado) => handleAnularVenta(venta, ej.id, nuevoEstado)}
               anulando={anulandoVenta}
+              onGenerarPresupuesto={() => handleGenerarPresupuesto(ej)}
+              generandoPresupuesto={generandoPresupuestoId === ej.id}
             />
           ))}
+          {presupuestoMensaje && (
+            <p className="success" role="status">
+              ✅ {presupuestoMensaje}
+            </p>
+          )}
         </div>
       )}
 
@@ -1252,6 +1363,8 @@ function EjemplarRowView({
   onEditarVenta,
   onAnularVenta,
   anulando,
+  onGenerarPresupuesto,
+  generandoPresupuesto,
 }: {
   ejemplar: EjemplarRow;
   categoria: CategoriaObra;
@@ -1276,6 +1389,8 @@ function EjemplarRowView({
   onEditarVenta: (venta: VentaRow) => void;
   onAnularVenta: (venta: VentaRow, nuevoEstado: string) => void;
   anulando: boolean;
+  onGenerarPresupuesto: () => void;
+  generandoPresupuesto: boolean;
 }) {
   const { t } = useLanguage();
   const [estado, setEstado] = useState(ejemplar.estado);
@@ -1504,6 +1619,9 @@ function EjemplarRowView({
             )}
           </button>
         )}
+        <button type="button" onClick={onGenerarPresupuesto} disabled={generandoPresupuesto}>
+          {generandoPresupuesto ? t("common.saving") : t("obraDetail.generarPresupuesto")}
+        </button>
       </div>
 
       {venta && confirmingAnular && (

@@ -1,0 +1,243 @@
+import { useEffect, useState, type FormEvent } from "react";
+import { useWorkspace } from "../state/WorkspaceContext.js";
+import { LinkField } from "../components/LinkField.js";
+import { useLanguage } from "../i18n/LanguageContext.js";
+import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
+import { savePdfWithDialog } from "../utils/savePdfDialog.js";
+import { buildWebUrl, buildInstagramUrl, buildFacebookUrl, buildXUrl, buildMailtoUrl } from "../utils/socialLinks.js";
+import { drawPdfHeader, writeWrappedText } from "../utils/pdfBranding.js";
+
+interface GaleriaPerfilRow {
+  nombre: string;
+  direccion: string | null;
+  telefono: string | null;
+  email: string | null;
+  web: string | null;
+  instagram: string | null;
+  facebook: string | null;
+  x: string | null;
+  notas: string | null;
+}
+
+export function GaleriaProfileForm({ onBack }: { onBack: () => void }) {
+  const { context } = useWorkspace();
+  const { t } = useLanguage();
+
+  const [existing, setExisting] = useState<GaleriaPerfilRow | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [nombre, setNombre] = useState("");
+  const [direccion, setDireccion] = useState("");
+  const [telefono, setTelefono] = useState("");
+  const [email, setEmail] = useState("");
+  const [web, setWeb] = useState("");
+  const [instagram, setInstagram] = useState("");
+  const [facebook, setFacebook] = useState("");
+  const [x, setX] = useState("");
+  const [notas, setNotas] = useState("");
+
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  useEscapeToDismiss(error, setError);
+  const [generandoPdf, setGenerandoPdf] = useState(false);
+  const [pdfMensaje, setPdfMensaje] = useState<string | null>(null);
+  useEscapeToDismiss(pdfMensaje, setPdfMensaje);
+  const [guardadoMensaje, setGuardadoMensaje] = useState<string | null>(null);
+  useEscapeToDismiss(guardadoMensaje, setGuardadoMensaje);
+  const [salirBloqueadoMensaje, setSalirBloqueadoMensaje] = useState<string | null>(null);
+  useEscapeToDismiss(salirBloqueadoMensaje, setSalirBloqueadoMensaje);
+
+  const isDirty =
+    nombre !== (existing?.nombre ?? "") ||
+    direccion !== (existing?.direccion ?? "") ||
+    telefono !== (existing?.telefono ?? "") ||
+    email !== (existing?.email ?? "") ||
+    web !== (existing?.web ?? "") ||
+    instagram !== (existing?.instagram ?? "") ||
+    facebook !== (existing?.facebook ?? "") ||
+    x !== (existing?.x ?? "") ||
+    notas !== (existing?.notas ?? "");
+
+  useEffect(() => {
+    if (!context) return;
+    setLoading(true);
+    context.db
+      .query<GaleriaPerfilRow>(
+        `SELECT nombre, direccion, telefono, email, web, instagram, facebook, x, notas FROM galeria_perfil WHERE id = 1`,
+      )
+      .then((rows) => {
+        const row = rows[0] ?? null;
+        setExisting(row);
+        setNombre(row?.nombre ?? "");
+        setDireccion(row?.direccion ?? "");
+        setTelefono(row?.telefono ?? "");
+        setEmail(row?.email ?? "");
+        setWeb(row?.web ?? "");
+        setInstagram(row?.instagram ?? "");
+        setFacebook(row?.facebook ?? "");
+        setX(row?.x ?? "");
+        setNotas(row?.notas ?? "");
+      })
+      .catch((err) => setError(err instanceof Error ? err.message : String(err)))
+      .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [context]);
+
+  if (!context || loading) return null;
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setSubmitting(true);
+    setError(null);
+    setGuardadoMensaje(null);
+    setSalirBloqueadoMensaje(null);
+    try {
+      await context!.db.execute(
+        `UPDATE galeria_perfil SET nombre = ?, direccion = ?, telefono = ?, email = ?, web = ?, instagram = ?, facebook = ?, x = ?, notas = ? WHERE id = 1`,
+        [nombre, direccion || null, telefono || null, email || null, web || null, instagram || null, facebook || null, x || null, notas || null],
+      );
+      setExisting({ nombre, direccion, telefono, email, web, instagram, facebook, x, notas });
+      setGuardadoMensaje(t("galeriaProfile.datosGuardados"));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  function handleVolver() {
+    if (isDirty) {
+      setSalirBloqueadoMensaje(t("galeriaProfile.salirBloqueado"));
+      return;
+    }
+    onBack();
+  }
+
+  async function handleGenerarPdf() {
+    setGenerandoPdf(true);
+    setError(null);
+    setPdfMensaje(null);
+    try {
+      const { default: jsPDF } = await import("jspdf");
+      const doc = new jsPDF({ unit: "mm", format: "a4" });
+      const marginLeft = 14;
+      const startY = await drawPdfHeader(doc, nombre || t("galeriaProfile.titulo"), { marginLeft });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const textWidth = pageWidth - marginLeft * 2;
+
+      const lineas: string[] = [];
+      if (direccion) lineas.push(`${t("artistas.direccion")}: ${direccion}`);
+      if (email) lineas.push(`${t("profile.mail")}: ${email}`);
+      if (telefono) lineas.push(`${t("artistas.telefono")}: ${telefono}`);
+      if (web) lineas.push(`${t("profile.paginaWeb")}: ${web}`);
+      if (instagram) lineas.push(`${t("artistas.instagram")}: ${instagram}`);
+      if (facebook) lineas.push(`${t("artistas.facebook")}: ${facebook}`);
+      if (x) lineas.push(`${t("artistas.x")}: ${x}`);
+
+      let textY = startY + 5;
+      for (const linea of lineas) {
+        textY = writeWrappedText(doc, linea, marginLeft, textY, textWidth);
+      }
+
+      if (notas) {
+        textY += 3;
+        doc.setFontSize(11);
+        textY = writeWrappedText(doc, t("artistas.notas"), marginLeft, textY, textWidth, { lineHeight: 6 });
+        doc.setFontSize(10);
+        writeWrappedText(doc, notas, marginLeft, textY, textWidth);
+      }
+
+      const bytes = new Uint8Array(doc.output("arraybuffer"));
+      const fileName = `galeria_${(nombre || "datos").trim().replace(/\s+/g, "_")}.pdf`;
+      const guardado = await savePdfWithDialog(bytes, fileName);
+      if (guardado) setPdfMensaje(t("profile.pdfGenerado"));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setGenerandoPdf(false);
+    }
+  }
+
+  return (
+    <form className="obra-form profile-form" onSubmit={handleSubmit}>
+      <h2>{t("galeriaProfile.titulo")}</h2>
+
+      <label>
+        {t("galeriaProfile.nombreLabel")}
+        <input type="text" required value={nombre} onChange={(e) => setNombre(e.target.value)} />
+      </label>
+
+      <label>
+        {t("artistas.notas")}
+        <textarea rows={3} value={notas} onChange={(e) => setNotas(e.target.value)} />
+      </label>
+
+      <fieldset>
+        <legend>{t("profile.contactoLegend")}</legend>
+        <label>
+          {t("profile.mail")}
+          <LinkField type="email" value={email} onChange={setEmail} buildUrl={buildMailtoUrl} />
+        </label>
+        <label>
+          {t("artistas.telefono")}
+          <input type="tel" value={telefono} onChange={(e) => setTelefono(e.target.value)} />
+        </label>
+        <label>
+          {t("artistas.direccion")}
+          <input type="text" value={direccion} onChange={(e) => setDireccion(e.target.value)} />
+        </label>
+        <label>
+          {t("profile.paginaWeb")}
+          <LinkField value={web} onChange={setWeb} buildUrl={buildWebUrl} />
+        </label>
+        <label>
+          {t("artistas.instagram")}
+          <LinkField value={instagram} onChange={setInstagram} buildUrl={buildInstagramUrl} />
+        </label>
+        <label>
+          {t("artistas.facebook")}
+          <LinkField value={facebook} onChange={setFacebook} buildUrl={buildFacebookUrl} />
+        </label>
+        <label>
+          {t("artistas.x")}
+          <LinkField value={x} onChange={setX} buildUrl={buildXUrl} />
+        </label>
+      </fieldset>
+
+      <div className="obra-form-saved-actions">
+        <button type="submit" disabled={submitting}>
+          {submitting ? t("common.saving") : t("galeriaProfile.guardar")}
+        </button>
+        <button type="button" onClick={handleGenerarPdf} disabled={generandoPdf}>
+          {generandoPdf ? t("common.saving") : t("profile.generarPdf")}
+        </button>
+        <button type="button" onClick={handleVolver} disabled={submitting}>
+          {t("galeriaProfile.volver")}
+        </button>
+      </div>
+
+      {guardadoMensaje && (
+        <p className="success" role="status">
+          ✅ {guardadoMensaje}
+        </p>
+      )}
+
+      {pdfMensaje && (
+        <p className="success" role="status">
+          ✅ {pdfMensaje}
+        </p>
+      )}
+
+      {salirBloqueadoMensaje && (
+        <p className="error" role="alert">
+          ⚠️ {salirBloqueadoMensaje}
+        </p>
+      )}
+
+      {error && (
+        <p className="error" role="alert">
+          ⚠️ {t("obraForm.errorNoSePudoGuardar", { error })}
+        </p>
+      )}
+    </form>
+  );
+}
