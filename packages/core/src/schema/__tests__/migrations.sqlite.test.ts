@@ -154,6 +154,7 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
       "0029_estado_en_stock",
       "0030_galeria_perfil",
       "0031_cliente",
+      "0032_ejemplar_precio_venta",
     ]);
   });
 

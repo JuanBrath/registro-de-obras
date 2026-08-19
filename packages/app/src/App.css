@@ -974,7 +974,10 @@ input[type="date"] {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  /* Por encima de .app-topbar (z-index: 200): un modal abierto tiene que
+     taparlo por completo, si no la franja fija tapa la X de cerrar cuando
+     la ventana no esta maximizada. */
+  z-index: 300;
   padding: 1rem;
 }
 

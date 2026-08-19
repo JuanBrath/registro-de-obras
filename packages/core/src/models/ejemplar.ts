@@ -33,4 +33,6 @@ export interface Ejemplar {
   /** Tamano final de la pieza ya enmarcada, en milimetros. */
   tamanoFinalEnmarcado: string | null;
   notas: string | null;
+  /** Importe al que se ofrece/vende esta copia (referencia para presupuestos, no es venta.valor_venta). */
+  precioVenta: number | null;
 }

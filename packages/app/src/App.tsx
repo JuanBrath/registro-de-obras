@@ -3,9 +3,9 @@ import "./App.css";
 import { useWorkspace, WorkspaceProvider } from "./state/WorkspaceContext.js";
 import { EdicionProvider, useEdicion } from "./state/EdicionContext.js";
 import { ThemeProvider } from "./state/ThemeContext.js";
+import { FontSizeProvider } from "./state/FontSizeContext.js";
 import { NavigationProvider, useRegisterGoHome } from "./state/NavigationContext.js";
 import { LanguageProvider, useLanguage } from "./i18n/LanguageContext.js";
-import { isTauri } from "./adapters/detectPlatform.js";
 import { useForceReflowOnResize } from "./utils/useForceReflowOnResize.js";
 import { BrandHeader } from "./components/BrandHeader.js";
 import { WorkspacePicker } from "./screens/WorkspacePicker.js";
@@ -122,9 +122,6 @@ function AppShell() {
   const { t } = useLanguage();
   const [showSettings, setShowSettings] = useState(false);
   useForceReflowOnResize();
-  // En desktop el idioma se elige desde el menú nativo de la app (barra
-  // superior); el botón flotante solo hace falta donde no hay menú nativo.
-  const necesitaBotonFlotante = !isTauri();
 
   // El menú "Edición (prueba)" es solo para previsualizar que mostraría cada
   // nivel de suscripción — cambiarlo mientras hay un workspace abierto tiene
@@ -139,16 +136,14 @@ function AppShell() {
     <NavigationProvider>
       <div className="app-topbar">
         <BrandHeader size="navbar" />
-        {necesitaBotonFlotante && (
-          <button
-            type="button"
-            className="settings-gear-button"
-            onClick={() => setShowSettings(true)}
-            aria-label={t("common.settings")}
-          >
-            ⚙
-          </button>
-        )}
+        <button
+          type="button"
+          className="settings-gear-button"
+          onClick={() => setShowSettings(true)}
+          aria-label={t("common.settings")}
+        >
+          ⚙
+        </button>
       </div>
       {context ? <WorkspaceScreens key={context.workspace} /> : <WorkspacePicker />}
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
@@ -160,11 +155,13 @@ function App() {
   return (
     <LanguageProvider>
       <ThemeProvider>
-        <EdicionProvider>
-          <WorkspaceProvider>
-            <AppShell />
-          </WorkspaceProvider>
-        </EdicionProvider>
+        <FontSizeProvider>
+          <EdicionProvider>
+            <WorkspaceProvider>
+              <AppShell />
+            </WorkspaceProvider>
+          </EdicionProvider>
+        </FontSizeProvider>
       </ThemeProvider>
     </LanguageProvider>
   );

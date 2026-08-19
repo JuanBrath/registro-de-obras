@@ -53,11 +53,11 @@ export function WorkspaceHome({
         <button type="button" onClick={onGaleriaFotos}>
           {t("workspaceHome.galeriaFotos")}
         </button>
-        <button type="button" onClick={onVentas}>
-          {t("workspaceHome.ventas")}
-        </button>
         <button type="button" onClick={onClientes}>
           {t("workspaceHome.clientes")}
+        </button>
+        <button type="button" onClick={onVentas}>
+          {t("workspaceHome.ventas")}
         </button>
       </div>
     </div>

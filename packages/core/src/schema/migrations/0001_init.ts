@@ -28,6 +28,7 @@ import { migration0028TextoAyudaEstadoEjemplar } from "./0028_texto_ayuda_estado
 import { migration0029EstadoEnStock } from "./0029_estado_en_stock.js";
 import { migration0030GaleriaPerfil } from "./0030_galeria_perfil.js";
 import { migration0031Cliente } from "./0031_cliente.js";
+import { migration0032EjemplarPrecioVenta } from "./0032_ejemplar_precio_venta.js";
 
 export interface Migration {
   name: string;
@@ -187,4 +188,5 @@ export const ALL_MIGRATIONS: Migration[] = [
   migration0029EstadoEnStock,
   migration0030GaleriaPerfil,
   migration0031Cliente,
+  migration0032EjemplarPrecioVenta,
 ];

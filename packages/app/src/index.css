@@ -68,6 +68,16 @@ optgroup {
   }
 }
 
+/* Tamaño de letra elegido en Configuracion — mayor especificidad que el
+   :root base y que el @media de arriba, asi la eleccion explicita del
+   usuario siempre gana por sobre el tamaño responsivo por defecto. */
+:root[data-font-size="chica"] {
+  font-size: 17px;
+}
+:root[data-font-size="grande"] {
+  font-size: 24px;
+}
+
 /* Elegido explicitamente desde Configuracion / menu Apariencia — tiene
    prioridad por sobre la preferencia del sistema operativo. */
 :root[data-theme="dark"] {

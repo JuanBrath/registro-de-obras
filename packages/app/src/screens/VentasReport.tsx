@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Moneda } from "@registro/core";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
@@ -20,6 +20,11 @@ interface VentaReportRow {
   monto_comision: number | null;
 }
 
+interface ClienteOption {
+  id: number;
+  nombre: string;
+}
+
 function primerDiaMesActual(): string {
   const hoy = new Date();
   return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}-01`;
@@ -39,6 +44,8 @@ export function VentasReport({ onBack }: { onBack: () => void }) {
   const [fechaHasta, setFechaHasta] = useState(todayISO());
   const [fechaDesdeTocada, setFechaDesdeTocada] = useState(false);
   const [fechaHastaTocada, setFechaHastaTocada] = useState(false);
+  const [clientes, setClientes] = useState<ClienteOption[]>([]);
+  const [clienteId, setClienteId] = useState("");
   const [ventas, setVentas] = useState<VentaReportRow[]>([]);
   const [buscado, setBuscado] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -51,6 +58,15 @@ export function VentasReport({ onBack }: { onBack: () => void }) {
   const [planillaMensaje, setPlanillaMensaje] = useState<string | null>(null);
   useEscapeToDismiss(planillaMensaje, setPlanillaMensaje);
 
+  useEffect(() => {
+    if (!context) return;
+    context.db
+      .query<ClienteOption>("SELECT id, nombre FROM cliente ORDER BY nombre")
+      .then(setClientes)
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [context]);
+
   async function cargar() {
     if (!context || !fechaDesde || !fechaHasta) return;
     setLoading(true);
@@ -60,6 +76,12 @@ export function VentasReport({ onBack }: { onBack: () => void }) {
     setVentas([]);
     setBuscado(true);
     try {
+      const params: unknown[] = [fechaDesde, fechaHasta];
+      let filtroCliente = "";
+      if (clienteId) {
+        filtroCliente = " AND venta.cliente_id = ?";
+        params.push(Number(clienteId));
+      }
       const rows = await context.db.query<VentaReportRow>(
         `SELECT venta.id, venta.fecha_venta, artista.nombre_completo as artista, obra.titulo as obra,
                 ejemplar.numero as serie, venta.valor_venta, venta.moneda, venta.monto_comision
@@ -67,9 +89,9 @@ export function VentasReport({ onBack }: { onBack: () => void }) {
          JOIN obra ON obra.id = venta.obra_id
          JOIN artista ON artista.id = obra.artista_id
          LEFT JOIN ejemplar ON ejemplar.id = venta.ejemplar_id
-         WHERE venta.tipo = 'venta' AND venta.fecha_venta >= ? AND venta.fecha_venta <= ?
+         WHERE venta.tipo = 'venta' AND venta.fecha_venta >= ? AND venta.fecha_venta <= ?${filtroCliente}
          ORDER BY venta.fecha_venta ASC`,
-        [fechaDesde, fechaHasta],
+        params,
       );
       setVentas(rows);
     } catch (err) {
@@ -261,6 +283,19 @@ export function VentasReport({ onBack }: { onBack: () => void }) {
             }}
           />
         </label>
+        {clientes.length > 0 && (
+          <label>
+            {t("ventasReport.cliente")}
+            <select value={clienteId} onChange={(e) => setClienteId(e.target.value)}>
+              <option value="">{t("ventasReport.todosLosClientes")}</option>
+              {clientes.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nombre}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <button type="submit" disabled={loading || !fechaDesde || !fechaHasta}>
           {loading ? t("common.loading") : t("ventasReport.buscar")}
         </button>

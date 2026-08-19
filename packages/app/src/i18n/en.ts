@@ -97,6 +97,8 @@ export const en: Record<keyof typeof es, string> = {
   "ventasReport.title": "Sales",
   "ventasReport.desde": "From",
   "ventasReport.hasta": "To",
+  "ventasReport.cliente": "Client",
+  "ventasReport.todosLosClientes": "All",
   "ventasReport.buscar": "Search",
   "ventasReport.sinVentas": "No sales recorded in that date range.",
   "ventasReport.colFecha": "Date",
@@ -122,6 +124,10 @@ export const en: Record<keyof typeof es, string> = {
   "settings.apariencia": "Appearance",
   "settings.claro": "Light",
   "settings.oscuro": "Dark",
+  "settings.tamanoLetra": "Font size",
+  "settings.letraChica": "Small",
+  "settings.letraMediana": "Medium",
+  "settings.letraGrande": "Large",
 
   // ObraForm
   "obraForm.tituloNueva": "New artwork — {{registro}}",
@@ -366,6 +372,8 @@ export const en: Record<keyof typeof es, string> = {
   "obraDetail.ubicacionActualCopia": "Current location of this copy",
   "obraDetail.tamanoEjemplarLabel": "Size (mm)",
   "obraDetail.tamanoEjemplar": "Size: {{valor}}",
+  "obraDetail.precioVentaLabel": "Sale amount",
+  "obraDetail.precioVenta": "Amount: {{valor}}",
   "obraDetail.tipoEnmarcadoLabel": "Frame type",
   "obraDetail.tipoEnmarcado": "Frame: {{valor}}",
   "obraDetail.tamanoFinalEnmarcadoLabel": "Final size framed (mm)",

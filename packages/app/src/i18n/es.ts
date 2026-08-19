@@ -95,6 +95,8 @@ export const es = {
   "ventasReport.title": "Ventas",
   "ventasReport.desde": "Desde",
   "ventasReport.hasta": "Hasta",
+  "ventasReport.cliente": "Cliente",
+  "ventasReport.todosLosClientes": "Todos",
   "ventasReport.buscar": "Buscar",
   "ventasReport.sinVentas": "No hay ventas registradas en ese rango de fechas.",
   "ventasReport.colFecha": "Fecha",
@@ -120,6 +122,10 @@ export const es = {
   "settings.apariencia": "Apariencia",
   "settings.claro": "Claro",
   "settings.oscuro": "Oscuro",
+  "settings.tamanoLetra": "Tamaño de letra",
+  "settings.letraChica": "Chica",
+  "settings.letraMediana": "Mediana",
+  "settings.letraGrande": "Grande",
 
   // ObraForm
   "obraForm.tituloNueva": "Nueva obra — {{registro}}",
@@ -363,6 +369,8 @@ export const es = {
   "obraDetail.ubicacionActualCopia": "Ubicación actual de esta copia",
   "obraDetail.tamanoEjemplarLabel": "Tamaño (mm)",
   "obraDetail.tamanoEjemplar": "Tamaño: {{valor}}",
+  "obraDetail.precioVentaLabel": "Importe de venta",
+  "obraDetail.precioVenta": "Importe: {{valor}}",
   "obraDetail.tipoEnmarcadoLabel": "Tipo de enmarcado",
   "obraDetail.tipoEnmarcado": "Enmarcado: {{valor}}",
   "obraDetail.tamanoFinalEnmarcadoLabel": "Tamaño final con marco (mm)",
