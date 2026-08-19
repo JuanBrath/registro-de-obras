@@ -229,6 +229,8 @@ export const es = {
   // PersonalProfileForm
   "profile.tituloMisDatos": "Mis datos — Galeris Studio",
   "profile.fotoAlt": "Foto del titular",
+  "profile.logo": "Logo personal",
+  "profile.logoAlt": "Logo personal",
   "profile.contactoLegend": "Contacto",
   "profile.mail": "Mail",
   "profile.paginaWeb": "Página web",
@@ -247,6 +249,8 @@ export const es = {
   "galeriaProfile.datosGuardados": "Datos de la galería guardados correctamente.",
   "galeriaProfile.salirBloqueado": "Hay cambios sin guardar. Guardalos con \"Guardar datos de la galería\" antes de volver.",
   "galeriaProfile.volver": "Volver",
+  "galeriaProfile.logo": "Logo de la galería",
+  "galeriaProfile.logoAlt": "Logo de la galería",
 
   // ObrasList
   "obrasList.title": "Obras",
@@ -369,8 +373,8 @@ export const es = {
   "obraDetail.ubicacionActualCopia": "Ubicación actual de esta copia",
   "obraDetail.tamanoEjemplarLabel": "Tamaño (mm)",
   "obraDetail.tamanoEjemplar": "Tamaño: {{valor}}",
-  "obraDetail.precioVentaLabel": "Importe de venta",
-  "obraDetail.precioVenta": "Importe: {{valor}}",
+  "obraDetail.valorLabel": "Valor",
+  "obraDetail.valorSerie": "Valor: {{moneda}} {{valor}}",
   "obraDetail.tipoEnmarcadoLabel": "Tipo de enmarcado",
   "obraDetail.tipoEnmarcado": "Enmarcado: {{valor}}",
   "obraDetail.tamanoFinalEnmarcadoLabel": "Tamaño final con marco (mm)",

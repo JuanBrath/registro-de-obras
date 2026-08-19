@@ -8,4 +8,5 @@ export interface GaleriaPerfil {
   facebook: string | null;
   x: string | null;
   notas: string | null;
+  logoPath: string | null;
 }

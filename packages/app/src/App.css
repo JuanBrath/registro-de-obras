@@ -883,6 +883,14 @@ input[type="date"] {
   flex: 1;
 }
 
+.venta-form-valor-row select {
+  flex: 0 0 auto;
+}
+
+.venta-form-valor-row input[type="number"] {
+  flex: 1;
+}
+
 .artista-selector-row {
   display: flex;
   align-items: center;

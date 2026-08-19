@@ -69,6 +69,13 @@ export function VentaForm({
 
   const [clientes, setClientes] = useState<ClienteOption[]>([]);
   const [clienteId, setClienteId] = useState<number | null>(existingVenta?.clienteId ?? null);
+  const [addingCliente, setAddingCliente] = useState(false);
+  const [nuevoClienteNombre, setNuevoClienteNombre] = useState("");
+  const [nuevoClienteEmail, setNuevoClienteEmail] = useState("");
+  const [nuevoClienteTelefono, setNuevoClienteTelefono] = useState("");
+  const [creandoCliente, setCreandoCliente] = useState(false);
+  const [errorCliente, setErrorCliente] = useState<string | null>(null);
+  useEscapeToDismiss(errorCliente, setErrorCliente);
   const [compradorNombre, setCompradorNombre] = useState(existingVenta?.compradorNombre ?? "");
   const [compradorEmail, setCompradorEmail] = useState(existingVenta?.compradorEmail ?? "");
   const [compradorTelefono, setCompradorTelefono] = useState(existingVenta?.compradorTelefono ?? "");
@@ -111,6 +118,38 @@ export function VentaForm({
       setCompradorNombre(cliente.nombre);
       setCompradorEmail(cliente.email ?? "");
       setCompradorTelefono(cliente.telefono ?? "");
+    }
+  }
+
+  async function handleCrearCliente() {
+    if (!context || !nuevoClienteNombre.trim()) return;
+    setCreandoCliente(true);
+    setErrorCliente(null);
+    try {
+      const nombre = nuevoClienteNombre.trim();
+      const email = nuevoClienteEmail.trim() || null;
+      const telefono = nuevoClienteTelefono.trim() || null;
+      const result = await context.db.execute(`INSERT INTO cliente (nombre, email, telefono) VALUES (?, ?, ?)`, [
+        nombre,
+        email,
+        telefono,
+      ]);
+      const nuevoId = result.lastInsertId;
+      if (!nuevoId) throw new Error(t("clientes.title"));
+      const nuevoCliente: ClienteOption = { id: nuevoId, nombre, email, telefono };
+      setClientes((prev) => [...prev, nuevoCliente].sort((a, b) => a.nombre.localeCompare(b.nombre)));
+      setClienteId(nuevoId);
+      setCompradorNombre(nuevoCliente.nombre);
+      setCompradorEmail(nuevoCliente.email ?? "");
+      setCompradorTelefono(nuevoCliente.telefono ?? "");
+      setAddingCliente(false);
+      setNuevoClienteNombre("");
+      setNuevoClienteEmail("");
+      setNuevoClienteTelefono("");
+    } catch (err) {
+      setErrorCliente(err instanceof Error ? err.message : String(err));
+    } finally {
+      setCreandoCliente(false);
     }
   }
 
@@ -272,19 +311,68 @@ export function VentaForm({
         </label>
       )}
 
-      {clientes.length > 0 && (
+      <div>
         <label>
           {t("ventaForm.clienteRegistrado")}
-          <select value={clienteId ?? ""} onChange={(e) => handleClienteChange(e.target.value)}>
-            <option value="">{t("ventaForm.clienteSinRegistrar")}</option>
-            {clientes.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.nombre}
-              </option>
-            ))}
-          </select>
+          <div className="artista-selector-row">
+            <select value={clienteId ?? ""} onChange={(e) => handleClienteChange(e.target.value)}>
+              <option value="">{t("ventaForm.clienteSinRegistrar")}</option>
+              {clientes.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nombre}
+                </option>
+              ))}
+            </select>
+            {!addingCliente && (
+              <button type="button" className="link-button" onClick={() => setAddingCliente(true)}>
+                {t("clientes.nuevoCliente")}
+              </button>
+            )}
+          </div>
         </label>
-      )}
+
+        {addingCliente && (
+          <div className="artista-selector-new">
+            <label>
+              {t("clientes.nombreLabel")}
+              <input
+                type="text"
+                value={nuevoClienteNombre}
+                onChange={(e) => setNuevoClienteNombre(e.target.value)}
+              />
+            </label>
+            <label>
+              {t("profile.mail")}
+              <input type="email" value={nuevoClienteEmail} onChange={(e) => setNuevoClienteEmail(e.target.value)} />
+            </label>
+            <label>
+              {t("artistas.telefono")}
+              <input
+                type="tel"
+                value={nuevoClienteTelefono}
+                onChange={(e) => setNuevoClienteTelefono(e.target.value)}
+              />
+            </label>
+            <div className="obra-form-saved-actions">
+              <button
+                type="button"
+                onClick={handleCrearCliente}
+                disabled={!nuevoClienteNombre.trim() || creandoCliente}
+              >
+                {creandoCliente ? t("common.adding") : t("common.add")}
+              </button>
+              <button type="button" onClick={() => setAddingCliente(false)} disabled={creandoCliente}>
+                {t("common.cancel")}
+              </button>
+            </div>
+            {errorCliente && (
+              <p className="error" role="alert">
+                ⚠️ {errorCliente}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
 
       <label>
         {esDonacion ? t("ventaForm.destinatarioDonacion") : t("ventaForm.comprador")}

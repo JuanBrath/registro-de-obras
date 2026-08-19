@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { artistaFotoPath } from "@registro/core";
+import { artistaFotoPath, artistaLogoPath } from "@registro/core";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { bytesToObjectUrl } from "../utils/imageObjectUrl.js";
 import { ImageFileField } from "../components/ImageFileField.js";
@@ -31,6 +31,9 @@ export function PersonalProfileForm({ onExit, onCancel }: { onExit: () => void; 
   const [fotoFile, setFotoFile] = useState<File | null>(null);
   const [fotoPreviewUrl, setFotoPreviewUrl] = useState<string | null>(null);
   const objectUrlRef = useRef<string | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
+  const logoObjectUrlRef = useRef<string | null>(null);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,7 +62,8 @@ export function PersonalProfileForm({ onExit, onCancel }: { onExit: () => void; 
     direccion !== (existing?.direccion ?? "") ||
     x !== (existing?.x ?? "") ||
     facebook !== (existing?.facebook ?? "") ||
-    fotoFile !== null;
+    fotoFile !== null ||
+    logoFile !== null;
 
   useEffect(() => {
     if (!context || !existing?.fotoPath) return;
@@ -78,6 +82,23 @@ export function PersonalProfileForm({ onExit, onCancel }: { onExit: () => void; 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [context, existing?.fotoPath]);
 
+  useEffect(() => {
+    if (!context || !existing?.logoPath) return;
+    context.fs
+      .readFile(existing.logoPath)
+      .then((bytes) => {
+        if (logoObjectUrlRef.current) URL.revokeObjectURL(logoObjectUrlRef.current);
+        const url = bytesToObjectUrl(bytes);
+        logoObjectUrlRef.current = url;
+        setLogoPreviewUrl(url);
+      })
+      .catch(() => {});
+    return () => {
+      if (logoObjectUrlRef.current) URL.revokeObjectURL(logoObjectUrlRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [context, existing?.logoPath]);
+
   if (!context) return null;
 
   function handleFotoChange(file: File | null) {
@@ -87,6 +108,16 @@ export function PersonalProfileForm({ onExit, onCancel }: { onExit: () => void; 
       const url = URL.createObjectURL(file);
       objectUrlRef.current = url;
       setFotoPreviewUrl(url);
+    }
+  }
+
+  function handleLogoChange(file: File | null) {
+    setLogoFile(file);
+    if (file) {
+      if (logoObjectUrlRef.current) URL.revokeObjectURL(logoObjectUrlRef.current);
+      const url = URL.createObjectURL(file);
+      logoObjectUrlRef.current = url;
+      setLogoPreviewUrl(url);
     }
   }
 
@@ -147,7 +178,16 @@ export function PersonalProfileForm({ onExit, onCancel }: { onExit: () => void; 
         await db.execute(`UPDATE artista SET foto_path = ? WHERE id = ?`, [path, artistaId]);
       }
 
+      if (logoFile) {
+        const ext = logoFile.name.split(".").pop() || "jpg";
+        const bytes = new Uint8Array(await logoFile.arrayBuffer());
+        const path = artistaLogoPath(artistaId, ext);
+        await fs.writeFile(path, bytes);
+        await db.execute(`UPDATE artista SET logo_path = ? WHERE id = ?`, [path, artistaId]);
+      }
+
       setFotoFile(null);
+      setLogoFile(null);
       await reloadPersonalArtista();
       setGuardadoMensaje(t("profile.datosGuardados"));
     } catch (err) {
@@ -255,6 +295,13 @@ export function PersonalProfileForm({ onExit, onCancel }: { onExit: () => void; 
       <label>
         {t("artistas.foto")}
         <ImageFileField value={fotoFile} onChange={handleFotoChange} />
+      </label>
+
+      {logoPreviewUrl && <img src={logoPreviewUrl} alt={t("profile.logoAlt")} className="artista-foto-preview" />}
+
+      <label>
+        {t("profile.logo")}
+        <ImageFileField value={logoFile} onChange={handleLogoChange} />
       </label>
 
       <label>

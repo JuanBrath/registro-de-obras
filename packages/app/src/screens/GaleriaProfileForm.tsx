@@ -1,9 +1,12 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { galeriaLogoPath } from "@registro/core";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { LinkField } from "../components/LinkField.js";
+import { ImageFileField } from "../components/ImageFileField.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
 import { savePdfWithDialog } from "../utils/savePdfDialog.js";
+import { bytesToObjectUrl } from "../utils/imageObjectUrl.js";
 import { buildWebUrl, buildInstagramUrl, buildFacebookUrl, buildXUrl, buildMailtoUrl } from "../utils/socialLinks.js";
 import { drawPdfHeader, writeWrappedText } from "../utils/pdfBranding.js";
 
@@ -17,6 +20,7 @@ interface GaleriaPerfilRow {
   facebook: string | null;
   x: string | null;
   notas: string | null;
+  logo_path: string | null;
 }
 
 export function GaleriaProfileForm({ onBack }: { onBack: () => void }) {
@@ -34,6 +38,9 @@ export function GaleriaProfileForm({ onBack }: { onBack: () => void }) {
   const [facebook, setFacebook] = useState("");
   const [x, setX] = useState("");
   const [notas, setNotas] = useState("");
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
+  const logoObjectUrlRef = useRef<string | null>(null);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,14 +62,15 @@ export function GaleriaProfileForm({ onBack }: { onBack: () => void }) {
     instagram !== (existing?.instagram ?? "") ||
     facebook !== (existing?.facebook ?? "") ||
     x !== (existing?.x ?? "") ||
-    notas !== (existing?.notas ?? "");
+    notas !== (existing?.notas ?? "") ||
+    logoFile !== null;
 
   useEffect(() => {
     if (!context) return;
     setLoading(true);
     context.db
       .query<GaleriaPerfilRow>(
-        `SELECT nombre, direccion, telefono, email, web, instagram, facebook, x, notas FROM galeria_perfil WHERE id = 1`,
+        `SELECT nombre, direccion, telefono, email, web, instagram, facebook, x, notas, logo_path FROM galeria_perfil WHERE id = 1`,
       )
       .then((rows) => {
         const row = rows[0] ?? null;
@@ -76,13 +84,37 @@ export function GaleriaProfileForm({ onBack }: { onBack: () => void }) {
         setFacebook(row?.facebook ?? "");
         setX(row?.x ?? "");
         setNotas(row?.notas ?? "");
+        if (row?.logo_path) {
+          context.fs
+            .readFile(row.logo_path)
+            .then((bytes) => {
+              if (logoObjectUrlRef.current) URL.revokeObjectURL(logoObjectUrlRef.current);
+              const url = bytesToObjectUrl(bytes);
+              logoObjectUrlRef.current = url;
+              setLogoPreviewUrl(url);
+            })
+            .catch(() => {});
+        }
       })
       .catch((err) => setError(err instanceof Error ? err.message : String(err)))
       .finally(() => setLoading(false));
+    return () => {
+      if (logoObjectUrlRef.current) URL.revokeObjectURL(logoObjectUrlRef.current);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [context]);
 
   if (!context || loading) return null;
+
+  function handleLogoChange(file: File | null) {
+    setLogoFile(file);
+    if (file) {
+      if (logoObjectUrlRef.current) URL.revokeObjectURL(logoObjectUrlRef.current);
+      const url = URL.createObjectURL(file);
+      logoObjectUrlRef.current = url;
+      setLogoPreviewUrl(url);
+    }
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -95,7 +127,18 @@ export function GaleriaProfileForm({ onBack }: { onBack: () => void }) {
         `UPDATE galeria_perfil SET nombre = ?, direccion = ?, telefono = ?, email = ?, web = ?, instagram = ?, facebook = ?, x = ?, notas = ? WHERE id = 1`,
         [nombre, direccion || null, telefono || null, email || null, web || null, instagram || null, facebook || null, x || null, notas || null],
       );
-      setExisting({ nombre, direccion, telefono, email, web, instagram, facebook, x, notas });
+
+      let logoPath = existing?.logo_path ?? null;
+      if (logoFile) {
+        const ext = logoFile.name.split(".").pop() || "jpg";
+        const bytes = new Uint8Array(await logoFile.arrayBuffer());
+        logoPath = galeriaLogoPath(ext);
+        await context!.fs.writeFile(logoPath, bytes);
+        await context!.db.execute(`UPDATE galeria_perfil SET logo_path = ? WHERE id = 1`, [logoPath]);
+      }
+
+      setExisting({ nombre, direccion, telefono, email, web, instagram, facebook, x, notas, logo_path: logoPath });
+      setLogoFile(null);
       setGuardadoMensaje(t("galeriaProfile.datosGuardados"));
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -160,6 +203,13 @@ export function GaleriaProfileForm({ onBack }: { onBack: () => void }) {
   return (
     <form className="obra-form profile-form" onSubmit={handleSubmit}>
       <h2>{t("galeriaProfile.titulo")}</h2>
+
+      {logoPreviewUrl && <img src={logoPreviewUrl} alt={t("galeriaProfile.logoAlt")} className="artista-foto-preview" />}
+
+      <label>
+        {t("galeriaProfile.logo")}
+        <ImageFileField value={logoFile} onChange={handleLogoChange} />
+      </label>
 
       <label>
         {t("galeriaProfile.nombreLabel")}

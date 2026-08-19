@@ -13,3 +13,11 @@ export function certificadoPdfPath(numeroCertificado: number): string {
 export function artistaFotoPath(idArtista: number, ext: string): string {
   return `artistas/${idArtista}/foto.${ext}`;
 }
+
+export function artistaLogoPath(idArtista: number, ext: string): string {
+  return `artistas/${idArtista}/logo.${ext}`;
+}
+
+export function galeriaLogoPath(ext: string): string {
+  return `galeria/logo.${ext}`;
+}

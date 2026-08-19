@@ -75,6 +75,7 @@ interface EjemplarRow {
   tamano_final_enmarcado: string | null;
   notas: string | null;
   precio_venta: number | null;
+  moneda_venta: string | null;
 }
 
 interface VentaRow {
@@ -256,7 +257,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
 
       if (obraRow) {
         const ejemplarRows = await context.db.query<EjemplarRow>(
-          `SELECT id, tipo, numero, estado, venta_id, fecha_impresion, tipo_impresion, soporte_impresion, taller_impresion, ubicacion_actual, dimensiones, tipo_enmarcado, tamano_final_enmarcado, notas, precio_venta
+          `SELECT id, tipo, numero, estado, venta_id, fecha_impresion, tipo_impresion, soporte_impresion, taller_impresion, ubicacion_actual, dimensiones, tipo_enmarcado, tamano_final_enmarcado, notas, precio_venta, moneda_venta
            FROM ejemplar WHERE obra_id = ? ORDER BY tipo, indice`,
           [obraId],
         );
@@ -494,7 +495,9 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       const serieLineas: string[] = [];
       serieLineas.push(`${t("ventasReport.colSerie")}: ${ejemplar.numero}`);
       if (ejemplar.precio_venta != null) {
-        serieLineas.push(t("obraDetail.precioVenta", { valor: ejemplar.precio_venta }));
+        serieLineas.push(
+          t("obraDetail.valorSerie", { moneda: ejemplar.moneda_venta ?? "ARS", valor: ejemplar.precio_venta }),
+        );
       }
       if (ejemplar.fecha_impresion) {
         serieLineas.push(`${t("obraDetail.fechaImpresion")}: ${formatFechaDDMMYYYY(ejemplar.fecha_impresion)}`);
@@ -549,12 +552,13 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       tamanoFinalEnmarcado: string;
       notas: string;
       precioVenta: string;
+      monedaVenta: string;
     },
   ) {
     if (!context) return;
     await context.db.transaction(async (tx) => {
       await tx.execute(
-        `UPDATE ejemplar SET estado = ?, fecha_impresion = ?, tipo_impresion = ?, soporte_impresion = ?, taller_impresion = ?, ubicacion_actual = ?, dimensiones = ?, tipo_enmarcado = ?, tamano_final_enmarcado = ?, notas = ?, precio_venta = ? WHERE id = ?`,
+        `UPDATE ejemplar SET estado = ?, fecha_impresion = ?, tipo_impresion = ?, soporte_impresion = ?, taller_impresion = ?, ubicacion_actual = ?, dimensiones = ?, tipo_enmarcado = ?, tamano_final_enmarcado = ?, notas = ?, precio_venta = ?, moneda_venta = ? WHERE id = ?`,
         [
           fields.estado,
           fields.fechaImpresion || null,
@@ -567,6 +571,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
           fields.tamanoFinalEnmarcado || null,
           fields.notas || null,
           fields.precioVenta ? parseFloat(fields.precioVenta) : null,
+          fields.precioVenta ? fields.monedaVenta : null,
           ejemplarId,
         ],
       );
@@ -1398,6 +1403,7 @@ function EjemplarRowView({
     tamanoFinalEnmarcado: string;
     notas: string;
     precioVenta: string;
+    monedaVenta: string;
   }) => void;
   onVender: () => void;
   onEditarVenta: (venta: VentaRow) => void;
@@ -1419,6 +1425,7 @@ function EjemplarRowView({
   const [tamanoFinalEnmarcado, setTamanoFinalEnmarcado] = useState(ejemplar.tamano_final_enmarcado ?? "");
   const [notas, setNotas] = useState(ejemplar.notas ?? "");
   const [precioVenta, setPrecioVenta] = useState(ejemplar.precio_venta != null ? String(ejemplar.precio_venta) : "");
+  const [monedaVenta, setMonedaVenta] = useState(ejemplar.moneda_venta ?? "ARS");
   const permiteEnmarcado = categoria === "Fotografia" || categoria === "Pintura";
   const presupuestoBloqueado = ["vendida", "descartada", "coleccion_autor", "destruida"].includes(ejemplar.estado);
   const [ventaBloqueada, setVentaBloqueada] = useState<string | null>(null);
@@ -1480,30 +1487,18 @@ function EjemplarRowView({
           <span className="field-label">{t("obraDetail.soporteImpresion")}</span>
           <input type="text" value={soporteImpresion} onChange={(e) => setSoporteImpresion(e.target.value)} />
         </label>
+        <label>
+          <span className="field-label">{t("obraDetail.tamanoEjemplarLabel")}</span>
+          <input type="text" value={dimensiones} onChange={(e) => setDimensiones(e.target.value)} />
+        </label>
         {esFotografiaDigital && (
           <label>
             <span className="field-label">{t("obraDetail.tallerImpresionLabel")}</span>
             <input type="text" value={tallerImpresion} onChange={(e) => setTallerImpresion(e.target.value)} />
           </label>
         )}
-        <label>
-          <span className="field-label">{t("obraDetail.ubicacionActualCopia")}</span>
-          <input type="text" value={ubicacionActual} onChange={(e) => setUbicacionActual(e.target.value)} />
-        </label>
-        <label>
-          <span className="field-label">{t("obraDetail.tamanoEjemplarLabel")}</span>
-          <input type="text" value={dimensiones} onChange={(e) => setDimensiones(e.target.value)} />
-        </label>
-        <label>
-          <span className="field-label">{t("obraDetail.precioVentaLabel")}</span>
-          <input type="number" min={0} step="0.01" value={precioVenta} onChange={(e) => setPrecioVenta(e.target.value)} />
-        </label>
         {permiteEnmarcado && (
           <>
-            <label>
-              <span className="field-label">{t("obraDetail.tipoEnmarcadoLabel")}</span>
-              <input type="text" value={tipoEnmarcado} onChange={(e) => setTipoEnmarcado(e.target.value)} />
-            </label>
             <label>
               <span className="field-label">{t("obraDetail.tamanoFinalEnmarcadoLabel")}</span>
               <input
@@ -1512,8 +1507,27 @@ function EjemplarRowView({
                 onChange={(e) => setTamanoFinalEnmarcado(e.target.value)}
               />
             </label>
+            <label>
+              <span className="field-label">{t("obraDetail.tipoEnmarcadoLabel")}</span>
+              <input type="text" value={tipoEnmarcado} onChange={(e) => setTipoEnmarcado(e.target.value)} />
+            </label>
           </>
         )}
+        <label>
+          <span className="field-label">{t("obraDetail.ubicacionActualCopia")}</span>
+          <input type="text" value={ubicacionActual} onChange={(e) => setUbicacionActual(e.target.value)} />
+        </label>
+        <label>
+          <span className="field-label">{t("obraDetail.valorLabel")}</span>
+          <div className="venta-form-valor-row">
+            <select value={monedaVenta} onChange={(e) => setMonedaVenta(e.target.value)}>
+              <option value="ARS">ARS</option>
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+            </select>
+            <input type="number" min={0} step="0.01" value={precioVenta} onChange={(e) => setPrecioVenta(e.target.value)} />
+          </div>
+        </label>
         <label>
           <span className="field-label">{t("obraDetail.notasEjemplarLabel")}</span>
           <textarea rows={2} value={notas} onChange={(e) => setNotas(e.target.value)} />
@@ -1534,6 +1548,7 @@ function EjemplarRowView({
                 tamanoFinalEnmarcado,
                 notas,
                 precioVenta,
+                monedaVenta,
               })
             }
           >
@@ -1564,17 +1579,19 @@ function EjemplarRowView({
       </span>
       {ejemplar.tipo_impresion && <span>{t("obraDetail.tipoImpresion", { valor: ejemplar.tipo_impresion })}</span>}
       {ejemplar.soporte_impresion && <span>{t("common.soporte", { soporte: ejemplar.soporte_impresion })}</span>}
+      {ejemplar.dimensiones && <span>{t("obraDetail.tamanoEjemplar", { valor: ejemplar.dimensiones })}</span>}
       {ejemplar.taller_impresion && (
         <span>{t("obraDetail.tallerImpresion", { valor: ejemplar.taller_impresion })}</span>
       )}
-      {ejemplar.dimensiones && <span>{t("obraDetail.tamanoEjemplar", { valor: ejemplar.dimensiones })}</span>}
-      {ejemplar.tipo_enmarcado && <span>{t("obraDetail.tipoEnmarcado", { valor: ejemplar.tipo_enmarcado })}</span>}
       {ejemplar.tamano_final_enmarcado && (
         <span>{t("obraDetail.tamanoFinalEnmarcado", { valor: ejemplar.tamano_final_enmarcado })}</span>
       )}
+      {ejemplar.tipo_enmarcado && <span>{t("obraDetail.tipoEnmarcado", { valor: ejemplar.tipo_enmarcado })}</span>}
       <span>{t("common.ubicacion", { ubicacion: ejemplar.ubicacion_actual || "—" })}</span>
       {ejemplar.precio_venta != null && (
-        <span>{t("obraDetail.precioVenta", { valor: ejemplar.precio_venta })}</span>
+        <span>
+          {t("obraDetail.valorSerie", { moneda: ejemplar.moneda_venta ?? "ARS", valor: ejemplar.precio_venta })}
+        </span>
       )}
 
       {venta && (

@@ -231,6 +231,8 @@ export const en: Record<keyof typeof es, string> = {
   // PersonalProfileForm
   "profile.tituloMisDatos": "My info — Galeris Studio",
   "profile.fotoAlt": "Owner's photo",
+  "profile.logo": "Personal logo",
+  "profile.logoAlt": "Personal logo",
   "profile.contactoLegend": "Contact",
   "profile.mail": "Email",
   "profile.paginaWeb": "Website",
@@ -250,6 +252,8 @@ export const en: Record<keyof typeof es, string> = {
   "galeriaProfile.datosGuardados": "Gallery details saved successfully.",
   "galeriaProfile.salirBloqueado": "There are unsaved changes. Save them with \"Save gallery details\" before going back.",
   "galeriaProfile.volver": "Back",
+  "galeriaProfile.logo": "Gallery logo",
+  "galeriaProfile.logoAlt": "Gallery logo",
 
   // ObrasList
   "obrasList.title": "Artworks",
@@ -372,8 +376,8 @@ export const en: Record<keyof typeof es, string> = {
   "obraDetail.ubicacionActualCopia": "Current location of this copy",
   "obraDetail.tamanoEjemplarLabel": "Size (mm)",
   "obraDetail.tamanoEjemplar": "Size: {{valor}}",
-  "obraDetail.precioVentaLabel": "Sale amount",
-  "obraDetail.precioVenta": "Amount: {{valor}}",
+  "obraDetail.valorLabel": "Value",
+  "obraDetail.valorSerie": "Value: {{moneda}} {{valor}}",
   "obraDetail.tipoEnmarcadoLabel": "Frame type",
   "obraDetail.tipoEnmarcado": "Frame: {{valor}}",
   "obraDetail.tamanoFinalEnmarcadoLabel": "Final size framed (mm)",

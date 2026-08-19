@@ -12,6 +12,7 @@ export interface Artista {
   x: string | null;
   facebook: string | null;
   fotoPath: string | null;
+  logoPath: string | null;
   notas: string | null;
   fechaNacimiento: string | null;
   bio: string | null;
@@ -31,6 +32,7 @@ export interface NuevoArtista {
   x?: string | null;
   facebook?: string | null;
   fotoPath?: string | null;
+  logoPath?: string | null;
   notas?: string | null;
   fechaNacimiento?: string | null;
   bio?: string | null;

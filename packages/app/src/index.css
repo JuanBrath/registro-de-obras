@@ -54,7 +54,7 @@ optgroup {
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --text: #9ca3af;
-    --text-h: #f3f4f6;
+    --text-h: #c3c6cf;
     --bg: #16171d;
     --bg-panel: #1e1f27;
     --border: #2e303a;
@@ -82,7 +82,7 @@ optgroup {
    prioridad por sobre la preferencia del sistema operativo. */
 :root[data-theme="dark"] {
   --text: #9ca3af;
-  --text-h: #f3f4f6;
+  --text-h: #c3c6cf;
   --bg: #16171d;
   --bg-panel: #1e1f27;
   --border: #2e303a;
