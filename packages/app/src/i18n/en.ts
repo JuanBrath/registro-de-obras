@@ -284,6 +284,7 @@ export const en: Record<keyof typeof es, string> = {
   "galeria.ningunaConEtiqueta": "No photo has that tag.",
   "galeria.anterior": "Previous",
   "galeria.siguiente": "Next",
+  "galeria.verInfo": "View artwork info",
   "galeria.todosArtistas": "All artists",
   "galeria.todasCategorias": "All categories",
   "galeria.todosSubtipos": "All",

@@ -62,6 +62,7 @@ export function GaleriaFotos({ onBack }: { onBack: () => void }) {
   const [selectedSubtipo, setSelectedSubtipo] = useState<string | null>(null);
   const [soloMarcadas, setSoloMarcadas] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [mostrarInfo, setMostrarInfo] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [loadingLightbox, setLoadingLightbox] = useState(false);
   const objectUrlsRef = useRef<string[]>([]);
@@ -262,16 +263,19 @@ export function GaleriaFotos({ onBack }: { onBack: () => void }) {
   function closeLightbox() {
     setLightboxIndex(null);
     setLightboxUrl(null);
+    setMostrarInfo(false);
   }
 
   function showNext() {
     setLightboxIndex((i) => (i === null || filteredFotos.length === 0 ? null : (i + 1) % filteredFotos.length));
+    setMostrarInfo(false);
   }
 
   function showPrev() {
     setLightboxIndex((i) =>
       i === null || filteredFotos.length === 0 ? null : (i - 1 + filteredFotos.length) % filteredFotos.length,
     );
+    setMostrarInfo(false);
   }
 
   if (!context) return null;
@@ -440,8 +444,19 @@ export function GaleriaFotos({ onBack }: { onBack: () => void }) {
                 </button>
               )}
               {filteredFotos[lightboxIndex]?.titulo} — {lightboxIndex + 1} / {filteredFotos.length}
+              {filteredFotos[lightboxIndex] && (
+                <button
+                  type="button"
+                  className={`lightbox-info-button${mostrarInfo ? " activo" : ""}`}
+                  onClick={() => setMostrarInfo((prev) => !prev)}
+                  aria-label={t("galeria.verInfo")}
+                  title={t("galeria.verInfo")}
+                >
+                  ⓘ
+                </button>
+              )}
             </p>
-            {filteredFotos[lightboxIndex] && (
+            {mostrarInfo && filteredFotos[lightboxIndex] && (
               <div className="lightbox-info">
                 {filteredFotos[lightboxIndex].nombre_completo && (
                   <span>{filteredFotos[lightboxIndex].nombre_completo}</span>

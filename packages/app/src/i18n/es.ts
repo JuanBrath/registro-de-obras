@@ -281,6 +281,7 @@ export const es = {
   "galeria.ningunaConEtiqueta": "Ninguna foto tiene esa etiqueta.",
   "galeria.anterior": "Anterior",
   "galeria.siguiente": "Siguiente",
+  "galeria.verInfo": "Ver información de la obra",
   "galeria.todosArtistas": "Todos los artistas",
   "galeria.todasCategorias": "Todas las categorías",
   "galeria.todosSubtipos": "Todos",
