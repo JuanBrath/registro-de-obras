@@ -157,6 +157,7 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
       "0032_ejemplar_precio_venta",
       "0033_ejemplar_moneda_venta",
       "0034_logos",
+      "0035_cuit",
     ]);
   });
 

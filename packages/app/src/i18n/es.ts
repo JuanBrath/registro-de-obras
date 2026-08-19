@@ -25,6 +25,7 @@ export const es = {
   "common.remove": "Quitar",
   "common.abrirEnlace": "Abrir enlace",
   "common.settings": "Configuración",
+  "common.cuit": "CUIT",
   "common.venta": "Venta",
   "common.reserva": "Reserva",
   "common.donacion": "Donación",
@@ -243,7 +244,7 @@ export const es = {
   "profile.errorCrearTitular": "No se pudo crear el titular",
 
   // GaleriaProfileForm
-  "galeriaProfile.titulo": "Datos de la galería",
+  "galeriaProfile.titulo": "Mi Galería",
   "galeriaProfile.nombreLabel": "Nombre de la galería",
   "galeriaProfile.guardar": "Guardar datos de la galería",
   "galeriaProfile.datosGuardados": "Datos de la galería guardados correctamente.",

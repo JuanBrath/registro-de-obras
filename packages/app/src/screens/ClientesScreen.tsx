@@ -11,6 +11,7 @@ interface ClienteRow {
   nombre: string;
   email: string | null;
   telefono: string | null;
+  cuit: string | null;
   notas: string | null;
 }
 
@@ -18,6 +19,7 @@ export interface ClienteFields {
   nombre: string;
   email: string;
   telefono: string;
+  cuit: string;
   notas: string;
 }
 
@@ -33,6 +35,7 @@ export function ClientesScreen({ onBack }: { onBack: () => void }) {
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [telefono, setTelefono] = useState("");
+  const [cuit, setCuit] = useState("");
   const [notas, setNotas] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -44,6 +47,7 @@ export function ClientesScreen({ onBack }: { onBack: () => void }) {
     setNombre("");
     setEmail("");
     setTelefono("");
+    setCuit("");
     setNotas("");
     setFormError(null);
   }
@@ -54,7 +58,7 @@ export function ClientesScreen({ onBack }: { onBack: () => void }) {
     setError(null);
     try {
       const rows = await context.db.query<ClienteRow>(
-        "SELECT id, nombre, email, telefono, notas FROM cliente ORDER BY nombre",
+        "SELECT id, nombre, email, telefono, cuit, notas FROM cliente ORDER BY nombre",
       );
       setClientes(rows);
     } catch (err) {
@@ -74,10 +78,11 @@ export function ClientesScreen({ onBack }: { onBack: () => void }) {
     setSubmitting(true);
     setFormError(null);
     try {
-      await context!.db.execute(`INSERT INTO cliente (nombre, email, telefono, notas) VALUES (?, ?, ?, ?)`, [
+      await context!.db.execute(`INSERT INTO cliente (nombre, email, telefono, cuit, notas) VALUES (?, ?, ?, ?, ?)`, [
         nombre,
         email || null,
         telefono || null,
+        cuit || null,
         notas || null,
       ]);
       resetForm();
@@ -115,10 +120,11 @@ export function ClientesScreen({ onBack }: { onBack: () => void }) {
 
   async function handleUpdateCliente(id: number, fields: ClienteFields) {
     if (!context) return;
-    await context.db.execute(`UPDATE cliente SET nombre = ?, email = ?, telefono = ?, notas = ? WHERE id = ?`, [
+    await context.db.execute(`UPDATE cliente SET nombre = ?, email = ?, telefono = ?, cuit = ?, notas = ? WHERE id = ?`, [
       fields.nombre,
       fields.email || null,
       fields.telefono || null,
+      fields.cuit || null,
       fields.notas || null,
       id,
     ]);
@@ -167,6 +173,11 @@ export function ClientesScreen({ onBack }: { onBack: () => void }) {
           <label>
             <span className="field-label">{t("artistas.telefono")}</span>
             <input type="tel" value={telefono} onChange={(e) => setTelefono(e.target.value)} />
+          </label>
+
+          <label>
+            <span className="field-label">{t("common.cuit")}</span>
+            <input type="text" value={cuit} onChange={(e) => setCuit(e.target.value)} />
           </label>
 
           <label>
@@ -260,13 +271,14 @@ function ClienteRowView({
   const [nombre, setNombre] = useState(cliente.nombre);
   const [email, setEmail] = useState(cliente.email ?? "");
   const [telefono, setTelefono] = useState(cliente.telefono ?? "");
+  const [cuit, setCuit] = useState(cliente.cuit ?? "");
   const [notas, setNotas] = useState(cliente.notas ?? "");
 
   async function handleGuardar() {
     setSaving(true);
     setError(null);
     try {
-      await onSave({ nombre, email, telefono, notas });
+      await onSave({ nombre, email, telefono, cuit, notas });
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -299,6 +311,10 @@ function ClienteRowView({
         <label>
           <span className="field-label">{t("artistas.telefono")}</span>
           <input type="tel" value={telefono} onChange={(e) => setTelefono(e.target.value)} />
+        </label>
+        <label>
+          <span className="field-label">{t("common.cuit")}</span>
+          <input type="text" value={cuit} onChange={(e) => setCuit(e.target.value)} />
         </label>
         <label>
           <span className="field-label">{t("artistas.notas")}</span>
@@ -334,6 +350,7 @@ function ClienteRowView({
           <a href={`tel:${cliente.telefono}`}>{cliente.telefono}</a>
         </span>
       )}
+      {cliente.cuit && <span>{t("common.cuit")}: {cliente.cuit}</span>}
       {cliente.notas && <span>{cliente.notas}</span>}
       <div className="obra-form-saved-actions">
         <button type="button" onClick={onStartEdit}>

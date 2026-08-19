@@ -31,6 +31,7 @@ import { migration0031Cliente } from "./0031_cliente.js";
 import { migration0032EjemplarPrecioVenta } from "./0032_ejemplar_precio_venta.js";
 import { migration0033EjemplarMonedaVenta } from "./0033_ejemplar_moneda_venta.js";
 import { migration0034Logos } from "./0034_logos.js";
+import { migration0035Cuit } from "./0035_cuit.js";
 
 export interface Migration {
   name: string;
@@ -193,4 +194,5 @@ export const ALL_MIGRATIONS: Migration[] = [
   migration0032EjemplarPrecioVenta,
   migration0033EjemplarMonedaVenta,
   migration0034Logos,
+  migration0035Cuit,
 ];

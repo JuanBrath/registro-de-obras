@@ -18,7 +18,34 @@ interface FotoRow {
   subtipo_fotografia: string | null;
   subtipo_pintura: string | null;
   marcada: number;
+  estado: string;
+  es_seriada: number;
+  total_ejemplares: number;
+  ejemplares_disponible: number;
+  ejemplares_en_stock: number;
+  ejemplares_exhibicion: number;
+  ejemplares_reservada: number;
+  ejemplares_vendida: number;
+  ejemplares_consignacion: number;
+  ejemplares_en_produccion: number;
+  ejemplares_coleccion_autor: number;
+  ejemplares_descartada: number;
+  ejemplares_destruida: number;
 }
+
+// Mismo criterio que ObrasList: "disponible" ya lo cubre la fraccion
+// "X/Y disponibles", asi que no se repite como fragmento aparte.
+const FRAGMENTOS_ESTADO: { estado: string; key: TranslationKey; campo: keyof FotoRow }[] = [
+  { estado: "en_stock", key: "obrasList.fragmentoEnStock", campo: "ejemplares_en_stock" },
+  { estado: "exhibicion", key: "obrasList.fragmentoExhibicion", campo: "ejemplares_exhibicion" },
+  { estado: "reservada", key: "obrasList.fragmentoReservadas", campo: "ejemplares_reservada" },
+  { estado: "consignacion", key: "obrasList.fragmentoConsignacion", campo: "ejemplares_consignacion" },
+  { estado: "en_produccion", key: "obrasList.fragmentoEnProduccion", campo: "ejemplares_en_produccion" },
+  { estado: "coleccion_autor", key: "obrasList.fragmentoColeccionAutor", campo: "ejemplares_coleccion_autor" },
+  { estado: "vendida", key: "obrasList.fragmentoVendidas", campo: "ejemplares_vendida" },
+  { estado: "descartada", key: "obrasList.fragmentoDescartadas", campo: "ejemplares_descartada" },
+  { estado: "destruida", key: "obrasList.fragmentoDestruidas", campo: "ejemplares_destruida" },
+];
 
 export function GaleriaFotos({ onBack }: { onBack: () => void }) {
   const { context } = useWorkspace();
@@ -50,13 +77,27 @@ export function GaleriaFotos({ onBack }: { onBack: () => void }) {
       try {
         const rows = await context!.db.query<FotoRow>(
           `SELECT obra.id, obra.titulo, obra.miniatura_path, obra.imagen_alta_resolucion_path, obra.tags, obra.artista_id,
-                  obra.categoria_obra, obra.marcada, artista.nombre_completo,
-                  obra_fotografia.subtipo_fotografia, obra_pintura.subtipo_pintura
+                  obra.categoria_obra, obra.marcada, obra.estado, obra.es_seriada, artista.nombre_completo,
+                  obra_fotografia.subtipo_fotografia, obra_pintura.subtipo_pintura,
+                  COUNT(CASE WHEN ejemplar.tipo = 'edicion' THEN ejemplar.id END) as total_ejemplares,
+                  SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'disponible' THEN 1 ELSE 0 END) as ejemplares_disponible,
+                  SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'en_stock' THEN 1 ELSE 0 END) as ejemplares_en_stock,
+                  SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'exhibicion' THEN 1 ELSE 0 END) as ejemplares_exhibicion,
+                  SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'reservada' THEN 1 ELSE 0 END) as ejemplares_reservada,
+                  SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'vendida' THEN 1 ELSE 0 END) as ejemplares_vendida,
+                  SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'consignacion' THEN 1 ELSE 0 END) as ejemplares_consignacion,
+                  SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'en_produccion' THEN 1 ELSE 0 END) as ejemplares_en_produccion,
+                  SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'coleccion_autor' THEN 1 ELSE 0 END) as ejemplares_coleccion_autor,
+                  SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'descartada' THEN 1 ELSE 0 END) as ejemplares_descartada,
+                  SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'destruida' THEN 1 ELSE 0 END) as ejemplares_destruida
            FROM obra
            LEFT JOIN artista ON artista.id = obra.artista_id
            LEFT JOIN obra_fotografia ON obra_fotografia.obra_id = obra.id
            LEFT JOIN obra_pintura ON obra_pintura.obra_id = obra.id
-           WHERE obra.miniatura_path IS NOT NULL ORDER BY obra.titulo COLLATE NOCASE ASC`,
+           LEFT JOIN ejemplar ON ejemplar.obra_id = obra.id
+           WHERE obra.miniatura_path IS NOT NULL
+           GROUP BY obra.id
+           ORDER BY obra.titulo COLLATE NOCASE ASC`,
         );
         if (cancelled) return;
         setFotos(rows);
@@ -400,6 +441,48 @@ export function GaleriaFotos({ onBack }: { onBack: () => void }) {
               )}
               {filteredFotos[lightboxIndex]?.titulo} — {lightboxIndex + 1} / {filteredFotos.length}
             </p>
+            {filteredFotos[lightboxIndex] && (
+              <div className="lightbox-info">
+                {filteredFotos[lightboxIndex].nombre_completo && (
+                  <span>{filteredFotos[lightboxIndex].nombre_completo}</span>
+                )}
+                <span>
+                  {t(`categoria.${filteredFotos[lightboxIndex].categoria_obra}` as TranslationKey)}
+                  {" — "}
+                  {Number(filteredFotos[lightboxIndex].es_seriada) === 1
+                    ? t("obrasList.seriada")
+                    : t("obrasList.unica")}
+                </span>
+                {Number(filteredFotos[lightboxIndex].es_seriada) === 1 ? (
+                  (() => {
+                    const foto = filteredFotos[lightboxIndex];
+                    const disponibles = Number(foto.ejemplares_disponible) || 0;
+                    const total = Number(foto.total_ejemplares) || 0;
+                    const claseDisponibles = disponibles > 0 ? "disponible" : "vendida";
+                    return (
+                      <>
+                        <span className={`obra-card-estado obra-card-estado-${claseDisponibles}`}>
+                          {t("obrasList.fraccionDisponibles", { disponibles, total })}
+                        </span>
+                        {FRAGMENTOS_ESTADO.map(({ estado, key, campo }) => {
+                          const n = Number(foto[campo]) || 0;
+                          if (n === 0) return null;
+                          return (
+                            <span key={estado} className={`obra-card-estado obra-card-estado-${estado}`}>
+                              {t(key, { n })}
+                            </span>
+                          );
+                        })}
+                      </>
+                    );
+                  })()
+                ) : (
+                  <span className={`obra-card-estado obra-card-estado-${filteredFotos[lightboxIndex].estado}`}>
+                    {t(`estado.${filteredFotos[lightboxIndex].estado}` as TranslationKey)}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </Modal>
       )}

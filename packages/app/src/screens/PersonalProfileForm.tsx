@@ -27,6 +27,7 @@ export function PersonalProfileForm({ onExit, onCancel }: { onExit: () => void; 
   const [direccion, setDireccion] = useState(existing?.direccion ?? "");
   const [x, setX] = useState(existing?.x ?? "");
   const [facebook, setFacebook] = useState(existing?.facebook ?? "");
+  const [cuit, setCuit] = useState(existing?.cuit ?? "");
   const [notas, setNotas] = useState(existing?.notas ?? "");
   const [fotoFile, setFotoFile] = useState<File | null>(null);
   const [fotoPreviewUrl, setFotoPreviewUrl] = useState<string | null>(null);
@@ -62,6 +63,7 @@ export function PersonalProfileForm({ onExit, onCancel }: { onExit: () => void; 
     direccion !== (existing?.direccion ?? "") ||
     x !== (existing?.x ?? "") ||
     facebook !== (existing?.facebook ?? "") ||
+    cuit !== (existing?.cuit ?? "") ||
     fotoFile !== null ||
     logoFile !== null;
 
@@ -133,7 +135,7 @@ export function PersonalProfileForm({ onExit, onCancel }: { onExit: () => void; 
       if (existing) {
         artistaId = existing.id;
         await db.execute(
-          `UPDATE artista SET nombre_completo = ?, fecha_nacimiento = ?, bio = ?, email = ?, telefono = ?, web = ?, instagram = ?, direccion = ?, x = ?, facebook = ?, notas = ? WHERE id = ?`,
+          `UPDATE artista SET nombre_completo = ?, fecha_nacimiento = ?, bio = ?, email = ?, telefono = ?, web = ?, instagram = ?, direccion = ?, x = ?, facebook = ?, cuit = ?, notas = ? WHERE id = ?`,
           [
             nombreCompleto,
             fechaNacimiento || null,
@@ -145,13 +147,14 @@ export function PersonalProfileForm({ onExit, onCancel }: { onExit: () => void; 
             direccion || null,
             x || null,
             facebook || null,
+            cuit || null,
             notas || null,
             existing.id,
           ],
         );
       } else {
         const result = await db.execute(
-          `INSERT INTO artista (nombre_completo, es_propio, fecha_nacimiento, bio, email, telefono, web, instagram, direccion, x, facebook, notas) VALUES (?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO artista (nombre_completo, es_propio, fecha_nacimiento, bio, email, telefono, web, instagram, direccion, x, facebook, cuit, notas) VALUES (?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             nombreCompleto,
             fechaNacimiento || null,
@@ -163,6 +166,7 @@ export function PersonalProfileForm({ onExit, onCancel }: { onExit: () => void; 
             direccion || null,
             x || null,
             facebook || null,
+            cuit || null,
             notas || null,
           ],
         );
@@ -261,6 +265,7 @@ export function PersonalProfileForm({ onExit, onCancel }: { onExit: () => void; 
       if (facebook) lineas.push(`${t("artistas.facebook")}: ${facebook}`);
       if (x) lineas.push(`${t("artistas.x")}: ${x}`);
       if (direccion) lineas.push(`${t("artistas.direccion")}: ${direccion}`);
+      if (cuit) lineas.push(`${t("common.cuit")}: ${cuit}`);
       for (const linea of lineas) {
         textY = writeWrappedText(doc, linea, textX, textY, textWidth);
       }
@@ -337,6 +342,10 @@ export function PersonalProfileForm({ onExit, onCancel }: { onExit: () => void; 
         <label>
           {t("artistas.direccion")}
           <input type="text" value={direccion} onChange={(e) => setDireccion(e.target.value)} />
+        </label>
+        <label>
+          {t("common.cuit")}
+          <input type="text" value={cuit} onChange={(e) => setCuit(e.target.value)} />
         </label>
         <label>
           {t("profile.paginaWeb")}

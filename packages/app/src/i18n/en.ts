@@ -27,6 +27,7 @@ export const en: Record<keyof typeof es, string> = {
   "common.remove": "Remove",
   "common.abrirEnlace": "Open link",
   "common.settings": "Settings",
+  "common.cuit": "CUIT",
   "common.venta": "Sale",
   "common.reserva": "Reservation",
   "common.donacion": "Donation",
@@ -246,7 +247,7 @@ export const en: Record<keyof typeof es, string> = {
   "profile.errorCrearTitular": "Could not create the owner",
 
   // GaleriaProfileForm
-  "galeriaProfile.titulo": "Gallery details",
+  "galeriaProfile.titulo": "My Gallery",
   "galeriaProfile.nombreLabel": "Gallery name",
   "galeriaProfile.guardar": "Save gallery details",
   "galeriaProfile.datosGuardados": "Gallery details saved successfully.",

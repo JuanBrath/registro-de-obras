@@ -3,6 +3,7 @@ export interface Cliente {
   nombre: string;
   email: string | null;
   telefono: string | null;
+  cuit: string | null;
   notas: string | null;
   fechaAltaSistema: string;
 }
@@ -11,5 +12,6 @@ export interface NuevoCliente {
   nombre: string;
   email?: string | null;
   telefono?: string | null;
+  cuit?: string | null;
   notas?: string | null;
 }

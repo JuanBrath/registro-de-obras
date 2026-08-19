@@ -21,6 +21,7 @@ interface GaleriaPerfilRow {
   x: string | null;
   notas: string | null;
   logo_path: string | null;
+  cuit: string | null;
 }
 
 export function GaleriaProfileForm({ onBack }: { onBack: () => void }) {
@@ -38,6 +39,7 @@ export function GaleriaProfileForm({ onBack }: { onBack: () => void }) {
   const [facebook, setFacebook] = useState("");
   const [x, setX] = useState("");
   const [notas, setNotas] = useState("");
+  const [cuit, setCuit] = useState("");
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
   const logoObjectUrlRef = useRef<string | null>(null);
@@ -63,6 +65,7 @@ export function GaleriaProfileForm({ onBack }: { onBack: () => void }) {
     facebook !== (existing?.facebook ?? "") ||
     x !== (existing?.x ?? "") ||
     notas !== (existing?.notas ?? "") ||
+    cuit !== (existing?.cuit ?? "") ||
     logoFile !== null;
 
   useEffect(() => {
@@ -70,7 +73,7 @@ export function GaleriaProfileForm({ onBack }: { onBack: () => void }) {
     setLoading(true);
     context.db
       .query<GaleriaPerfilRow>(
-        `SELECT nombre, direccion, telefono, email, web, instagram, facebook, x, notas, logo_path FROM galeria_perfil WHERE id = 1`,
+        `SELECT nombre, direccion, telefono, email, web, instagram, facebook, x, notas, logo_path, cuit FROM galeria_perfil WHERE id = 1`,
       )
       .then((rows) => {
         const row = rows[0] ?? null;
@@ -84,6 +87,7 @@ export function GaleriaProfileForm({ onBack }: { onBack: () => void }) {
         setFacebook(row?.facebook ?? "");
         setX(row?.x ?? "");
         setNotas(row?.notas ?? "");
+        setCuit(row?.cuit ?? "");
         if (row?.logo_path) {
           context.fs
             .readFile(row.logo_path)
@@ -124,8 +128,19 @@ export function GaleriaProfileForm({ onBack }: { onBack: () => void }) {
     setSalirBloqueadoMensaje(null);
     try {
       await context!.db.execute(
-        `UPDATE galeria_perfil SET nombre = ?, direccion = ?, telefono = ?, email = ?, web = ?, instagram = ?, facebook = ?, x = ?, notas = ? WHERE id = 1`,
-        [nombre, direccion || null, telefono || null, email || null, web || null, instagram || null, facebook || null, x || null, notas || null],
+        `UPDATE galeria_perfil SET nombre = ?, direccion = ?, telefono = ?, email = ?, web = ?, instagram = ?, facebook = ?, x = ?, notas = ?, cuit = ? WHERE id = 1`,
+        [
+          nombre,
+          direccion || null,
+          telefono || null,
+          email || null,
+          web || null,
+          instagram || null,
+          facebook || null,
+          x || null,
+          notas || null,
+          cuit || null,
+        ],
       );
 
       let logoPath = existing?.logo_path ?? null;
@@ -137,7 +152,7 @@ export function GaleriaProfileForm({ onBack }: { onBack: () => void }) {
         await context!.db.execute(`UPDATE galeria_perfil SET logo_path = ? WHERE id = 1`, [logoPath]);
       }
 
-      setExisting({ nombre, direccion, telefono, email, web, instagram, facebook, x, notas, logo_path: logoPath });
+      setExisting({ nombre, direccion, telefono, email, web, instagram, facebook, x, notas, logo_path: logoPath, cuit });
       setLogoFile(null);
       setGuardadoMensaje(t("galeriaProfile.datosGuardados"));
     } catch (err) {
@@ -169,6 +184,7 @@ export function GaleriaProfileForm({ onBack }: { onBack: () => void }) {
 
       const lineas: string[] = [];
       if (direccion) lineas.push(`${t("artistas.direccion")}: ${direccion}`);
+      if (cuit) lineas.push(`${t("common.cuit")}: ${cuit}`);
       if (email) lineas.push(`${t("profile.mail")}: ${email}`);
       if (telefono) lineas.push(`${t("artistas.telefono")}: ${telefono}`);
       if (web) lineas.push(`${t("profile.paginaWeb")}: ${web}`);
@@ -234,6 +250,10 @@ export function GaleriaProfileForm({ onBack }: { onBack: () => void }) {
         <label>
           {t("artistas.direccion")}
           <input type="text" value={direccion} onChange={(e) => setDireccion(e.target.value)} />
+        </label>
+        <label>
+          {t("common.cuit")}
+          <input type="text" value={cuit} onChange={(e) => setCuit(e.target.value)} />
         </label>
         <label>
           {t("profile.paginaWeb")}

@@ -38,13 +38,13 @@ export function WorkspaceHome({
           </button>
         )}
         {!esRegistroPersonal && (
-          <button type="button" onClick={onArtistas}>
-            {t("workspaceHome.artistas")}
+          <button type="button" onClick={onGaleriaPerfil}>
+            {t("galeriaProfile.titulo")}
           </button>
         )}
         {!esRegistroPersonal && (
-          <button type="button" onClick={onGaleriaPerfil}>
-            {t("galeriaProfile.titulo")}
+          <button type="button" onClick={onArtistas}>
+            {t("workspaceHome.artistas")}
           </button>
         )}
         <button type="button" onClick={onVerObras}>

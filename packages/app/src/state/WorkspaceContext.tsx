@@ -42,6 +42,7 @@ interface ArtistaRow {
   facebook: string | null;
   foto_path: string | null;
   logo_path: string | null;
+  cuit: string | null;
   notas: string | null;
   fecha_nacimiento: string | null;
   bio: string | null;
@@ -64,6 +65,7 @@ function mapArtistaRow(row: ArtistaRow): Artista {
     facebook: row.facebook,
     fotoPath: row.foto_path,
     logoPath: row.logo_path,
+    cuit: row.cuit,
     notas: row.notas,
     fechaNacimiento: row.fecha_nacimiento,
     bio: row.bio,

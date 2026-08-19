@@ -526,6 +526,16 @@ input[type="date"] {
   font-weight: 600;
 }
 
+.lightbox-info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
 .lightbox-arrow {
   position: absolute;
   top: 50%;
