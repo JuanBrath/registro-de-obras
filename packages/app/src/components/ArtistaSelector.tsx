@@ -96,7 +96,7 @@ export function ArtistaSelector({
         </select>
 
         {!addingNew && (
-          <button type="button" className="link-button" onClick={() => setAddingNew(true)}>
+          <button type="button" onClick={() => setAddingNew(true)}>
             {t("artistaSelector.nuevoArtista")}
           </button>
         )}

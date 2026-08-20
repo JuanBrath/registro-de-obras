@@ -44,6 +44,16 @@ describe("generarEjemplares", () => {
     expect(() => generarEjemplares(-1)).toThrow();
     expect(() => generarEjemplares(1.5)).toThrow();
   });
+
+  it("permite indicar una cantidad de pruebas de artista explicita, en vez del 10% automatico", () => {
+    const conCero = generarEjemplares(12, 0);
+    expect(conCero.filter((e) => e.tipo === "prueba_artista")).toHaveLength(0);
+
+    const conCinco = generarEjemplares(12, 5);
+    const pruebasArtista = conCinco.filter((e) => e.tipo === "prueba_artista");
+    expect(pruebasArtista).toHaveLength(5);
+    expect(pruebasArtista[4].numero).toBe("PA 5/5");
+  });
 });
 
 describe("generarEjemplarUnico", () => {

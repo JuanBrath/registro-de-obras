@@ -5,6 +5,8 @@ import { bytesToObjectUrl } from "../utils/imageObjectUrl.js";
 import { Modal } from "../components/Modal.js";
 import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
+import type { ObrasListFiltros } from "./ObrasList.js";
+import { subtipoTranslationKey } from "./fields/ObraDetalleFields.js";
 
 interface FotoRow {
   id: number;
@@ -16,7 +18,7 @@ interface FotoRow {
   nombre_completo: string | null;
   categoria_obra: CategoriaObra;
   subtipo_fotografia: string | null;
-  subtipo_pintura: string | null;
+  subtipo: string | null;
   marcada: number;
   estado: string;
   es_seriada: number;
@@ -47,7 +49,13 @@ const FRAGMENTOS_ESTADO: { estado: string; key: TranslationKey; campo: keyof Fot
   { estado: "destruida", key: "obrasList.fragmentoDestruidas", campo: "ejemplares_destruida" },
 ];
 
-export function GaleriaFotos({ onBack }: { onBack: () => void }) {
+export function GaleriaFotos({
+  onBack,
+  filtrosIniciales,
+}: {
+  onBack: () => void;
+  filtrosIniciales?: ObrasListFiltros;
+}) {
   const { context } = useWorkspace();
   const { t } = useLanguage();
   const esGaleria = context?.workspace === "galeria";
@@ -56,11 +64,13 @@ export function GaleriaFotos({ onBack }: { onBack: () => void }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   useEscapeToDismiss(error, setError);
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  const [selectedArtistaId, setSelectedArtistaId] = useState<number | null>(null);
-  const [selectedCategoria, setSelectedCategoria] = useState<CategoriaObra | null>(null);
-  const [selectedSubtipo, setSelectedSubtipo] = useState<string | null>(null);
-  const [soloMarcadas, setSoloMarcadas] = useState(false);
+  const [selectedTag, setSelectedTag] = useState<string | null>(filtrosIniciales?.selectedTag ?? null);
+  const [selectedArtistaId, setSelectedArtistaId] = useState<number | null>(filtrosIniciales?.selectedArtistaId ?? null);
+  const [selectedCategoria, setSelectedCategoria] = useState<CategoriaObra | null>(
+    filtrosIniciales?.selectedCategoria ?? null,
+  );
+  const [selectedSubtipo, setSelectedSubtipo] = useState<string | null>(filtrosIniciales?.selectedSubtipo ?? null);
+  const [soloMarcadas, setSoloMarcadas] = useState(filtrosIniciales?.soloMarcadas ?? false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [mostrarInfo, setMostrarInfo] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
@@ -79,7 +89,7 @@ export function GaleriaFotos({ onBack }: { onBack: () => void }) {
         const rows = await context!.db.query<FotoRow>(
           `SELECT obra.id, obra.titulo, obra.miniatura_path, obra.imagen_alta_resolucion_path, obra.tags, obra.artista_id,
                   obra.categoria_obra, obra.marcada, obra.estado, obra.es_seriada, artista.nombre_completo,
-                  obra_fotografia.subtipo_fotografia, obra_pintura.subtipo_pintura,
+                  obra_fotografia.subtipo_fotografia, obra_detalle.subtipo,
                   COUNT(CASE WHEN ejemplar.tipo = 'edicion' THEN ejemplar.id END) as total_ejemplares,
                   SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'disponible' THEN 1 ELSE 0 END) as ejemplares_disponible,
                   SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'en_stock' THEN 1 ELSE 0 END) as ejemplares_en_stock,
@@ -94,7 +104,7 @@ export function GaleriaFotos({ onBack }: { onBack: () => void }) {
            FROM obra
            LEFT JOIN artista ON artista.id = obra.artista_id
            LEFT JOIN obra_fotografia ON obra_fotografia.obra_id = obra.id
-           LEFT JOIN obra_pintura ON obra_pintura.obra_id = obra.id
+           LEFT JOIN obra_detalle ON obra_detalle.obra_id = obra.id
            LEFT JOIN ejemplar ON ejemplar.obra_id = obra.id
            WHERE obra.miniatura_path IS NOT NULL
            GROUP BY obra.id
@@ -155,14 +165,12 @@ export function GaleriaFotos({ onBack }: { onBack: () => void }) {
   }, [fotos]);
 
   const allSubtipos = useMemo(() => {
-    const map = new Map<string, { categoria: "Fotografia" | "Pintura"; subtipo: string }>();
+    const map = new Map<string, { categoria: CategoriaObra; subtipo: string }>();
     for (const foto of fotos) {
       if (selectedCategoria && foto.categoria_obra !== selectedCategoria) continue;
-      if (foto.subtipo_fotografia) {
-        map.set(`Fotografia:${foto.subtipo_fotografia}`, { categoria: "Fotografia", subtipo: foto.subtipo_fotografia });
-      }
-      if (foto.subtipo_pintura) {
-        map.set(`Pintura:${foto.subtipo_pintura}`, { categoria: "Pintura", subtipo: foto.subtipo_pintura });
+      const subtipoValor = foto.categoria_obra === "Fotografia" ? foto.subtipo_fotografia : foto.subtipo;
+      if (subtipoValor) {
+        map.set(`${foto.categoria_obra}:${subtipoValor}`, { categoria: foto.categoria_obra, subtipo: subtipoValor });
       }
     }
     return Array.from(map.values()).sort((a, b) => a.subtipo.localeCompare(b.subtipo));
@@ -174,10 +182,8 @@ export function GaleriaFotos({ onBack }: { onBack: () => void }) {
         const tagMatch = selectedTag === null || parseTags(f.tags).includes(selectedTag);
         const artistaMatch = !esGaleria || selectedArtistaId === null || f.artista_id === selectedArtistaId;
         const categoriaMatch = selectedCategoria === null || f.categoria_obra === selectedCategoria;
-        const subtipoMatch =
-          selectedSubtipo === null ||
-          f.subtipo_fotografia === selectedSubtipo ||
-          f.subtipo_pintura === selectedSubtipo;
+        const subtipoValor = f.categoria_obra === "Fotografia" ? f.subtipo_fotografia : f.subtipo;
+        const subtipoMatch = selectedSubtipo === null || subtipoValor === selectedSubtipo;
         const marcadaMatch = !soloMarcadas || f.marcada !== 0;
         return tagMatch && artistaMatch && categoriaMatch && subtipoMatch && marcadaMatch;
       }),
@@ -285,11 +291,6 @@ export function GaleriaFotos({ onBack }: { onBack: () => void }) {
       <div className="obras-list-header">
         <h1>{t("galeria.title")}</h1>
         <div className="header-actions">
-          {hayMarcadas && (
-            <button type="button" onClick={handleDesmarcarTodas}>
-              {t("galeria.desmarcarTodas")}
-            </button>
-          )}
           <button type="button" onClick={onBack}>
             {t("common.back")}
           </button>
@@ -340,9 +341,7 @@ export function GaleriaFotos({ onBack }: { onBack: () => void }) {
               <option value="">{t("galeria.todosSubtipos")}</option>
               {allSubtipos.map((entry) => (
                 <option key={`${entry.categoria}:${entry.subtipo}`} value={entry.subtipo}>
-                  {t(
-                    `fields.${entry.categoria === "Fotografia" ? "fotografia" : "pintura"}.subtipo${entry.subtipo}` as TranslationKey,
-                  )}
+                  {t(subtipoTranslationKey(entry.categoria, entry.subtipo))}
                 </option>
               ))}
             </select>
@@ -364,17 +363,22 @@ export function GaleriaFotos({ onBack }: { onBack: () => void }) {
         )}
 
         {hayMarcadas && (
-          <label className="galeria-filtro-marcadas">
-            <input
-              type="checkbox"
-              checked={soloMarcadas}
-              onChange={(e) => {
-                setSoloMarcadas(e.target.checked);
-                closeLightbox();
-              }}
-            />
-            {t("galeria.soloMarcadas")}
-          </label>
+          <div className="galeria-filtro-marcadas-row">
+            <label className="galeria-filtro-marcadas">
+              <input
+                type="checkbox"
+                checked={soloMarcadas}
+                onChange={(e) => {
+                  setSoloMarcadas(e.target.checked);
+                  closeLightbox();
+                }}
+              />
+              {t("galeria.soloMarcadas")}
+            </label>
+            <button type="button" onClick={handleDesmarcarTodas}>
+              {t("galeria.desmarcarTodas")}
+            </button>
+          </div>
         )}
       </div>
 

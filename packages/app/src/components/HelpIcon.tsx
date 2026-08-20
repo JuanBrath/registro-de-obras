@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
 
@@ -6,7 +6,24 @@ export function HelpIcon({ fieldKey }: { fieldKey: string }) {
   const { helpTexts } = useWorkspace();
   const { idioma, t } = useLanguage();
   const [open, setOpen] = useState(false);
+  const wrapperRef = useRef<HTMLSpanElement>(null);
   const text = helpTexts[fieldKey];
+
+  useEffect(() => {
+    if (!open) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    function handleClickOutside(e: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [open]);
 
   if (!text) return null;
   const shown = idioma === "en" ? text.en ?? text.es : text.es;
@@ -14,14 +31,12 @@ export function HelpIcon({ fieldKey }: { fieldKey: string }) {
   const esMultilinea = lineas.length > 1;
 
   return (
-    <span className="help-icon-wrapper">
+    <span className="help-icon-wrapper" ref={wrapperRef}>
       <button
         type="button"
         className="help-icon"
         aria-label={t("helpIcon.ayuda")}
         onClick={() => setOpen((v) => !v)}
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
       >
         ⓘ
       </button>

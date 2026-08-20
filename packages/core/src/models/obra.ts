@@ -1,4 +1,11 @@
-export type CategoriaObra = "Fotografia" | "Pintura" | "Escultura";
+export type CategoriaObra =
+  | "Fotografia"
+  | "Pintura"
+  | "Escultura"
+  | "ObraGrafica"
+  | "Dibujo"
+  | "TextilCeramica"
+  | "NuevosMedios";
 export type EstadoObra =
   | "disponible"
   | "en_stock"

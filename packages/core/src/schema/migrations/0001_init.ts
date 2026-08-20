@@ -32,6 +32,11 @@ import { migration0032EjemplarPrecioVenta } from "./0032_ejemplar_precio_venta.j
 import { migration0033EjemplarMonedaVenta } from "./0033_ejemplar_moneda_venta.js";
 import { migration0034Logos } from "./0034_logos.js";
 import { migration0035Cuit } from "./0035_cuit.js";
+import { migration0036EjemplarTintasFirmaSello } from "./0036_ejemplar_tintas_firma_sello.js";
+import { migration0037ObraFotografiaEscalaPorTamanos } from "./0037_obra_fotografia_escala_por_tamanos.js";
+import { migration0038ObraFotografiaSubtipoAmpliado } from "./0038_obra_fotografia_subtipo_ampliado.js";
+import { migration0039CategoriasObraDetalle } from "./0039_categorias_obra_detalle.js";
+import { migration0040TextoAyudaCategoriasSubtipos } from "./0040_texto_ayuda_categorias_subtipos.js";
 
 export interface Migration {
   name: string;
@@ -195,4 +200,9 @@ export const ALL_MIGRATIONS: Migration[] = [
   migration0033EjemplarMonedaVenta,
   migration0034Logos,
   migration0035Cuit,
+  migration0036EjemplarTintasFirmaSello,
+  migration0037ObraFotografiaEscalaPorTamanos,
+  migration0038ObraFotografiaSubtipoAmpliado,
+  migration0039CategoriasObraDetalle,
+  migration0040TextoAyudaCategoriasSubtipos,
 ];

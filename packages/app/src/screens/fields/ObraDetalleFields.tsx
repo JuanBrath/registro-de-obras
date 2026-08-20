@@ -1,0 +1,229 @@
+import { derivarEsSeriadaObraGrafica, type CategoriaObra, type SubtipoObraGrafica } from "@registro/core";
+import { HelpIcon } from "../../components/HelpIcon.js";
+import { todayISO } from "../../utils/today.js";
+import { useLanguage, type TranslationKey } from "../../i18n/LanguageContext.js";
+
+export type CategoriaObraDetalle = Exclude<CategoriaObra, "Fotografia">;
+
+export interface ObraDetalleFieldsState {
+  subtipo: string;
+  /** Solo aplica a Pintura/TecnicasTradicionales: Oleo, Acrilico o Temple. */
+  tecnicaMaterial: string;
+  /** Solo aplica a Pintura/TecnicasTradicionales: Lienzo, Lino, Tabla, Cobre o Aluminio. */
+  soporte: string;
+  tecnica: string;
+  dimensiones: string;
+  peso: string;
+  fechaCreacion: string;
+  esSeriada: boolean;
+}
+
+export const initialObraDetalleFieldsState: ObraDetalleFieldsState = {
+  subtipo: "",
+  tecnicaMaterial: "",
+  soporte: "",
+  tecnica: "",
+  dimensiones: "",
+  peso: "",
+  fechaCreacion: todayISO(),
+  esSeriada: false,
+};
+
+interface CategoriaConfig {
+  legendKey: TranslationKey;
+  subtipoHelpKey: string;
+  subtipos: { value: string; labelKey: TranslationKey }[];
+}
+
+const CATEGORIA_CONFIG: Record<CategoriaObraDetalle, CategoriaConfig> = {
+  Pintura: {
+    legendKey: "fields.pintura.legend",
+    subtipoHelpKey: "subtipo_pintura",
+    subtipos: [
+      { value: "TecnicasTradicionales", labelKey: "fields.pintura.subtipoTecnicasTradicionales" },
+      { value: "TecnicasMixtas", labelKey: "fields.pintura.subtipoTecnicasMixtas" },
+      { value: "Murales", labelKey: "fields.pintura.subtipoMurales" },
+    ],
+  },
+  ObraGrafica: {
+    legendKey: "fields.obraGrafica.legend",
+    subtipoHelpKey: "subtipo_obra_grafica",
+    subtipos: [
+      { value: "GrabadoRelieve", labelKey: "fields.obraGrafica.subtipoGrabadoRelieve" },
+      { value: "GrabadoHueco", labelKey: "fields.obraGrafica.subtipoGrabadoHueco" },
+      { value: "GrabadoPlanografico", labelKey: "fields.obraGrafica.subtipoGrabadoPlanografico" },
+      { value: "Monotipos", labelKey: "fields.obraGrafica.subtipoMonotipos" },
+    ],
+  },
+  Escultura: {
+    legendKey: "fields.escultura.legend",
+    subtipoHelpKey: "subtipo_escultura",
+    subtipos: [
+      { value: "TallaDirecta", labelKey: "fields.escultura.subtipoTallaDirecta" },
+      { value: "FundicionMetal", labelKey: "fields.escultura.subtipoFundicionMetal" },
+      { value: "EsculturaContemporanea", labelKey: "fields.escultura.subtipoEsculturaContemporanea" },
+    ],
+  },
+  Dibujo: {
+    legendKey: "fields.dibujo.legend",
+    subtipoHelpKey: "subtipo_dibujo",
+    subtipos: [
+      { value: "TecnicasSecas", labelKey: "fields.dibujo.subtipoTecnicasSecas" },
+      { value: "TecnicasHumedas", labelKey: "fields.dibujo.subtipoTecnicasHumedas" },
+      { value: "EstudiosPreparatorios", labelKey: "fields.dibujo.subtipoEstudiosPreparatorios" },
+    ],
+  },
+  TextilCeramica: {
+    legendKey: "fields.textilCeramica.legend",
+    subtipoHelpKey: "subtipo_textil_ceramica",
+    subtipos: [
+      { value: "TapiceriaFibra", labelKey: "fields.textilCeramica.subtipoTapiceriaFibra" },
+      { value: "CeramicaEscultorica", labelKey: "fields.textilCeramica.subtipoCeramicaEscultorica" },
+    ],
+  },
+  NuevosMedios: {
+    legendKey: "fields.nuevosMedios.legend",
+    subtipoHelpKey: "subtipo_nuevos_medios",
+    subtipos: [
+      { value: "VideoartFilmes", labelKey: "fields.nuevosMedios.subtipoVideoartFilmes" },
+      { value: "InstalacionesSiteSpecific", labelKey: "fields.nuevosMedios.subtipoInstalacionesSiteSpecific" },
+      { value: "ArteDigitalGenerativo", labelKey: "fields.nuevosMedios.subtipoArteDigitalGenerativo" },
+    ],
+  },
+};
+
+export function subtipoLabelKey(categoria: CategoriaObraDetalle, subtipo: string): TranslationKey | undefined {
+  return CATEGORIA_CONFIG[categoria].subtipos.find((s) => s.value === subtipo)?.labelKey;
+}
+
+const CATEGORIA_I18N_NAMESPACE: Record<CategoriaObra, string> = {
+  Fotografia: "fotografia",
+  Pintura: "pintura",
+  ObraGrafica: "obraGrafica",
+  Escultura: "escultura",
+  Dibujo: "dibujo",
+  TextilCeramica: "textilCeramica",
+  NuevosMedios: "nuevosMedios",
+};
+
+export function subtipoTranslationKey(categoria: CategoriaObra, subtipo: string): TranslationKey {
+  return `fields.${CATEGORIA_I18N_NAMESPACE[categoria]}.subtipo${subtipo}` as TranslationKey;
+}
+
+export function ObraDetalleFields({
+  categoria,
+  value,
+  onChange,
+  mostrarEsSeriada = true,
+}: {
+  categoria: CategoriaObraDetalle;
+  value: ObraDetalleFieldsState;
+  onChange: (next: ObraDetalleFieldsState) => void;
+  mostrarEsSeriada?: boolean;
+}) {
+  const { t } = useLanguage();
+  const config = CATEGORIA_CONFIG[categoria];
+  const esTecnicasTradicionales = categoria === "Pintura" && value.subtipo === "TecnicasTradicionales";
+
+  return (
+    <fieldset>
+      <legend>{t(config.legendKey)}</legend>
+
+      <label>
+        {t("field.subtipo")} <HelpIcon fieldKey={config.subtipoHelpKey} />
+        <select value={value.subtipo} onChange={(e) => onChange({ ...value, subtipo: e.target.value })}>
+          <option value="" disabled>
+            {t("obraForm.elegirSubtipo")}
+          </option>
+          {config.subtipos.map((s) => (
+            <option key={s.value} value={s.value}>
+              {t(s.labelKey)}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      {esTecnicasTradicionales ? (
+        <>
+          <label>
+            {t("field.tecnica")} <HelpIcon fieldKey="tecnica_material" />
+            <select
+              value={value.tecnicaMaterial}
+              onChange={(e) => onChange({ ...value, tecnicaMaterial: e.target.value })}
+            >
+              <option value="">—</option>
+              <option value="Oleo">{t("fields.pintura.tecnicaMaterialOleo")}</option>
+              <option value="Acrilico">{t("fields.pintura.tecnicaMaterialAcrilico")}</option>
+              <option value="Temple">{t("fields.pintura.tecnicaMaterialTemple")}</option>
+            </select>
+          </label>
+          <label>
+            {t("fields.pintura.soporteLabel")} <HelpIcon fieldKey="soporte_pintura" />
+            <select value={value.soporte} onChange={(e) => onChange({ ...value, soporte: e.target.value })}>
+              <option value="">—</option>
+              <option value="Lienzo">{t("fields.pintura.soporteLienzo")}</option>
+              <option value="Lino">{t("fields.pintura.soporteLino")}</option>
+              <option value="Tabla">{t("fields.pintura.soporteTabla")}</option>
+              <option value="Cobre">{t("fields.pintura.soporteCobre")}</option>
+              <option value="Aluminio">{t("fields.pintura.soporteAluminio")}</option>
+            </select>
+          </label>
+        </>
+      ) : (
+        <label>
+          {t("field.tecnica")} <HelpIcon fieldKey="tecnica" />
+          <textarea
+            rows={2}
+            value={value.tecnica}
+            onChange={(e) => onChange({ ...value, tecnica: e.target.value })}
+          />
+        </label>
+      )}
+
+      <label>
+        {t("field.dimensiones")}
+        <input
+          type="text"
+          value={value.dimensiones}
+          onChange={(e) => onChange({ ...value, dimensiones: e.target.value })}
+        />
+      </label>
+
+      <label>
+        {t("field.peso")}
+        <input type="text" value={value.peso} onChange={(e) => onChange({ ...value, peso: e.target.value })} />
+      </label>
+
+      <label>
+        {t("field.fechaCreacion")}
+        <input
+          type="date"
+          value={value.fechaCreacion}
+          onChange={(e) => onChange({ ...value, fechaCreacion: e.target.value })}
+        />
+      </label>
+
+      {mostrarEsSeriada &&
+        (categoria === "ObraGrafica" ? (
+          value.subtipo && (
+            <p className="field-note">
+              {t("fields.pintura.esSeriadaPrefix")}{" "}
+              <strong>
+                {derivarEsSeriadaObraGrafica(value.subtipo as SubtipoObraGrafica) ? t("common.yes") : t("common.no")}
+              </strong>{" "}
+              {t("fields.pintura.esSeriadaSuffix")} <HelpIcon fieldKey="es_seriada" />
+            </p>
+          )
+        ) : (
+          <label>
+            <input
+              type="checkbox"
+              checked={value.esSeriada}
+              onChange={(e) => onChange({ ...value, esSeriada: e.target.checked })}
+            />
+            {t("field.esSeriada")} <HelpIcon fieldKey="es_seriada" />
+          </label>
+        ))}
+    </fieldset>
+  );
+}

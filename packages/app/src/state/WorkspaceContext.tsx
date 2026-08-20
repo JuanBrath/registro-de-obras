@@ -90,6 +90,10 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
+      // Cierra la conexion anterior (si habia una) antes de abrir la nueva,
+      // sin pasar por "context = null" en el medio: asi cambiar de modulo no
+      // hace parpadear la pantalla de seleccion, solo reemplaza el contexto.
+      if (context) await context.db.close();
       const factory = await createPlatformAdapterFactory();
       const ctx = await openWorkspace(workspace, factory);
       setContext(ctx);

@@ -1,19 +1,31 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { parseTags } from "@registro/core";
+import { parseTags, type CategoriaObra } from "@registro/core";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { bytesToObjectUrl } from "../utils/imageObjectUrl.js";
 import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
+import { subtipoTranslationKey } from "./fields/ObraDetalleFields.js";
+
+export interface ObrasListFiltros {
+  selectedTag: string | null;
+  selectedArtistaId: number | null;
+  selectedCategoria: CategoriaObra | null;
+  selectedSubtipo: string | null;
+  soloMarcadas: boolean;
+}
 
 interface ObraRow {
   id: number;
   titulo: string;
-  categoria_obra: string;
+  categoria_obra: CategoriaObra;
   estado: string;
   es_seriada: number;
   miniatura_path: string | null;
   tags: string | null;
+  artista_id: number | null;
   nombre_completo: string;
+  subtipo_fotografia: string | null;
+  subtipo: string | null;
   total_ejemplares: number;
   ejemplares_disponible: number;
   ejemplares_en_stock: number;
@@ -47,10 +59,12 @@ export function ObrasList({
   onBack,
   onOpenObra,
   onNuevaObra,
+  onVerGaleria,
 }: {
   onBack: () => void;
   onOpenObra: (obraId: number) => void;
   onNuevaObra: () => void;
+  onVerGaleria: (filtros: ObrasListFiltros) => void;
 }) {
   const { context } = useWorkspace();
   const { t } = useLanguage();
@@ -60,6 +74,9 @@ export function ObrasList({
   const [error, setError] = useState<string | null>(null);
   useEscapeToDismiss(error, setError);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [selectedArtistaId, setSelectedArtistaId] = useState<number | null>(null);
+  const [selectedCategoria, setSelectedCategoria] = useState<CategoriaObra | null>(null);
+  const [selectedSubtipo, setSelectedSubtipo] = useState<string | null>(null);
   const [busqueda, setBusqueda] = useState("");
   const [soloMarcadas, setSoloMarcadas] = useState(false);
   const objectUrlsRef = useRef<string[]>([]);
@@ -75,7 +92,8 @@ export function ObrasList({
       try {
         const rows = await context!.db.query<ObraRow>(
           `SELECT obra.id, obra.titulo, obra.categoria_obra, obra.estado, obra.es_seriada, obra.miniatura_path, obra.tags,
-                  obra.marcada, artista.nombre_completo,
+                  obra.marcada, obra.artista_id, artista.nombre_completo,
+                  obra_fotografia.subtipo_fotografia, obra_detalle.subtipo,
                   COUNT(CASE WHEN ejemplar.tipo = 'edicion' THEN ejemplar.id END) as total_ejemplares,
                   SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'disponible' THEN 1 ELSE 0 END) as ejemplares_disponible,
                   SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'en_stock' THEN 1 ELSE 0 END) as ejemplares_en_stock,
@@ -90,6 +108,8 @@ export function ObrasList({
            FROM obra
            LEFT JOIN ejemplar ON ejemplar.obra_id = obra.id
            LEFT JOIN artista ON artista.id = obra.artista_id
+           LEFT JOIN obra_fotografia ON obra_fotografia.obra_id = obra.id
+           LEFT JOIN obra_detalle ON obra_detalle.obra_id = obra.id
            GROUP BY obra.id
            ORDER BY obra.titulo COLLATE NOCASE ASC`,
         );
@@ -132,12 +152,47 @@ export function ObrasList({
   }, [obras]);
 
   const esRegistroPersonal = context?.workspace === "personal";
+  const esGaleria = !esRegistroPersonal;
+
+  const allArtistas = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const obra of obras) {
+      if (obra.artista_id != null && obra.nombre_completo != null) map.set(obra.artista_id, obra.nombre_completo);
+    }
+    return Array.from(map.entries())
+      .map(([id, nombre]) => ({ id, nombre }))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre));
+  }, [obras]);
+
+  const allCategorias = useMemo(() => {
+    const set = new Set<CategoriaObra>();
+    for (const obra of obras) set.add(obra.categoria_obra);
+    return Array.from(set).sort();
+  }, [obras]);
+
+  const allSubtipos = useMemo(() => {
+    const map = new Map<string, { categoria: CategoriaObra; subtipo: string }>();
+    for (const obra of obras) {
+      if (selectedCategoria && obra.categoria_obra !== selectedCategoria) continue;
+      const subtipoValor = obra.categoria_obra === "Fotografia" ? obra.subtipo_fotografia : obra.subtipo;
+      if (subtipoValor) {
+        map.set(`${obra.categoria_obra}:${subtipoValor}`, { categoria: obra.categoria_obra, subtipo: subtipoValor });
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => a.subtipo.localeCompare(b.subtipo));
+  }, [obras, selectedCategoria]);
 
   const filteredObras = useMemo(() => {
     const busquedaNorm = busqueda.trim().toLowerCase();
     return obras.filter((o) => {
       if (soloMarcadas && o.marcada === 0) return false;
       if (selectedTag && !parseTags(o.tags).includes(selectedTag)) return false;
+      if (esGaleria && selectedArtistaId !== null && o.artista_id !== selectedArtistaId) return false;
+      if (selectedCategoria && o.categoria_obra !== selectedCategoria) return false;
+      if (selectedSubtipo) {
+        const subtipoValor = o.categoria_obra === "Fotografia" ? o.subtipo_fotografia : o.subtipo;
+        if (subtipoValor !== selectedSubtipo) return false;
+      }
       if (!busquedaNorm) return true;
       const enTitulo = o.titulo.toLowerCase().includes(busquedaNorm);
       const enArtista = !esRegistroPersonal && (o.nombre_completo ?? "").toLowerCase().includes(busquedaNorm);
@@ -147,7 +202,17 @@ export function ObrasList({
       const enEtiquetas = !esRegistroPersonal && parseTags(o.tags).some((tag) => tag.toLowerCase().includes(busquedaNorm));
       return enTitulo || enArtista || enEtiquetas;
     });
-  }, [obras, selectedTag, busqueda, soloMarcadas, esRegistroPersonal]);
+  }, [
+    obras,
+    selectedTag,
+    selectedArtistaId,
+    selectedCategoria,
+    selectedSubtipo,
+    busqueda,
+    soloMarcadas,
+    esRegistroPersonal,
+    esGaleria,
+  ]);
 
   const hayMarcadas = useMemo(() => obras.some((o) => o.marcada !== 0), [obras]);
 
@@ -174,6 +239,11 @@ export function ObrasList({
     }
   }
 
+  function handleCategoriaChange(value: string) {
+    setSelectedCategoria(value === "" ? null : (value as CategoriaObra));
+    setSelectedSubtipo(null);
+  }
+
   if (!context) return null;
 
   return (
@@ -181,18 +251,24 @@ export function ObrasList({
       <div className="obras-list-header">
         <h1>{t("obrasList.title")}</h1>
         <div className="header-actions">
-          <button type="button" onClick={onNuevaObra}>
-            {t("workspaceHome.nuevaObra")}
-          </button>
-          {hayMarcadas && (
-            <button type="button" onClick={handleDesmarcarTodas}>
-              {t("galeria.desmarcarTodas")}
-            </button>
-          )}
           <button type="button" onClick={onBack}>
             {t("common.back")}
           </button>
         </div>
+      </div>
+
+      <div className="header-actions obras-list-options">
+        <button type="button" onClick={onNuevaObra}>
+          {t("workspaceHome.nuevaObra")}
+        </button>
+        <button
+          type="button"
+          onClick={() =>
+            onVerGaleria({ selectedTag, selectedArtistaId, selectedCategoria, selectedSubtipo, soloMarcadas })
+          }
+        >
+          {t("workspaceHome.galeriaFotos")}
+        </button>
       </div>
 
       {loading && <p>{t("common.loading")}</p>}
@@ -214,28 +290,81 @@ export function ObrasList({
         />
       )}
 
-      {allTags.length > 0 && (
+      {(esGaleria ? allArtistas.length > 0 : false) ||
+      allCategorias.length > 0 ||
+      allSubtipos.length > 0 ||
+      allTags.length > 0 ||
+      hayMarcadas ? (
         <div className="galeria-filtros-selects">
-          <label className="obras-filtro-etiquetas">
-            {t("obrasList.filtrarPorEtiquetas")}
-            <select value={selectedTag ?? ""} onChange={(e) => setSelectedTag(e.target.value || null)}>
-              <option value="">{t("obrasList.todas")}</option>
-              {allTags.map((tag) => (
-                <option key={tag} value={tag}>
-                  {tag}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-      )}
+          {esGaleria && allArtistas.length > 0 && (
+            <label className="galeria-filtro-artista">
+              {t("obraForm.artistaLabel")}
+              <select value={selectedArtistaId ?? ""} onChange={(e) => setSelectedArtistaId(e.target.value === "" ? null : Number(e.target.value))}>
+                <option value="">{t("galeria.todosArtistas")}</option>
+                {allArtistas.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.nombre}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
 
-      {hayMarcadas && (
-        <label className="galeria-filtro-marcadas">
-          <input type="checkbox" checked={soloMarcadas} onChange={(e) => setSoloMarcadas(e.target.checked)} />
-          {t("galeria.soloMarcadas")}
-        </label>
-      )}
+          {allCategorias.length > 0 && (
+            <label className="galeria-filtro-artista">
+              {t("obraForm.categoriaLabel")}
+              <select value={selectedCategoria ?? ""} onChange={(e) => handleCategoriaChange(e.target.value)}>
+                <option value="">{t("galeria.todasCategorias")}</option>
+                {allCategorias.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {t(`categoria.${cat}` as TranslationKey)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+
+          {allSubtipos.length > 0 && (
+            <label className="galeria-filtro-artista">
+              {t("field.subtipo")}
+              <select value={selectedSubtipo ?? ""} onChange={(e) => setSelectedSubtipo(e.target.value || null)}>
+                <option value="">{t("galeria.todosSubtipos")}</option>
+                {allSubtipos.map((entry) => (
+                  <option key={`${entry.categoria}:${entry.subtipo}`} value={entry.subtipo}>
+                    {t(subtipoTranslationKey(entry.categoria, entry.subtipo))}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+
+          {allTags.length > 0 && (
+            <label className="galeria-filtro-artista">
+              {t("obraForm.etiquetasLabel")}
+              <select value={selectedTag ?? ""} onChange={(e) => setSelectedTag(e.target.value || null)}>
+                <option value="">{t("obrasList.todas")}</option>
+                {allTags.map((tag) => (
+                  <option key={tag} value={tag}>
+                    {tag}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+
+          {hayMarcadas && (
+            <div className="galeria-filtro-marcadas-row">
+              <label className="galeria-filtro-marcadas">
+                <input type="checkbox" checked={soloMarcadas} onChange={(e) => setSoloMarcadas(e.target.checked)} />
+                {t("galeria.soloMarcadas")}
+              </label>
+              <button type="button" onClick={handleDesmarcarTodas}>
+                {t("galeria.desmarcarTodas")}
+              </button>
+            </div>
+          )}
+        </div>
+      ) : null}
 
       {!loading && obras.length > 0 && filteredObras.length === 0 && <p>{t("obrasList.sinResultados")}</p>}
 

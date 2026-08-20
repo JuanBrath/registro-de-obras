@@ -116,7 +116,9 @@ h1,
 h2 {
   font-family: var(--heading);
   font-weight: 500;
-  color: var(--text-h);
+  /* Mismo dorado fijo que el texto del logo (--galeris-gold en :root arriba),
+     para que los títulos de cada módulo se sientan parte de la marca. */
+  color: var(--galeris-gold);
 }
 
 h1 {

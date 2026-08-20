@@ -156,6 +156,12 @@ input[type="date"] {
   gap: 0.75rem;
 }
 
+.obra-form-detalles-ediciones {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
 /* El texto del label y el ícono de ayuda siempre van en la misma fila (el
    ícono a la derecha del texto, nunca abajo); el input/select/textarea del
    campo se fuerza a ancho completo (flex-basis:100%) para que arranque en su
@@ -276,7 +282,7 @@ input[type="date"] {
   position: absolute;
   z-index: 10;
   top: 50%;
-  left: 1.6em;
+  left: 2.4em;
   transform: translateY(-50%);
   width: 240px;
   padding: 0.5rem;
@@ -369,6 +375,10 @@ input[type="date"] {
   margin-top: 1.5rem;
 }
 
+.workspace-home-cambiar-modulo {
+  margin-top: 3.5rem;
+}
+
 .obras-list,
 .obra-detail {
   max-width: 900px;
@@ -386,6 +396,10 @@ input[type="date"] {
   display: flex;
   gap: 0.75rem;
   align-items: center;
+}
+
+.obras-list-options {
+  margin-top: 1rem;
 }
 
 .obras-grid {
@@ -477,11 +491,17 @@ input[type="date"] {
   margin-right: 0.4rem;
 }
 
+.galeria-filtro-marcadas-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
 .galeria-filtro-marcadas {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  margin-top: 1rem;
   cursor: pointer;
 }
 
@@ -585,9 +605,13 @@ input[type="date"] {
 }
 
 /* Deja un margen fijo a los costados de la imagen para que las flechas,
-   ancladas a los bordes del modal, nunca queden superpuestas sobre la foto. */
+   ancladas a los bordes del modal, nunca queden superpuestas sobre la foto.
+   La altura se reduce respecto del máximo general (85vh) para dejarle lugar
+   fijo al renglón de información de abajo, que si no queda tapado por el
+   borde del modal y obliga a hacer scroll para verlo. */
 .lightbox-content .obra-full-image {
   max-width: calc(100% - 7rem);
+  max-height: 68vh;
 }
 
 .tags-list {
@@ -645,13 +669,6 @@ input[type="date"] {
   gap: 0.25rem;
   margin-top: 1rem;
   max-width: 320px;
-}
-
-.obras-filtro-etiquetas {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 1rem;
 }
 
 .tag-picker {

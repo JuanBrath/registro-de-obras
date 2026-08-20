@@ -44,7 +44,7 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
 
     const tables = await db.query<{ name: string }>("SELECT name FROM sqlite_master WHERE type='table'");
     expect(tables.map((t) => t.name)).toEqual(
-      expect.arrayContaining(["artista", "obra", "obra_fotografia", "obra_pintura", "obra_escultura", "venta", "ejemplar", "historial_evento", "texto_ayuda"]),
+      expect.arrayContaining(["artista", "obra", "obra_fotografia", "obra_detalle", "venta", "ejemplar", "historial_evento", "texto_ayuda"]),
     );
 
     const helpTexts = await db.query("SELECT field_key FROM texto_ayuda");
@@ -158,6 +158,11 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
       "0033_ejemplar_moneda_venta",
       "0034_logos",
       "0035_cuit",
+      "0036_ejemplar_tintas_firma_sello",
+      "0037_obra_fotografia_escala_por_tamanos",
+      "0038_obra_fotografia_subtipo_ampliado",
+      "0039_categorias_obra_detalle",
+      "0040_texto_ayuda_categorias_subtipos",
     ]);
   });
 
@@ -282,7 +287,7 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
     const rows = await db.query<{ subtipo_fotografia: string; dimensiones: string | null }>(
       "SELECT subtipo_fotografia, dimensiones FROM obra_fotografia",
     );
-    expect(rows).toEqual([{ subtipo_fotografia: "Digital", dimensiones: null }]);
+    expect(rows).toEqual([{ subtipo_fotografia: "DigitalFineArt", dimensiones: null }]);
 
     await db.execute("UPDATE obra_fotografia SET dimensiones = ? WHERE obra_id = ?", [
       "300 x 450 mm",
@@ -426,6 +431,80 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
         0,
       ]),
     ).rejects.toThrow();
+  });
+
+  it("0039 reclasifica Pintura en tecnicas de reproduccion como ObraGrafica y preserva Escultura en obra_detalle", async () => {
+    const db = adaptNodeSqlite(new DatabaseSync(":memory:"));
+    await applyMigrations(db, ALL_MIGRATIONS.slice(0, 38)); // hasta 0038, antes de la reestructuracion
+
+    await db.execute("INSERT INTO artista (nombre_completo, es_propio) VALUES (?, ?)", ["Juan Brath", 1]);
+
+    const original = await db.execute(
+      `INSERT INTO obra (titulo, categoria_obra, artista_id, es_seriada) VALUES (?, ?, ?, ?)`,
+      ["Pieza original", "Pintura", 1, 0],
+    );
+    await db.execute("INSERT INTO obra_pintura (obra_id, subtipo_pintura, tecnica, dimensiones) VALUES (?, ?, ?, ?)", [
+      original.lastInsertId,
+      "Original",
+      "Oleo sobre tela",
+      "50 x 70 cm",
+    ]);
+
+    const serigrafia = await db.execute(
+      `INSERT INTO obra (titulo, categoria_obra, artista_id, es_seriada) VALUES (?, ?, ?, ?)`,
+      ["Serie serigrafiada", "Pintura", 1, 1],
+    );
+    await db.execute("INSERT INTO obra_pintura (obra_id, subtipo_pintura, tecnica) VALUES (?, ?, ?)", [
+      serigrafia.lastInsertId,
+      "Serigrafia",
+      "Serigrafia sobre papel",
+    ]);
+
+    const grabadoViejo = await db.execute(
+      `INSERT INTO obra (titulo, categoria_obra, artista_id, es_seriada) VALUES (?, ?, ?, ?)`,
+      ["Grabado sin especificar", "Pintura", 1, 1],
+    );
+    await db.execute("INSERT INTO obra_pintura (obra_id, subtipo_pintura, tecnica) VALUES (?, ?, ?)", [
+      grabadoViejo.lastInsertId,
+      "Grabado",
+      "Tecnica mixta de grabado",
+    ]);
+
+    const escultura = await db.execute(
+      `INSERT INTO obra (titulo, categoria_obra, artista_id, es_seriada) VALUES (?, ?, ?, ?)`,
+      ["Bronce sin titulo", "Escultura", 1, 0],
+    );
+    await db.execute("INSERT INTO obra_escultura (obra_id, tecnica, dimensiones, peso) VALUES (?, ?, ?, ?)", [
+      escultura.lastInsertId,
+      "Bronce fundido",
+      "40 x 20 x 20 cm",
+      "8 kg",
+    ]);
+
+    await applyMigrations(db, ALL_MIGRATIONS);
+
+    const categorias = await db.query<{ id: number; categoria_obra: string }>(
+      "SELECT id, categoria_obra FROM obra ORDER BY id",
+    );
+    expect(categorias).toEqual([
+      { id: original.lastInsertId, categoria_obra: "Pintura" },
+      { id: serigrafia.lastInsertId, categoria_obra: "ObraGrafica" },
+      { id: grabadoViejo.lastInsertId, categoria_obra: "ObraGrafica" },
+      { id: escultura.lastInsertId, categoria_obra: "Escultura" },
+    ]);
+
+    const detalle = await db.query<{ obra_id: number; subtipo: string | null; tecnica: string | null }>(
+      "SELECT obra_id, subtipo, tecnica FROM obra_detalle ORDER BY obra_id",
+    );
+    expect(detalle).toEqual([
+      { obra_id: original.lastInsertId, subtipo: "TecnicasTradicionales", tecnica: "Oleo sobre tela" },
+      { obra_id: serigrafia.lastInsertId, subtipo: "GrabadoPlanografico", tecnica: "Serigrafia sobre papel" },
+      { obra_id: grabadoViejo.lastInsertId, subtipo: null, tecnica: "Tecnica mixta de grabado" },
+      { obra_id: escultura.lastInsertId, subtipo: null, tecnica: "Bronce fundido" },
+    ]);
+
+    const tables = await db.query<{ name: string }>("SELECT name FROM sqlite_master WHERE type='table'");
+    expect(tables.map((t) => t.name)).not.toEqual(expect.arrayContaining(["obra_pintura", "obra_escultura"]));
   });
 
   it("0005 seeds artista_contador starting at 1 and it increments", async () => {

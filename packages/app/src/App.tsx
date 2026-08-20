@@ -4,14 +4,13 @@ import { useWorkspace, WorkspaceProvider } from "./state/WorkspaceContext.js";
 import { EdicionProvider, useEdicion } from "./state/EdicionContext.js";
 import { ThemeProvider } from "./state/ThemeContext.js";
 import { FontSizeProvider } from "./state/FontSizeContext.js";
-import { NavigationProvider, useRegisterGoHome } from "./state/NavigationContext.js";
 import { LanguageProvider, useLanguage } from "./i18n/LanguageContext.js";
 import { useForceReflowOnResize } from "./utils/useForceReflowOnResize.js";
 import { BrandHeader } from "./components/BrandHeader.js";
 import { WorkspacePicker } from "./screens/WorkspacePicker.js";
 import { WorkspaceHome } from "./screens/WorkspaceHome.js";
 import { ObraForm } from "./screens/ObraForm.js";
-import { ObrasList } from "./screens/ObrasList.js";
+import { ObrasList, type ObrasListFiltros } from "./screens/ObrasList.js";
 import { ObraDetail } from "./screens/ObraDetail.js";
 import { PersonalProfileForm } from "./screens/PersonalProfileForm.js";
 import { ArtistasScreen } from "./screens/ArtistasScreen.js";
@@ -28,7 +27,7 @@ type Screen =
   | { name: "obras" }
   | { name: "obra-detail"; obraId: number }
   | { name: "artistas" }
-  | { name: "galeria-fotos" }
+  | { name: "galeria-fotos"; filtros?: ObrasListFiltros }
   | { name: "ventas" }
   | { name: "galeria-perfil" }
   | { name: "clientes" };
@@ -40,11 +39,8 @@ function WorkspaceScreens() {
   if (!context) return null;
 
   // Si ya estamos en "home", no dispara un cambio de estado: evita un
-  // re-render innecesario cuando BrandHeader lo llama estando ya ahi.
+  // re-render innecesario cuando algun "Volver" lo llama estando ya ahi.
   const goHome = () => setScreen((prev) => (prev.name === "home" ? prev : { name: "home" }));
-  // BrandHeader vive en la franja fija de AppShell, fuera de este subarbol:
-  // publica goHome en el NavigationContext para que pueda llamarlo igual.
-  useRegisterGoHome(goHome);
   const needsPersonalProfile = context.workspace === "personal" && !personalArtista;
   const activeScreen: Screen = needsPersonalProfile ? { name: "profile" } : screen;
 
@@ -77,6 +73,7 @@ function WorkspaceScreens() {
           onBack={goHome}
           onOpenObra={(obraId) => setScreen({ name: "obra-detail", obraId })}
           onNuevaObra={() => setScreen({ name: "nueva-obra" })}
+          onVerGaleria={(filtros) => setScreen({ name: "galeria-fotos", filtros })}
         />
       );
       break;
@@ -87,7 +84,9 @@ function WorkspaceScreens() {
       content = <ArtistasScreen onBack={goHome} />;
       break;
     case "galeria-fotos":
-      content = <GaleriaFotos onBack={goHome} />;
+      content = (
+        <GaleriaFotos onBack={() => setScreen({ name: "obras" })} filtrosIniciales={activeScreen.filtros} />
+      );
       break;
     case "ventas":
       content = <VentasReport onBack={goHome} />;
@@ -105,7 +104,6 @@ function WorkspaceScreens() {
           onEditProfile={() => setScreen({ name: "profile" })}
           onVerObras={() => setScreen({ name: "obras" })}
           onArtistas={() => setScreen({ name: "artistas" })}
-          onGaleriaFotos={() => setScreen({ name: "galeria-fotos" })}
           onVentas={() => setScreen({ name: "ventas" })}
           onGaleriaPerfil={() => setScreen({ name: "galeria-perfil" })}
           onClientes={() => setScreen({ name: "clientes" })}
@@ -133,7 +131,7 @@ function AppShell() {
   }, [edicion]);
 
   return (
-    <NavigationProvider>
+    <>
       <div className="app-topbar">
         <BrandHeader size="navbar" />
         <button
@@ -147,7 +145,7 @@ function AppShell() {
       </div>
       {context ? <WorkspaceScreens key={context.workspace} /> : <WorkspacePicker />}
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
-    </NavigationProvider>
+    </>
   );
 }
 

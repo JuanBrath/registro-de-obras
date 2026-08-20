@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   derivarAnioDesdeFecha,
-  derivarEsSeriadaPintura,
+  derivarEsSeriadaObraGrafica,
   formatTags,
   generarEjemplarUnico,
   generarEjemplares,
@@ -11,9 +11,15 @@ import {
   puedeDeshacerSerie,
   type CategoriaObra,
   type Moneda,
-  type SubtipoPintura,
+  type SubtipoObraGrafica,
   type TipoVenta,
 } from "@registro/core";
+import {
+  ObraDetalleFields,
+  subtipoLabelKey,
+  type ObraDetalleFieldsState,
+  type CategoriaObraDetalle,
+} from "./fields/ObraDetalleFields.js";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { bytesToObjectUrl } from "../utils/imageObjectUrl.js";
 import { VentaForm, type VentaExistente } from "../components/VentaForm.js";
@@ -36,7 +42,7 @@ import { drawPdfHeader, writeWrappedText } from "../utils/pdfBranding.js";
 interface ObraRow {
   id: number;
   titulo: string;
-  categoria_obra: "Fotografia" | "Pintura" | "Escultura";
+  categoria_obra: CategoriaObra;
   estado: string;
   es_seriada: number;
   ubicacion_fisica_actual: string | null;
@@ -52,7 +58,9 @@ interface ObraExtRow {
   fecha_captura?: string | null;
   fecha_edicion?: string | null;
   software_edicion?: string | null;
-  subtipo_pintura?: string;
+  subtipo?: string | null;
+  tecnica_material?: string | null;
+  soporte?: string | null;
   tecnica?: string | null;
   dimensiones?: string | null;
   peso?: string | null;
@@ -68,11 +76,14 @@ interface EjemplarRow {
   fecha_impresion: string | null;
   tipo_impresion: string | null;
   soporte_impresion: string | null;
+  tipo_tintas: string | null;
   taller_impresion: string | null;
   ubicacion_actual: string | null;
   dimensiones: string | null;
   tipo_enmarcado: string | null;
   tamano_final_enmarcado: string | null;
+  ubicacion_firma: string | null;
+  sello_seco_holograma: string | null;
   notas: string | null;
   precio_venta: number | null;
   moneda_venta: string | null;
@@ -135,16 +146,21 @@ function buildObraDescripcionLineas(
       }),
     );
   }
-  if (ext?.subtipo_pintura) {
-    lineas.push(
-      t("obraDetail.subtipoNoEditable", {
-        subtipo: t(`fields.pintura.subtipo${ext.subtipo_pintura}` as TranslationKey),
-      }),
-    );
+  if (ext?.subtipo && obra.categoria_obra !== "Fotografia") {
+    const labelKey = subtipoLabelKey(obra.categoria_obra as CategoriaObraDetalle, ext.subtipo);
+    if (labelKey) {
+      lineas.push(t("obraDetail.subtipoNoEditable", { subtipo: t(labelKey) }));
+    }
   }
   lineas.push(Number(obra.es_seriada) === 1 ? t("obraDetail.obraSeriada") : t("obraDetail.obraUnica"));
   if (incluirUbicacionArchivo && esRegistroPersonal && obra.ubicacion_fisica_actual) {
     lineas.push(`${t("obraDetail.ubicacionArchivoPrefix")} ${obra.ubicacion_fisica_actual}`);
+  }
+  if (ext?.tecnica_material) {
+    lineas.push(t("obraDetail.tecnica", { valor: t(`fields.pintura.tecnicaMaterial${ext.tecnica_material}` as TranslationKey) }));
+  }
+  if (ext?.soporte) {
+    lineas.push(t("obraDetail.soporte", { valor: t(`fields.pintura.soporte${ext.soporte}` as TranslationKey) }));
   }
   if (ext?.tecnica) lineas.push(t("obraDetail.tecnica", { valor: ext.tecnica }));
   if (ext?.dimensiones) lineas.push(t("obraDetail.dimensiones", { valor: ext.dimensiones }));
@@ -240,15 +256,9 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
             [obraId],
           );
           setExt(rows[0] ?? null);
-        } else if (obraRow.categoria_obra === "Pintura") {
-          const rows = await context.db.query<ObraExtRow>(
-            `SELECT subtipo_pintura, tecnica, dimensiones, peso, fecha_creacion FROM obra_pintura WHERE obra_id = ?`,
-            [obraId],
-          );
-          setExt(rows[0] ?? null);
         } else {
           const rows = await context.db.query<ObraExtRow>(
-            `SELECT tecnica, dimensiones, peso, fecha_creacion FROM obra_escultura WHERE obra_id = ?`,
+            `SELECT subtipo, tecnica_material, soporte, tecnica, dimensiones, peso, fecha_creacion FROM obra_detalle WHERE obra_id = ?`,
             [obraId],
           );
           setExt(rows[0] ?? null);
@@ -257,7 +267,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
 
       if (obraRow) {
         const ejemplarRows = await context.db.query<EjemplarRow>(
-          `SELECT id, tipo, numero, estado, venta_id, fecha_impresion, tipo_impresion, soporte_impresion, taller_impresion, ubicacion_actual, dimensiones, tipo_enmarcado, tamano_final_enmarcado, notas, precio_venta, moneda_venta
+          `SELECT id, tipo, numero, estado, venta_id, fecha_impresion, tipo_impresion, soporte_impresion, tipo_tintas, taller_impresion, ubicacion_actual, dimensiones, tipo_enmarcado, tamano_final_enmarcado, ubicacion_firma, sello_seco_holograma, notas, precio_venta, moneda_venta
            FROM ejemplar WHERE obra_id = ? ORDER BY tipo, indice`,
           [obraId],
         );
@@ -545,11 +555,14 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       fechaImpresion: string;
       tipoImpresion: string;
       soporteImpresion: string;
+      tipoTintas: string;
       tallerImpresion: string;
       ubicacionActual: string;
       dimensiones: string;
       tipoEnmarcado: string;
       tamanoFinalEnmarcado: string;
+      ubicacionFirma: string;
+      selloSecoHolograma: string;
       notas: string;
       precioVenta: string;
       monedaVenta: string;
@@ -558,17 +571,20 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
     if (!context) return;
     await context.db.transaction(async (tx) => {
       await tx.execute(
-        `UPDATE ejemplar SET estado = ?, fecha_impresion = ?, tipo_impresion = ?, soporte_impresion = ?, taller_impresion = ?, ubicacion_actual = ?, dimensiones = ?, tipo_enmarcado = ?, tamano_final_enmarcado = ?, notas = ?, precio_venta = ?, moneda_venta = ? WHERE id = ?`,
+        `UPDATE ejemplar SET estado = ?, fecha_impresion = ?, tipo_impresion = ?, soporte_impresion = ?, tipo_tintas = ?, taller_impresion = ?, ubicacion_actual = ?, dimensiones = ?, tipo_enmarcado = ?, tamano_final_enmarcado = ?, ubicacion_firma = ?, sello_seco_holograma = ?, notas = ?, precio_venta = ?, moneda_venta = ? WHERE id = ?`,
         [
           fields.estado,
           fields.fechaImpresion || null,
           fields.tipoImpresion || null,
           fields.soporteImpresion || null,
+          fields.tipoTintas || null,
           fields.tallerImpresion || null,
           fields.ubicacionActual || null,
           fields.dimensiones || null,
           fields.tipoEnmarcado || null,
           fields.tamanoFinalEnmarcado || null,
+          fields.ubicacionFirma || null,
+          fields.selloSecoHolograma || null,
           fields.notas || null,
           fields.precioVenta ? parseFloat(fields.precioVenta) : null,
           fields.precioVenta ? fields.monedaVenta : null,
@@ -643,8 +659,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
 
       if (cambiaCategoria) {
         await tx.execute(`DELETE FROM obra_fotografia WHERE obra_id = ?`, [obraId]);
-        await tx.execute(`DELETE FROM obra_pintura WHERE obra_id = ?`, [obraId]);
-        await tx.execute(`DELETE FROM obra_escultura WHERE obra_id = ?`, [obraId]);
+        await tx.execute(`DELETE FROM obra_detalle WHERE obra_id = ?`, [obraId]);
       }
 
       if (fields.categoria === "Fotografia") {
@@ -675,35 +690,31 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
               obraId,
             ];
         await tx.execute(upsert, params);
-      } else if (fields.categoria === "Pintura") {
+      } else {
         const upsert = cambiaCategoria
-          ? `INSERT INTO obra_pintura (obra_id, subtipo_pintura, tecnica, dimensiones, peso, fecha_creacion) VALUES (?, ?, ?, ?, ?, ?)`
-          : `UPDATE obra_pintura SET subtipo_pintura = ?, tecnica = ?, dimensiones = ?, peso = ?, fecha_creacion = ? WHERE obra_id = ?`;
+          ? `INSERT INTO obra_detalle (obra_id, subtipo, tecnica_material, soporte, tecnica, dimensiones, peso, fecha_creacion) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+          : `UPDATE obra_detalle SET subtipo = ?, tecnica_material = ?, soporte = ?, tecnica = ?, dimensiones = ?, peso = ?, fecha_creacion = ? WHERE obra_id = ?`;
         const params = cambiaCategoria
           ? [
               obraId,
-              fields.ext.subtipo_pintura,
+              fields.ext.subtipo || null,
+              fields.ext.tecnica_material || null,
+              fields.ext.soporte || null,
               fields.ext.tecnica || null,
               fields.ext.dimensiones || null,
               fields.ext.peso || null,
               fields.ext.fecha_creacion || null,
             ]
           : [
-              fields.ext.subtipo_pintura,
+              fields.ext.subtipo || null,
+              fields.ext.tecnica_material || null,
+              fields.ext.soporte || null,
               fields.ext.tecnica || null,
               fields.ext.dimensiones || null,
               fields.ext.peso || null,
               fields.ext.fecha_creacion || null,
               obraId,
             ];
-        await tx.execute(upsert, params);
-      } else {
-        const upsert = cambiaCategoria
-          ? `INSERT INTO obra_escultura (obra_id, tecnica, dimensiones, peso, fecha_creacion) VALUES (?, ?, ?, ?, ?)`
-          : `UPDATE obra_escultura SET tecnica = ?, dimensiones = ?, peso = ?, fecha_creacion = ? WHERE obra_id = ?`;
-        const params = cambiaCategoria
-          ? [obraId, fields.ext.tecnica || null, fields.ext.dimensiones || null, fields.ext.peso || null, fields.ext.fecha_creacion || null]
-          : [fields.ext.tecnica || null, fields.ext.dimensiones || null, fields.ext.peso || null, fields.ext.fecha_creacion || null, obraId];
         await tx.execute(upsert, params);
       }
 
@@ -838,13 +849,12 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
                 })}
               </p>
             )}
-            {ext?.subtipo_pintura && (
-              <p>
-                {t("obraDetail.subtipoNoEditable", {
-                  subtipo: t(`fields.pintura.subtipo${ext.subtipo_pintura}` as TranslationKey),
-                })}
-              </p>
-            )}
+            {ext?.subtipo &&
+              obra.categoria_obra !== "Fotografia" &&
+              (() => {
+                const labelKey = subtipoLabelKey(obra.categoria_obra as CategoriaObraDetalle, ext.subtipo!);
+                return labelKey ? <p>{t("obraDetail.subtipoNoEditable", { subtipo: t(labelKey) })}</p> : null;
+              })()}
             <p>{Number(obra.es_seriada) === 1 ? t("obraDetail.obraSeriada") : t("obraDetail.obraUnica")}</p>
             {esRegistroPersonal && (
               <p>
@@ -861,6 +871,12 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
                   "—"
                 )}
               </p>
+            )}
+            {ext?.tecnica_material && (
+              <p>{t("obraDetail.tecnica", { valor: t(`fields.pintura.tecnicaMaterial${ext.tecnica_material}` as TranslationKey) })}</p>
+            )}
+            {ext?.soporte && (
+              <p>{t("obraDetail.soporte", { valor: t(`fields.pintura.soporte${ext.soporte}` as TranslationKey) })}</p>
             )}
             {ext?.tecnica && <p>{t("obraDetail.tecnica", { valor: ext.tecnica })}</p>}
             {ext?.dimensiones && <p>{t("obraDetail.dimensiones", { valor: ext.dimensiones })}</p>}
@@ -920,7 +936,11 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
               key={ej.id}
               ejemplar={ej}
               categoria={obra.categoria_obra}
-              esFotografiaDigital={obra.categoria_obra === "Fotografia" && ext?.subtipo_fotografia === "Digital"}
+              esFotografiaDigital={obra.categoria_obra === "Fotografia" && ext?.subtipo_fotografia === "DigitalFineArt"}
+              esFotografiaDigitalOSintografia={
+                obra.categoria_obra === "Fotografia" &&
+                (ext?.subtipo_fotografia === "DigitalFineArt" || ext?.subtipo_fotografia === "Sintografia")
+              }
               venta={ej.venta_id ? ventas[ej.venta_id] : undefined}
               editing={editingEjemplarId === ej.id}
               onEdit={() => setEditingEjemplarId(ej.id)}
@@ -1071,17 +1091,22 @@ function ObraEditForm({
   const [ubicacion, setUbicacion] = useState(obra.ubicacion_fisica_actual ?? "");
   const [tags, setTags] = useState<string[]>(parseTags(obra.tags));
   const [categoriaObra, setCategoriaObra] = useState<CategoriaObra>(obra.categoria_obra);
-  const [subtipoFotografia, setSubtipoFotografia] = useState(ext?.subtipo_fotografia ?? "Digital");
-  const [subtipoPintura, setSubtipoPintura] = useState<SubtipoPintura>(
-    (ext?.subtipo_pintura as SubtipoPintura) ?? "Original",
-  );
+  const [subtipoFotografia, setSubtipoFotografia] = useState(ext?.subtipo_fotografia ?? "DigitalFineArt");
   const [fechaCaptura, setFechaCaptura] = useState(ext?.fecha_captura ?? todayISO());
   const [fechaEdicion, setFechaEdicion] = useState(ext?.fecha_edicion ?? todayISO());
   const [softwareEdicion, setSoftwareEdicion] = useState(ext?.software_edicion ?? "");
   const [tecnica, setTecnica] = useState(ext?.tecnica ?? "");
   const [dimensiones, setDimensiones] = useState(ext?.dimensiones ?? "");
-  const [peso, setPeso] = useState(ext?.peso ?? "");
-  const [fechaCreacion, setFechaCreacion] = useState(ext?.fecha_creacion ?? todayISO());
+  const [obraDetalle, setObraDetalle] = useState<ObraDetalleFieldsState>({
+    subtipo: ext?.subtipo ?? "",
+    tecnicaMaterial: ext?.tecnica_material ?? "",
+    soporte: ext?.soporte ?? "",
+    tecnica: ext?.tecnica ?? "",
+    dimensiones: ext?.dimensiones ?? "",
+    peso: ext?.peso ?? "",
+    fechaCreacion: ext?.fecha_creacion ?? todayISO(),
+    esSeriada: false,
+  });
   const eraSeriada = Number(obra.es_seriada) === 1;
   const [esSeriada, setEsSeriada] = useState(eraSeriada);
   const [cantidadTotalEdiciones, setCantidadTotalEdiciones] = useState("1");
@@ -1089,9 +1114,14 @@ function ObraEditForm({
   const [error, setError] = useState<string | null>(null);
   useEscapeToDismiss(error, setError);
 
-  const permiteCambiarSeriada = categoriaObra !== "Pintura";
+  const permiteCambiarSeriada = categoriaObra !== "ObraGrafica";
   const puedeDesconvertir = puedeDeshacerSerie(ejemplares.map((ej) => ej.estado));
-  const esSeriadaCalculada = categoriaObra === "Pintura" ? derivarEsSeriadaPintura(subtipoPintura) : esSeriada;
+  const esSeriadaCalculada =
+    categoriaObra === "ObraGrafica"
+      ? obraDetalle.subtipo
+        ? derivarEsSeriadaObraGrafica(obraDetalle.subtipo as SubtipoObraGrafica)
+        : false
+      : esSeriada;
 
   useEffect(() => {
     return () => {
@@ -1138,17 +1168,25 @@ function ObraEditForm({
         categoria: categoriaObra,
         esSeriada: esSeriadaCalculada,
         cantidadTotalEdiciones: Math.max(1, parseInt(cantidadTotalEdiciones, 10) || 1),
-        ext: {
-          subtipo_fotografia: subtipoFotografia,
-          fecha_captura: fechaCaptura,
-          fecha_edicion: fechaEdicion,
-          software_edicion: softwareEdicion,
-          subtipo_pintura: subtipoPintura,
-          tecnica,
-          dimensiones,
-          peso,
-          fecha_creacion: fechaCreacion,
-        },
+        ext:
+          categoriaObra === "Fotografia"
+            ? {
+                subtipo_fotografia: subtipoFotografia,
+                fecha_captura: fechaCaptura,
+                fecha_edicion: fechaEdicion,
+                software_edicion: softwareEdicion,
+                tecnica,
+                dimensiones,
+              }
+            : {
+                subtipo: obraDetalle.subtipo,
+                tecnica_material: obraDetalle.tecnicaMaterial,
+                soporte: obraDetalle.soporte,
+                tecnica: obraDetalle.tecnica,
+                dimensiones: obraDetalle.dimensiones,
+                peso: obraDetalle.peso,
+                fecha_creacion: obraDetalle.fechaCreacion,
+              },
         imageFile,
         removeImage: removerImagen,
         artistaId: artistaId ?? obra.artista_id,
@@ -1208,11 +1246,15 @@ function ObraEditForm({
       )}
 
       <label>
-        {t("obraForm.categoriaLabel")}
+        {t("obraForm.categoriaLabel")} <HelpIcon fieldKey="categoria_obra" />
         <select value={categoriaObra} onChange={(e) => setCategoriaObra(e.target.value as CategoriaObra)}>
           <option value="Fotografia">{t("fields.fotografia.legend")}</option>
           <option value="Pintura">{t("fields.pintura.legend")}</option>
+          <option value="ObraGrafica">{t("fields.obraGrafica.legend")}</option>
           <option value="Escultura">{t("fields.escultura.legend")}</option>
+          <option value="Dibujo">{t("fields.dibujo.legend")}</option>
+          <option value="TextilCeramica">{t("fields.textilCeramica.legend")}</option>
+          <option value="NuevosMedios">{t("fields.nuevosMedios.legend")}</option>
         </select>
       </label>
 
@@ -1221,8 +1263,10 @@ function ObraEditForm({
           <label>
             {t("field.subtipo")}
             <select value={subtipoFotografia} onChange={(e) => setSubtipoFotografia(e.target.value)}>
-              <option value="Analogica">{t("fields.fotografia.subtipoAnalogica")}</option>
-              <option value="Digital">{t("fields.fotografia.subtipoDigital")}</option>
+              <option value="AnalogicaClasica">{t("fields.fotografia.subtipoAnalogicaClasica")}</option>
+              <option value="DigitalFineArt">{t("fields.fotografia.subtipoDigitalFineArt")}</option>
+              <option value="ProcesosHistoricos">{t("fields.fotografia.subtipoProcesosHistoricos")}</option>
+              <option value="Fotolibros">{t("fields.fotografia.subtipoFotolibros")}</option>
               <option value="Sintografia">{t("fields.fotografia.subtipoSintografia")}</option>
             </select>
           </label>
@@ -1240,7 +1284,7 @@ function ObraEditForm({
           </label>
           <label>
             {t("field.tecnica")} <HelpIcon fieldKey="tecnica_fotografia" />
-            <input type="text" value={tecnica ?? ""} onChange={(e) => setTecnica(e.target.value)} />
+            <textarea rows={2} value={tecnica ?? ""} onChange={(e) => setTecnica(e.target.value)} />
           </label>
           {esRegistroPersonal && (
             <label>
@@ -1251,22 +1295,12 @@ function ObraEditForm({
         </>
       )}
 
-      {categoriaObra === "Pintura" && (
+      {categoriaObra !== "Fotografia" && (
+        <ObraDetalleFields categoria={categoriaObra} value={obraDetalle} onChange={setObraDetalle} mostrarEsSeriada={false} />
+      )}
+
+      {categoriaObra === "ObraGrafica" && (
         <>
-          <label>
-            {t("field.subtipo")} <HelpIcon fieldKey="subtipo_pintura" />
-            <select
-              value={subtipoPintura}
-              onChange={(e) => setSubtipoPintura(e.target.value as SubtipoPintura)}
-            >
-              <option value="Original" disabled={eraSeriada && subtipoPintura !== "Original" && !puedeDesconvertir}>
-                {t("fields.pintura.subtipoOriginal")}
-              </option>
-              <option value="Serigrafia">{t("fields.pintura.subtipoSerigrafia")}</option>
-              <option value="Litografia">{t("fields.pintura.subtipoLitografia")}</option>
-              <option value="Grabado">{t("fields.pintura.subtipoGrabado")}</option>
-            </select>
-          </label>
           {eraSeriada && !esSeriadaCalculada && !puedeDesconvertir && (
             <p className="field-note">{t("obraDetail.noSePuedeDeshacerSerie")}</p>
           )}
@@ -1281,39 +1315,34 @@ function ObraEditForm({
               />
             </label>
           )}
-          <p className="field-note">
-            {t("fields.pintura.esSeriadaPrefix")} <strong>{esSeriadaCalculada ? t("common.yes") : t("common.no")}</strong>{" "}
-            {t("fields.pintura.esSeriadaSuffix")} <HelpIcon fieldKey="es_seriada" />
-          </p>
+          {obraDetalle.subtipo && (
+            <p className="field-note">
+              {t("fields.pintura.esSeriadaPrefix")} <strong>{esSeriadaCalculada ? t("common.yes") : t("common.no")}</strong>{" "}
+              {t("fields.pintura.esSeriadaSuffix")} <HelpIcon fieldKey="es_seriada" />
+            </p>
+          )}
         </>
       )}
 
-      {(categoriaObra === "Pintura" || categoriaObra === "Escultura") && (
-        <>
+      {esRegistroPersonal && categoriaObra === "Fotografia" ? (
+        subtipoFotografia === "DigitalFineArt" || subtipoFotografia === "Sintografia" ? (
           <label>
-            {t("field.tecnica")}
-            <input type="text" value={tecnica ?? ""} onChange={(e) => setTecnica(e.target.value)} />
+            {t("obraForm.ubicacionArchivoLabel")} <HelpIcon fieldKey="ubicacion_fisica_archivo" />
+            <FilePathField value={ubicacion} onChange={setUbicacion} />
           </label>
+        ) : (
           <label>
-            {t("field.dimensiones")}
-            <input type="text" value={dimensiones ?? ""} onChange={(e) => setDimensiones(e.target.value)} />
+            {t("obraForm.ubicacionNegativoLabel")} <HelpIcon fieldKey="ubicacion_fisica_archivo" />
+            <input type="text" value={ubicacion} onChange={(e) => setUbicacion(e.target.value)} />
           </label>
+        )
+      ) : (
+        esRegistroPersonal && (
           <label>
-            {t("field.peso")}
-            <input type="text" value={peso ?? ""} onChange={(e) => setPeso(e.target.value)} />
+            {t("obraDetail.ubicacionFisicaArchivo")} <HelpIcon fieldKey="ubicacion_fisica_archivo" />
+            <FilePathField value={ubicacion} onChange={setUbicacion} />
           </label>
-          <label>
-            {t("field.fechaCreacion")}
-            <input type="date" value={fechaCreacion ?? ""} onChange={(e) => setFechaCreacion(e.target.value)} />
-          </label>
-        </>
-      )}
-
-      {esRegistroPersonal && (
-        <label>
-          {t("obraDetail.ubicacionFisicaArchivo")} <HelpIcon fieldKey="ubicacion_fisica_archivo" />
-          <FilePathField value={ubicacion} onChange={setUbicacion} />
-        </label>
+        )
       )}
 
       {permiteCambiarSeriada && (
@@ -1372,6 +1401,7 @@ function EjemplarRowView({
   ejemplar,
   categoria,
   esFotografiaDigital,
+  esFotografiaDigitalOSintografia,
   venta,
   editing,
   onEdit,
@@ -1387,6 +1417,7 @@ function EjemplarRowView({
   ejemplar: EjemplarRow;
   categoria: CategoriaObra;
   esFotografiaDigital: boolean;
+  esFotografiaDigitalOSintografia: boolean;
   venta: VentaRow | undefined;
   editing: boolean;
   onEdit: () => void;
@@ -1396,11 +1427,14 @@ function EjemplarRowView({
     fechaImpresion: string;
     tipoImpresion: string;
     soporteImpresion: string;
+    tipoTintas: string;
     tallerImpresion: string;
     ubicacionActual: string;
     dimensiones: string;
     tipoEnmarcado: string;
     tamanoFinalEnmarcado: string;
+    ubicacionFirma: string;
+    selloSecoHolograma: string;
     notas: string;
     precioVenta: string;
     monedaVenta: string;
@@ -1418,15 +1452,19 @@ function EjemplarRowView({
   const [fechaImpresion, setFechaImpresion] = useState(ejemplar.fecha_impresion ?? todayISO());
   const [tipoImpresion, setTipoImpresion] = useState(ejemplar.tipo_impresion ?? "");
   const [soporteImpresion, setSoporteImpresion] = useState(ejemplar.soporte_impresion ?? "");
+  const [tipoTintas, setTipoTintas] = useState(ejemplar.tipo_tintas ?? "");
   const [tallerImpresion, setTallerImpresion] = useState(ejemplar.taller_impresion ?? "");
   const [ubicacionActual, setUbicacionActual] = useState(ejemplar.ubicacion_actual ?? "");
   const [dimensiones, setDimensiones] = useState(ejemplar.dimensiones ?? "");
   const [tipoEnmarcado, setTipoEnmarcado] = useState(ejemplar.tipo_enmarcado ?? "");
   const [tamanoFinalEnmarcado, setTamanoFinalEnmarcado] = useState(ejemplar.tamano_final_enmarcado ?? "");
+  const [ubicacionFirma, setUbicacionFirma] = useState(ejemplar.ubicacion_firma ?? "");
+  const [selloSecoHolograma, setSelloSecoHolograma] = useState(ejemplar.sello_seco_holograma ?? "");
   const [notas, setNotas] = useState(ejemplar.notas ?? "");
   const [precioVenta, setPrecioVenta] = useState(ejemplar.precio_venta != null ? String(ejemplar.precio_venta) : "");
   const [monedaVenta, setMonedaVenta] = useState(ejemplar.moneda_venta ?? "ARS");
-  const permiteEnmarcado = categoria === "Fotografia" || categoria === "Pintura";
+  const permiteEnmarcado =
+    categoria === "Fotografia" || categoria === "Pintura" || categoria === "ObraGrafica" || categoria === "Dibujo";
   const presupuestoBloqueado = ["vendida", "descartada", "coleccion_autor", "destruida"].includes(ejemplar.estado);
   const [ventaBloqueada, setVentaBloqueada] = useState<string | null>(null);
   useEscapeToDismiss(ventaBloqueada, setVentaBloqueada);
@@ -1487,18 +1525,34 @@ function EjemplarRowView({
           <span className="field-label">{t("obraDetail.soporteImpresion")}</span>
           <input type="text" value={soporteImpresion} onChange={(e) => setSoporteImpresion(e.target.value)} />
         </label>
+        {esFotografiaDigitalOSintografia && (
+          <label>
+            <span className="field-label">
+              {t("obraDetail.tipoTintasLabel")} <HelpIcon fieldKey="tipo_tintas" />
+            </span>
+            <input type="text" value={tipoTintas} onChange={(e) => setTipoTintas(e.target.value)} />
+          </label>
+        )}
         <label>
           <span className="field-label">{t("obraDetail.tamanoEjemplarLabel")}</span>
           <input type="text" value={dimensiones} onChange={(e) => setDimensiones(e.target.value)} />
         </label>
         {esFotografiaDigital && (
           <label>
-            <span className="field-label">{t("obraDetail.tallerImpresionLabel")}</span>
+            <span className="field-label">
+              {t("obraDetail.tallerImpresionLabel")} <HelpIcon fieldKey="taller_impresion" />
+            </span>
             <input type="text" value={tallerImpresion} onChange={(e) => setTallerImpresion(e.target.value)} />
           </label>
         )}
         {permiteEnmarcado && (
           <>
+            <label>
+              <span className="field-label">
+                {t("obraDetail.tipoEnmarcadoLabel")} <HelpIcon fieldKey="tipo_enmarcado" />
+              </span>
+              <input type="text" value={tipoEnmarcado} onChange={(e) => setTipoEnmarcado(e.target.value)} />
+            </label>
             <label>
               <span className="field-label">{t("obraDetail.tamanoFinalEnmarcadoLabel")}</span>
               <input
@@ -1507,9 +1561,25 @@ function EjemplarRowView({
                 onChange={(e) => setTamanoFinalEnmarcado(e.target.value)}
               />
             </label>
+          </>
+        )}
+        {categoria === "Fotografia" && (
+          <>
             <label>
-              <span className="field-label">{t("obraDetail.tipoEnmarcadoLabel")}</span>
-              <input type="text" value={tipoEnmarcado} onChange={(e) => setTipoEnmarcado(e.target.value)} />
+              <span className="field-label">
+                {t("obraDetail.ubicacionFirmaLabel")} <HelpIcon fieldKey="ubicacion_firma" />
+              </span>
+              <input type="text" value={ubicacionFirma} onChange={(e) => setUbicacionFirma(e.target.value)} />
+            </label>
+            <label>
+              <span className="field-label">
+                {t("obraDetail.selloSecoHologramaLabel")} <HelpIcon fieldKey="sello_seco_holograma" />
+              </span>
+              <input
+                type="text"
+                value={selloSecoHolograma}
+                onChange={(e) => setSelloSecoHolograma(e.target.value)}
+              />
             </label>
           </>
         )}
@@ -1541,11 +1611,14 @@ function EjemplarRowView({
                 fechaImpresion,
                 tipoImpresion,
                 soporteImpresion,
+                tipoTintas,
                 tallerImpresion,
                 ubicacionActual,
                 dimensiones,
                 tipoEnmarcado,
                 tamanoFinalEnmarcado,
+                ubicacionFirma,
+                selloSecoHolograma,
                 notas,
                 precioVenta,
                 monedaVenta,
@@ -1579,14 +1652,21 @@ function EjemplarRowView({
       </span>
       {ejemplar.tipo_impresion && <span>{t("obraDetail.tipoImpresion", { valor: ejemplar.tipo_impresion })}</span>}
       {ejemplar.soporte_impresion && <span>{t("common.soporte", { soporte: ejemplar.soporte_impresion })}</span>}
+      {ejemplar.tipo_tintas && <span>{t("obraDetail.tipoTintas", { valor: ejemplar.tipo_tintas })}</span>}
       {ejemplar.dimensiones && <span>{t("obraDetail.tamanoEjemplar", { valor: ejemplar.dimensiones })}</span>}
       {ejemplar.taller_impresion && (
         <span>{t("obraDetail.tallerImpresion", { valor: ejemplar.taller_impresion })}</span>
       )}
+      {ejemplar.tipo_enmarcado && <span>{t("obraDetail.tipoEnmarcado", { valor: ejemplar.tipo_enmarcado })}</span>}
       {ejemplar.tamano_final_enmarcado && (
         <span>{t("obraDetail.tamanoFinalEnmarcado", { valor: ejemplar.tamano_final_enmarcado })}</span>
       )}
-      {ejemplar.tipo_enmarcado && <span>{t("obraDetail.tipoEnmarcado", { valor: ejemplar.tipo_enmarcado })}</span>}
+      {ejemplar.ubicacion_firma && (
+        <span>{t("obraDetail.ubicacionFirma", { valor: ejemplar.ubicacion_firma })}</span>
+      )}
+      {ejemplar.sello_seco_holograma && (
+        <span>{t("obraDetail.selloSecoHolograma", { valor: ejemplar.sello_seco_holograma })}</span>
+      )}
       <span>{t("common.ubicacion", { ubicacion: ejemplar.ubicacion_actual || "—" })}</span>
       {ejemplar.precio_venta != null && (
         <span>

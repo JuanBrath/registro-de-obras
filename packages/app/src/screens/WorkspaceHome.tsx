@@ -5,7 +5,6 @@ export function WorkspaceHome({
   onEditProfile,
   onVerObras,
   onArtistas,
-  onGaleriaFotos,
   onVentas,
   onGaleriaPerfil,
   onClientes,
@@ -13,16 +12,16 @@ export function WorkspaceHome({
   onEditProfile: () => void;
   onVerObras: () => void;
   onArtistas: () => void;
-  onGaleriaFotos: () => void;
   onVentas: () => void;
   onGaleriaPerfil: () => void;
   onClientes: () => void;
 }) {
-  const { context, personalArtista } = useWorkspace();
+  const { context, personalArtista, open } = useWorkspace();
   const { t } = useLanguage();
   if (!context) return null;
 
   const esRegistroPersonal = context.workspace === "personal";
+  const otroWorkspace = esRegistroPersonal ? "galeria" : "personal";
 
   return (
     <div className="workspace-home">
@@ -50,9 +49,6 @@ export function WorkspaceHome({
         <button type="button" onClick={onVerObras}>
           {t("workspaceHome.obras")}
         </button>
-        <button type="button" onClick={onGaleriaFotos}>
-          {t("workspaceHome.galeriaFotos")}
-        </button>
         <button type="button" onClick={onClientes}>
           {t("workspaceHome.clientes")}
         </button>
@@ -60,6 +56,10 @@ export function WorkspaceHome({
           {t("workspaceHome.ventas")}
         </button>
       </div>
+
+      <button type="button" className="workspace-home-cambiar-modulo" onClick={() => void open(otroWorkspace)}>
+        {t(esRegistroPersonal ? "workspacePicker.galeria" : "workspacePicker.personal")}
+      </button>
     </div>
   );
 }

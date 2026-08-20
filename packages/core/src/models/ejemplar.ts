@@ -36,4 +36,8 @@ export interface Ejemplar {
   /** Valor al que se ofrece esta copia (referencia para presupuestos, no es venta.valor_venta). */
   precioVenta: number | null;
   monedaVenta: string | null;
+  /** Solo aplica a fotografia digital/sintografia: tipo de tintas utilizadas en la impresion. */
+  tipoTintas: string | null;
+  ubicacionFirma: string | null;
+  selloSecoHolograma: string | null;
 }

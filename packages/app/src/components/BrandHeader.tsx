@@ -1,6 +1,6 @@
 import type { EdicionId } from "@registro/core";
 import gsMonograma from "../assets/brand/gs-monograma.png";
-import { useNavigation } from "../state/NavigationContext.js";
+import { useWorkspace } from "../state/WorkspaceContext.js";
 import { useEdicion } from "../state/EdicionContext.js";
 import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
 
@@ -17,15 +17,18 @@ export function BrandHeader({
   size?: "navbar" | "splash";
   className?: string;
 }) {
-  const { goHome } = useNavigation();
+  const { close } = useWorkspace();
   const { edicion } = useEdicion();
   const { t } = useLanguage();
 
+  // El logo siempre vuelve a la selección de módulo (Personal/Galería), no
+  // solo al home del módulo actual: cerrar el workspace es un no-op seguro
+  // si ya estamos en el picker (sin workspace abierto).
   return (
     <button
       type="button"
       className={`brand-header brand-header-${size}${className ? ` ${className}` : ""}`}
-      onClick={goHome}
+      onClick={() => void close()}
       aria-label={t("brand.irAInicio")}
     >
       <img src={gsMonograma} alt="" className="brand-header-icon" />

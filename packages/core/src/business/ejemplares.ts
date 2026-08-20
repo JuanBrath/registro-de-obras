@@ -35,12 +35,19 @@ export function generarEjemplarUnico(): EjemplarGenerado {
   return { tipo: "edicion", indice: 1, totalEdiciones: 1, numero: formatearNumeroEjemplar(1, 1) };
 }
 
-export function generarEjemplares(cantidadTotalEdiciones: number): EjemplarGenerado[] {
+// cantidadPruebasArtista es opcional: si no se especifica, se usa el 10%
+// redondeado hacia arriba (calcularCantidadPruebasArtista). Cuando el
+// usuario elige explicitamente cuantas pruebas de autor tiene la serie, se
+// pasa ese valor aca en vez del automatico.
+export function generarEjemplares(
+  cantidadTotalEdiciones: number,
+  cantidadPruebasArtista?: number,
+): EjemplarGenerado[] {
   if (!Number.isInteger(cantidadTotalEdiciones) || cantidadTotalEdiciones < 1) {
     throw new Error("cantidadTotalEdiciones debe ser un entero mayor o igual a 1");
   }
 
-  const cantidadPA = calcularCantidadPruebasArtista(cantidadTotalEdiciones);
+  const cantidadPA = cantidadPruebasArtista ?? calcularCantidadPruebasArtista(cantidadTotalEdiciones);
 
   const ediciones: EjemplarGenerado[] = Array.from({ length: cantidadTotalEdiciones }, (_, i) => ({
     tipo: "edicion" as const,
