@@ -1,4 +1,5 @@
 import type { DatabaseAdapter } from "@registro/core";
+import { formatNumeroArtista } from "../utils/formatNumeroArtista.js";
 
 export interface NuevoArtistaFields {
   nombreCompleto: string;
@@ -35,7 +36,7 @@ export async function createArtista(
     const counter = await tx.query<{ siguiente_numero: number }>(
       "SELECT siguiente_numero FROM artista_contador WHERE id = 1",
     );
-    const numeroArtista = String(counter[0].siguiente_numero);
+    const numeroArtista = formatNumeroArtista(counter[0].siguiente_numero);
     await tx.execute("UPDATE artista_contador SET siguiente_numero = siguiente_numero + 1 WHERE id = 1");
 
     const result = await tx.execute(

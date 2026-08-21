@@ -13,6 +13,7 @@ import { formatFechaDDMMYYYY } from "../utils/formatFecha.js";
 import { detectImageFormat } from "../utils/detectImageFormat.js";
 import { focusNextOnEnter } from "../utils/focusNextOnEnter.js";
 import { drawPdfHeader, writeWrappedText } from "../utils/pdfBranding.js";
+import { formatNumeroArtista } from "../utils/formatNumeroArtista.js";
 import {
   buildWebUrl,
   buildInstagramUrl,
@@ -316,7 +317,7 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
     const rows = await context.db.query<{ siguiente_numero: number }>(
       "SELECT siguiente_numero FROM artista_contador WHERE id = 1",
     );
-    setNextNumero(rows.length > 0 ? String(rows[0].siguiente_numero) : null);
+    setNextNumero(rows.length > 0 ? formatNumeroArtista(rows[0].siguiente_numero) : null);
   }
 
   useEffect(() => {
@@ -548,10 +549,11 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
       {mostrandoAlta && (
       <form className="obra-form" onSubmit={handleSubmit} onKeyDown={focusNextOnEnter}>
         <h2>{t("artistas.nuevoArtistaTitulo")}</h2>
-        <p className="field-note">{t("artistas.notaNumeroAuto")}</p>
 
         <label>
-          <span className="field-label">{t("artistaSelector.numeroAsignado")}</span>
+          <span className="field-label">
+            {t("artistaSelector.numeroAsignado")} <HelpIcon fieldKey="numero_artista_auto" />
+          </span>
           <input type="text" value={nextNumero ?? "…"} disabled readOnly />
         </label>
 

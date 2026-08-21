@@ -275,8 +275,6 @@ export const es = {
   "artistas.title": "Artistas",
   "artistas.nuevoArtista": "+ Nuevo artista",
   "artistas.nuevoArtistaTitulo": "Nuevo artista",
-  "artistas.notaNumeroAuto":
-    "El número de identificación se asigna automáticamente. Estos datos quedan disponibles para elegir al cargar una obra.",
   "artistas.foto": "Foto",
   "artistas.fechaNacimiento": "Fecha de nacimiento",
   "artistas.bio": "Biografía corta (Short Bio)",

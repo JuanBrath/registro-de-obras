@@ -3,6 +3,7 @@ import { useWorkspace } from "../state/WorkspaceContext.js";
 import { createArtista } from "../data/createArtista.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
+import { formatNumeroArtista } from "../utils/formatNumeroArtista.js";
 
 interface ArtistaOption {
   id: number;
@@ -48,7 +49,7 @@ export function ArtistaSelector({
     const rows = await context.db.query<{ siguiente_numero: number }>(
       "SELECT siguiente_numero FROM artista_contador WHERE id = 1",
     );
-    setNextNumero(rows.length > 0 ? String(rows[0].siguiente_numero) : null);
+    setNextNumero(rows.length > 0 ? formatNumeroArtista(rows[0].siguiente_numero) : null);
   }
 
   useEffect(() => {

@@ -40,6 +40,7 @@ import { migration0040TextoAyudaCategoriasSubtipos } from "./0040_texto_ayuda_ca
 import { migration0041EjemplarFechaLimite } from "./0041_ejemplar_fecha_limite.js";
 import { migration0042ClientePerfil } from "./0042_cliente_perfil.js";
 import { migration0043ArtistaPerfilExtendido } from "./0043_artista_perfil_extendido.js";
+import { migration0044TextoAyudaNumeroArtista } from "./0044_texto_ayuda_numero_artista.js";
 
 export interface Migration {
   name: string;
@@ -211,4 +212,5 @@ export const ALL_MIGRATIONS: Migration[] = [
   migration0041EjemplarFechaLimite,
   migration0042ClientePerfil,
   migration0043ArtistaPerfilExtendido,
+  migration0044TextoAyudaNumeroArtista,
 ];

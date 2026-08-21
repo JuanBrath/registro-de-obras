@@ -277,8 +277,6 @@ export const en: Record<keyof typeof es, string> = {
   "artistas.title": "Artists",
   "artistas.nuevoArtista": "+ New artist",
   "artistas.nuevoArtistaTitulo": "New artist",
-  "artistas.notaNumeroAuto":
-    "The ID number is assigned automatically. This info becomes available to choose when adding an artwork.",
   "artistas.foto": "Photo",
   "artistas.fechaNacimiento": "Date of birth",
   "artistas.bio": "Short Bio",

@@ -166,6 +166,7 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
       "0041_ejemplar_fecha_limite",
       "0042_cliente_perfil",
       "0043_artista_perfil_extendido",
+      "0044_texto_ayuda_numero_artista",
     ]);
   });
 
