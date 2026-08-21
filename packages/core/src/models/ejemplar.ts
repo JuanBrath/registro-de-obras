@@ -40,4 +40,6 @@ export interface Ejemplar {
   tipoTintas: string | null;
   ubicacionFirma: string | null;
   selloSecoHolograma: string | null;
+  /** Solo aplica a los estados Exhibicion/Consignacion: hasta cuando queda la pieza en ese estado. */
+  fechaLimite: string | null;
 }

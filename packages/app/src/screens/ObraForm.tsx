@@ -322,11 +322,7 @@ export function ObraForm({
   return (
     <form className="obra-form" onSubmit={handleSubmit} onKeyDown={focusNextOnEnter}>
       <div className="obra-form-header">
-        <h2>
-          {t("obraForm.tituloNueva", {
-            registro: esRegistroPersonal ? t("workspacePicker.personal") : t("workspacePicker.galeria"),
-          })}
-        </h2>
+        <h2>{t("obraForm.tituloNueva")}</h2>
         <button type="button" onClick={onCancel}>
           {t("obraForm.cancelarVolver")}
         </button>

@@ -84,6 +84,7 @@ interface EjemplarRow {
   tamano_final_enmarcado: string | null;
   ubicacion_firma: string | null;
   sello_seco_holograma: string | null;
+  fecha_limite: string | null;
   notas: string | null;
   precio_venta: number | null;
   moneda_venta: string | null;
@@ -267,7 +268,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
 
       if (obraRow) {
         const ejemplarRows = await context.db.query<EjemplarRow>(
-          `SELECT id, tipo, numero, estado, venta_id, fecha_impresion, tipo_impresion, soporte_impresion, tipo_tintas, taller_impresion, ubicacion_actual, dimensiones, tipo_enmarcado, tamano_final_enmarcado, ubicacion_firma, sello_seco_holograma, notas, precio_venta, moneda_venta
+          `SELECT id, tipo, numero, estado, venta_id, fecha_impresion, tipo_impresion, soporte_impresion, tipo_tintas, taller_impresion, ubicacion_actual, dimensiones, tipo_enmarcado, tamano_final_enmarcado, ubicacion_firma, sello_seco_holograma, fecha_limite, notas, precio_venta, moneda_venta
            FROM ejemplar WHERE obra_id = ? ORDER BY tipo, indice`,
           [obraId],
         );
@@ -563,6 +564,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       tamanoFinalEnmarcado: string;
       ubicacionFirma: string;
       selloSecoHolograma: string;
+      fechaLimite: string;
       notas: string;
       precioVenta: string;
       monedaVenta: string;
@@ -571,7 +573,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
     if (!context) return;
     await context.db.transaction(async (tx) => {
       await tx.execute(
-        `UPDATE ejemplar SET estado = ?, fecha_impresion = ?, tipo_impresion = ?, soporte_impresion = ?, tipo_tintas = ?, taller_impresion = ?, ubicacion_actual = ?, dimensiones = ?, tipo_enmarcado = ?, tamano_final_enmarcado = ?, ubicacion_firma = ?, sello_seco_holograma = ?, notas = ?, precio_venta = ?, moneda_venta = ? WHERE id = ?`,
+        `UPDATE ejemplar SET estado = ?, fecha_impresion = ?, tipo_impresion = ?, soporte_impresion = ?, tipo_tintas = ?, taller_impresion = ?, ubicacion_actual = ?, dimensiones = ?, tipo_enmarcado = ?, tamano_final_enmarcado = ?, ubicacion_firma = ?, sello_seco_holograma = ?, fecha_limite = ?, notas = ?, precio_venta = ?, moneda_venta = ? WHERE id = ?`,
         [
           fields.estado,
           fields.fechaImpresion || null,
@@ -585,6 +587,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
           fields.tamanoFinalEnmarcado || null,
           fields.ubicacionFirma || null,
           fields.selloSecoHolograma || null,
+          fields.estado === "exhibicion" || fields.estado === "consignacion" ? fields.fechaLimite || null : null,
           fields.notas || null,
           fields.precioVenta ? parseFloat(fields.precioVenta) : null,
           fields.precioVenta ? fields.monedaVenta : null,
@@ -1435,6 +1438,7 @@ function EjemplarRowView({
     tamanoFinalEnmarcado: string;
     ubicacionFirma: string;
     selloSecoHolograma: string;
+    fechaLimite: string;
     notas: string;
     precioVenta: string;
     monedaVenta: string;
@@ -1460,6 +1464,7 @@ function EjemplarRowView({
   const [tamanoFinalEnmarcado, setTamanoFinalEnmarcado] = useState(ejemplar.tamano_final_enmarcado ?? "");
   const [ubicacionFirma, setUbicacionFirma] = useState(ejemplar.ubicacion_firma ?? "");
   const [selloSecoHolograma, setSelloSecoHolograma] = useState(ejemplar.sello_seco_holograma ?? "");
+  const [fechaLimite, setFechaLimite] = useState(ejemplar.fecha_limite ?? "");
   const [notas, setNotas] = useState(ejemplar.notas ?? "");
   const [precioVenta, setPrecioVenta] = useState(ejemplar.precio_venta != null ? String(ejemplar.precio_venta) : "");
   const [monedaVenta, setMonedaVenta] = useState(ejemplar.moneda_venta ?? "ARS");
@@ -1511,6 +1516,14 @@ function EjemplarRowView({
             <option value="destruida">{t("estado.destruida")}</option>
           </select>
         </label>
+        {(estado === "exhibicion" || estado === "consignacion") && (
+          <label>
+            <span className="field-label">
+              {t("obraDetail.fechaLimiteLabel")} <HelpIcon fieldKey="fecha_limite_ejemplar" />
+            </span>
+            <input type="date" value={fechaLimite} onChange={(e) => setFechaLimite(e.target.value)} />
+          </label>
+        )}
         <label>
           <span className="field-label">{t("obraDetail.fechaImpresion")}</span>
           <input type="date" value={fechaImpresion} onChange={(e) => setFechaImpresion(e.target.value)} />
@@ -1619,6 +1632,7 @@ function EjemplarRowView({
                 tamanoFinalEnmarcado,
                 ubicacionFirma,
                 selloSecoHolograma,
+                fechaLimite,
                 notas,
                 precioVenta,
                 monedaVenta,
@@ -1644,6 +1658,9 @@ function EjemplarRowView({
       <span className={`obra-card-estado obra-card-estado-${ejemplar.estado}`}>
         {t(`estado.${ejemplar.estado}` as TranslationKey)}
       </span>
+      {(ejemplar.estado === "exhibicion" || ejemplar.estado === "consignacion") && ejemplar.fecha_limite && (
+        <span>{t("obraDetail.fechaLimite", { valor: formatFechaDDMMYYYY(ejemplar.fecha_limite) })}</span>
+      )}
       <span>
         {ejemplar.fecha_impresion
           ? t("common.impreso", { fecha: formatFechaDDMMYYYY(ejemplar.fecha_impresion) })

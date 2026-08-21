@@ -6,7 +6,15 @@ import { limitImageResolution } from "../utils/limitImageResolution.js";
 // "Elegir archivo") whose text follows the system locale, not the language
 // picked in Configuracion. This hides that native control and drives it
 // through our own translated button instead.
-export function ImageFileField({ value, onChange }: { value: File | null; onChange: (file: File | null) => void }) {
+export function ImageFileField({
+  value,
+  onChange,
+  disabled = false,
+}: {
+  value: File | null;
+  onChange: (file: File | null) => void;
+  disabled?: boolean;
+}) {
   const { t } = useLanguage();
   const inputRef = useRef<HTMLInputElement>(null);
   const [procesando, setProcesando] = useState(false);
@@ -41,7 +49,7 @@ export function ImageFileField({ value, onChange }: { value: File | null; onChan
       <span className="image-file-field-name">
         {procesando ? t("common.loading") : value ? value.name : t("imageFileField.ningunoSeleccionado")}
       </span>
-      <button type="button" onClick={() => inputRef.current?.click()} disabled={procesando}>
+      <button type="button" onClick={() => inputRef.current?.click()} disabled={procesando || disabled}>
         {t("imageFileField.elegirImagen")}
       </button>
     </div>

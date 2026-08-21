@@ -157,9 +157,10 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
   const [generandoPdf, setGenerandoPdf] = useState(false);
   const [pdfMensaje, setPdfMensaje] = useState<string | null>(null);
   useEscapeToDismiss(pdfMensaje, setPdfMensaje);
-  // Mientras se edita un artista, los demas no se muestran debajo (se ve
-  // solo el que esta en edicion, no toda la lista mezclada con el formulario).
-  const [editingId, setEditingId] = useState<number | null>(null);
+  // Mientras se consulta/edita un artista, los demas no se muestran debajo
+  // (se ve solo el que esta abierto, no toda la lista mezclada con la ficha).
+  const [fichaId, setFichaId] = useState<number | null>(null);
+  const [fichaModo, setFichaModo] = useState<"consultar" | "editar">("consultar");
   // Nombre duplicado: bloquea el guardado (con confirmacion explicita para
   // seguir igual) en vez de solo avisar, para que Enter no dispare un
   // guardado silencioso que crea el duplicado y borra lo que se tipeo.
@@ -306,8 +307,8 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
       handleCancelarAlta();
       return;
     }
-    if (editingId !== null) {
-      setEditingId(null);
+    if (fichaId !== null) {
+      setFichaId(null);
       return;
     }
     onBack();
@@ -453,40 +454,46 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
           <textarea rows={3} value={notas} onChange={(e) => setNotas(e.target.value)} />
         </label>
 
-        <label>
-          <span className="field-label">{t("artistas.telefono")}</span>
-          <input type="text" value={telefono} onChange={(e) => setTelefono(e.target.value)} />
-        </label>
+        <div className="form-row-2">
+          <label>
+            <span className="field-label">{t("artistas.telefono")}</span>
+            <input type="text" value={telefono} onChange={(e) => setTelefono(e.target.value)} />
+          </label>
 
-        <label>
-          <span className="field-label">{t("artistas.email")}</span>
-          <LinkField type="email" value={email} onChange={setEmail} buildUrl={buildMailtoUrl} />
-        </label>
+          <label>
+            <span className="field-label">{t("artistas.email")}</span>
+            <LinkField type="email" value={email} onChange={setEmail} buildUrl={buildMailtoUrl} />
+          </label>
+        </div>
 
         <label>
           <span className="field-label">{t("artistas.direccion")}</span>
           <input type="text" value={direccion} onChange={(e) => setDireccion(e.target.value)} />
         </label>
 
-        <label>
-          <span className="field-label">{t("artistas.web")}</span>
-          <LinkField value={web} onChange={setWeb} buildUrl={buildWebUrl} />
-        </label>
+        <div className="form-row-2">
+          <label>
+            <span className="field-label">{t("artistas.web")}</span>
+            <LinkField value={web} onChange={setWeb} buildUrl={buildWebUrl} />
+          </label>
 
-        <label>
-          <span className="field-label">{t("artistas.instagram")}</span>
-          <LinkField value={instagram} onChange={setInstagram} buildUrl={buildInstagramUrl} />
-        </label>
+          <label>
+            <span className="field-label">{t("artistas.instagram")}</span>
+            <LinkField value={instagram} onChange={setInstagram} buildUrl={buildInstagramUrl} />
+          </label>
+        </div>
 
-        <label>
-          <span className="field-label">{t("artistas.facebook")}</span>
-          <LinkField value={facebook} onChange={setFacebook} buildUrl={buildFacebookUrl} />
-        </label>
+        <div className="form-row-2">
+          <label>
+            <span className="field-label">{t("artistas.facebook")}</span>
+            <LinkField value={facebook} onChange={setFacebook} buildUrl={buildFacebookUrl} />
+          </label>
 
-        <label>
-          <span className="field-label">{t("artistas.x")}</span>
-          <LinkField value={x} onChange={setX} buildUrl={buildXUrl} />
-        </label>
+          <label>
+            <span className="field-label">{t("artistas.x")}</span>
+            <LinkField value={x} onChange={setX} buildUrl={buildXUrl} />
+          </label>
+        </div>
 
         <div className="obra-form-saved-actions">
           <button type="submit" disabled={submitting}>
@@ -536,7 +543,7 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
 
       {!mostrandoAlta && (
       <div className="obras-list">
-        <h2>{t("artistas.artistasRegistrados")}</h2>
+        {fichaId === null && <h2>{t("artistas.artistasRegistrados")}</h2>}
         {loading && <p>{t("common.loading")}</p>}
         {error && (
           <p className="error" role="alert">
@@ -545,7 +552,7 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
         )}
         {!loading && artistas.length === 0 && <p>{t("artistas.sinArtistas")}</p>}
 
-        {artistas.length > 0 && editingId === null && (
+        {artistas.length > 0 && fichaId === null && (
           <input
             type="search"
             className="obras-list-buscador"
@@ -561,15 +568,22 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
 
         <div className="artistas-list">
           {filteredArtistas
-            .filter((a) => editingId === null || a.id === editingId)
+            .filter((a) => fichaId === null || a.id === fichaId)
             .map((a) => (
               <ArtistaRowView
                 key={a.id}
                 artista={a}
                 fotoUrl={thumbnails[a.id]}
-                editing={editingId === a.id}
-                onStartEdit={() => setEditingId(a.id)}
-                onStopEdit={() => setEditingId(null)}
+                modo={fichaId === a.id ? fichaModo : "compacto"}
+                onConsultar={() => {
+                  setFichaId(a.id);
+                  setFichaModo("consultar");
+                }}
+                onEditar={() => {
+                  setFichaId(a.id);
+                  setFichaModo("editar");
+                }}
+                onCerrarFicha={() => setFichaId(null)}
                 onDelete={() => handleDeleteArtista(a.id, a.foto_path)}
                 onSave={(fields, newFoto) => handleUpdateArtista(a.id, fields, newFoto)}
               />
@@ -584,17 +598,19 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
 function ArtistaRowView({
   artista,
   fotoUrl,
-  editing,
-  onStartEdit,
-  onStopEdit,
+  modo,
+  onConsultar,
+  onEditar,
+  onCerrarFicha,
   onDelete,
   onSave,
 }: {
   artista: ArtistaRow;
   fotoUrl: string | undefined;
-  editing: boolean;
-  onStartEdit: () => void;
-  onStopEdit: () => void;
+  modo: "compacto" | "consultar" | "editar";
+  onConsultar: () => void;
+  onEditar: () => void;
+  onCerrarFicha: () => void;
   onDelete: () => Promise<void>;
   onSave: (fields: ArtistaFields, newFoto: File | null) => Promise<void>;
 }) {
@@ -666,7 +682,7 @@ function ArtistaRowView({
     setError(null);
     try {
       await onDelete();
-      onStopEdit();
+      onCerrarFicha();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
       setConfirming(false);
@@ -683,7 +699,7 @@ function ArtistaRowView({
         { nombreCompleto, fechaNacimiento, bio, telefono, email, web, instagram, direccion, x, facebook, notas },
         fotoFile,
       );
-      onStopEdit();
+      onCerrarFicha();
       setFotoFile(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -692,71 +708,118 @@ function ArtistaRowView({
     }
   }
 
-  if (editing) {
+  if (modo !== "compacto") {
+    const soloLectura = modo === "consultar";
     return (
       <div className="ejemplar-row ejemplar-row-editing">
+        <h2>{artista.nombre_completo}</h2>
         <label>
           <span className="field-label">{t("artistas.foto")}</span>
-          <ImageFileField value={fotoFile} onChange={setFotoFile} />
+          <ImageFileField value={fotoFile} onChange={setFotoFile} disabled={soloLectura} />
         </label>
         <label>
           <span className="field-label">{t("artistaSelector.nombreCompleto")}</span>
-          <input type="text" value={nombreCompleto} onChange={(e) => setNombreCompleto(e.target.value)} />
+          <input
+            type="text"
+            value={nombreCompleto}
+            onChange={(e) => setNombreCompleto(e.target.value)}
+            disabled={soloLectura}
+          />
         </label>
         <label>
           <span className="field-label">{t("artistas.fechaNacimiento")}</span>
-          <input type="date" value={fechaNacimiento} onChange={(e) => setFechaNacimiento(e.target.value)} />
+          <input
+            type="date"
+            value={fechaNacimiento}
+            onChange={(e) => setFechaNacimiento(e.target.value)}
+            disabled={soloLectura}
+          />
         </label>
         <label>
           <span className="field-label">{t("artistas.bio")}</span>
-          <textarea rows={3} value={bio} onChange={(e) => setBio(e.target.value)} />
+          <textarea rows={3} value={bio} onChange={(e) => setBio(e.target.value)} disabled={soloLectura} />
         </label>
         <label>
           <span className="field-label">{t("artistas.notas")}</span>
-          <textarea rows={3} value={notas} onChange={(e) => setNotas(e.target.value)} />
+          <textarea rows={3} value={notas} onChange={(e) => setNotas(e.target.value)} disabled={soloLectura} />
         </label>
-        <label>
-          <span className="field-label">{t("artistas.telefono")}</span>
-          <input type="text" value={telefono} onChange={(e) => setTelefono(e.target.value)} />
-        </label>
-        <label>
-          <span className="field-label">{t("artistas.email")}</span>
-          <LinkField type="email" value={email} onChange={setEmail} buildUrl={buildMailtoUrl} />
-        </label>
+        <div className="form-row-2">
+          <label>
+            <span className="field-label">{t("artistas.telefono")}</span>
+            <input
+              type="text"
+              value={telefono}
+              onChange={(e) => setTelefono(e.target.value)}
+              disabled={soloLectura}
+            />
+          </label>
+          <label>
+            <span className="field-label">{t("artistas.email")}</span>
+            <LinkField
+              type="email"
+              value={email}
+              onChange={setEmail}
+              buildUrl={buildMailtoUrl}
+              disabled={soloLectura}
+            />
+          </label>
+        </div>
         <label>
           <span className="field-label">{t("artistas.direccion")}</span>
-          <input type="text" value={direccion} onChange={(e) => setDireccion(e.target.value)} />
+          <input
+            type="text"
+            value={direccion}
+            onChange={(e) => setDireccion(e.target.value)}
+            disabled={soloLectura}
+          />
         </label>
-        <label>
-          <span className="field-label">{t("artistas.web")}</span>
-          <LinkField value={web} onChange={setWeb} buildUrl={buildWebUrl} />
-        </label>
-        <label>
-          <span className="field-label">{t("artistas.instagram")}</span>
-          <LinkField value={instagram} onChange={setInstagram} buildUrl={buildInstagramUrl} />
-        </label>
-        <label>
-          <span className="field-label">{t("artistas.facebook")}</span>
-          <LinkField value={facebook} onChange={setFacebook} buildUrl={buildFacebookUrl} />
-        </label>
-        <label>
-          <span className="field-label">{t("artistas.x")}</span>
-          <LinkField value={x} onChange={setX} buildUrl={buildXUrl} />
-        </label>
+        <div className="form-row-2">
+          <label>
+            <span className="field-label">{t("artistas.web")}</span>
+            <LinkField value={web} onChange={setWeb} buildUrl={buildWebUrl} disabled={soloLectura} />
+          </label>
+          <label>
+            <span className="field-label">{t("artistas.instagram")}</span>
+            <LinkField
+              value={instagram}
+              onChange={setInstagram}
+              buildUrl={buildInstagramUrl}
+              disabled={soloLectura}
+            />
+          </label>
+        </div>
+        <div className="form-row-2">
+          <label>
+            <span className="field-label">{t("artistas.facebook")}</span>
+            <LinkField value={facebook} onChange={setFacebook} buildUrl={buildFacebookUrl} disabled={soloLectura} />
+          </label>
+          <label>
+            <span className="field-label">{t("artistas.x")}</span>
+            <LinkField value={x} onChange={setX} buildUrl={buildXUrl} disabled={soloLectura} />
+          </label>
+        </div>
         <div className="obra-form-saved-actions">
-          <button type="button" onClick={handleSaveEdit} disabled={saving}>
-            {saving ? t("common.saving") : t("common.save")}
-          </button>
-          <button type="button" onClick={handleGenerarPdf} disabled={generandoPdf}>
-            {generandoPdf ? t("common.saving") : t("artistas.generarPdf")}
-          </button>
-          <button type="button" onClick={onStopEdit} disabled={saving}>
-            {t("common.cancel")}
-          </button>
-          {!confirming && (
-            <button type="button" onClick={() => setConfirming(true)} disabled={saving}>
-              {t("common.delete")}
-            </button>
+          {soloLectura ? (
+            <>
+              <button type="button" onClick={handleGenerarPdf} disabled={generandoPdf}>
+                {generandoPdf ? t("common.saving") : t("artistas.generarPdf")}
+              </button>
+              <button type="button" onClick={onCerrarFicha}>
+                {t("common.close")}
+              </button>
+            </>
+          ) : (
+            <>
+              <button type="button" onClick={handleSaveEdit} disabled={saving}>
+                {saving ? t("common.saving") : t("common.save")}
+              </button>
+              <button type="button" onClick={handleGenerarPdf} disabled={generandoPdf}>
+                {generandoPdf ? t("common.saving") : t("artistas.generarPdf")}
+              </button>
+              <button type="button" onClick={onCerrarFicha} disabled={saving}>
+                {t("common.cancel")}
+              </button>
+            </>
           )}
         </div>
 
@@ -764,20 +827,6 @@ function ArtistaRowView({
           <p className="success" role="status">
             ✅ {pdfMensaje}
           </p>
-        )}
-
-        {confirming && (
-          <div className="confirm-box">
-            <p>{t("artistas.eliminarConfirm")}</p>
-            <div className="obra-form-saved-actions">
-              <button type="button" onClick={handleConfirmDelete} disabled={deleting}>
-                {deleting ? t("common.deleting") : t("common.siEliminar")}
-              </button>
-              <button type="button" onClick={() => setConfirming(false)} disabled={deleting}>
-                {t("common.cancel")}
-              </button>
-            </div>
-          </div>
         )}
 
         {error && (
@@ -791,21 +840,20 @@ function ArtistaRowView({
 
   return (
     <div className="ejemplar-row">
-      {fotoUrl && <img src={fotoUrl} alt={artista.nombre_completo} className="artista-foto-thumb" />}
-      <strong>{artista.numero_artista || "—"}</strong>
-      <span>{artista.nombre_completo}</span>
+      <strong>{artista.nombre_completo}</strong>
       {artista.telefono && <span>{t("artistas.telPrefix", { telefono: artista.telefono })}</span>}
-      {artista.email && <span>{artista.email}</span>}
-      {artista.web && <span>{artista.web}</span>}
 
-      <button type="button" onClick={onStartEdit}>
-        {t("common.edit")}
-      </button>
-      {!confirming && (
+      <div className="obra-form-saved-actions cliente-compacto-acciones">
+        <button type="button" onClick={onConsultar}>
+          {t("common.consultar")}
+        </button>
+        <button type="button" onClick={onEditar}>
+          {t("common.edit")}
+        </button>
         <button type="button" onClick={() => setConfirming(true)}>
           {t("common.delete")}
         </button>
-      )}
+      </div>
 
       {confirming && (
         <div className="confirm-box">

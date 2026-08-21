@@ -163,6 +163,8 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
       "0038_obra_fotografia_subtipo_ampliado",
       "0039_categorias_obra_detalle",
       "0040_texto_ayuda_categorias_subtipos",
+      "0041_ejemplar_fecha_limite",
+      "0042_cliente_perfil",
     ]);
   });
 
