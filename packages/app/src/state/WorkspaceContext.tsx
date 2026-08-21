@@ -40,12 +40,24 @@ interface ArtistaRow {
   direccion: string | null;
   x: string | null;
   facebook: string | null;
+  linkedin: string | null;
   foto_path: string | null;
   logo_path: string | null;
   cuit: string | null;
   notas: string | null;
   fecha_nacimiento: string | null;
   bio: string | null;
+  nombre_artistico: string | null;
+  lugar_nacimiento: string | null;
+  lugar_fallecimiento: string | null;
+  lugar_residencia_trabajo: string | null;
+  declaracion_artista: string | null;
+  formacion_academica: string | null;
+  exposiciones_individuales: string | null;
+  exposiciones_colectivas: string | null;
+  premios_becas_reconocimientos: string | null;
+  colecciones: string | null;
+  publicaciones_prensa: string | null;
   fecha_alta_sistema: string;
 }
 
@@ -63,12 +75,24 @@ function mapArtistaRow(row: ArtistaRow): Artista {
     direccion: row.direccion,
     x: row.x,
     facebook: row.facebook,
+    linkedin: row.linkedin,
     fotoPath: row.foto_path,
     logoPath: row.logo_path,
     cuit: row.cuit,
     notas: row.notas,
     fechaNacimiento: row.fecha_nacimiento,
     bio: row.bio,
+    nombreArtistico: row.nombre_artistico,
+    lugarNacimiento: row.lugar_nacimiento,
+    lugarFallecimiento: row.lugar_fallecimiento,
+    lugarResidenciaTrabajo: row.lugar_residencia_trabajo,
+    declaracionArtista: row.declaracion_artista,
+    formacionAcademica: row.formacion_academica,
+    exposicionesIndividuales: row.exposiciones_individuales,
+    exposicionesColectivas: row.exposiciones_colectivas,
+    premiosBecasReconocimientos: row.premios_becas_reconocimientos,
+    colecciones: row.colecciones,
+    publicacionesPrensa: row.publicaciones_prensa,
     fechaAltaSistema: row.fecha_alta_sistema,
   };
 }

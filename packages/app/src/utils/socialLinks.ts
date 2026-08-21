@@ -32,3 +32,9 @@ export function buildMailtoUrl(value: string): string {
   const v = value.trim();
   return v.toLowerCase().startsWith("mailto:") ? v : `mailto:${v}`;
 }
+
+export function buildLinkedinUrl(value: string): string {
+  const v = value.trim();
+  if (/linkedin\.com/i.test(v)) return ensureProtocol(v);
+  return `https://linkedin.com/in/${stripHandle(v)}`;
+}

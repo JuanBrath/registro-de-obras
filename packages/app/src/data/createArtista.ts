@@ -11,7 +11,19 @@ export interface NuevoArtistaFields {
   direccion?: string | null;
   x?: string | null;
   facebook?: string | null;
+  linkedin?: string | null;
   notas?: string | null;
+  nombreArtistico?: string | null;
+  lugarNacimiento?: string | null;
+  lugarFallecimiento?: string | null;
+  lugarResidenciaTrabajo?: string | null;
+  declaracionArtista?: string | null;
+  formacionAcademica?: string | null;
+  exposicionesIndividuales?: string | null;
+  exposicionesColectivas?: string | null;
+  premiosBecasReconocimientos?: string | null;
+  colecciones?: string | null;
+  publicacionesPrensa?: string | null;
 }
 
 /** Asigna el próximo número de artista_contador y crea el artista en una sola transacción. */
@@ -27,8 +39,13 @@ export async function createArtista(
     await tx.execute("UPDATE artista_contador SET siguiente_numero = siguiente_numero + 1 WHERE id = 1");
 
     const result = await tx.execute(
-      `INSERT INTO artista (numero_artista, nombre_completo, es_propio, fecha_nacimiento, bio, telefono, email, web, instagram, direccion, x, facebook, notas)
-       VALUES (?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO artista (
+         numero_artista, nombre_completo, es_propio, fecha_nacimiento, bio, telefono, email, web, instagram,
+         direccion, x, facebook, linkedin, notas, nombre_artistico, lugar_nacimiento, lugar_fallecimiento,
+         lugar_residencia_trabajo, declaracion_artista, formacion_academica, exposiciones_individuales,
+         exposiciones_colectivas, premios_becas_reconocimientos, colecciones, publicaciones_prensa
+       )
+       VALUES (?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         numeroArtista,
         fields.nombreCompleto,
@@ -41,7 +58,19 @@ export async function createArtista(
         fields.direccion ?? null,
         fields.x ?? null,
         fields.facebook ?? null,
+        fields.linkedin ?? null,
         fields.notas ?? null,
+        fields.nombreArtistico ?? null,
+        fields.lugarNacimiento ?? null,
+        fields.lugarFallecimiento ?? null,
+        fields.lugarResidenciaTrabajo ?? null,
+        fields.declaracionArtista ?? null,
+        fields.formacionAcademica ?? null,
+        fields.exposicionesIndividuales ?? null,
+        fields.exposicionesColectivas ?? null,
+        fields.premiosBecasReconocimientos ?? null,
+        fields.colecciones ?? null,
+        fields.publicacionesPrensa ?? null,
       ],
     );
     if (!result.lastInsertId) throw new Error("No se pudo crear el artista");

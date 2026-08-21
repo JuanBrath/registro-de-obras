@@ -11,12 +11,24 @@ export interface Artista {
   direccion: string | null;
   x: string | null;
   facebook: string | null;
+  linkedin: string | null;
   fotoPath: string | null;
   logoPath: string | null;
   cuit: string | null;
   notas: string | null;
   fechaNacimiento: string | null;
   bio: string | null;
+  nombreArtistico: string | null;
+  lugarNacimiento: string | null;
+  lugarFallecimiento: string | null;
+  lugarResidenciaTrabajo: string | null;
+  declaracionArtista: string | null;
+  formacionAcademica: string | null;
+  exposicionesIndividuales: string | null;
+  exposicionesColectivas: string | null;
+  premiosBecasReconocimientos: string | null;
+  colecciones: string | null;
+  publicacionesPrensa: string | null;
   fechaAltaSistema: string;
 }
 
@@ -32,10 +44,22 @@ export interface NuevoArtista {
   direccion?: string | null;
   x?: string | null;
   facebook?: string | null;
+  linkedin?: string | null;
   fotoPath?: string | null;
   logoPath?: string | null;
   cuit?: string | null;
   notas?: string | null;
   fechaNacimiento?: string | null;
   bio?: string | null;
+  nombreArtistico?: string | null;
+  lugarNacimiento?: string | null;
+  lugarFallecimiento?: string | null;
+  lugarResidenciaTrabajo?: string | null;
+  declaracionArtista?: string | null;
+  formacionAcademica?: string | null;
+  exposicionesIndividuales?: string | null;
+  exposicionesColectivas?: string | null;
+  premiosBecasReconocimientos?: string | null;
+  colecciones?: string | null;
+  publicacionesPrensa?: string | null;
 }

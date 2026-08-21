@@ -5,6 +5,7 @@ import { createArtista } from "../data/createArtista.js";
 import { bytesToObjectUrl } from "../utils/imageObjectUrl.js";
 import { ImageFileField } from "../components/ImageFileField.js";
 import { LinkField } from "../components/LinkField.js";
+import { HelpIcon } from "../components/HelpIcon.js";
 import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
 import { savePdfWithDialog } from "../utils/savePdfDialog.js";
@@ -12,7 +13,14 @@ import { formatFechaDDMMYYYY } from "../utils/formatFecha.js";
 import { detectImageFormat } from "../utils/detectImageFormat.js";
 import { focusNextOnEnter } from "../utils/focusNextOnEnter.js";
 import { drawPdfHeader, writeWrappedText } from "../utils/pdfBranding.js";
-import { buildWebUrl, buildInstagramUrl, buildFacebookUrl, buildXUrl, buildMailtoUrl } from "../utils/socialLinks.js";
+import {
+  buildWebUrl,
+  buildInstagramUrl,
+  buildFacebookUrl,
+  buildXUrl,
+  buildMailtoUrl,
+  buildLinkedinUrl,
+} from "../utils/socialLinks.js";
 
 interface ArtistaRow {
   id: number;
@@ -27,8 +35,20 @@ interface ArtistaRow {
   direccion: string | null;
   x: string | null;
   facebook: string | null;
+  linkedin: string | null;
   notas: string | null;
   foto_path: string | null;
+  nombre_artistico: string | null;
+  lugar_nacimiento: string | null;
+  lugar_fallecimiento: string | null;
+  lugar_residencia_trabajo: string | null;
+  declaracion_artista: string | null;
+  formacion_academica: string | null;
+  exposiciones_individuales: string | null;
+  exposiciones_colectivas: string | null;
+  premios_becas_reconocimientos: string | null;
+  colecciones: string | null;
+  publicaciones_prensa: string | null;
 }
 
 export interface ArtistaFields {
@@ -42,7 +62,19 @@ export interface ArtistaFields {
   direccion: string;
   x: string;
   facebook: string;
+  linkedin: string;
   notas: string;
+  nombreArtistico: string;
+  lugarNacimiento: string;
+  lugarFallecimiento: string;
+  lugarResidenciaTrabajo: string;
+  declaracionArtista: string;
+  formacionAcademica: string;
+  exposicionesIndividuales: string;
+  exposicionesColectivas: string;
+  premiosBecasReconocimientos: string;
+  colecciones: string;
+  publicacionesPrensa: string;
 }
 
 type TFn = (key: TranslationKey, vars?: Record<string, string | number>) => string;
@@ -58,7 +90,19 @@ interface FichaArtistaFields {
   instagram: string;
   facebook: string;
   x: string;
+  linkedin: string;
   direccion: string;
+  nombreArtistico: string;
+  lugarNacimiento: string;
+  lugarFallecimiento: string;
+  lugarResidenciaTrabajo: string;
+  declaracionArtista: string;
+  formacionAcademica: string;
+  exposicionesIndividuales: string;
+  exposicionesColectivas: string;
+  premiosBecasReconocimientos: string;
+  colecciones: string;
+  publicacionesPrensa: string;
 }
 
 // Genera el PDF con la ficha del artista (usado tanto desde el alta como
@@ -96,8 +140,16 @@ async function generarFichaArtistaPdfBytes(t: TFn, fields: FichaArtistaFields, i
 
   const lineas: string[] = [];
   if (fields.numeroArtista) lineas.push(`${t("artistaSelector.numeroAsignado")}: ${fields.numeroArtista}`);
+  if (fields.nombreArtistico) lineas.push(`${t("artistas.nombreArtisticoLabel")}: ${fields.nombreArtistico}`);
   if (fields.fechaNacimiento) {
     lineas.push(`${t("artistas.fechaNacimiento")}: ${formatFechaDDMMYYYY(fields.fechaNacimiento)}`);
+  }
+  if (fields.lugarNacimiento) lineas.push(`${t("artistas.lugarNacimientoLabel")}: ${fields.lugarNacimiento}`);
+  if (fields.lugarFallecimiento) {
+    lineas.push(`${t("artistas.lugarFallecimientoLabel")}: ${fields.lugarFallecimiento}`);
+  }
+  if (fields.lugarResidenciaTrabajo) {
+    lineas.push(`${t("artistas.lugarResidenciaTrabajoLabel")}: ${fields.lugarResidenciaTrabajo}`);
   }
   if (fields.email) lineas.push(`${t("artistas.email")}: ${fields.email}`);
   if (fields.telefono) lineas.push(`${t("artistas.telefono")}: ${fields.telefono}`);
@@ -106,17 +158,28 @@ async function generarFichaArtistaPdfBytes(t: TFn, fields: FichaArtistaFields, i
   if (fields.instagram) lineas.push(`${t("artistas.instagram")}: ${fields.instagram}`);
   if (fields.facebook) lineas.push(`${t("artistas.facebook")}: ${fields.facebook}`);
   if (fields.x) lineas.push(`${t("artistas.x")}: ${fields.x}`);
+  if (fields.linkedin) lineas.push(`${t("artistas.linkedinLabel")}: ${fields.linkedin}`);
   for (const linea of lineas) {
     textY = writeWrappedText(doc, linea, textX, textY, textWidth);
   }
 
-  if (fields.bio) {
+  function agregarParrafo(titulo: string, texto: string) {
+    if (!texto) return;
     textY += 3;
     doc.setFontSize(11);
-    textY = writeWrappedText(doc, t("artistas.bio"), textX, textY, textWidth, { lineHeight: 6 });
+    textY = writeWrappedText(doc, titulo, textX, textY, textWidth, { lineHeight: 6 });
     doc.setFontSize(10);
-    writeWrappedText(doc, fields.bio, textX, textY, textWidth);
+    textY = writeWrappedText(doc, texto, textX, textY, textWidth);
   }
+
+  agregarParrafo(t("artistas.bio"), fields.bio);
+  agregarParrafo(t("artistas.declaracionArtistaLabel"), fields.declaracionArtista);
+  agregarParrafo(t("artistas.formacionAcademicaLabel"), fields.formacionAcademica);
+  agregarParrafo(t("artistas.exposicionesIndividualesLabel"), fields.exposicionesIndividuales);
+  agregarParrafo(t("artistas.exposicionesColectivasLabel"), fields.exposicionesColectivas);
+  agregarParrafo(t("artistas.premiosBecasReconocimientosLabel"), fields.premiosBecasReconocimientos);
+  agregarParrafo(t("artistas.coleccionesLabel"), fields.colecciones);
+  agregarParrafo(t("artistas.publicacionesPrensaLabel"), fields.publicacionesPrensa);
 
   return new Uint8Array(doc.output("arraybuffer"));
 }
@@ -142,7 +205,19 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
   const [direccion, setDireccion] = useState("");
   const [x, setX] = useState("");
   const [facebook, setFacebook] = useState("");
+  const [linkedin, setLinkedin] = useState("");
   const [notas, setNotas] = useState("");
+  const [nombreArtistico, setNombreArtistico] = useState("");
+  const [lugarNacimiento, setLugarNacimiento] = useState("");
+  const [lugarFallecimiento, setLugarFallecimiento] = useState("");
+  const [lugarResidenciaTrabajo, setLugarResidenciaTrabajo] = useState("");
+  const [declaracionArtista, setDeclaracionArtista] = useState("");
+  const [formacionAcademica, setFormacionAcademica] = useState("");
+  const [exposicionesIndividuales, setExposicionesIndividuales] = useState("");
+  const [exposicionesColectivas, setExposicionesColectivas] = useState("");
+  const [premiosBecasReconocimientos, setPremiosBecasReconocimientos] = useState("");
+  const [colecciones, setColecciones] = useState("");
+  const [publicacionesPrensa, setPublicacionesPrensa] = useState("");
   const [fotoFile, setFotoFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -179,7 +254,19 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
     setDireccion("");
     setX("");
     setFacebook("");
+    setLinkedin("");
     setNotas("");
+    setNombreArtistico("");
+    setLugarNacimiento("");
+    setLugarFallecimiento("");
+    setLugarResidenciaTrabajo("");
+    setDeclaracionArtista("");
+    setFormacionAcademica("");
+    setExposicionesIndividuales("");
+    setExposicionesColectivas("");
+    setPremiosBecasReconocimientos("");
+    setColecciones("");
+    setPublicacionesPrensa("");
     setFotoFile(null);
     setFormError(null);
     setPdfMensaje(null);
@@ -193,7 +280,12 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
     setError(null);
     try {
       const rows = await context.db.query<ArtistaRow>(
-        "SELECT id, numero_artista, nombre_completo, fecha_nacimiento, bio, telefono, email, web, instagram, direccion, x, facebook, notas, foto_path FROM artista ORDER BY numero_artista",
+        `SELECT id, numero_artista, nombre_completo, fecha_nacimiento, bio, telefono, email, web, instagram,
+                direccion, x, facebook, linkedin, notas, foto_path, nombre_artistico, lugar_nacimiento,
+                lugar_fallecimiento, lugar_residencia_trabajo, declaracion_artista, formacion_academica,
+                exposiciones_individuales, exposiciones_colectivas, premios_becas_reconocimientos, colecciones,
+                publicaciones_prensa
+         FROM artista ORDER BY numero_artista`,
       );
       setArtistas(rows);
 
@@ -260,7 +352,19 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
         direccion: direccion || null,
         x: x || null,
         facebook: facebook || null,
+        linkedin: linkedin || null,
         notas: notas || null,
+        nombreArtistico: nombreArtistico || null,
+        lugarNacimiento: lugarNacimiento || null,
+        lugarFallecimiento: lugarFallecimiento || null,
+        lugarResidenciaTrabajo: lugarResidenciaTrabajo || null,
+        declaracionArtista: declaracionArtista || null,
+        formacionAcademica: formacionAcademica || null,
+        exposicionesIndividuales: exposicionesIndividuales || null,
+        exposicionesColectivas: exposicionesColectivas || null,
+        premiosBecasReconocimientos: premiosBecasReconocimientos || null,
+        colecciones: colecciones || null,
+        publicacionesPrensa: publicacionesPrensa || null,
       });
 
       if (fotoFile) await writeFoto(id, fotoFile);
@@ -333,7 +437,19 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
           instagram,
           facebook,
           x,
+          linkedin,
           direccion,
+          nombreArtistico,
+          lugarNacimiento,
+          lugarFallecimiento,
+          lugarResidenciaTrabajo,
+          declaracionArtista,
+          formacionAcademica,
+          exposicionesIndividuales,
+          exposicionesColectivas,
+          premiosBecasReconocimientos,
+          colecciones,
+          publicacionesPrensa,
         },
         imgBytes,
       );
@@ -361,7 +477,13 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
   async function handleUpdateArtista(id: number, fields: ArtistaFields, newFoto: File | null) {
     if (!context) return;
     await context.db.execute(
-      `UPDATE artista SET nombre_completo = ?, fecha_nacimiento = ?, bio = ?, telefono = ?, email = ?, web = ?, instagram = ?, direccion = ?, x = ?, facebook = ?, notas = ? WHERE id = ?`,
+      `UPDATE artista SET
+         nombre_completo = ?, fecha_nacimiento = ?, bio = ?, telefono = ?, email = ?, web = ?, instagram = ?,
+         direccion = ?, x = ?, facebook = ?, linkedin = ?, notas = ?, nombre_artistico = ?, lugar_nacimiento = ?,
+         lugar_fallecimiento = ?, lugar_residencia_trabajo = ?, declaracion_artista = ?, formacion_academica = ?,
+         exposiciones_individuales = ?, exposiciones_colectivas = ?, premios_becas_reconocimientos = ?,
+         colecciones = ?, publicaciones_prensa = ?
+       WHERE id = ?`,
       [
         fields.nombreCompleto,
         fields.fechaNacimiento || null,
@@ -373,7 +495,19 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
         fields.direccion || null,
         fields.x || null,
         fields.facebook || null,
+        fields.linkedin || null,
         fields.notas || null,
+        fields.nombreArtistico || null,
+        fields.lugarNacimiento || null,
+        fields.lugarFallecimiento || null,
+        fields.lugarResidenciaTrabajo || null,
+        fields.declaracionArtista || null,
+        fields.formacionAcademica || null,
+        fields.exposicionesIndividuales || null,
+        fields.exposicionesColectivas || null,
+        fields.premiosBecasReconocimientos || null,
+        fields.colecciones || null,
+        fields.publicacionesPrensa || null,
         id,
       ],
     );
@@ -426,74 +560,198 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
           <ImageFileField value={fotoFile} onChange={setFotoFile} />
         </label>
 
-        <label>
-          <span className="field-label">{t("artistaSelector.nombreCompleto")}</span>
-          <input
-            type="text"
-            required
-            value={nombreCompleto}
-            onChange={(e) => {
-              setNombreCompleto(e.target.value);
-              setDuplicadoConfirmado(false);
-            }}
-          />
-        </label>
+        <fieldset>
+          <legend>{t("artistas.seccionIdentificacion")}</legend>
 
-        <label>
-          <span className="field-label">{t("artistas.fechaNacimiento")}</span>
-          <input type="date" value={fechaNacimiento} onChange={(e) => setFechaNacimiento(e.target.value)} />
-        </label>
+          <label>
+            <span className="field-label">{t("artistaSelector.nombreCompleto")}</span>
+            <input
+              type="text"
+              required
+              value={nombreCompleto}
+              onChange={(e) => {
+                setNombreCompleto(e.target.value);
+                setDuplicadoConfirmado(false);
+              }}
+            />
+          </label>
 
-        <label>
-          <span className="field-label">{t("artistas.bio")}</span>
-          <textarea rows={4} value={bio} onChange={(e) => setBio(e.target.value)} />
-        </label>
+          <label>
+            <span className="field-label">{t("artistas.nombreArtisticoLabel")}</span>
+            <input type="text" value={nombreArtistico} onChange={(e) => setNombreArtistico(e.target.value)} />
+          </label>
+
+          <label>
+            <span className="field-label">{t("artistas.fechaNacimiento")}</span>
+            <input type="date" value={fechaNacimiento} onChange={(e) => setFechaNacimiento(e.target.value)} />
+          </label>
+
+          <div className="form-row-2">
+            <label>
+              <span className="field-label">{t("artistas.lugarNacimientoLabel")}</span>
+              <input type="text" value={lugarNacimiento} onChange={(e) => setLugarNacimiento(e.target.value)} />
+            </label>
+
+            <label>
+              <span className="field-label">{t("artistas.lugarFallecimientoLabel")}</span>
+              <input
+                type="text"
+                value={lugarFallecimiento}
+                onChange={(e) => setLugarFallecimiento(e.target.value)}
+              />
+            </label>
+          </div>
+
+          <label>
+            <span className="field-label">{t("artistas.lugarResidenciaTrabajoLabel")}</span>
+            <input
+              type="text"
+              value={lugarResidenciaTrabajo}
+              onChange={(e) => setLugarResidenciaTrabajo(e.target.value)}
+            />
+          </label>
+
+          <div className="form-row-2">
+            <label>
+              <span className="field-label">{t("artistas.telefono")}</span>
+              <input type="text" value={telefono} onChange={(e) => setTelefono(e.target.value)} />
+            </label>
+
+            <label>
+              <span className="field-label">{t("artistas.email")}</span>
+              <LinkField type="email" value={email} onChange={setEmail} buildUrl={buildMailtoUrl} />
+            </label>
+          </div>
+
+          <label>
+            <span className="field-label">{t("artistas.direccion")}</span>
+            <input type="text" value={direccion} onChange={(e) => setDireccion(e.target.value)} />
+          </label>
+
+          <div className="form-row-2">
+            <label>
+              <span className="field-label">{t("artistas.web")}</span>
+              <LinkField value={web} onChange={setWeb} buildUrl={buildWebUrl} />
+            </label>
+
+            <label>
+              <span className="field-label">{t("artistas.instagram")}</span>
+              <LinkField value={instagram} onChange={setInstagram} buildUrl={buildInstagramUrl} />
+            </label>
+          </div>
+
+          <div className="form-row-2">
+            <label>
+              <span className="field-label">{t("artistas.facebook")}</span>
+              <LinkField value={facebook} onChange={setFacebook} buildUrl={buildFacebookUrl} />
+            </label>
+
+            <label>
+              <span className="field-label">{t("artistas.x")}</span>
+              <LinkField value={x} onChange={setX} buildUrl={buildXUrl} />
+            </label>
+          </div>
+
+          <label>
+            <span className="field-label">{t("artistas.linkedinLabel")}</span>
+            <LinkField value={linkedin} onChange={setLinkedin} buildUrl={buildLinkedinUrl} />
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>{t("artistas.seccionBiografia")}</legend>
+
+          <label>
+            <span className="field-label">
+              {t("artistas.bio")} <HelpIcon fieldKey="artista_bio_corta" />
+            </span>
+            <textarea rows={4} value={bio} onChange={(e) => setBio(e.target.value)} />
+          </label>
+
+          <label>
+            <span className="field-label">
+              {t("artistas.declaracionArtistaLabel")} <HelpIcon fieldKey="artista_declaracion" />
+            </span>
+            <textarea
+              rows={4}
+              value={declaracionArtista}
+              onChange={(e) => setDeclaracionArtista(e.target.value)}
+            />
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>{t("artistas.seccionCv")}</legend>
+
+          <label>
+            <span className="field-label">
+              {t("artistas.formacionAcademicaLabel")} <HelpIcon fieldKey="artista_formacion_academica" />
+            </span>
+            <textarea
+              rows={3}
+              value={formacionAcademica}
+              onChange={(e) => setFormacionAcademica(e.target.value)}
+            />
+          </label>
+
+          <label>
+            <span className="field-label">
+              {t("artistas.exposicionesIndividualesLabel")}{" "}
+              <HelpIcon fieldKey="artista_exposiciones_individuales" />
+            </span>
+            <textarea
+              rows={3}
+              value={exposicionesIndividuales}
+              onChange={(e) => setExposicionesIndividuales(e.target.value)}
+            />
+          </label>
+
+          <label>
+            <span className="field-label">
+              {t("artistas.exposicionesColectivasLabel")}{" "}
+              <HelpIcon fieldKey="artista_exposiciones_colectivas" />
+            </span>
+            <textarea
+              rows={3}
+              value={exposicionesColectivas}
+              onChange={(e) => setExposicionesColectivas(e.target.value)}
+            />
+          </label>
+
+          <label>
+            <span className="field-label">
+              {t("artistas.premiosBecasReconocimientosLabel")} <HelpIcon fieldKey="artista_premios_becas" />
+            </span>
+            <textarea
+              rows={3}
+              value={premiosBecasReconocimientos}
+              onChange={(e) => setPremiosBecasReconocimientos(e.target.value)}
+            />
+          </label>
+
+          <label>
+            <span className="field-label">
+              {t("artistas.coleccionesLabel")} <HelpIcon fieldKey="artista_colecciones" />
+            </span>
+            <textarea rows={3} value={colecciones} onChange={(e) => setColecciones(e.target.value)} />
+          </label>
+
+          <label>
+            <span className="field-label">
+              {t("artistas.publicacionesPrensaLabel")} <HelpIcon fieldKey="artista_publicaciones_prensa" />
+            </span>
+            <textarea
+              rows={3}
+              value={publicacionesPrensa}
+              onChange={(e) => setPublicacionesPrensa(e.target.value)}
+            />
+          </label>
+        </fieldset>
 
         <label>
           <span className="field-label">{t("artistas.notas")}</span>
           <textarea rows={3} value={notas} onChange={(e) => setNotas(e.target.value)} />
         </label>
-
-        <div className="form-row-2">
-          <label>
-            <span className="field-label">{t("artistas.telefono")}</span>
-            <input type="text" value={telefono} onChange={(e) => setTelefono(e.target.value)} />
-          </label>
-
-          <label>
-            <span className="field-label">{t("artistas.email")}</span>
-            <LinkField type="email" value={email} onChange={setEmail} buildUrl={buildMailtoUrl} />
-          </label>
-        </div>
-
-        <label>
-          <span className="field-label">{t("artistas.direccion")}</span>
-          <input type="text" value={direccion} onChange={(e) => setDireccion(e.target.value)} />
-        </label>
-
-        <div className="form-row-2">
-          <label>
-            <span className="field-label">{t("artistas.web")}</span>
-            <LinkField value={web} onChange={setWeb} buildUrl={buildWebUrl} />
-          </label>
-
-          <label>
-            <span className="field-label">{t("artistas.instagram")}</span>
-            <LinkField value={instagram} onChange={setInstagram} buildUrl={buildInstagramUrl} />
-          </label>
-        </div>
-
-        <div className="form-row-2">
-          <label>
-            <span className="field-label">{t("artistas.facebook")}</span>
-            <LinkField value={facebook} onChange={setFacebook} buildUrl={buildFacebookUrl} />
-          </label>
-
-          <label>
-            <span className="field-label">{t("artistas.x")}</span>
-            <LinkField value={x} onChange={setX} buildUrl={buildXUrl} />
-          </label>
-        </div>
 
         <div className="obra-form-saved-actions">
           <button type="submit" disabled={submitting}>
@@ -631,7 +889,27 @@ function ArtistaRowView({
   const [direccion, setDireccion] = useState(artista.direccion ?? "");
   const [x, setX] = useState(artista.x ?? "");
   const [facebook, setFacebook] = useState(artista.facebook ?? "");
+  const [linkedin, setLinkedin] = useState(artista.linkedin ?? "");
   const [notas, setNotas] = useState(artista.notas ?? "");
+  const [nombreArtistico, setNombreArtistico] = useState(artista.nombre_artistico ?? "");
+  const [lugarNacimiento, setLugarNacimiento] = useState(artista.lugar_nacimiento ?? "");
+  const [lugarFallecimiento, setLugarFallecimiento] = useState(artista.lugar_fallecimiento ?? "");
+  const [lugarResidenciaTrabajo, setLugarResidenciaTrabajo] = useState(
+    artista.lugar_residencia_trabajo ?? "",
+  );
+  const [declaracionArtista, setDeclaracionArtista] = useState(artista.declaracion_artista ?? "");
+  const [formacionAcademica, setFormacionAcademica] = useState(artista.formacion_academica ?? "");
+  const [exposicionesIndividuales, setExposicionesIndividuales] = useState(
+    artista.exposiciones_individuales ?? "",
+  );
+  const [exposicionesColectivas, setExposicionesColectivas] = useState(
+    artista.exposiciones_colectivas ?? "",
+  );
+  const [premiosBecasReconocimientos, setPremiosBecasReconocimientos] = useState(
+    artista.premios_becas_reconocimientos ?? "",
+  );
+  const [colecciones, setColecciones] = useState(artista.colecciones ?? "");
+  const [publicacionesPrensa, setPublicacionesPrensa] = useState(artista.publicaciones_prensa ?? "");
   const [fotoFile, setFotoFile] = useState<File | null>(null);
   const [generandoPdf, setGenerandoPdf] = useState(false);
   const [pdfMensaje, setPdfMensaje] = useState<string | null>(null);
@@ -663,7 +941,19 @@ function ArtistaRowView({
           instagram,
           facebook,
           x,
+          linkedin,
           direccion,
+          nombreArtistico,
+          lugarNacimiento,
+          lugarFallecimiento,
+          lugarResidenciaTrabajo,
+          declaracionArtista,
+          formacionAcademica,
+          exposicionesIndividuales,
+          exposicionesColectivas,
+          premiosBecasReconocimientos,
+          colecciones,
+          publicacionesPrensa,
         },
         imgBytes,
       );
@@ -696,7 +986,31 @@ function ArtistaRowView({
     setError(null);
     try {
       await onSave(
-        { nombreCompleto, fechaNacimiento, bio, telefono, email, web, instagram, direccion, x, facebook, notas },
+        {
+          nombreCompleto,
+          fechaNacimiento,
+          bio,
+          telefono,
+          email,
+          web,
+          instagram,
+          direccion,
+          x,
+          facebook,
+          linkedin,
+          notas,
+          nombreArtistico,
+          lugarNacimiento,
+          lugarFallecimiento,
+          lugarResidenciaTrabajo,
+          declaracionArtista,
+          formacionAcademica,
+          exposicionesIndividuales,
+          exposicionesColectivas,
+          premiosBecasReconocimientos,
+          colecciones,
+          publicacionesPrensa,
+        },
         fotoFile,
       );
       onCerrarFicha();
@@ -717,87 +1031,251 @@ function ArtistaRowView({
           <span className="field-label">{t("artistas.foto")}</span>
           <ImageFileField value={fotoFile} onChange={setFotoFile} disabled={soloLectura} />
         </label>
-        <label>
-          <span className="field-label">{t("artistaSelector.nombreCompleto")}</span>
-          <input
-            type="text"
-            value={nombreCompleto}
-            onChange={(e) => setNombreCompleto(e.target.value)}
-            disabled={soloLectura}
-          />
-        </label>
-        <label>
-          <span className="field-label">{t("artistas.fechaNacimiento")}</span>
-          <input
-            type="date"
-            value={fechaNacimiento}
-            onChange={(e) => setFechaNacimiento(e.target.value)}
-            disabled={soloLectura}
-          />
-        </label>
-        <label>
-          <span className="field-label">{t("artistas.bio")}</span>
-          <textarea rows={3} value={bio} onChange={(e) => setBio(e.target.value)} disabled={soloLectura} />
-        </label>
+        <fieldset>
+          <legend>{t("artistas.seccionIdentificacion")}</legend>
+
+          <label>
+            <span className="field-label">{t("artistaSelector.nombreCompleto")}</span>
+            <input
+              type="text"
+              value={nombreCompleto}
+              onChange={(e) => setNombreCompleto(e.target.value)}
+              disabled={soloLectura}
+            />
+          </label>
+
+          <label>
+            <span className="field-label">{t("artistas.nombreArtisticoLabel")}</span>
+            <input
+              type="text"
+              value={nombreArtistico}
+              onChange={(e) => setNombreArtistico(e.target.value)}
+              disabled={soloLectura}
+            />
+          </label>
+
+          <label>
+            <span className="field-label">{t("artistas.fechaNacimiento")}</span>
+            <input
+              type="date"
+              value={fechaNacimiento}
+              onChange={(e) => setFechaNacimiento(e.target.value)}
+              disabled={soloLectura}
+            />
+          </label>
+
+          <div className="form-row-2">
+            <label>
+              <span className="field-label">{t("artistas.lugarNacimientoLabel")}</span>
+              <input
+                type="text"
+                value={lugarNacimiento}
+                onChange={(e) => setLugarNacimiento(e.target.value)}
+                disabled={soloLectura}
+              />
+            </label>
+            <label>
+              <span className="field-label">{t("artistas.lugarFallecimientoLabel")}</span>
+              <input
+                type="text"
+                value={lugarFallecimiento}
+                onChange={(e) => setLugarFallecimiento(e.target.value)}
+                disabled={soloLectura}
+              />
+            </label>
+          </div>
+
+          <label>
+            <span className="field-label">{t("artistas.lugarResidenciaTrabajoLabel")}</span>
+            <input
+              type="text"
+              value={lugarResidenciaTrabajo}
+              onChange={(e) => setLugarResidenciaTrabajo(e.target.value)}
+              disabled={soloLectura}
+            />
+          </label>
+
+          <div className="form-row-2">
+            <label>
+              <span className="field-label">{t("artistas.telefono")}</span>
+              <input
+                type="text"
+                value={telefono}
+                onChange={(e) => setTelefono(e.target.value)}
+                disabled={soloLectura}
+              />
+            </label>
+            <label>
+              <span className="field-label">{t("artistas.email")}</span>
+              <LinkField
+                type="email"
+                value={email}
+                onChange={setEmail}
+                buildUrl={buildMailtoUrl}
+                disabled={soloLectura}
+              />
+            </label>
+          </div>
+
+          <label>
+            <span className="field-label">{t("artistas.direccion")}</span>
+            <input
+              type="text"
+              value={direccion}
+              onChange={(e) => setDireccion(e.target.value)}
+              disabled={soloLectura}
+            />
+          </label>
+
+          <div className="form-row-2">
+            <label>
+              <span className="field-label">{t("artistas.web")}</span>
+              <LinkField value={web} onChange={setWeb} buildUrl={buildWebUrl} disabled={soloLectura} />
+            </label>
+            <label>
+              <span className="field-label">{t("artistas.instagram")}</span>
+              <LinkField
+                value={instagram}
+                onChange={setInstagram}
+                buildUrl={buildInstagramUrl}
+                disabled={soloLectura}
+              />
+            </label>
+          </div>
+
+          <div className="form-row-2">
+            <label>
+              <span className="field-label">{t("artistas.facebook")}</span>
+              <LinkField
+                value={facebook}
+                onChange={setFacebook}
+                buildUrl={buildFacebookUrl}
+                disabled={soloLectura}
+              />
+            </label>
+            <label>
+              <span className="field-label">{t("artistas.x")}</span>
+              <LinkField value={x} onChange={setX} buildUrl={buildXUrl} disabled={soloLectura} />
+            </label>
+          </div>
+
+          <label>
+            <span className="field-label">{t("artistas.linkedinLabel")}</span>
+            <LinkField
+              value={linkedin}
+              onChange={setLinkedin}
+              buildUrl={buildLinkedinUrl}
+              disabled={soloLectura}
+            />
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>{t("artistas.seccionBiografia")}</legend>
+
+          <label>
+            <span className="field-label">
+              {t("artistas.bio")} <HelpIcon fieldKey="artista_bio_corta" />
+            </span>
+            <textarea rows={3} value={bio} onChange={(e) => setBio(e.target.value)} disabled={soloLectura} />
+          </label>
+
+          <label>
+            <span className="field-label">
+              {t("artistas.declaracionArtistaLabel")} <HelpIcon fieldKey="artista_declaracion" />
+            </span>
+            <textarea
+              rows={3}
+              value={declaracionArtista}
+              onChange={(e) => setDeclaracionArtista(e.target.value)}
+              disabled={soloLectura}
+            />
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>{t("artistas.seccionCv")}</legend>
+
+          <label>
+            <span className="field-label">
+              {t("artistas.formacionAcademicaLabel")} <HelpIcon fieldKey="artista_formacion_academica" />
+            </span>
+            <textarea
+              rows={3}
+              value={formacionAcademica}
+              onChange={(e) => setFormacionAcademica(e.target.value)}
+              disabled={soloLectura}
+            />
+          </label>
+
+          <label>
+            <span className="field-label">
+              {t("artistas.exposicionesIndividualesLabel")}{" "}
+              <HelpIcon fieldKey="artista_exposiciones_individuales" />
+            </span>
+            <textarea
+              rows={3}
+              value={exposicionesIndividuales}
+              onChange={(e) => setExposicionesIndividuales(e.target.value)}
+              disabled={soloLectura}
+            />
+          </label>
+
+          <label>
+            <span className="field-label">
+              {t("artistas.exposicionesColectivasLabel")}{" "}
+              <HelpIcon fieldKey="artista_exposiciones_colectivas" />
+            </span>
+            <textarea
+              rows={3}
+              value={exposicionesColectivas}
+              onChange={(e) => setExposicionesColectivas(e.target.value)}
+              disabled={soloLectura}
+            />
+          </label>
+
+          <label>
+            <span className="field-label">
+              {t("artistas.premiosBecasReconocimientosLabel")} <HelpIcon fieldKey="artista_premios_becas" />
+            </span>
+            <textarea
+              rows={3}
+              value={premiosBecasReconocimientos}
+              onChange={(e) => setPremiosBecasReconocimientos(e.target.value)}
+              disabled={soloLectura}
+            />
+          </label>
+
+          <label>
+            <span className="field-label">
+              {t("artistas.coleccionesLabel")} <HelpIcon fieldKey="artista_colecciones" />
+            </span>
+            <textarea
+              rows={3}
+              value={colecciones}
+              onChange={(e) => setColecciones(e.target.value)}
+              disabled={soloLectura}
+            />
+          </label>
+
+          <label>
+            <span className="field-label">
+              {t("artistas.publicacionesPrensaLabel")} <HelpIcon fieldKey="artista_publicaciones_prensa" />
+            </span>
+            <textarea
+              rows={3}
+              value={publicacionesPrensa}
+              onChange={(e) => setPublicacionesPrensa(e.target.value)}
+              disabled={soloLectura}
+            />
+          </label>
+        </fieldset>
+
         <label>
           <span className="field-label">{t("artistas.notas")}</span>
           <textarea rows={3} value={notas} onChange={(e) => setNotas(e.target.value)} disabled={soloLectura} />
         </label>
-        <div className="form-row-2">
-          <label>
-            <span className="field-label">{t("artistas.telefono")}</span>
-            <input
-              type="text"
-              value={telefono}
-              onChange={(e) => setTelefono(e.target.value)}
-              disabled={soloLectura}
-            />
-          </label>
-          <label>
-            <span className="field-label">{t("artistas.email")}</span>
-            <LinkField
-              type="email"
-              value={email}
-              onChange={setEmail}
-              buildUrl={buildMailtoUrl}
-              disabled={soloLectura}
-            />
-          </label>
-        </div>
-        <label>
-          <span className="field-label">{t("artistas.direccion")}</span>
-          <input
-            type="text"
-            value={direccion}
-            onChange={(e) => setDireccion(e.target.value)}
-            disabled={soloLectura}
-          />
-        </label>
-        <div className="form-row-2">
-          <label>
-            <span className="field-label">{t("artistas.web")}</span>
-            <LinkField value={web} onChange={setWeb} buildUrl={buildWebUrl} disabled={soloLectura} />
-          </label>
-          <label>
-            <span className="field-label">{t("artistas.instagram")}</span>
-            <LinkField
-              value={instagram}
-              onChange={setInstagram}
-              buildUrl={buildInstagramUrl}
-              disabled={soloLectura}
-            />
-          </label>
-        </div>
-        <div className="form-row-2">
-          <label>
-            <span className="field-label">{t("artistas.facebook")}</span>
-            <LinkField value={facebook} onChange={setFacebook} buildUrl={buildFacebookUrl} disabled={soloLectura} />
-          </label>
-          <label>
-            <span className="field-label">{t("artistas.x")}</span>
-            <LinkField value={x} onChange={setX} buildUrl={buildXUrl} disabled={soloLectura} />
-          </label>
-        </div>
+
         <div className="obra-form-saved-actions">
           {soloLectura ? (
             <>
