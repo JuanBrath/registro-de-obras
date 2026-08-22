@@ -18,6 +18,8 @@ export type EstadoObra =
   | "en_produccion"
   | "coleccion_autor";
 
+export type RegimenIngreso = "ConsignacionTaller" | "DepositoColeccionPrivada" | "CompraFirmeGaleria";
+
 export interface Obra {
   id: number;
   titulo: string;
@@ -28,6 +30,11 @@ export interface Obra {
   estado: EstadoObra;
   ubicacionFisicaActual: string | null;
   esSeriada: boolean;
+  codigoInventario: string | null;
+  subtitulo: string | null;
+  anioPeriodo: string | null;
+  regimenIngreso: RegimenIngreso | null;
+  historialProcedenciaExhibiciones: string | null;
   fechaAltaSistema: string;
 }
 
@@ -35,4 +42,9 @@ export interface NuevaObraBase {
   titulo: string;
   artistaId: number;
   ubicacionFisicaActual?: string | null;
+  codigoInventario?: string | null;
+  subtitulo?: string | null;
+  anioPeriodo?: string | null;
+  regimenIngreso?: RegimenIngreso | null;
+  historialProcedenciaExhibiciones?: string | null;
 }

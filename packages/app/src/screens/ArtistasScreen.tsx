@@ -42,6 +42,8 @@ interface ArtistaRow {
   nombre_artistico: string | null;
   lugar_nacimiento: string | null;
   lugar_fallecimiento: string | null;
+  nacionalidad: string | null;
+  fecha_fallecimiento: string | null;
   lugar_residencia_trabajo: string | null;
   declaracion_artista: string | null;
   formacion_academica: string | null;
@@ -68,6 +70,8 @@ export interface ArtistaFields {
   nombreArtistico: string;
   lugarNacimiento: string;
   lugarFallecimiento: string;
+  nacionalidad: string;
+  fechaFallecimiento: string;
   lugarResidenciaTrabajo: string;
   declaracionArtista: string;
   formacionAcademica: string;
@@ -96,6 +100,8 @@ interface FichaArtistaFields {
   nombreArtistico: string;
   lugarNacimiento: string;
   lugarFallecimiento: string;
+  nacionalidad: string;
+  fechaFallecimiento: string;
   lugarResidenciaTrabajo: string;
   declaracionArtista: string;
   formacionAcademica: string;
@@ -142,10 +148,14 @@ async function generarFichaArtistaPdfBytes(t: TFn, fields: FichaArtistaFields, i
   const lineas: string[] = [];
   if (fields.numeroArtista) lineas.push(`${t("artistaSelector.numeroAsignado")}: ${fields.numeroArtista}`);
   if (fields.nombreArtistico) lineas.push(`${t("artistas.nombreArtisticoLabel")}: ${fields.nombreArtistico}`);
+  if (fields.nacionalidad) lineas.push(`${t("artistas.nacionalidadLabel")}: ${fields.nacionalidad}`);
   if (fields.fechaNacimiento) {
     lineas.push(`${t("artistas.fechaNacimiento")}: ${formatFechaDDMMYYYY(fields.fechaNacimiento)}`);
   }
   if (fields.lugarNacimiento) lineas.push(`${t("artistas.lugarNacimientoLabel")}: ${fields.lugarNacimiento}`);
+  if (fields.fechaFallecimiento) {
+    lineas.push(`${t("artistas.fechaFallecimientoLabel")}: ${formatFechaDDMMYYYY(fields.fechaFallecimiento)}`);
+  }
   if (fields.lugarFallecimiento) {
     lineas.push(`${t("artistas.lugarFallecimientoLabel")}: ${fields.lugarFallecimiento}`);
   }
@@ -209,8 +219,10 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
   const [linkedin, setLinkedin] = useState("");
   const [notas, setNotas] = useState("");
   const [nombreArtistico, setNombreArtistico] = useState("");
+  const [nacionalidad, setNacionalidad] = useState("");
   const [lugarNacimiento, setLugarNacimiento] = useState("");
   const [lugarFallecimiento, setLugarFallecimiento] = useState("");
+  const [fechaFallecimiento, setFechaFallecimiento] = useState("");
   const [lugarResidenciaTrabajo, setLugarResidenciaTrabajo] = useState("");
   const [declaracionArtista, setDeclaracionArtista] = useState("");
   const [formacionAcademica, setFormacionAcademica] = useState("");
@@ -258,8 +270,10 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
     setLinkedin("");
     setNotas("");
     setNombreArtistico("");
+    setNacionalidad("");
     setLugarNacimiento("");
     setLugarFallecimiento("");
+    setFechaFallecimiento("");
     setLugarResidenciaTrabajo("");
     setDeclaracionArtista("");
     setFormacionAcademica("");
@@ -283,9 +297,9 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
       const rows = await context.db.query<ArtistaRow>(
         `SELECT id, numero_artista, nombre_completo, fecha_nacimiento, bio, telefono, email, web, instagram,
                 direccion, x, facebook, linkedin, notas, foto_path, nombre_artistico, lugar_nacimiento,
-                lugar_fallecimiento, lugar_residencia_trabajo, declaracion_artista, formacion_academica,
-                exposiciones_individuales, exposiciones_colectivas, premios_becas_reconocimientos, colecciones,
-                publicaciones_prensa
+                lugar_fallecimiento, nacionalidad, fecha_fallecimiento, lugar_residencia_trabajo,
+                declaracion_artista, formacion_academica, exposiciones_individuales, exposiciones_colectivas,
+                premios_becas_reconocimientos, colecciones, publicaciones_prensa
          FROM artista ORDER BY numero_artista`,
       );
       setArtistas(rows);
@@ -356,8 +370,10 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
         linkedin: linkedin || null,
         notas: notas || null,
         nombreArtistico: nombreArtistico || null,
+        nacionalidad: nacionalidad || null,
         lugarNacimiento: lugarNacimiento || null,
         lugarFallecimiento: lugarFallecimiento || null,
+        fechaFallecimiento: fechaFallecimiento || null,
         lugarResidenciaTrabajo: lugarResidenciaTrabajo || null,
         declaracionArtista: declaracionArtista || null,
         formacionAcademica: formacionAcademica || null,
@@ -441,8 +457,10 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
           linkedin,
           direccion,
           nombreArtistico,
+          nacionalidad,
           lugarNacimiento,
           lugarFallecimiento,
+          fechaFallecimiento,
           lugarResidenciaTrabajo,
           declaracionArtista,
           formacionAcademica,
@@ -480,10 +498,10 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
     await context.db.execute(
       `UPDATE artista SET
          nombre_completo = ?, fecha_nacimiento = ?, bio = ?, telefono = ?, email = ?, web = ?, instagram = ?,
-         direccion = ?, x = ?, facebook = ?, linkedin = ?, notas = ?, nombre_artistico = ?, lugar_nacimiento = ?,
-         lugar_fallecimiento = ?, lugar_residencia_trabajo = ?, declaracion_artista = ?, formacion_academica = ?,
-         exposiciones_individuales = ?, exposiciones_colectivas = ?, premios_becas_reconocimientos = ?,
-         colecciones = ?, publicaciones_prensa = ?
+         direccion = ?, x = ?, facebook = ?, linkedin = ?, notas = ?, nombre_artistico = ?, nacionalidad = ?,
+         lugar_nacimiento = ?, lugar_fallecimiento = ?, fecha_fallecimiento = ?, lugar_residencia_trabajo = ?,
+         declaracion_artista = ?, formacion_academica = ?, exposiciones_individuales = ?,
+         exposiciones_colectivas = ?, premios_becas_reconocimientos = ?, colecciones = ?, publicaciones_prensa = ?
        WHERE id = ?`,
       [
         fields.nombreCompleto,
@@ -499,8 +517,10 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
         fields.linkedin || null,
         fields.notas || null,
         fields.nombreArtistico || null,
+        fields.nacionalidad || null,
         fields.lugarNacimiento || null,
         fields.lugarFallecimiento || null,
+        fields.fechaFallecimiento || null,
         fields.lugarResidenciaTrabajo || null,
         fields.declaracionArtista || null,
         fields.formacionAcademica || null,
@@ -584,6 +604,11 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
           </label>
 
           <label>
+            <span className="field-label">{t("artistas.nacionalidadLabel")}</span>
+            <input type="text" value={nacionalidad} onChange={(e) => setNacionalidad(e.target.value)} />
+          </label>
+
+          <label>
             <span className="field-label">{t("artistas.fechaNacimiento")}</span>
             <input type="date" value={fechaNacimiento} onChange={(e) => setFechaNacimiento(e.target.value)} />
           </label>
@@ -603,6 +628,15 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
               />
             </label>
           </div>
+
+          <label>
+            <span className="field-label">{t("artistas.fechaFallecimientoLabel")}</span>
+            <input
+              type="date"
+              value={fechaFallecimiento}
+              onChange={(e) => setFechaFallecimiento(e.target.value)}
+            />
+          </label>
 
           <label>
             <span className="field-label">{t("artistas.lugarResidenciaTrabajoLabel")}</span>
@@ -894,8 +928,10 @@ function ArtistaRowView({
   const [linkedin, setLinkedin] = useState(artista.linkedin ?? "");
   const [notas, setNotas] = useState(artista.notas ?? "");
   const [nombreArtistico, setNombreArtistico] = useState(artista.nombre_artistico ?? "");
+  const [nacionalidad, setNacionalidad] = useState(artista.nacionalidad ?? "");
   const [lugarNacimiento, setLugarNacimiento] = useState(artista.lugar_nacimiento ?? "");
   const [lugarFallecimiento, setLugarFallecimiento] = useState(artista.lugar_fallecimiento ?? "");
+  const [fechaFallecimiento, setFechaFallecimiento] = useState(artista.fecha_fallecimiento ?? "");
   const [lugarResidenciaTrabajo, setLugarResidenciaTrabajo] = useState(
     artista.lugar_residencia_trabajo ?? "",
   );
@@ -946,8 +982,10 @@ function ArtistaRowView({
           linkedin,
           direccion,
           nombreArtistico,
+          nacionalidad,
           lugarNacimiento,
           lugarFallecimiento,
+          fechaFallecimiento,
           lugarResidenciaTrabajo,
           declaracionArtista,
           formacionAcademica,
@@ -1002,8 +1040,10 @@ function ArtistaRowView({
           linkedin,
           notas,
           nombreArtistico,
+          nacionalidad,
           lugarNacimiento,
           lugarFallecimiento,
+          fechaFallecimiento,
           lugarResidenciaTrabajo,
           declaracionArtista,
           formacionAcademica,
@@ -1057,6 +1097,16 @@ function ArtistaRowView({
           </label>
 
           <label>
+            <span className="field-label">{t("artistas.nacionalidadLabel")}</span>
+            <input
+              type="text"
+              value={nacionalidad}
+              onChange={(e) => setNacionalidad(e.target.value)}
+              disabled={soloLectura}
+            />
+          </label>
+
+          <label>
             <span className="field-label">{t("artistas.fechaNacimiento")}</span>
             <input
               type="date"
@@ -1086,6 +1136,16 @@ function ArtistaRowView({
               />
             </label>
           </div>
+
+          <label>
+            <span className="field-label">{t("artistas.fechaFallecimientoLabel")}</span>
+            <input
+              type="date"
+              value={fechaFallecimiento}
+              onChange={(e) => setFechaFallecimiento(e.target.value)}
+              disabled={soloLectura}
+            />
+          </label>
 
           <label>
             <span className="field-label">{t("artistas.lugarResidenciaTrabajoLabel")}</span>

@@ -167,6 +167,8 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
       "0042_cliente_perfil",
       "0043_artista_perfil_extendido",
       "0044_texto_ayuda_numero_artista",
+      "0045_campos_generales_obra",
+      "0046_obra_detalle_pintura_riguroso",
     ]);
   });
 

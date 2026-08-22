@@ -22,6 +22,8 @@ export interface Artista {
   lugarNacimiento: string | null;
   lugarFallecimiento: string | null;
   lugarResidenciaTrabajo: string | null;
+  nacionalidad: string | null;
+  fechaFallecimiento: string | null;
   declaracionArtista: string | null;
   formacionAcademica: string | null;
   exposicionesIndividuales: string | null;
@@ -55,6 +57,8 @@ export interface NuevoArtista {
   lugarNacimiento?: string | null;
   lugarFallecimiento?: string | null;
   lugarResidenciaTrabajo?: string | null;
+  nacionalidad?: string | null;
+  fechaFallecimiento?: string | null;
   declaracionArtista?: string | null;
   formacionAcademica?: string | null;
   exposicionesIndividuales?: string | null;

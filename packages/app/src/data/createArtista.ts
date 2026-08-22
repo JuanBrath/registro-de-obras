@@ -15,8 +15,10 @@ export interface NuevoArtistaFields {
   linkedin?: string | null;
   notas?: string | null;
   nombreArtistico?: string | null;
+  nacionalidad?: string | null;
   lugarNacimiento?: string | null;
   lugarFallecimiento?: string | null;
+  fechaFallecimiento?: string | null;
   lugarResidenciaTrabajo?: string | null;
   declaracionArtista?: string | null;
   formacionAcademica?: string | null;
@@ -42,11 +44,12 @@ export async function createArtista(
     const result = await tx.execute(
       `INSERT INTO artista (
          numero_artista, nombre_completo, es_propio, fecha_nacimiento, bio, telefono, email, web, instagram,
-         direccion, x, facebook, linkedin, notas, nombre_artistico, lugar_nacimiento, lugar_fallecimiento,
-         lugar_residencia_trabajo, declaracion_artista, formacion_academica, exposiciones_individuales,
-         exposiciones_colectivas, premios_becas_reconocimientos, colecciones, publicaciones_prensa
+         direccion, x, facebook, linkedin, notas, nombre_artistico, nacionalidad, lugar_nacimiento,
+         lugar_fallecimiento, fecha_fallecimiento, lugar_residencia_trabajo, declaracion_artista,
+         formacion_academica, exposiciones_individuales, exposiciones_colectivas, premios_becas_reconocimientos,
+         colecciones, publicaciones_prensa
        )
-       VALUES (?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         numeroArtista,
         fields.nombreCompleto,
@@ -62,8 +65,10 @@ export async function createArtista(
         fields.linkedin ?? null,
         fields.notas ?? null,
         fields.nombreArtistico ?? null,
+        fields.nacionalidad ?? null,
         fields.lugarNacimiento ?? null,
         fields.lugarFallecimiento ?? null,
+        fields.fechaFallecimiento ?? null,
         fields.lugarResidenciaTrabajo ?? null,
         fields.declaracionArtista ?? null,
         fields.formacionAcademica ?? null,

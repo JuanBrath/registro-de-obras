@@ -49,6 +49,11 @@ export function ObraForm({
   const esRegistroPersonal = context?.workspace === "personal";
 
   const [titulo, setTitulo] = useState("");
+  const [subtitulo, setSubtitulo] = useState("");
+  const [codigoInventario, setCodigoInventario] = useState("");
+  const [anioPeriodo, setAnioPeriodo] = useState("");
+  const [regimenIngreso, setRegimenIngreso] = useState("");
+  const [historialProcedenciaExhibiciones, setHistorialProcedenciaExhibiciones] = useState("");
   const [selectedArtistaId, setSelectedArtistaId] = useState<number | null>(null);
   const [ubicacion, setUbicacion] = useState("");
   const [tags, setTags] = useState<string[]>([]);
@@ -105,6 +110,11 @@ export function ObraForm({
 
   function resetForm() {
     setTitulo("");
+    setSubtitulo("");
+    setCodigoInventario("");
+    setAnioPeriodo("");
+    setRegimenIngreso("");
+    setHistorialProcedenciaExhibiciones("");
     setSelectedArtistaId(null);
     setUbicacion("");
     setTags([]);
@@ -190,9 +200,24 @@ export function ObraForm({
 
       const obraId = await db.transaction(async (tx) => {
         const insertObra = await tx.execute(
-          `INSERT INTO obra (titulo, categoria_obra, artista_id, estado, ubicacion_fisica_actual, es_seriada, tags)
-           VALUES (?, ?, ?, 'disponible', ?, ?, ?)`,
-          [titulo, categoria, artistaId, ubicacion || null, esSeriada ? 1 : 0, formatTags(tags) || null],
+          `INSERT INTO obra (
+             titulo, categoria_obra, artista_id, estado, ubicacion_fisica_actual, es_seriada, tags,
+             subtitulo, codigo_inventario, anio_periodo, regimen_ingreso, historial_procedencia_exhibiciones
+           )
+           VALUES (?, ?, ?, 'disponible', ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            titulo,
+            categoria,
+            artistaId,
+            ubicacion || null,
+            esSeriada ? 1 : 0,
+            formatTags(tags) || null,
+            subtitulo || null,
+            codigoInventario || null,
+            anioPeriodo || null,
+            regimenIngreso || null,
+            historialProcedenciaExhibiciones || null,
+          ],
         );
         const id = insertObra.lastInsertId;
         if (!id) throw new Error("No se pudo crear la obra");
@@ -215,8 +240,12 @@ export function ObraForm({
           );
         } else {
           await tx.execute(
-            `INSERT INTO obra_detalle (obra_id, subtipo, tecnica_material, soporte, tecnica, dimensiones, peso, fecha_creacion)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO obra_detalle (
+               obra_id, subtipo, tecnica_material, soporte, tecnica, dimensiones, peso, fecha_creacion,
+               materiales_mixtura, tipo_bastidor, imprimacion_base, profundidad_relieve, configuracion_panel,
+               estabilidad_capas, barniz_proteccion, sensibilidad_ambiental, estado_cantos
+             )
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               id,
               obraDetalle.subtipo || null,
@@ -226,6 +255,15 @@ export function ObraForm({
               obraDetalle.dimensiones || null,
               obraDetalle.peso || null,
               obraDetalle.fechaCreacion || null,
+              obraDetalle.materialesMixtura || null,
+              obraDetalle.tipoBastidor || null,
+              obraDetalle.imprimacionBase || null,
+              obraDetalle.profundidadRelieve || null,
+              obraDetalle.configuracionPanel || null,
+              obraDetalle.estabilidadCapas || null,
+              obraDetalle.barnizProteccion || null,
+              obraDetalle.sensibilidadAmbiental || null,
+              obraDetalle.estadoCantos || null,
             ],
           );
         }
@@ -236,8 +274,13 @@ export function ObraForm({
         for (const ejemplar of ejemplares) {
           const detalle = detallesEdiciones[ejemplar.tipo]?.[ejemplar.indice - 1];
           await tx.execute(
-            `INSERT INTO ejemplar (obra_id, tipo, indice, total_ediciones, numero, fecha_impresion, tipo_impresion, soporte_impresion, tipo_tintas, taller_impresion, ubicacion_actual, dimensiones, tipo_enmarcado, tamano_final_enmarcado, ubicacion_firma, sello_seco_holograma, notas)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO ejemplar (
+               obra_id, tipo, indice, total_ediciones, numero, fecha_impresion, tipo_impresion, soporte_impresion,
+               tipo_tintas, taller_impresion, ubicacion_actual, dimensiones, tipo_enmarcado, tamano_final_enmarcado,
+               ubicacion_firma, sello_seco_holograma, notas, coa_numero, coa_emisor, coa_fecha, valor_seguro,
+               moneda_seguro, vidrio_proteccion_frontal, sistema_cuelgue
+             )
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               id,
               ejemplar.tipo,
@@ -256,6 +299,13 @@ export function ObraForm({
               detalle?.ubicacionFirma || null,
               detalle?.selloSecoHolograma || null,
               detalle?.notas || null,
+              detalle?.coaNumero || null,
+              detalle?.coaEmisor || null,
+              detalle?.coaFecha || null,
+              detalle?.valorSeguro ? parseFloat(detalle.valorSeguro) : null,
+              detalle?.valorSeguro ? detalle.monedaSeguro : null,
+              detalle?.vidrioProteccionFrontal || null,
+              detalle?.sistemaCuelgue || null,
             ],
           );
         }
@@ -362,6 +412,47 @@ export function ObraForm({
           onChange={(e) => setTitulo(e.target.value)}
         />
       </label>
+
+      <label>
+        {t("obraForm.subtituloLabel")} <HelpIcon fieldKey="subtitulo" />
+        <input type="text" value={subtitulo} onChange={(e) => setSubtitulo(e.target.value)} />
+      </label>
+
+      <label>
+        {t("obraForm.codigoInventarioLabel")} <HelpIcon fieldKey="codigo_inventario" />
+        <input type="text" value={codigoInventario} onChange={(e) => setCodigoInventario(e.target.value)} />
+      </label>
+
+      <label>
+        {t("obraForm.anioPeriodoLabel")} <HelpIcon fieldKey="anio_periodo" />
+        <input type="text" value={anioPeriodo} onChange={(e) => setAnioPeriodo(e.target.value)} />
+      </label>
+
+      {!esRegistroPersonal && (
+        <label>
+          {t("obraForm.regimenIngresoLabel")} <HelpIcon fieldKey="regimen_ingreso" />
+          <select value={regimenIngreso} onChange={(e) => setRegimenIngreso(e.target.value)}>
+            <option value="">—</option>
+            <option value="ConsignacionTaller">{t("obraForm.regimenIngresoConsignacionTaller")}</option>
+            <option value="DepositoColeccionPrivada">
+              {t("obraForm.regimenIngresoDepositoColeccionPrivada")}
+            </option>
+            <option value="CompraFirmeGaleria">{t("obraForm.regimenIngresoCompraFirmeGaleria")}</option>
+          </select>
+        </label>
+      )}
+
+      {!esRegistroPersonal && (
+        <label>
+          {t("obraForm.historialProcedenciaExhibicionesLabel")}{" "}
+          <HelpIcon fieldKey="historial_procedencia_exhibiciones" />
+          <textarea
+            rows={3}
+            value={historialProcedenciaExhibiciones}
+            onChange={(e) => setHistorialProcedenciaExhibiciones(e.target.value)}
+          />
+        </label>
+      )}
 
       <label>
         {t("obraForm.categoriaLabel")} <HelpIcon fieldKey="categoria_obra" />
@@ -505,6 +596,7 @@ export function ObraForm({
                     esFotografiaDigitalOSintografia={esFotografiaDigitalOSintografia}
                     permiteEnmarcado={permiteEnmarcado}
                     esPruebaArtista={false}
+                    esGaleria={!esRegistroPersonal}
                   />
                 );
               })}
@@ -529,6 +621,7 @@ export function ObraForm({
                     esFotografiaDigitalOSintografia={esFotografiaDigitalOSintografia}
                     permiteEnmarcado={permiteEnmarcado}
                     esPruebaArtista={true}
+                    esGaleria={!esRegistroPersonal}
                   />
                 );
               })}

@@ -28,6 +28,16 @@ export interface ObraDetalle {
   dimensiones: string | null;
   peso: string | null;
   fechaCreacion: string | null;
+  /** Los siguientes campos solo se muestran en la UI para categoria Pintura. */
+  materialesMixtura: string | null;
+  tipoBastidor: string | null;
+  imprimacionBase: string | null;
+  profundidadRelieve: string | null;
+  configuracionPanel: string | null;
+  estabilidadCapas: string | null;
+  barnizProteccion: string | null;
+  sensibilidadAmbiental: string | null;
+  estadoCantos: string | null;
 }
 
 export interface NuevaObraDetalle {
@@ -38,5 +48,14 @@ export interface NuevaObraDetalle {
   dimensiones?: string | null;
   peso?: string | null;
   fechaCreacion?: string | null;
+  materialesMixtura?: string | null;
+  tipoBastidor?: string | null;
+  imprimacionBase?: string | null;
+  profundidadRelieve?: string | null;
+  configuracionPanel?: string | null;
+  estabilidadCapas?: string | null;
+  barnizProteccion?: string | null;
+  sensibilidadAmbiental?: string | null;
+  estadoCantos?: string | null;
   esSeriada: boolean;
 }

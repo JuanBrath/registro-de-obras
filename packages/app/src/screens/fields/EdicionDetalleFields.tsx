@@ -14,6 +14,13 @@ export interface EdicionDetalleState {
   selloSecoHolograma: string;
   ubicacionActual: string;
   notas: string;
+  coaNumero: string;
+  coaEmisor: string;
+  coaFecha: string;
+  valorSeguro: string;
+  monedaSeguro: string;
+  vidrioProteccionFrontal: string;
+  sistemaCuelgue: string;
 }
 
 export const initialEdicionDetalleState: EdicionDetalleState = {
@@ -29,6 +36,13 @@ export const initialEdicionDetalleState: EdicionDetalleState = {
   selloSecoHolograma: "",
   ubicacionActual: "",
   notas: "",
+  coaNumero: "",
+  coaEmisor: "",
+  coaFecha: "",
+  valorSeguro: "",
+  monedaSeguro: "",
+  vidrioProteccionFrontal: "",
+  sistemaCuelgue: "",
 };
 
 function resumenEdicion(value: EdicionDetalleState): string[] {
@@ -52,6 +66,7 @@ export function EdicionDetalleRow({
   esFotografiaDigitalOSintografia,
   permiteEnmarcado,
   esPruebaArtista,
+  esGaleria,
 }: {
   numero: string;
   value: EdicionDetalleState;
@@ -64,6 +79,7 @@ export function EdicionDetalleRow({
   esFotografiaDigitalOSintografia: boolean;
   permiteEnmarcado: boolean;
   esPruebaArtista: boolean;
+  esGaleria: boolean;
 }) {
   const { t } = useLanguage();
 
@@ -153,6 +169,22 @@ export function EdicionDetalleRow({
                 onChange={(e) => onChange({ ...value, tamanoFinalEnmarcado: e.target.value })}
               />
             </label>
+            <label>
+              {t("obraDetail.vidrioProteccionFrontalLabel")} <HelpIcon fieldKey="vidrio_proteccion_frontal" />
+              <input
+                type="text"
+                value={value.vidrioProteccionFrontal}
+                onChange={(e) => onChange({ ...value, vidrioProteccionFrontal: e.target.value })}
+              />
+            </label>
+            <label>
+              {t("obraDetail.sistemaCuelgueLabel")} <HelpIcon fieldKey="sistema_cuelgue" />
+              <input
+                type="text"
+                value={value.sistemaCuelgue}
+                onChange={(e) => onChange({ ...value, sistemaCuelgue: e.target.value })}
+              />
+            </label>
           </>
         )}
 
@@ -185,6 +217,55 @@ export function EdicionDetalleRow({
             onChange={(e) => onChange({ ...value, ubicacionActual: e.target.value })}
           />
         </label>
+
+        {esGaleria && (
+          <>
+            <label>
+              {t("obraDetail.coaNumeroLabel")} <HelpIcon fieldKey="coa_numero" />
+              <input
+                type="text"
+                value={value.coaNumero}
+                onChange={(e) => onChange({ ...value, coaNumero: e.target.value })}
+              />
+            </label>
+            <label>
+              {t("obraDetail.coaEmisorLabel")} <HelpIcon fieldKey="coa_emisor" />
+              <input
+                type="text"
+                value={value.coaEmisor}
+                onChange={(e) => onChange({ ...value, coaEmisor: e.target.value })}
+              />
+            </label>
+            <label>
+              {t("obraDetail.coaFechaLabel")} <HelpIcon fieldKey="coa_fecha" />
+              <input
+                type="date"
+                value={value.coaFecha}
+                onChange={(e) => onChange({ ...value, coaFecha: e.target.value })}
+              />
+            </label>
+            <label>
+              {t("obraDetail.valorSeguroLabel")} <HelpIcon fieldKey="valor_seguro" />
+              <div className="venta-form-valor-row">
+                <select
+                  value={value.monedaSeguro || "ARS"}
+                  onChange={(e) => onChange({ ...value, monedaSeguro: e.target.value })}
+                >
+                  <option value="ARS">ARS</option>
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                </select>
+                <input
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={value.valorSeguro}
+                  onChange={(e) => onChange({ ...value, valorSeguro: e.target.value })}
+                />
+              </div>
+            </label>
+          </>
+        )}
 
         <label>
           {t("obraDetail.notasEjemplarLabel")}

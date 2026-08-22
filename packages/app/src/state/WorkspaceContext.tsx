@@ -48,8 +48,10 @@ interface ArtistaRow {
   fecha_nacimiento: string | null;
   bio: string | null;
   nombre_artistico: string | null;
+  nacionalidad: string | null;
   lugar_nacimiento: string | null;
   lugar_fallecimiento: string | null;
+  fecha_fallecimiento: string | null;
   lugar_residencia_trabajo: string | null;
   declaracion_artista: string | null;
   formacion_academica: string | null;
@@ -83,8 +85,10 @@ function mapArtistaRow(row: ArtistaRow): Artista {
     fechaNacimiento: row.fecha_nacimiento,
     bio: row.bio,
     nombreArtistico: row.nombre_artistico,
+    nacionalidad: row.nacionalidad,
     lugarNacimiento: row.lugar_nacimiento,
     lugarFallecimiento: row.lugar_fallecimiento,
+    fechaFallecimiento: row.fecha_fallecimiento,
     lugarResidenciaTrabajo: row.lugar_residencia_trabajo,
     declaracionArtista: row.declaracion_artista,
     formacionAcademica: row.formacion_academica,

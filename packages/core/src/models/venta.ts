@@ -21,6 +21,8 @@ export interface Venta {
   montoNetoArtista: number | null;
   numeroCertificado: number | null;
   rutaCertificadoPdf: string | null;
+  ivaPorcentaje: number | null;
+  ivaMonto: number | null;
   fechaRegistro: string;
 }
 

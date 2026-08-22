@@ -23,6 +23,8 @@ export interface VentaExistente {
   porcentajeComision: number | null;
   montoComision: number | null;
   numeroCertificado: number | null;
+  ivaPorcentaje: number | null;
+  ivaMonto: number | null;
 }
 
 interface ClienteOption {
@@ -90,6 +92,10 @@ export function VentaForm({
   const [montoComision, setMontoComision] = useState(
     existingVenta?.montoComision != null ? String(existingVenta.montoComision) : "",
   );
+  const [ivaPorcentaje, setIvaPorcentaje] = useState(
+    existingVenta?.ivaPorcentaje != null ? String(existingVenta.ivaPorcentaje) : "",
+  );
+  const [ivaMonto, setIvaMonto] = useState(existingVenta?.ivaMonto != null ? String(existingVenta.ivaMonto) : "");
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -169,6 +175,22 @@ export function VentaForm({
     );
   }
 
+  function handleIvaPorcentajeChange(nuevoPorcentaje: string) {
+    setIvaPorcentaje(nuevoPorcentaje);
+    const valor = parseFloat(valorVenta) || 0;
+    const pct = parseFloat(nuevoPorcentaje);
+    setIvaMonto(!isNaN(pct) && valor > 0 ? String(redondearMonto(valor * (pct / 100))) : "");
+  }
+
+  function handleIvaMontoChange(nuevoMonto: string) {
+    setIvaMonto(nuevoMonto);
+    const valor = parseFloat(valorVenta) || 0;
+    const monto = parseFloat(nuevoMonto);
+    setIvaPorcentaje(
+      !isNaN(monto) && valor > 0 ? String(redondearPorcentaje(calcularPorcentajeComision(valor, monto))) : "",
+    );
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setSubmitting(true);
@@ -180,11 +202,18 @@ export function VentaForm({
       const porcentaje = aplica ? parseFloat(porcentajeComision) || 0 : null;
       const montoComisionNum = aplica ? parseFloat(montoComision) || 0 : 0;
       const montoNetoArtista = aplica ? valorVentaNum - montoComisionNum : valorVentaNum;
+      const aplicaIva = !esDonacion && esGaleria && ivaPorcentaje !== "";
+      const ivaPorcentajeNum = aplicaIva ? parseFloat(ivaPorcentaje) || 0 : null;
+      const ivaMontoNum = aplicaIva ? parseFloat(ivaMonto) || 0 : null;
 
       if (existingVenta) {
         await db.transaction(async (tx) => {
           await tx.execute(
-            `UPDATE venta SET cliente_id = ?, comprador_nombre = ?, comprador_email = ?, comprador_telefono = ?, fecha_venta = ?, lugar_venta = ?, valor_venta = ?, moneda = ?, aplica_comision = ?, porcentaje_comision = ?, monto_comision = ?, monto_neto_artista = ? WHERE id = ?`,
+            `UPDATE venta SET
+               cliente_id = ?, comprador_nombre = ?, comprador_email = ?, comprador_telefono = ?, fecha_venta = ?,
+               lugar_venta = ?, valor_venta = ?, moneda = ?, aplica_comision = ?, porcentaje_comision = ?,
+               monto_comision = ?, monto_neto_artista = ?, iva_porcentaje = ?, iva_monto = ?
+             WHERE id = ?`,
             [
               clienteId,
               compradorNombre,
@@ -198,6 +227,8 @@ export function VentaForm({
               porcentaje,
               aplica ? montoComisionNum : null,
               montoNetoArtista,
+              ivaPorcentajeNum,
+              ivaMontoNum,
               existingVenta.id,
             ],
           );
@@ -218,8 +249,12 @@ export function VentaForm({
           }
 
           const insertVenta = await tx.execute(
-            `INSERT INTO venta (obra_id, ejemplar_id, tipo, cliente_id, comprador_nombre, comprador_email, comprador_telefono, fecha_venta, lugar_venta, valor_venta, moneda, aplica_comision, porcentaje_comision, monto_comision, monto_neto_artista, numero_certificado)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO venta (
+               obra_id, ejemplar_id, tipo, cliente_id, comprador_nombre, comprador_email, comprador_telefono,
+               fecha_venta, lugar_venta, valor_venta, moneda, aplica_comision, porcentaje_comision, monto_comision,
+               monto_neto_artista, numero_certificado, iva_porcentaje, iva_monto
+             )
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               obraId,
               ejemplarId,
@@ -237,6 +272,8 @@ export function VentaForm({
               aplica ? montoComisionNum : null,
               montoNetoArtista,
               numeroCertificado,
+              ivaPorcentajeNum,
+              ivaMontoNum,
             ],
           );
           const ventaId = insertVenta.lastInsertId;
@@ -474,6 +511,29 @@ export function VentaForm({
               </label>
             </>
           )}
+          <div className="venta-form-valor-row">
+            <label>
+              {t("ventaForm.ivaPorcentaje")} <HelpIcon fieldKey="iva_porcentaje" />
+              <input
+                type="number"
+                min={0}
+                max={100}
+                step="0.1"
+                value={ivaPorcentaje}
+                onChange={(e) => handleIvaPorcentajeChange(e.target.value)}
+              />
+            </label>
+            <label>
+              {t("ventaForm.ivaMonto")}
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={ivaMonto}
+                onChange={(e) => handleIvaMontoChange(e.target.value)}
+              />
+            </label>
+          </div>
         </>
       )}
 

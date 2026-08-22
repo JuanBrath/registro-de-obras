@@ -51,6 +51,11 @@ interface ObraRow {
   tags: string | null;
   artista_id: number;
   nombre_completo: string;
+  subtitulo: string | null;
+  codigo_inventario: string | null;
+  anio_periodo: string | null;
+  regimen_ingreso: string | null;
+  historial_procedencia_exhibiciones: string | null;
 }
 
 interface ObraExtRow {
@@ -65,6 +70,15 @@ interface ObraExtRow {
   dimensiones?: string | null;
   peso?: string | null;
   fecha_creacion?: string | null;
+  materiales_mixtura?: string | null;
+  tipo_bastidor?: string | null;
+  imprimacion_base?: string | null;
+  profundidad_relieve?: string | null;
+  configuracion_panel?: string | null;
+  estabilidad_capas?: string | null;
+  barniz_proteccion?: string | null;
+  sensibilidad_ambiental?: string | null;
+  estado_cantos?: string | null;
 }
 
 interface EjemplarRow {
@@ -88,6 +102,13 @@ interface EjemplarRow {
   notas: string | null;
   precio_venta: number | null;
   moneda_venta: string | null;
+  coa_numero: string | null;
+  coa_emisor: string | null;
+  coa_fecha: string | null;
+  valor_seguro: number | null;
+  moneda_seguro: string | null;
+  vidrio_proteccion_frontal: string | null;
+  sistema_cuelgue: string | null;
 }
 
 interface VentaRow {
@@ -105,6 +126,8 @@ interface VentaRow {
   porcentaje_comision: number | null;
   monto_comision: number | null;
   numero_certificado: number | null;
+  iva_porcentaje: number | null;
+  iva_monto: number | null;
 }
 
 function toVentaExistente(v: VentaRow): VentaExistente {
@@ -123,6 +146,8 @@ function toVentaExistente(v: VentaRow): VentaExistente {
     porcentajeComision: v.porcentaje_comision,
     montoComision: v.monto_comision,
     numeroCertificado: v.numero_certificado,
+    ivaPorcentaje: v.iva_porcentaje,
+    ivaMonto: v.iva_monto,
   };
 }
 
@@ -135,9 +160,11 @@ function buildObraDescripcionLineas(
   // completa, no debe incluir la ubicacion del archivo original ni el
   // software de edicion (son datos internos, no para compartir con un
   // comprador).
-  { incluirUbicacionArchivo = true, incluirSoftwareEdicion = true } = {},
+  { incluirUbicacionArchivo = true, incluirSoftwareEdicion = true, incluirInfoComercial = true } = {},
 ): string[] {
   const lineas: string[] = [];
+  if (obra.subtitulo) lineas.push(t("obraForm.subtituloLabel") + ": " + obra.subtitulo);
+  if (obra.codigo_inventario) lineas.push(t("obraForm.codigoInventarioLabel") + ": " + obra.codigo_inventario);
   lineas.push(t("obraDetail.artista", { nombre: obra.nombre_completo }));
   lineas.push(t("obraDetail.categoria", { categoria: t(`categoria.${obra.categoria_obra}` as TranslationKey) }));
   if (ext?.subtipo_fotografia) {
@@ -177,6 +204,42 @@ function buildObraDescripcionLineas(
   }
   if (ext?.fecha_creacion) {
     lineas.push(`${t("field.fechaCreacion")}: ${formatFechaDDMMYYYY(ext.fecha_creacion)}`);
+  }
+  if (obra.anio_periodo) lineas.push(`${t("obraForm.anioPeriodoLabel")}: ${obra.anio_periodo}`);
+  if (obra.categoria_obra === "Pintura") {
+    if (ext?.materiales_mixtura) {
+      lineas.push(`${t("fields.pintura.materialesMixturaLabel")}: ${ext.materiales_mixtura}`);
+    }
+    if (ext?.tipo_bastidor) lineas.push(`${t("fields.pintura.tipoBastidorLabel")}: ${ext.tipo_bastidor}`);
+    if (ext?.imprimacion_base) {
+      lineas.push(`${t("fields.pintura.imprimacionBaseLabel")}: ${ext.imprimacion_base}`);
+    }
+    if (ext?.profundidad_relieve) {
+      lineas.push(`${t("fields.pintura.profundidadRelieveLabel")}: ${ext.profundidad_relieve}`);
+    }
+    if (ext?.configuracion_panel) {
+      lineas.push(`${t("fields.pintura.configuracionPanelLabel")}: ${ext.configuracion_panel}`);
+    }
+    if (ext?.estabilidad_capas) {
+      lineas.push(`${t("fields.pintura.estabilidadCapasLabel")}: ${ext.estabilidad_capas}`);
+    }
+    if (ext?.barniz_proteccion) {
+      lineas.push(`${t("fields.pintura.barnizProteccionLabel")}: ${ext.barniz_proteccion}`);
+    }
+    if (ext?.sensibilidad_ambiental) {
+      lineas.push(`${t("fields.pintura.sensibilidadAmbientalLabel")}: ${ext.sensibilidad_ambiental}`);
+    }
+    if (ext?.estado_cantos) lineas.push(`${t("fields.pintura.estadoCantosLabel")}: ${ext.estado_cantos}`);
+  }
+  if (incluirInfoComercial && !esRegistroPersonal && obra.regimen_ingreso) {
+    lineas.push(
+      `${t("obraForm.regimenIngresoLabel")}: ${t(`obraForm.regimenIngreso${obra.regimen_ingreso}` as TranslationKey)}`,
+    );
+  }
+  if (incluirInfoComercial && !esRegistroPersonal && obra.historial_procedencia_exhibiciones) {
+    lineas.push(
+      `${t("obraForm.historialProcedenciaExhibicionesLabel")}: ${obra.historial_procedencia_exhibiciones}`,
+    );
   }
   const tags = parseTags(obra.tags);
   if (tags.length > 0) lineas.push(`${t("obraForm.etiquetasLabel")}: ${tags.join(", ")}`);
@@ -226,7 +289,8 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       const obraRows = await context.db.query<ObraRow>(
         `SELECT obra.id, obra.titulo, obra.categoria_obra, obra.estado, obra.es_seriada,
                 obra.ubicacion_fisica_actual, obra.miniatura_path, obra.imagen_alta_resolucion_path, obra.tags,
-                obra.artista_id, artista.nombre_completo
+                obra.artista_id, artista.nombre_completo, obra.subtitulo, obra.codigo_inventario,
+                obra.anio_periodo, obra.regimen_ingreso, obra.historial_procedencia_exhibiciones
          FROM obra JOIN artista ON artista.id = obra.artista_id
          WHERE obra.id = ?`,
         [obraId],
@@ -259,7 +323,10 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
           setExt(rows[0] ?? null);
         } else {
           const rows = await context.db.query<ObraExtRow>(
-            `SELECT subtipo, tecnica_material, soporte, tecnica, dimensiones, peso, fecha_creacion FROM obra_detalle WHERE obra_id = ?`,
+            `SELECT subtipo, tecnica_material, soporte, tecnica, dimensiones, peso, fecha_creacion,
+                    materiales_mixtura, tipo_bastidor, imprimacion_base, profundidad_relieve, configuracion_panel,
+                    estabilidad_capas, barniz_proteccion, sensibilidad_ambiental, estado_cantos
+             FROM obra_detalle WHERE obra_id = ?`,
             [obraId],
           );
           setExt(rows[0] ?? null);
@@ -268,7 +335,8 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
 
       if (obraRow) {
         const ejemplarRows = await context.db.query<EjemplarRow>(
-          `SELECT id, tipo, numero, estado, venta_id, fecha_impresion, tipo_impresion, soporte_impresion, tipo_tintas, taller_impresion, ubicacion_actual, dimensiones, tipo_enmarcado, tamano_final_enmarcado, ubicacion_firma, sello_seco_holograma, fecha_limite, notas, precio_venta, moneda_venta
+          `SELECT id, tipo, numero, estado, venta_id, fecha_impresion, tipo_impresion, soporte_impresion, tipo_tintas, taller_impresion, ubicacion_actual, dimensiones, tipo_enmarcado, tamano_final_enmarcado, ubicacion_firma, sello_seco_holograma, fecha_limite, notas, precio_venta, moneda_venta,
+                  coa_numero, coa_emisor, coa_fecha, valor_seguro, moneda_seguro, vidrio_proteccion_frontal, sistema_cuelgue
            FROM ejemplar WHERE obra_id = ? ORDER BY tipo, indice`,
           [obraId],
         );
@@ -276,7 +344,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       }
 
       const ventaRows = await context.db.query<VentaRow>(
-        `SELECT id, tipo, cliente_id, comprador_nombre, comprador_email, comprador_telefono, fecha_venta, lugar_venta, valor_venta, moneda, aplica_comision, porcentaje_comision, monto_comision, numero_certificado
+        `SELECT id, tipo, cliente_id, comprador_nombre, comprador_email, comprador_telefono, fecha_venta, lugar_venta, valor_venta, moneda, aplica_comision, porcentaje_comision, monto_comision, numero_certificado, iva_porcentaje, iva_monto
          FROM venta WHERE obra_id = ?`,
         [obraId],
       );
@@ -496,6 +564,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       const lineas = buildObraDescripcionLineas(obra, ext, esRegistroPersonal, t, {
         incluirUbicacionArchivo: false,
         incluirSoftwareEdicion: false,
+        incluirInfoComercial: false,
       });
 
       let textY = startY;
@@ -568,12 +637,25 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       notas: string;
       precioVenta: string;
       monedaVenta: string;
+      coaNumero: string;
+      coaEmisor: string;
+      coaFecha: string;
+      valorSeguro: string;
+      monedaSeguro: string;
+      vidrioProteccionFrontal: string;
+      sistemaCuelgue: string;
     },
   ) {
     if (!context) return;
     await context.db.transaction(async (tx) => {
       await tx.execute(
-        `UPDATE ejemplar SET estado = ?, fecha_impresion = ?, tipo_impresion = ?, soporte_impresion = ?, tipo_tintas = ?, taller_impresion = ?, ubicacion_actual = ?, dimensiones = ?, tipo_enmarcado = ?, tamano_final_enmarcado = ?, ubicacion_firma = ?, sello_seco_holograma = ?, fecha_limite = ?, notas = ?, precio_venta = ?, moneda_venta = ? WHERE id = ?`,
+        `UPDATE ejemplar SET
+           estado = ?, fecha_impresion = ?, tipo_impresion = ?, soporte_impresion = ?, tipo_tintas = ?,
+           taller_impresion = ?, ubicacion_actual = ?, dimensiones = ?, tipo_enmarcado = ?,
+           tamano_final_enmarcado = ?, ubicacion_firma = ?, sello_seco_holograma = ?, fecha_limite = ?, notas = ?,
+           precio_venta = ?, moneda_venta = ?, coa_numero = ?, coa_emisor = ?, coa_fecha = ?, valor_seguro = ?,
+           moneda_seguro = ?, vidrio_proteccion_frontal = ?, sistema_cuelgue = ?
+         WHERE id = ?`,
         [
           fields.estado,
           fields.fechaImpresion || null,
@@ -591,6 +673,13 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
           fields.notas || null,
           fields.precioVenta ? parseFloat(fields.precioVenta) : null,
           fields.precioVenta ? fields.monedaVenta : null,
+          fields.coaNumero || null,
+          fields.coaEmisor || null,
+          fields.coaFecha || null,
+          fields.valorSeguro ? parseFloat(fields.valorSeguro) : null,
+          fields.valorSeguro ? fields.monedaSeguro : null,
+          fields.vidrioProteccionFrontal || null,
+          fields.sistemaCuelgue || null,
           ejemplarId,
         ],
       );
@@ -608,6 +697,11 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
 
   async function handleSaveObra(fields: {
     titulo: string;
+    subtitulo: string;
+    codigoInventario: string;
+    anioPeriodo: string;
+    regimenIngreso: string;
+    historialProcedenciaExhibiciones: string;
     ubicacion: string;
     tags: string[];
     categoria: CategoriaObra;
@@ -629,7 +723,11 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
 
     await context.db.transaction(async (tx) => {
       await tx.execute(
-        `UPDATE obra SET titulo = ?, categoria_obra = ?, ubicacion_fisica_actual = ?, tags = ?, es_seriada = ?, artista_id = ? WHERE id = ?`,
+        `UPDATE obra SET
+           titulo = ?, categoria_obra = ?, ubicacion_fisica_actual = ?, tags = ?, es_seriada = ?, artista_id = ?,
+           subtitulo = ?, codigo_inventario = ?, anio_periodo = ?, regimen_ingreso = ?,
+           historial_procedencia_exhibiciones = ?
+         WHERE id = ?`,
         [
           fields.titulo,
           fields.categoria,
@@ -637,6 +735,11 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
           formatTags(fields.tags) || null,
           fields.esSeriada ? 1 : 0,
           esRegistroPersonal ? obra.artista_id : fields.artistaId,
+          fields.subtitulo || null,
+          fields.codigoInventario || null,
+          fields.anioPeriodo || null,
+          fields.regimenIngreso || null,
+          fields.historialProcedenciaExhibiciones || null,
           obraId,
         ],
       );
@@ -695,8 +798,17 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
         await tx.execute(upsert, params);
       } else {
         const upsert = cambiaCategoria
-          ? `INSERT INTO obra_detalle (obra_id, subtipo, tecnica_material, soporte, tecnica, dimensiones, peso, fecha_creacion) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-          : `UPDATE obra_detalle SET subtipo = ?, tecnica_material = ?, soporte = ?, tecnica = ?, dimensiones = ?, peso = ?, fecha_creacion = ? WHERE obra_id = ?`;
+          ? `INSERT INTO obra_detalle (
+               obra_id, subtipo, tecnica_material, soporte, tecnica, dimensiones, peso, fecha_creacion,
+               materiales_mixtura, tipo_bastidor, imprimacion_base, profundidad_relieve, configuracion_panel,
+               estabilidad_capas, barniz_proteccion, sensibilidad_ambiental, estado_cantos
+             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          : `UPDATE obra_detalle SET
+               subtipo = ?, tecnica_material = ?, soporte = ?, tecnica = ?, dimensiones = ?, peso = ?,
+               fecha_creacion = ?, materiales_mixtura = ?, tipo_bastidor = ?, imprimacion_base = ?,
+               profundidad_relieve = ?, configuracion_panel = ?, estabilidad_capas = ?, barniz_proteccion = ?,
+               sensibilidad_ambiental = ?, estado_cantos = ?
+             WHERE obra_id = ?`;
         const params = cambiaCategoria
           ? [
               obraId,
@@ -707,6 +819,15 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
               fields.ext.dimensiones || null,
               fields.ext.peso || null,
               fields.ext.fecha_creacion || null,
+              fields.ext.materiales_mixtura || null,
+              fields.ext.tipo_bastidor || null,
+              fields.ext.imprimacion_base || null,
+              fields.ext.profundidad_relieve || null,
+              fields.ext.configuracion_panel || null,
+              fields.ext.estabilidad_capas || null,
+              fields.ext.barniz_proteccion || null,
+              fields.ext.sensibilidad_ambiental || null,
+              fields.ext.estado_cantos || null,
             ]
           : [
               fields.ext.subtipo || null,
@@ -716,6 +837,15 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
               fields.ext.dimensiones || null,
               fields.ext.peso || null,
               fields.ext.fecha_creacion || null,
+              fields.ext.materiales_mixtura || null,
+              fields.ext.tipo_bastidor || null,
+              fields.ext.imprimacion_base || null,
+              fields.ext.profundidad_relieve || null,
+              fields.ext.configuracion_panel || null,
+              fields.ext.estabilidad_capas || null,
+              fields.ext.barniz_proteccion || null,
+              fields.ext.sensibilidad_ambiental || null,
+              fields.ext.estado_cantos || null,
               obraId,
             ];
         await tx.execute(upsert, params);
@@ -945,6 +1075,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
                 (ext?.subtipo_fotografia === "DigitalFineArt" || ext?.subtipo_fotografia === "Sintografia")
               }
               venta={ej.venta_id ? ventas[ej.venta_id] : undefined}
+              esGaleria={!esRegistroPersonal}
               editing={editingEjemplarId === ej.id}
               onEdit={() => setEditingEjemplarId(ej.id)}
               onCancelEdit={() => setEditingEjemplarId(null)}
@@ -1071,6 +1202,11 @@ function ObraEditForm({
   onShowFullImage: () => void;
   onSave: (fields: {
     titulo: string;
+    subtitulo: string;
+    codigoInventario: string;
+    anioPeriodo: string;
+    regimenIngreso: string;
+    historialProcedenciaExhibiciones: string;
     ubicacion: string;
     tags: string[];
     categoria: CategoriaObra;
@@ -1085,6 +1221,13 @@ function ObraEditForm({
 }) {
   const { t } = useLanguage();
   const [titulo, setTitulo] = useState(obra.titulo);
+  const [subtitulo, setSubtitulo] = useState(obra.subtitulo ?? "");
+  const [codigoInventario, setCodigoInventario] = useState(obra.codigo_inventario ?? "");
+  const [anioPeriodo, setAnioPeriodo] = useState(obra.anio_periodo ?? "");
+  const [regimenIngreso, setRegimenIngreso] = useState(obra.regimen_ingreso ?? "");
+  const [historialProcedenciaExhibiciones, setHistorialProcedenciaExhibiciones] = useState(
+    obra.historial_procedencia_exhibiciones ?? "",
+  );
   const [artistaId, setArtistaId] = useState<number | null>(obra.artista_id);
   const tituloInputRef = useRef<HTMLInputElement>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -1109,6 +1252,15 @@ function ObraEditForm({
     peso: ext?.peso ?? "",
     fechaCreacion: ext?.fecha_creacion ?? todayISO(),
     esSeriada: false,
+    materialesMixtura: ext?.materiales_mixtura ?? "",
+    tipoBastidor: ext?.tipo_bastidor ?? "",
+    imprimacionBase: ext?.imprimacion_base ?? "",
+    profundidadRelieve: ext?.profundidad_relieve ?? "",
+    configuracionPanel: ext?.configuracion_panel ?? "",
+    estabilidadCapas: ext?.estabilidad_capas ?? "",
+    barnizProteccion: ext?.barniz_proteccion ?? "",
+    sensibilidadAmbiental: ext?.sensibilidad_ambiental ?? "",
+    estadoCantos: ext?.estado_cantos ?? "",
   });
   const eraSeriada = Number(obra.es_seriada) === 1;
   const [esSeriada, setEsSeriada] = useState(eraSeriada);
@@ -1166,6 +1318,11 @@ function ObraEditForm({
     try {
       await onSave({
         titulo,
+        subtitulo,
+        codigoInventario,
+        anioPeriodo,
+        regimenIngreso,
+        historialProcedenciaExhibiciones,
         ubicacion,
         tags,
         categoria: categoriaObra,
@@ -1189,6 +1346,15 @@ function ObraEditForm({
                 dimensiones: obraDetalle.dimensiones,
                 peso: obraDetalle.peso,
                 fecha_creacion: obraDetalle.fechaCreacion,
+                materiales_mixtura: obraDetalle.materialesMixtura,
+                tipo_bastidor: obraDetalle.tipoBastidor,
+                imprimacion_base: obraDetalle.imprimacionBase,
+                profundidad_relieve: obraDetalle.profundidadRelieve,
+                configuracion_panel: obraDetalle.configuracionPanel,
+                estabilidad_capas: obraDetalle.estabilidadCapas,
+                barniz_proteccion: obraDetalle.barnizProteccion,
+                sensibilidad_ambiental: obraDetalle.sensibilidadAmbiental,
+                estado_cantos: obraDetalle.estadoCantos,
               },
         imageFile,
         removeImage: removerImagen,
@@ -1207,6 +1373,47 @@ function ObraEditForm({
         {t("obraForm.tituloLabel")}
         <input ref={tituloInputRef} type="text" value={titulo} onChange={(e) => setTitulo(e.target.value)} />
       </label>
+
+      <label>
+        {t("obraForm.subtituloLabel")} <HelpIcon fieldKey="subtitulo" />
+        <input type="text" value={subtitulo} onChange={(e) => setSubtitulo(e.target.value)} />
+      </label>
+
+      <label>
+        {t("obraForm.codigoInventarioLabel")} <HelpIcon fieldKey="codigo_inventario" />
+        <input type="text" value={codigoInventario} onChange={(e) => setCodigoInventario(e.target.value)} />
+      </label>
+
+      <label>
+        {t("obraForm.anioPeriodoLabel")} <HelpIcon fieldKey="anio_periodo" />
+        <input type="text" value={anioPeriodo} onChange={(e) => setAnioPeriodo(e.target.value)} />
+      </label>
+
+      {!esRegistroPersonal && (
+        <label>
+          {t("obraForm.regimenIngresoLabel")} <HelpIcon fieldKey="regimen_ingreso" />
+          <select value={regimenIngreso} onChange={(e) => setRegimenIngreso(e.target.value)}>
+            <option value="">—</option>
+            <option value="ConsignacionTaller">{t("obraForm.regimenIngresoConsignacionTaller")}</option>
+            <option value="DepositoColeccionPrivada">
+              {t("obraForm.regimenIngresoDepositoColeccionPrivada")}
+            </option>
+            <option value="CompraFirmeGaleria">{t("obraForm.regimenIngresoCompraFirmeGaleria")}</option>
+          </select>
+        </label>
+      )}
+
+      {!esRegistroPersonal && (
+        <label>
+          {t("obraForm.historialProcedenciaExhibicionesLabel")}{" "}
+          <HelpIcon fieldKey="historial_procedencia_exhibiciones" />
+          <textarea
+            rows={3}
+            value={historialProcedenciaExhibiciones}
+            onChange={(e) => setHistorialProcedenciaExhibiciones(e.target.value)}
+          />
+        </label>
+      )}
 
       <label>
         {t("obraForm.imagenLabel")}
@@ -1406,6 +1613,7 @@ function EjemplarRowView({
   esFotografiaDigital,
   esFotografiaDigitalOSintografia,
   venta,
+  esGaleria,
   editing,
   onEdit,
   onCancelEdit,
@@ -1422,6 +1630,7 @@ function EjemplarRowView({
   esFotografiaDigital: boolean;
   esFotografiaDigitalOSintografia: boolean;
   venta: VentaRow | undefined;
+  esGaleria: boolean;
   editing: boolean;
   onEdit: () => void;
   onCancelEdit: () => void;
@@ -1442,6 +1651,13 @@ function EjemplarRowView({
     notas: string;
     precioVenta: string;
     monedaVenta: string;
+    coaNumero: string;
+    coaEmisor: string;
+    coaFecha: string;
+    valorSeguro: string;
+    monedaSeguro: string;
+    vidrioProteccionFrontal: string;
+    sistemaCuelgue: string;
   }) => void;
   onVender: () => void;
   onEditarVenta: (venta: VentaRow) => void;
@@ -1468,6 +1684,15 @@ function EjemplarRowView({
   const [notas, setNotas] = useState(ejemplar.notas ?? "");
   const [precioVenta, setPrecioVenta] = useState(ejemplar.precio_venta != null ? String(ejemplar.precio_venta) : "");
   const [monedaVenta, setMonedaVenta] = useState(ejemplar.moneda_venta ?? "ARS");
+  const [coaNumero, setCoaNumero] = useState(ejemplar.coa_numero ?? "");
+  const [coaEmisor, setCoaEmisor] = useState(ejemplar.coa_emisor ?? "");
+  const [coaFecha, setCoaFecha] = useState(ejemplar.coa_fecha ?? "");
+  const [valorSeguro, setValorSeguro] = useState(ejemplar.valor_seguro != null ? String(ejemplar.valor_seguro) : "");
+  const [monedaSeguro, setMonedaSeguro] = useState(ejemplar.moneda_seguro ?? "ARS");
+  const [vidrioProteccionFrontal, setVidrioProteccionFrontal] = useState(
+    ejemplar.vidrio_proteccion_frontal ?? "",
+  );
+  const [sistemaCuelgue, setSistemaCuelgue] = useState(ejemplar.sistema_cuelgue ?? "");
   const permiteEnmarcado =
     categoria === "Fotografia" || categoria === "Pintura" || categoria === "ObraGrafica" || categoria === "Dibujo";
   const presupuestoBloqueado = ["vendida", "descartada", "coleccion_autor", "destruida"].includes(ejemplar.estado);
@@ -1574,6 +1799,22 @@ function EjemplarRowView({
                 onChange={(e) => setTamanoFinalEnmarcado(e.target.value)}
               />
             </label>
+            <label>
+              <span className="field-label">
+                {t("obraDetail.vidrioProteccionFrontalLabel")} <HelpIcon fieldKey="vidrio_proteccion_frontal" />
+              </span>
+              <input
+                type="text"
+                value={vidrioProteccionFrontal}
+                onChange={(e) => setVidrioProteccionFrontal(e.target.value)}
+              />
+            </label>
+            <label>
+              <span className="field-label">
+                {t("obraDetail.sistemaCuelgueLabel")} <HelpIcon fieldKey="sistema_cuelgue" />
+              </span>
+              <input type="text" value={sistemaCuelgue} onChange={(e) => setSistemaCuelgue(e.target.value)} />
+            </label>
           </>
         )}
         {categoria === "Fotografia" && (
@@ -1611,6 +1852,47 @@ function EjemplarRowView({
             <input type="number" min={0} step="0.01" value={precioVenta} onChange={(e) => setPrecioVenta(e.target.value)} />
           </div>
         </label>
+        {esGaleria && (
+          <>
+            <label>
+              <span className="field-label">
+                {t("obraDetail.coaNumeroLabel")} <HelpIcon fieldKey="coa_numero" />
+              </span>
+              <input type="text" value={coaNumero} onChange={(e) => setCoaNumero(e.target.value)} />
+            </label>
+            <label>
+              <span className="field-label">
+                {t("obraDetail.coaEmisorLabel")} <HelpIcon fieldKey="coa_emisor" />
+              </span>
+              <input type="text" value={coaEmisor} onChange={(e) => setCoaEmisor(e.target.value)} />
+            </label>
+            <label>
+              <span className="field-label">
+                {t("obraDetail.coaFechaLabel")} <HelpIcon fieldKey="coa_fecha" />
+              </span>
+              <input type="date" value={coaFecha} onChange={(e) => setCoaFecha(e.target.value)} />
+            </label>
+            <label>
+              <span className="field-label">
+                {t("obraDetail.valorSeguroLabel")} <HelpIcon fieldKey="valor_seguro" />
+              </span>
+              <div className="venta-form-valor-row">
+                <select value={monedaSeguro} onChange={(e) => setMonedaSeguro(e.target.value)}>
+                  <option value="ARS">ARS</option>
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                </select>
+                <input
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={valorSeguro}
+                  onChange={(e) => setValorSeguro(e.target.value)}
+                />
+              </div>
+            </label>
+          </>
+        )}
         <label>
           <span className="field-label">{t("obraDetail.notasEjemplarLabel")}</span>
           <textarea rows={2} value={notas} onChange={(e) => setNotas(e.target.value)} />
@@ -1636,6 +1918,13 @@ function EjemplarRowView({
                 notas,
                 precioVenta,
                 monedaVenta,
+                coaNumero,
+                coaEmisor,
+                coaFecha,
+                valorSeguro,
+                monedaSeguro,
+                vidrioProteccionFrontal,
+                sistemaCuelgue,
               })
             }
           >
@@ -1678,6 +1967,12 @@ function EjemplarRowView({
       {ejemplar.tamano_final_enmarcado && (
         <span>{t("obraDetail.tamanoFinalEnmarcado", { valor: ejemplar.tamano_final_enmarcado })}</span>
       )}
+      {ejemplar.vidrio_proteccion_frontal && (
+        <span>{t("obraDetail.vidrioProteccionFrontal", { valor: ejemplar.vidrio_proteccion_frontal })}</span>
+      )}
+      {ejemplar.sistema_cuelgue && (
+        <span>{t("obraDetail.sistemaCuelgue", { valor: ejemplar.sistema_cuelgue })}</span>
+      )}
       {ejemplar.ubicacion_firma && (
         <span>{t("obraDetail.ubicacionFirma", { valor: ejemplar.ubicacion_firma })}</span>
       )}
@@ -1688,6 +1983,15 @@ function EjemplarRowView({
       {ejemplar.precio_venta != null && (
         <span>
           {t("obraDetail.valorSerie", { moneda: ejemplar.moneda_venta ?? "ARS", valor: ejemplar.precio_venta })}
+        </span>
+      )}
+      {ejemplar.coa_numero && <span>{t("obraDetail.coaResumen", { valor: ejemplar.coa_numero })}</span>}
+      {ejemplar.valor_seguro != null && (
+        <span>
+          {t("obraDetail.valorSeguroResumen", {
+            moneda: ejemplar.moneda_seguro ?? "ARS",
+            valor: ejemplar.valor_seguro,
+          })}
         </span>
       )}
 

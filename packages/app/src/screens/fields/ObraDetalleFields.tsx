@@ -16,6 +16,16 @@ export interface ObraDetalleFieldsState {
   peso: string;
   fechaCreacion: string;
   esSeriada: boolean;
+  /** Los siguientes campos solo se muestran para categoria Pintura. */
+  materialesMixtura: string;
+  tipoBastidor: string;
+  imprimacionBase: string;
+  profundidadRelieve: string;
+  configuracionPanel: string;
+  estabilidadCapas: string;
+  barnizProteccion: string;
+  sensibilidadAmbiental: string;
+  estadoCantos: string;
 }
 
 export const initialObraDetalleFieldsState: ObraDetalleFieldsState = {
@@ -27,6 +37,15 @@ export const initialObraDetalleFieldsState: ObraDetalleFieldsState = {
   peso: "",
   fechaCreacion: todayISO(),
   esSeriada: false,
+  materialesMixtura: "",
+  tipoBastidor: "",
+  imprimacionBase: "",
+  profundidadRelieve: "",
+  configuracionPanel: "",
+  estabilidadCapas: "",
+  barnizProteccion: "",
+  sensibilidadAmbiental: "",
+  estadoCantos: "",
 };
 
 interface CategoriaConfig {
@@ -202,6 +221,93 @@ export function ObraDetalleFields({
           onChange={(e) => onChange({ ...value, fechaCreacion: e.target.value })}
         />
       </label>
+
+      {categoria === "Pintura" && (
+        <fieldset>
+          <legend>{t("fields.pintura.rigurosaLegend")}</legend>
+
+          <label>
+            {t("fields.pintura.materialesMixturaLabel")} <HelpIcon fieldKey="materiales_mixtura" />
+            <textarea
+              rows={2}
+              value={value.materialesMixtura}
+              onChange={(e) => onChange({ ...value, materialesMixtura: e.target.value })}
+            />
+          </label>
+
+          <label>
+            {t("fields.pintura.tipoBastidorLabel")} <HelpIcon fieldKey="tipo_bastidor" />
+            <input
+              type="text"
+              value={value.tipoBastidor}
+              onChange={(e) => onChange({ ...value, tipoBastidor: e.target.value })}
+            />
+          </label>
+
+          <label>
+            {t("fields.pintura.imprimacionBaseLabel")} <HelpIcon fieldKey="imprimacion_base" />
+            <input
+              type="text"
+              value={value.imprimacionBase}
+              onChange={(e) => onChange({ ...value, imprimacionBase: e.target.value })}
+            />
+          </label>
+
+          <label>
+            {t("fields.pintura.profundidadRelieveLabel")} <HelpIcon fieldKey="profundidad_relieve" />
+            <input
+              type="text"
+              value={value.profundidadRelieve}
+              onChange={(e) => onChange({ ...value, profundidadRelieve: e.target.value })}
+            />
+          </label>
+
+          <label>
+            {t("fields.pintura.configuracionPanelLabel")} <HelpIcon fieldKey="configuracion_panel" />
+            <textarea
+              rows={2}
+              value={value.configuracionPanel}
+              onChange={(e) => onChange({ ...value, configuracionPanel: e.target.value })}
+            />
+          </label>
+
+          <label>
+            {t("fields.pintura.estabilidadCapasLabel")} <HelpIcon fieldKey="estabilidad_capas" />
+            <textarea
+              rows={2}
+              value={value.estabilidadCapas}
+              onChange={(e) => onChange({ ...value, estabilidadCapas: e.target.value })}
+            />
+          </label>
+
+          <label>
+            {t("fields.pintura.barnizProteccionLabel")} <HelpIcon fieldKey="barniz_proteccion" />
+            <input
+              type="text"
+              value={value.barnizProteccion}
+              onChange={(e) => onChange({ ...value, barnizProteccion: e.target.value })}
+            />
+          </label>
+
+          <label>
+            {t("fields.pintura.sensibilidadAmbientalLabel")} <HelpIcon fieldKey="sensibilidad_ambiental" />
+            <textarea
+              rows={2}
+              value={value.sensibilidadAmbiental}
+              onChange={(e) => onChange({ ...value, sensibilidadAmbiental: e.target.value })}
+            />
+          </label>
+
+          <label>
+            {t("fields.pintura.estadoCantosLabel")} <HelpIcon fieldKey="estado_cantos" />
+            <input
+              type="text"
+              value={value.estadoCantos}
+              onChange={(e) => onChange({ ...value, estadoCantos: e.target.value })}
+            />
+          </label>
+        </fieldset>
+      )}
 
       {mostrarEsSeriada &&
         (categoria === "ObraGrafica" ? (

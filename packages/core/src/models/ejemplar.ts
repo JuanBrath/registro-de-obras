@@ -42,4 +42,12 @@ export interface Ejemplar {
   selloSecoHolograma: string | null;
   /** Solo aplica a los estados Exhibicion/Consignacion: hasta cuando queda la pieza en ese estado. */
   fechaLimite: string | null;
+  /** Certificado de Autenticidad cargado manualmente, independiente del numero que se asigna al vender. */
+  coaNumero: string | null;
+  coaEmisor: string | null;
+  coaFecha: string | null;
+  valorSeguro: number | null;
+  monedaSeguro: string | null;
+  vidrioProteccionFrontal: string | null;
+  sistemaCuelgue: string | null;
 }
