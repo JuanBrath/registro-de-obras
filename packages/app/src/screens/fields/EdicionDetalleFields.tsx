@@ -21,6 +21,10 @@ export interface EdicionDetalleState {
   monedaSeguro: string;
   vidrioProteccionFrontal: string;
   sistemaCuelgue: string;
+  coaSistemaSeguridad: string;
+  informeConservacion: string;
+  dimensionesSoporteCompleto: string;
+  peso: string;
 }
 
 export const initialEdicionDetalleState: EdicionDetalleState = {
@@ -43,6 +47,10 @@ export const initialEdicionDetalleState: EdicionDetalleState = {
   monedaSeguro: "",
   vidrioProteccionFrontal: "",
   sistemaCuelgue: "",
+  coaSistemaSeguridad: "",
+  informeConservacion: "",
+  dimensionesSoporteCompleto: "",
+  peso: "",
 };
 
 function resumenEdicion(value: EdicionDetalleState): string[] {
@@ -139,6 +147,24 @@ export function EdicionDetalleRow({
             onChange={(e) => onChange({ ...value, dimensiones: e.target.value })}
           />
         </label>
+
+        {esFotografia && (
+          <>
+            <label>
+              {t("obraDetail.dimensionesSoporteCompletoLabel")}{" "}
+              <HelpIcon fieldKey="dimensiones_soporte_completo" />
+              <input
+                type="text"
+                value={value.dimensionesSoporteCompleto}
+                onChange={(e) => onChange({ ...value, dimensionesSoporteCompleto: e.target.value })}
+              />
+            </label>
+            <label>
+              {t("obraDetail.pesoLabel")} <HelpIcon fieldKey="peso_ejemplar" />
+              <input type="text" value={value.peso} onChange={(e) => onChange({ ...value, peso: e.target.value })} />
+            </label>
+          </>
+        )}
 
         {esFotografiaDigital && (
           <label>
@@ -245,6 +271,14 @@ export function EdicionDetalleRow({
               />
             </label>
             <label>
+              {t("obraDetail.coaSistemaSeguridadLabel")} <HelpIcon fieldKey="coa_sistema_seguridad" />
+              <input
+                type="text"
+                value={value.coaSistemaSeguridad}
+                onChange={(e) => onChange({ ...value, coaSistemaSeguridad: e.target.value })}
+              />
+            </label>
+            <label>
               {t("obraDetail.valorSeguroLabel")} <HelpIcon fieldKey="valor_seguro" />
               <div className="venta-form-valor-row">
                 <select
@@ -263,6 +297,14 @@ export function EdicionDetalleRow({
                   onChange={(e) => onChange({ ...value, valorSeguro: e.target.value })}
                 />
               </div>
+            </label>
+            <label>
+              {t("obraDetail.informeConservacionLabel")} <HelpIcon fieldKey="informe_conservacion" />
+              <textarea
+                rows={2}
+                value={value.informeConservacion}
+                onChange={(e) => onChange({ ...value, informeConservacion: e.target.value })}
+              />
             </label>
           </>
         )}

@@ -68,6 +68,10 @@ export function ObraForm({
   const [cantidadTotalEdiciones, setCantidadTotalEdiciones] = useState("1");
   const [hayPruebaAutor, setHayPruebaAutor] = useState(false);
   const [cantidadPruebaAutor, setCantidadPruebaAutor] = useState("1");
+  // La advertencia de "excede el 10%" es solo informativa: una vez que el
+  // usuario cargo la cantidad (no bien toca el campo), se deja de mostrar en
+  // vez de quedar fija en pantalla.
+  const [advertenciaPruebaAutorVista, setAdvertenciaPruebaAutorVista] = useState(false);
   const [detallesEdiciones, setDetallesEdiciones] = useState<{
     edicion: EdicionDetalleState[];
     prueba_artista: EdicionDetalleState[];
@@ -124,6 +128,7 @@ export function ObraForm({
     setCantidadTotalEdiciones("1");
     setHayPruebaAutor(false);
     setCantidadPruebaAutor("1");
+    setAdvertenciaPruebaAutorVista(false);
     setDetallesEdiciones({ edicion: [], prueba_artista: [] });
     setExpandedEdicionKey(null);
     handleImageChange(null);
@@ -147,7 +152,8 @@ export function ObraForm({
 
   const cantidadEdicionesNum = Math.max(1, parseInt(cantidadTotalEdiciones, 10) || 1);
   const cantidadPruebaAutorNum = hayPruebaAutor ? Math.max(0, parseInt(cantidadPruebaAutor, 10) || 0) : 0;
-  const excedePruebaAutor = hayPruebaAutor && cantidadPruebaAutorNum > cantidadEdicionesNum * 0.1;
+  const excedePruebaAutor =
+    hayPruebaAutor && cantidadPruebaAutorNum > cantidadEdicionesNum * 0.1 && !advertenciaPruebaAutorVista;
 
   // Mantiene un bloque de detalle por cada edicion y prueba de autor,
   // sincronizado con la cantidad tipeada: asi se puede completar info de
@@ -224,8 +230,16 @@ export function ObraForm({
 
         if (categoria === "Fotografia") {
           await tx.execute(
-            `INSERT INTO obra_fotografia (obra_id, subtipo_fotografia, fecha_captura, anio_toma, fecha_edicion, software_edicion, dimensiones, tecnica, escala_por_tamanos)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO obra_fotografia (
+               obra_id, subtipo_fotografia, fecha_captura, anio_toma, fecha_edicion, software_edicion, dimensiones,
+               tecnica, escala_por_tamanos, serie_proyecto, clasificacion_positivado, proceso_quimico_analogica,
+               viraje_conservacion, formato_negativo, estado_negativo, formato_archivo_maestro, espacio_color,
+               condiciones_custodia_archivo, proceso_quimico_historicos, preparacion_soporte, metales_sales,
+               pieza_unica_o_matriz, estructura_objeto, contenedor_estuche, incluye_copia_coleccionista,
+               detalle_copia_coleccionista, creditos_editoriales, isbn, colofon, motor_ia, prompt_parametros,
+               flujo_generativo, intervencion_postproduccion, soporte_salida, declaracion_derechos_ia
+             )
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               id,
               fotografia.subtipoFotografia,
@@ -236,6 +250,32 @@ export function ObraForm({
               fotografia.dimensiones || null,
               fotografia.tecnica || null,
               fotografia.escalaPorTamanos || null,
+              fotografia.serieProyecto || null,
+              fotografia.clasificacionPositivado || null,
+              fotografia.procesoQuimicoAnalogica || null,
+              fotografia.virajeConservacion || null,
+              fotografia.formatoNegativo || null,
+              fotografia.estadoNegativo || null,
+              fotografia.formatoArchivoMaestro || null,
+              fotografia.espacioColor || null,
+              fotografia.condicionesCustodiaArchivo || null,
+              fotografia.procesoQuimicoHistoricos || null,
+              fotografia.preparacionSoporte || null,
+              fotografia.metalesSales || null,
+              fotografia.piezaUnicaOMatriz || null,
+              fotografia.estructuraObjeto || null,
+              fotografia.contenedorEstuche || null,
+              fotografia.incluyeCopiaColeccionista ? 1 : 0,
+              fotografia.detalleCopiaColeccionista || null,
+              fotografia.creditosEditoriales || null,
+              fotografia.isbn || null,
+              fotografia.colofon || null,
+              fotografia.motorIa || null,
+              fotografia.promptParametros || null,
+              fotografia.flujoGenerativo || null,
+              fotografia.intervencionPostproduccion || null,
+              fotografia.soporteSalida || null,
+              fotografia.declaracionDerechosIa || null,
             ],
           );
         } else {
@@ -278,9 +318,10 @@ export function ObraForm({
                obra_id, tipo, indice, total_ediciones, numero, fecha_impresion, tipo_impresion, soporte_impresion,
                tipo_tintas, taller_impresion, ubicacion_actual, dimensiones, tipo_enmarcado, tamano_final_enmarcado,
                ubicacion_firma, sello_seco_holograma, notas, coa_numero, coa_emisor, coa_fecha, valor_seguro,
-               moneda_seguro, vidrio_proteccion_frontal, sistema_cuelgue
+               moneda_seguro, vidrio_proteccion_frontal, sistema_cuelgue, coa_sistema_seguridad,
+               informe_conservacion, dimensiones_soporte_completo, peso
              )
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               id,
               ejemplar.tipo,
@@ -306,6 +347,10 @@ export function ObraForm({
               detalle?.valorSeguro ? detalle.monedaSeguro : null,
               detalle?.vidrioProteccionFrontal || null,
               detalle?.sistemaCuelgue || null,
+              detalle?.coaSistemaSeguridad || null,
+              detalle?.informeConservacion || null,
+              detalle?.dimensionesSoporteCompleto || null,
+              detalle?.peso || null,
             ],
           );
         }
@@ -536,7 +581,10 @@ export function ObraForm({
               <input
                 type="checkbox"
                 checked={hayPruebaAutor}
-                onChange={(e) => setHayPruebaAutor(e.target.checked)}
+                onChange={(e) => {
+                  setHayPruebaAutor(e.target.checked);
+                  setAdvertenciaPruebaAutorVista(false);
+                }}
               />
               {t("obraForm.hayPruebaAutorLabel")} <HelpIcon fieldKey="pruebas_artista" />
             </label>
@@ -549,7 +597,10 @@ export function ObraForm({
                 type="number"
                 min={0}
                 value={cantidadPruebaAutor}
-                onChange={(e) => setCantidadPruebaAutor(e.target.value)}
+                onChange={(e) => {
+                  setCantidadPruebaAutor(e.target.value);
+                  setAdvertenciaPruebaAutorVista(true);
+                }}
               />
             </label>
           )}

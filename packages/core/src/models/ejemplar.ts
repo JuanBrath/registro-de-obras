@@ -50,4 +50,9 @@ export interface Ejemplar {
   monedaSeguro: string | null;
   vidrioProteccionFrontal: string | null;
   sistemaCuelgue: string | null;
+  coaSistemaSeguridad: string | null;
+  informeConservacion: string | null;
+  /** Medida de la hoja/soporte completo, distinta de "dimensiones" (mancha de imagen). */
+  dimensionesSoporteCompleto: string | null;
+  peso: string | null;
 }

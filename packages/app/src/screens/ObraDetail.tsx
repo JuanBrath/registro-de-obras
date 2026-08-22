@@ -20,6 +20,11 @@ import {
   type ObraDetalleFieldsState,
   type CategoriaObraDetalle,
 } from "./fields/ObraDetalleFields.js";
+import {
+  FotografiaFields,
+  initialFotografiaFieldsState,
+  type FotografiaFieldsState,
+} from "./fields/FotografiaFields.js";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { bytesToObjectUrl } from "../utils/imageObjectUrl.js";
 import { VentaForm, type VentaExistente } from "../components/VentaForm.js";
@@ -63,6 +68,33 @@ interface ObraExtRow {
   fecha_captura?: string | null;
   fecha_edicion?: string | null;
   software_edicion?: string | null;
+  escala_por_tamanos?: string | null;
+  serie_proyecto?: string | null;
+  clasificacion_positivado?: string | null;
+  proceso_quimico_analogica?: string | null;
+  viraje_conservacion?: string | null;
+  formato_negativo?: string | null;
+  estado_negativo?: string | null;
+  formato_archivo_maestro?: string | null;
+  espacio_color?: string | null;
+  condiciones_custodia_archivo?: string | null;
+  proceso_quimico_historicos?: string | null;
+  preparacion_soporte?: string | null;
+  metales_sales?: string | null;
+  pieza_unica_o_matriz?: string | null;
+  estructura_objeto?: string | null;
+  contenedor_estuche?: string | null;
+  incluye_copia_coleccionista?: number | null;
+  detalle_copia_coleccionista?: string | null;
+  creditos_editoriales?: string | null;
+  isbn?: string | null;
+  colofon?: string | null;
+  motor_ia?: string | null;
+  prompt_parametros?: string | null;
+  flujo_generativo?: string | null;
+  intervencion_postproduccion?: string | null;
+  soporte_salida?: string | null;
+  declaracion_derechos_ia?: string | null;
   subtipo?: string | null;
   tecnica_material?: string | null;
   soporte?: string | null;
@@ -109,6 +141,10 @@ interface EjemplarRow {
   moneda_seguro: string | null;
   vidrio_proteccion_frontal: string | null;
   sistema_cuelgue: string | null;
+  coa_sistema_seguridad: string | null;
+  informe_conservacion: string | null;
+  dimensiones_soporte_completo: string | null;
+  peso: string | null;
 }
 
 interface VentaRow {
@@ -231,6 +267,100 @@ function buildObraDescripcionLineas(
     }
     if (ext?.estado_cantos) lineas.push(`${t("fields.pintura.estadoCantosLabel")}: ${ext.estado_cantos}`);
   }
+  if (obra.categoria_obra === "Fotografia") {
+    if (ext?.serie_proyecto) lineas.push(`${t("fields.fotografia.serieProyectoLabel")}: ${ext.serie_proyecto}`);
+    if (ext?.escala_por_tamanos) {
+      lineas.push(
+        `${t("fields.fotografia.escalaPorTamanosLabel")}: ${ext.escala_por_tamanos === "Si" ? t("common.yes") : t("common.no")}`,
+      );
+    }
+    if (ext?.subtipo_fotografia === "AnalogicaClasica") {
+      if (ext?.clasificacion_positivado) {
+        lineas.push(
+          `${t("fields.fotografia.clasificacionPositivadoLabel")}: ${t(`fields.fotografia.clasificacionPositivado${ext.clasificacion_positivado}` as TranslationKey)}`,
+        );
+      }
+      if (ext?.proceso_quimico_analogica) {
+        lineas.push(`${t("fields.fotografia.procesoQuimicoLabel")}: ${ext.proceso_quimico_analogica}`);
+      }
+      if (ext?.viraje_conservacion) {
+        lineas.push(`${t("fields.fotografia.virajeConservacionLabel")}: ${ext.viraje_conservacion}`);
+      }
+      if (ext?.formato_negativo) {
+        lineas.push(`${t("fields.fotografia.formatoNegativoLabel")}: ${ext.formato_negativo}`);
+      }
+      if (ext?.estado_negativo) {
+        lineas.push(`${t("fields.fotografia.estadoNegativoLabel")}: ${ext.estado_negativo}`);
+      }
+    }
+    if (ext?.subtipo_fotografia === "DigitalFineArt") {
+      if (ext?.formato_archivo_maestro) {
+        lineas.push(`${t("fields.fotografia.formatoArchivoMaestroLabel")}: ${ext.formato_archivo_maestro}`);
+      }
+      if (ext?.espacio_color) lineas.push(`${t("fields.fotografia.espacioColorLabel")}: ${ext.espacio_color}`);
+      if (ext?.condiciones_custodia_archivo) {
+        lineas.push(
+          `${t("fields.fotografia.condicionesCustodiaArchivoLabel")}: ${ext.condiciones_custodia_archivo}`,
+        );
+      }
+    }
+    if (ext?.subtipo_fotografia === "ProcesosHistoricos") {
+      if (ext?.proceso_quimico_historicos) {
+        lineas.push(`${t("fields.fotografia.procesoQuimicoLabel")}: ${ext.proceso_quimico_historicos}`);
+      }
+      if (ext?.preparacion_soporte) {
+        lineas.push(`${t("fields.fotografia.preparacionSoporteLabel")}: ${ext.preparacion_soporte}`);
+      }
+      if (ext?.metales_sales) lineas.push(`${t("fields.fotografia.metalesSalesLabel")}: ${ext.metales_sales}`);
+      if (ext?.pieza_unica_o_matriz) {
+        lineas.push(
+          `${t("fields.fotografia.piezaUnicaOMatrizLabel")}: ${t(`fields.fotografia.piezaUnicaOMatriz${ext.pieza_unica_o_matriz}` as TranslationKey)}`,
+        );
+      }
+    }
+    if (ext?.subtipo_fotografia === "Fotolibros") {
+      if (ext?.estructura_objeto) {
+        lineas.push(`${t("fields.fotografia.estructuraObjetoLabel")}: ${ext.estructura_objeto}`);
+      }
+      if (ext?.contenedor_estuche) {
+        lineas.push(`${t("fields.fotografia.contenedorEstucheLabel")}: ${ext.contenedor_estuche}`);
+      }
+      if (Number(ext?.incluye_copia_coleccionista) === 1) {
+        lineas.push(
+          `${t("fields.fotografia.incluyeCopiaColeccionistaLabel")}${ext?.detalle_copia_coleccionista ? `: ${ext.detalle_copia_coleccionista}` : ""}`,
+        );
+      }
+      if (ext?.creditos_editoriales) {
+        lineas.push(`${t("fields.fotografia.creditosEditorialesLabel")}: ${ext.creditos_editoriales}`);
+      }
+      if (ext?.isbn) lineas.push(`${t("fields.fotografia.isbnLabel")}: ${ext.isbn}`);
+      if (ext?.colofon) lineas.push(`${t("fields.fotografia.colofonLabel")}: ${ext.colofon}`);
+    }
+    if (ext?.subtipo_fotografia === "Sintografia") {
+      if (ext?.motor_ia) lineas.push(`${t("fields.fotografia.motorIaLabel")}: ${ext.motor_ia}`);
+      if (ext?.prompt_parametros) {
+        lineas.push(`${t("fields.fotografia.promptParametrosLabel")}: ${ext.prompt_parametros}`);
+      }
+      if (ext?.flujo_generativo) {
+        lineas.push(
+          `${t("fields.fotografia.flujoGenerativoLabel")}: ${t(`fields.fotografia.flujoGenerativo${ext.flujo_generativo}` as TranslationKey)}`,
+        );
+      }
+      if (ext?.intervencion_postproduccion) {
+        lineas.push(
+          `${t("fields.fotografia.intervencionPostproduccionLabel")}: ${ext.intervencion_postproduccion}`,
+        );
+      }
+      if (ext?.soporte_salida) {
+        lineas.push(
+          `${t("fields.fotografia.soporteSalidaLabel")}: ${t(`fields.fotografia.soporteSalida${ext.soporte_salida}` as TranslationKey)}`,
+        );
+      }
+      if (ext?.declaracion_derechos_ia) {
+        lineas.push(`${t("fields.fotografia.declaracionDerechosIaLabel")}: ${ext.declaracion_derechos_ia}`);
+      }
+    }
+  }
   if (incluirInfoComercial && !esRegistroPersonal && obra.regimen_ingreso) {
     lineas.push(
       `${t("obraForm.regimenIngresoLabel")}: ${t(`obraForm.regimenIngreso${obra.regimen_ingreso}` as TranslationKey)}`,
@@ -317,7 +447,14 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       if (obraRow) {
         if (obraRow.categoria_obra === "Fotografia") {
           const rows = await context.db.query<ObraExtRow>(
-            `SELECT subtipo_fotografia, fecha_captura, fecha_edicion, software_edicion, dimensiones, tecnica FROM obra_fotografia WHERE obra_id = ?`,
+            `SELECT subtipo_fotografia, fecha_captura, fecha_edicion, software_edicion, dimensiones, tecnica,
+                    escala_por_tamanos, serie_proyecto, clasificacion_positivado, proceso_quimico_analogica,
+                    viraje_conservacion, formato_negativo, estado_negativo, formato_archivo_maestro, espacio_color,
+                    condiciones_custodia_archivo, proceso_quimico_historicos, preparacion_soporte, metales_sales,
+                    pieza_unica_o_matriz, estructura_objeto, contenedor_estuche, incluye_copia_coleccionista,
+                    detalle_copia_coleccionista, creditos_editoriales, isbn, colofon, motor_ia, prompt_parametros,
+                    flujo_generativo, intervencion_postproduccion, soporte_salida, declaracion_derechos_ia
+             FROM obra_fotografia WHERE obra_id = ?`,
             [obraId],
           );
           setExt(rows[0] ?? null);
@@ -336,7 +473,8 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       if (obraRow) {
         const ejemplarRows = await context.db.query<EjemplarRow>(
           `SELECT id, tipo, numero, estado, venta_id, fecha_impresion, tipo_impresion, soporte_impresion, tipo_tintas, taller_impresion, ubicacion_actual, dimensiones, tipo_enmarcado, tamano_final_enmarcado, ubicacion_firma, sello_seco_holograma, fecha_limite, notas, precio_venta, moneda_venta,
-                  coa_numero, coa_emisor, coa_fecha, valor_seguro, moneda_seguro, vidrio_proteccion_frontal, sistema_cuelgue
+                  coa_numero, coa_emisor, coa_fecha, valor_seguro, moneda_seguro, vidrio_proteccion_frontal, sistema_cuelgue,
+                  coa_sistema_seguridad, informe_conservacion, dimensiones_soporte_completo, peso
            FROM ejemplar WHERE obra_id = ? ORDER BY tipo, indice`,
           [obraId],
         );
@@ -644,6 +782,10 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       monedaSeguro: string;
       vidrioProteccionFrontal: string;
       sistemaCuelgue: string;
+      coaSistemaSeguridad: string;
+      informeConservacion: string;
+      dimensionesSoporteCompleto: string;
+      peso: string;
     },
   ) {
     if (!context) return;
@@ -654,7 +796,8 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
            taller_impresion = ?, ubicacion_actual = ?, dimensiones = ?, tipo_enmarcado = ?,
            tamano_final_enmarcado = ?, ubicacion_firma = ?, sello_seco_holograma = ?, fecha_limite = ?, notas = ?,
            precio_venta = ?, moneda_venta = ?, coa_numero = ?, coa_emisor = ?, coa_fecha = ?, valor_seguro = ?,
-           moneda_seguro = ?, vidrio_proteccion_frontal = ?, sistema_cuelgue = ?
+           moneda_seguro = ?, vidrio_proteccion_frontal = ?, sistema_cuelgue = ?, coa_sistema_seguridad = ?,
+           informe_conservacion = ?, dimensiones_soporte_completo = ?, peso = ?
          WHERE id = ?`,
         [
           fields.estado,
@@ -680,6 +823,10 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
           fields.valorSeguro ? fields.monedaSeguro : null,
           fields.vidrioProteccionFrontal || null,
           fields.sistemaCuelgue || null,
+          fields.coaSistemaSeguridad || null,
+          fields.informeConservacion || null,
+          fields.dimensionesSoporteCompleto || null,
+          fields.peso || null,
           ejemplarId,
         ],
       );
@@ -770,10 +917,59 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
 
       if (fields.categoria === "Fotografia") {
         const upsert = cambiaCategoria
-          ? `INSERT INTO obra_fotografia (obra_id, subtipo_fotografia, fecha_captura, anio_toma, fecha_edicion, software_edicion, dimensiones, tecnica) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-          : `UPDATE obra_fotografia SET subtipo_fotografia = ?, fecha_captura = ?, anio_toma = ?, fecha_edicion = ?, software_edicion = ?, dimensiones = ?, tecnica = ? WHERE obra_id = ?`;
+          ? `INSERT INTO obra_fotografia (
+               obra_id, subtipo_fotografia, fecha_captura, anio_toma, fecha_edicion, software_edicion, dimensiones,
+               tecnica, escala_por_tamanos, serie_proyecto, clasificacion_positivado, proceso_quimico_analogica,
+               viraje_conservacion, formato_negativo, estado_negativo, formato_archivo_maestro, espacio_color,
+               condiciones_custodia_archivo, proceso_quimico_historicos, preparacion_soporte, metales_sales,
+               pieza_unica_o_matriz, estructura_objeto, contenedor_estuche, incluye_copia_coleccionista,
+               detalle_copia_coleccionista, creditos_editoriales, isbn, colofon, motor_ia, prompt_parametros,
+               flujo_generativo, intervencion_postproduccion, soporte_salida, declaracion_derechos_ia
+             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          : `UPDATE obra_fotografia SET
+               subtipo_fotografia = ?, fecha_captura = ?, anio_toma = ?, fecha_edicion = ?, software_edicion = ?,
+               dimensiones = ?, tecnica = ?, escala_por_tamanos = ?, serie_proyecto = ?,
+               clasificacion_positivado = ?, proceso_quimico_analogica = ?, viraje_conservacion = ?,
+               formato_negativo = ?, estado_negativo = ?, formato_archivo_maestro = ?, espacio_color = ?,
+               condiciones_custodia_archivo = ?, proceso_quimico_historicos = ?, preparacion_soporte = ?,
+               metales_sales = ?, pieza_unica_o_matriz = ?, estructura_objeto = ?, contenedor_estuche = ?,
+               incluye_copia_coleccionista = ?, detalle_copia_coleccionista = ?, creditos_editoriales = ?,
+               isbn = ?, colofon = ?, motor_ia = ?, prompt_parametros = ?, flujo_generativo = ?,
+               intervencion_postproduccion = ?, soporte_salida = ?, declaracion_derechos_ia = ?
+             WHERE obra_id = ?`;
         const softwareEdicion = esRegistroPersonal ? fields.ext.software_edicion || null : null;
         const anioToma = derivarAnioDesdeFecha(fields.ext.fecha_captura);
+        const camposComunes = [
+          fields.ext.dimensiones || null,
+          fields.ext.tecnica || null,
+          fields.ext.escala_por_tamanos || null,
+          fields.ext.serie_proyecto || null,
+          fields.ext.clasificacion_positivado || null,
+          fields.ext.proceso_quimico_analogica || null,
+          fields.ext.viraje_conservacion || null,
+          fields.ext.formato_negativo || null,
+          fields.ext.estado_negativo || null,
+          fields.ext.formato_archivo_maestro || null,
+          fields.ext.espacio_color || null,
+          fields.ext.condiciones_custodia_archivo || null,
+          fields.ext.proceso_quimico_historicos || null,
+          fields.ext.preparacion_soporte || null,
+          fields.ext.metales_sales || null,
+          fields.ext.pieza_unica_o_matriz || null,
+          fields.ext.estructura_objeto || null,
+          fields.ext.contenedor_estuche || null,
+          fields.ext.incluye_copia_coleccionista ? 1 : 0,
+          fields.ext.detalle_copia_coleccionista || null,
+          fields.ext.creditos_editoriales || null,
+          fields.ext.isbn || null,
+          fields.ext.colofon || null,
+          fields.ext.motor_ia || null,
+          fields.ext.prompt_parametros || null,
+          fields.ext.flujo_generativo || null,
+          fields.ext.intervencion_postproduccion || null,
+          fields.ext.soporte_salida || null,
+          fields.ext.declaracion_derechos_ia || null,
+        ];
         const params = cambiaCategoria
           ? [
               obraId,
@@ -782,8 +978,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
               anioToma,
               fields.ext.fecha_edicion || null,
               softwareEdicion,
-              fields.ext.dimensiones || null,
-              fields.ext.tecnica || null,
+              ...camposComunes,
             ]
           : [
               fields.ext.subtipo_fotografia,
@@ -791,8 +986,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
               anioToma,
               fields.ext.fecha_edicion || null,
               softwareEdicion,
-              fields.ext.dimensiones || null,
-              fields.ext.tecnica || null,
+              ...camposComunes,
               obraId,
             ];
         await tx.execute(upsert, params);
@@ -1237,12 +1431,43 @@ function ObraEditForm({
   const [ubicacion, setUbicacion] = useState(obra.ubicacion_fisica_actual ?? "");
   const [tags, setTags] = useState<string[]>(parseTags(obra.tags));
   const [categoriaObra, setCategoriaObra] = useState<CategoriaObra>(obra.categoria_obra);
-  const [subtipoFotografia, setSubtipoFotografia] = useState(ext?.subtipo_fotografia ?? "DigitalFineArt");
-  const [fechaCaptura, setFechaCaptura] = useState(ext?.fecha_captura ?? todayISO());
-  const [fechaEdicion, setFechaEdicion] = useState(ext?.fecha_edicion ?? todayISO());
-  const [softwareEdicion, setSoftwareEdicion] = useState(ext?.software_edicion ?? "");
-  const [tecnica, setTecnica] = useState(ext?.tecnica ?? "");
-  const [dimensiones, setDimensiones] = useState(ext?.dimensiones ?? "");
+  const [fotografia, setFotografia] = useState<FotografiaFieldsState>({
+    ...initialFotografiaFieldsState,
+    subtipoFotografia: (ext?.subtipo_fotografia ?? "DigitalFineArt") as FotografiaFieldsState["subtipoFotografia"],
+    fechaCaptura: ext?.fecha_captura ?? todayISO(),
+    fechaEdicion: ext?.fecha_edicion ?? todayISO(),
+    softwareEdicion: ext?.software_edicion ?? "",
+    tecnica: ext?.tecnica ?? "",
+    dimensiones: ext?.dimensiones ?? "",
+    escalaPorTamanos: ext?.escala_por_tamanos ?? "",
+    serieProyecto: ext?.serie_proyecto ?? "",
+    clasificacionPositivado: (ext?.clasificacion_positivado ??
+      "") as FotografiaFieldsState["clasificacionPositivado"],
+    procesoQuimicoAnalogica: ext?.proceso_quimico_analogica ?? "",
+    virajeConservacion: ext?.viraje_conservacion ?? "",
+    formatoNegativo: ext?.formato_negativo ?? "",
+    estadoNegativo: ext?.estado_negativo ?? "",
+    formatoArchivoMaestro: ext?.formato_archivo_maestro ?? "",
+    espacioColor: ext?.espacio_color ?? "",
+    condicionesCustodiaArchivo: ext?.condiciones_custodia_archivo ?? "",
+    procesoQuimicoHistoricos: ext?.proceso_quimico_historicos ?? "",
+    preparacionSoporte: ext?.preparacion_soporte ?? "",
+    metalesSales: ext?.metales_sales ?? "",
+    piezaUnicaOMatriz: (ext?.pieza_unica_o_matriz ?? "") as FotografiaFieldsState["piezaUnicaOMatriz"],
+    estructuraObjeto: ext?.estructura_objeto ?? "",
+    contenedorEstuche: ext?.contenedor_estuche ?? "",
+    incluyeCopiaColeccionista: Number(ext?.incluye_copia_coleccionista) === 1,
+    detalleCopiaColeccionista: ext?.detalle_copia_coleccionista ?? "",
+    creditosEditoriales: ext?.creditos_editoriales ?? "",
+    isbn: ext?.isbn ?? "",
+    colofon: ext?.colofon ?? "",
+    motorIa: ext?.motor_ia ?? "",
+    promptParametros: ext?.prompt_parametros ?? "",
+    flujoGenerativo: (ext?.flujo_generativo ?? "") as FotografiaFieldsState["flujoGenerativo"],
+    intervencionPostproduccion: ext?.intervencion_postproduccion ?? "",
+    soporteSalida: (ext?.soporte_salida ?? "") as FotografiaFieldsState["soporteSalida"],
+    declaracionDerechosIa: ext?.declaracion_derechos_ia ?? "",
+  });
   const [obraDetalle, setObraDetalle] = useState<ObraDetalleFieldsState>({
     subtipo: ext?.subtipo ?? "",
     tecnicaMaterial: ext?.tecnica_material ?? "",
@@ -1331,12 +1556,39 @@ function ObraEditForm({
         ext:
           categoriaObra === "Fotografia"
             ? {
-                subtipo_fotografia: subtipoFotografia,
-                fecha_captura: fechaCaptura,
-                fecha_edicion: fechaEdicion,
-                software_edicion: softwareEdicion,
-                tecnica,
-                dimensiones,
+                subtipo_fotografia: fotografia.subtipoFotografia,
+                fecha_captura: fotografia.fechaCaptura,
+                fecha_edicion: fotografia.fechaEdicion,
+                software_edicion: fotografia.softwareEdicion,
+                tecnica: fotografia.tecnica,
+                dimensiones: fotografia.dimensiones,
+                escala_por_tamanos: fotografia.escalaPorTamanos,
+                serie_proyecto: fotografia.serieProyecto,
+                clasificacion_positivado: fotografia.clasificacionPositivado,
+                proceso_quimico_analogica: fotografia.procesoQuimicoAnalogica,
+                viraje_conservacion: fotografia.virajeConservacion,
+                formato_negativo: fotografia.formatoNegativo,
+                estado_negativo: fotografia.estadoNegativo,
+                formato_archivo_maestro: fotografia.formatoArchivoMaestro,
+                espacio_color: fotografia.espacioColor,
+                condiciones_custodia_archivo: fotografia.condicionesCustodiaArchivo,
+                proceso_quimico_historicos: fotografia.procesoQuimicoHistoricos,
+                preparacion_soporte: fotografia.preparacionSoporte,
+                metales_sales: fotografia.metalesSales,
+                pieza_unica_o_matriz: fotografia.piezaUnicaOMatriz,
+                estructura_objeto: fotografia.estructuraObjeto,
+                contenedor_estuche: fotografia.contenedorEstuche,
+                incluye_copia_coleccionista: fotografia.incluyeCopiaColeccionista ? 1 : 0,
+                detalle_copia_coleccionista: fotografia.detalleCopiaColeccionista,
+                creditos_editoriales: fotografia.creditosEditoriales,
+                isbn: fotografia.isbn,
+                colofon: fotografia.colofon,
+                motor_ia: fotografia.motorIa,
+                prompt_parametros: fotografia.promptParametros,
+                flujo_generativo: fotografia.flujoGenerativo,
+                intervencion_postproduccion: fotografia.intervencionPostproduccion,
+                soporte_salida: fotografia.soporteSalida,
+                declaracion_derechos_ia: fotografia.declaracionDerechosIa,
               }
             : {
                 subtipo: obraDetalle.subtipo,
@@ -1468,44 +1720,17 @@ function ObraEditForm({
         </select>
       </label>
 
-      {categoriaObra === "Fotografia" && (
-        <>
-          <label>
-            {t("field.subtipo")}
-            <select value={subtipoFotografia} onChange={(e) => setSubtipoFotografia(e.target.value)}>
-              <option value="AnalogicaClasica">{t("fields.fotografia.subtipoAnalogicaClasica")}</option>
-              <option value="DigitalFineArt">{t("fields.fotografia.subtipoDigitalFineArt")}</option>
-              <option value="ProcesosHistoricos">{t("fields.fotografia.subtipoProcesosHistoricos")}</option>
-              <option value="Fotolibros">{t("fields.fotografia.subtipoFotolibros")}</option>
-              <option value="Sintografia">{t("fields.fotografia.subtipoSintografia")}</option>
-            </select>
-          </label>
-          <label>
-            {t("fields.fotografia.fechaCaptura")}
-            <input type="date" value={fechaCaptura ?? ""} onChange={(e) => setFechaCaptura(e.target.value)} />
-          </label>
-          <label>
-            {t("fields.fotografia.fechaEdicion")}
-            <input type="date" value={fechaEdicion ?? ""} onChange={(e) => setFechaEdicion(e.target.value)} />
-          </label>
-          <label>
-            {t("fields.fotografia.dimensiones")}
-            <input type="text" value={dimensiones ?? ""} onChange={(e) => setDimensiones(e.target.value)} />
-          </label>
-          <label>
-            {t("field.tecnica")} <HelpIcon fieldKey="tecnica_fotografia" />
-            <textarea rows={2} value={tecnica ?? ""} onChange={(e) => setTecnica(e.target.value)} />
-          </label>
-          {esRegistroPersonal && (
-            <label>
-              {t("fields.fotografia.softwareEdicion")}
-              <input type="text" value={softwareEdicion ?? ""} onChange={(e) => setSoftwareEdicion(e.target.value)} />
-            </label>
-          )}
-        </>
-      )}
-
-      {categoriaObra !== "Fotografia" && (
+      {categoriaObra === "Fotografia" ? (
+        <FotografiaFields
+          value={fotografia}
+          onChange={setFotografia}
+          mostrarSoftwareEdicion={esRegistroPersonal}
+          mostrarEsSeriada={false}
+          ubicacion={ubicacion}
+          onUbicacionChange={setUbicacion}
+          mostrarUbicacion={esRegistroPersonal}
+        />
+      ) : (
         <ObraDetalleFields categoria={categoriaObra} value={obraDetalle} onChange={setObraDetalle} mostrarEsSeriada={false} />
       )}
 
@@ -1534,25 +1759,11 @@ function ObraEditForm({
         </>
       )}
 
-      {esRegistroPersonal && categoriaObra === "Fotografia" ? (
-        subtipoFotografia === "DigitalFineArt" || subtipoFotografia === "Sintografia" ? (
-          <label>
-            {t("obraForm.ubicacionArchivoLabel")} <HelpIcon fieldKey="ubicacion_fisica_archivo" />
-            <FilePathField value={ubicacion} onChange={setUbicacion} />
-          </label>
-        ) : (
-          <label>
-            {t("obraForm.ubicacionNegativoLabel")} <HelpIcon fieldKey="ubicacion_fisica_archivo" />
-            <input type="text" value={ubicacion} onChange={(e) => setUbicacion(e.target.value)} />
-          </label>
-        )
-      ) : (
-        esRegistroPersonal && (
-          <label>
-            {t("obraDetail.ubicacionFisicaArchivo")} <HelpIcon fieldKey="ubicacion_fisica_archivo" />
-            <FilePathField value={ubicacion} onChange={setUbicacion} />
-          </label>
-        )
+      {esRegistroPersonal && categoriaObra !== "Fotografia" && (
+        <label>
+          {t("obraDetail.ubicacionFisicaArchivo")} <HelpIcon fieldKey="ubicacion_fisica_archivo" />
+          <FilePathField value={ubicacion} onChange={setUbicacion} />
+        </label>
       )}
 
       {permiteCambiarSeriada && (
@@ -1658,6 +1869,10 @@ function EjemplarRowView({
     monedaSeguro: string;
     vidrioProteccionFrontal: string;
     sistemaCuelgue: string;
+    coaSistemaSeguridad: string;
+    informeConservacion: string;
+    dimensionesSoporteCompleto: string;
+    peso: string;
   }) => void;
   onVender: () => void;
   onEditarVenta: (venta: VentaRow) => void;
@@ -1693,6 +1908,13 @@ function EjemplarRowView({
     ejemplar.vidrio_proteccion_frontal ?? "",
   );
   const [sistemaCuelgue, setSistemaCuelgue] = useState(ejemplar.sistema_cuelgue ?? "");
+  const [coaSistemaSeguridad, setCoaSistemaSeguridad] = useState(ejemplar.coa_sistema_seguridad ?? "");
+  const [informeConservacion, setInformeConservacion] = useState(ejemplar.informe_conservacion ?? "");
+  const [dimensionesSoporteCompleto, setDimensionesSoporteCompleto] = useState(
+    ejemplar.dimensiones_soporte_completo ?? "",
+  );
+  const [peso, setPeso] = useState(ejemplar.peso ?? "");
+  const esFotografia = categoria === "Fotografia";
   const permiteEnmarcado =
     categoria === "Fotografia" || categoria === "Pintura" || categoria === "ObraGrafica" || categoria === "Dibujo";
   const presupuestoBloqueado = ["vendida", "descartada", "coleccion_autor", "destruida"].includes(ejemplar.estado);
@@ -1775,6 +1997,27 @@ function EjemplarRowView({
           <span className="field-label">{t("obraDetail.tamanoEjemplarLabel")}</span>
           <input type="text" value={dimensiones} onChange={(e) => setDimensiones(e.target.value)} />
         </label>
+        {esFotografia && (
+          <>
+            <label>
+              <span className="field-label">
+                {t("obraDetail.dimensionesSoporteCompletoLabel")}{" "}
+                <HelpIcon fieldKey="dimensiones_soporte_completo" />
+              </span>
+              <input
+                type="text"
+                value={dimensionesSoporteCompleto}
+                onChange={(e) => setDimensionesSoporteCompleto(e.target.value)}
+              />
+            </label>
+            <label>
+              <span className="field-label">
+                {t("obraDetail.pesoLabel")} <HelpIcon fieldKey="peso_ejemplar" />
+              </span>
+              <input type="text" value={peso} onChange={(e) => setPeso(e.target.value)} />
+            </label>
+          </>
+        )}
         {esFotografiaDigital && (
           <label>
             <span className="field-label">
@@ -1874,6 +2117,16 @@ function EjemplarRowView({
             </label>
             <label>
               <span className="field-label">
+                {t("obraDetail.coaSistemaSeguridadLabel")} <HelpIcon fieldKey="coa_sistema_seguridad" />
+              </span>
+              <input
+                type="text"
+                value={coaSistemaSeguridad}
+                onChange={(e) => setCoaSistemaSeguridad(e.target.value)}
+              />
+            </label>
+            <label>
+              <span className="field-label">
                 {t("obraDetail.valorSeguroLabel")} <HelpIcon fieldKey="valor_seguro" />
               </span>
               <div className="venta-form-valor-row">
@@ -1890,6 +2143,16 @@ function EjemplarRowView({
                   onChange={(e) => setValorSeguro(e.target.value)}
                 />
               </div>
+            </label>
+            <label>
+              <span className="field-label">
+                {t("obraDetail.informeConservacionLabel")} <HelpIcon fieldKey="informe_conservacion" />
+              </span>
+              <textarea
+                rows={2}
+                value={informeConservacion}
+                onChange={(e) => setInformeConservacion(e.target.value)}
+              />
             </label>
           </>
         )}
@@ -1925,6 +2188,10 @@ function EjemplarRowView({
                 monedaSeguro,
                 vidrioProteccionFrontal,
                 sistemaCuelgue,
+                coaSistemaSeguridad,
+                informeConservacion,
+                dimensionesSoporteCompleto,
+                peso,
               })
             }
           >
@@ -1960,6 +2227,12 @@ function EjemplarRowView({
       {ejemplar.soporte_impresion && <span>{t("common.soporte", { soporte: ejemplar.soporte_impresion })}</span>}
       {ejemplar.tipo_tintas && <span>{t("obraDetail.tipoTintas", { valor: ejemplar.tipo_tintas })}</span>}
       {ejemplar.dimensiones && <span>{t("obraDetail.tamanoEjemplar", { valor: ejemplar.dimensiones })}</span>}
+      {ejemplar.dimensiones_soporte_completo && (
+        <span>
+          {t("obraDetail.dimensionesSoporteCompletoResumen", { valor: ejemplar.dimensiones_soporte_completo })}
+        </span>
+      )}
+      {ejemplar.peso && <span>{t("obraDetail.pesoResumen", { valor: ejemplar.peso })}</span>}
       {ejemplar.taller_impresion && (
         <span>{t("obraDetail.tallerImpresion", { valor: ejemplar.taller_impresion })}</span>
       )}
@@ -1993,6 +2266,9 @@ function EjemplarRowView({
             valor: ejemplar.valor_seguro,
           })}
         </span>
+      )}
+      {ejemplar.informe_conservacion && (
+        <span>{t("obraDetail.informeConservacionResumen", { valor: ejemplar.informe_conservacion })}</span>
       )}
 
       {venta && (

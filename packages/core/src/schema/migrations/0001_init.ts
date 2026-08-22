@@ -43,6 +43,8 @@ import { migration0043ArtistaPerfilExtendido } from "./0043_artista_perfil_exten
 import { migration0044TextoAyudaNumeroArtista } from "./0044_texto_ayuda_numero_artista.js";
 import { migration0045CamposGeneralesObra } from "./0045_campos_generales_obra.js";
 import { migration0046ObraDetallePinturaRiguroso } from "./0046_obra_detalle_pintura_riguroso.js";
+import { migration0047ObraFotografiaRiguroso } from "./0047_obra_fotografia_riguroso.js";
+import { migration0048TextoAyudaFormatoMultilinea } from "./0048_texto_ayuda_formato_multilinea.js";
 
 export interface Migration {
   name: string;
@@ -217,4 +219,6 @@ export const ALL_MIGRATIONS: Migration[] = [
   migration0044TextoAyudaNumeroArtista,
   migration0045CamposGeneralesObra,
   migration0046ObraDetallePinturaRiguroso,
+  migration0047ObraFotografiaRiguroso,
+  migration0048TextoAyudaFormatoMultilinea,
 ];

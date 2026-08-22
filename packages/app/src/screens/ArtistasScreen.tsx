@@ -608,10 +608,21 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
             <input type="text" value={nacionalidad} onChange={(e) => setNacionalidad(e.target.value)} />
           </label>
 
-          <label>
-            <span className="field-label">{t("artistas.fechaNacimiento")}</span>
-            <input type="date" value={fechaNacimiento} onChange={(e) => setFechaNacimiento(e.target.value)} />
-          </label>
+          <div className="form-row-2">
+            <label>
+              <span className="field-label">{t("artistas.fechaNacimiento")}</span>
+              <input type="date" value={fechaNacimiento} onChange={(e) => setFechaNacimiento(e.target.value)} />
+            </label>
+
+            <label>
+              <span className="field-label">{t("artistas.fechaFallecimientoLabel")}</span>
+              <input
+                type="date"
+                value={fechaFallecimiento}
+                onChange={(e) => setFechaFallecimiento(e.target.value)}
+              />
+            </label>
+          </div>
 
           <div className="form-row-2">
             <label>
@@ -628,15 +639,6 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
               />
             </label>
           </div>
-
-          <label>
-            <span className="field-label">{t("artistas.fechaFallecimientoLabel")}</span>
-            <input
-              type="date"
-              value={fechaFallecimiento}
-              onChange={(e) => setFechaFallecimiento(e.target.value)}
-            />
-          </label>
 
           <label>
             <span className="field-label">{t("artistas.lugarResidenciaTrabajoLabel")}</span>
@@ -1106,15 +1108,26 @@ function ArtistaRowView({
             />
           </label>
 
-          <label>
-            <span className="field-label">{t("artistas.fechaNacimiento")}</span>
-            <input
-              type="date"
-              value={fechaNacimiento}
-              onChange={(e) => setFechaNacimiento(e.target.value)}
-              disabled={soloLectura}
-            />
-          </label>
+          <div className="form-row-2">
+            <label>
+              <span className="field-label">{t("artistas.fechaNacimiento")}</span>
+              <input
+                type="date"
+                value={fechaNacimiento}
+                onChange={(e) => setFechaNacimiento(e.target.value)}
+                disabled={soloLectura}
+              />
+            </label>
+            <label>
+              <span className="field-label">{t("artistas.fechaFallecimientoLabel")}</span>
+              <input
+                type="date"
+                value={fechaFallecimiento}
+                onChange={(e) => setFechaFallecimiento(e.target.value)}
+                disabled={soloLectura}
+              />
+            </label>
+          </div>
 
           <div className="form-row-2">
             <label>
@@ -1136,16 +1149,6 @@ function ArtistaRowView({
               />
             </label>
           </div>
-
-          <label>
-            <span className="field-label">{t("artistas.fechaFallecimientoLabel")}</span>
-            <input
-              type="date"
-              value={fechaFallecimiento}
-              onChange={(e) => setFechaFallecimiento(e.target.value)}
-              disabled={soloLectura}
-            />
-          </label>
 
           <label>
             <span className="field-label">{t("artistas.lugarResidenciaTrabajoLabel")}</span>
