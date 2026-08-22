@@ -15,7 +15,7 @@ export interface ObraDetalleFieldsState {
   dimensiones: string;
   peso: string;
   fechaCreacion: string;
-  esSeriada: boolean;
+  esSeriada: boolean | null;
   /** Los siguientes campos solo se muestran para categoria Pintura. */
   materialesMixtura: string;
   tipoBastidor: string;
@@ -39,6 +39,37 @@ export interface ObraDetalleFieldsState {
   elementosComplementarios: string;
   aptaExterior: string;
   requisitosInstalacion: string;
+  /** Los siguientes campos solo se muestran para categoria Dibujo. */
+  fijacionAcabado: string;
+  elementosAdicionales: string;
+  /** Los siguientes campos solo se muestran para categoria TextilCeramica/TapiceriaFibra. */
+  composicionFibras: string;
+  tintesColoracion: string;
+  estructuraTejido: string;
+  /** Los siguientes campos solo se muestran para categoria TextilCeramica/CeramicaEscultorica. */
+  tipoArcilla: string;
+  metodoConformado: string;
+  tratamientoSuperficie: string;
+  tipoCoccion: string;
+  /** Los siguientes campos solo se muestran para categoria NuevosMedios. */
+  naturalezaObra: string;
+  componentesEntregados: string;
+  planPreservacionDigital: string;
+  instruccionesReinstalacion: string;
+  derechosExhibicion: string;
+  /** Los siguientes campos solo se muestran para categoria NuevosMedios/VideoartFilmes. */
+  duracionLoop: string;
+  especificacionesVideo: string;
+  audioCanales: string;
+  /** Los siguientes campos solo se muestran para categoria NuevosMedios/ArteDigitalGenerativo. */
+  entornoLenguaje: string;
+  hardwareRequerido: string;
+  conectividad: string;
+  /** Los siguientes campos solo se muestran para categoria NuevosMedios/InstalacionesSiteSpecific. */
+  dimensionesEspaciales: string;
+  condicionesIluminacion: string;
+  acondicionamientoAcustico: string;
+  equipamientoExhibicion: string;
 }
 
 export const initialObraDetalleFieldsState: ObraDetalleFieldsState = {
@@ -49,7 +80,7 @@ export const initialObraDetalleFieldsState: ObraDetalleFieldsState = {
   dimensiones: "",
   peso: "",
   fechaCreacion: todayISO(),
-  esSeriada: false,
+  esSeriada: null,
   materialesMixtura: "",
   tipoBastidor: "",
   imprimacionBase: "",
@@ -70,6 +101,30 @@ export const initialObraDetalleFieldsState: ObraDetalleFieldsState = {
   elementosComplementarios: "",
   aptaExterior: "",
   requisitosInstalacion: "",
+  fijacionAcabado: "",
+  elementosAdicionales: "",
+  composicionFibras: "",
+  tintesColoracion: "",
+  estructuraTejido: "",
+  tipoArcilla: "",
+  metodoConformado: "",
+  tratamientoSuperficie: "",
+  tipoCoccion: "",
+  naturalezaObra: "",
+  componentesEntregados: "",
+  planPreservacionDigital: "",
+  instruccionesReinstalacion: "",
+  derechosExhibicion: "",
+  duracionLoop: "",
+  especificacionesVideo: "",
+  audioCanales: "",
+  entornoLenguaje: "",
+  hardwareRequerido: "",
+  conectividad: "",
+  dimensionesEspaciales: "",
+  condicionesIluminacion: "",
+  acondicionamientoAcustico: "",
+  equipamientoExhibicion: "",
 };
 
 interface CategoriaConfig {
@@ -449,6 +504,322 @@ export function ObraDetalleFields({
         </fieldset>
       )}
 
+      {categoria === "Dibujo" && (
+        <fieldset>
+          <legend>{t("fields.dibujo.rigurosaLegend")}</legend>
+
+          <label>
+            {t("fields.obraGrafica.papelMarcaLabel")} <HelpIcon fieldKey="papel_marca" />
+            <input
+              type="text"
+              value={value.papelMarca}
+              onChange={(e) => onChange({ ...value, papelMarca: e.target.value })}
+            />
+          </label>
+
+          <label>
+            {t("fields.obraGrafica.papelGramajeLabel")} <HelpIcon fieldKey="papel_gramaje" />
+            <input
+              type="text"
+              value={value.papelGramaje}
+              onChange={(e) => onChange({ ...value, papelGramaje: e.target.value })}
+            />
+          </label>
+
+          <label>
+            {t("fields.obraGrafica.papelCaracteristicasLabel")} <HelpIcon fieldKey="papel_caracteristicas" />
+            <textarea
+              rows={2}
+              value={value.papelCaracteristicas}
+              onChange={(e) => onChange({ ...value, papelCaracteristicas: e.target.value })}
+            />
+          </label>
+
+          <label>
+            {t("fields.dibujo.fijacionAcabadoLabel")} <HelpIcon fieldKey="fijacion_acabado" />
+            <input
+              type="text"
+              value={value.fijacionAcabado}
+              onChange={(e) => onChange({ ...value, fijacionAcabado: e.target.value })}
+            />
+          </label>
+
+          <label>
+            {t("fields.dibujo.elementosAdicionalesLabel")} <HelpIcon fieldKey="elementos_adicionales" />
+            <textarea
+              rows={2}
+              value={value.elementosAdicionales}
+              onChange={(e) => onChange({ ...value, elementosAdicionales: e.target.value })}
+            />
+          </label>
+        </fieldset>
+      )}
+
+      {categoria === "TextilCeramica" && (
+        <fieldset>
+          <legend>{t("fields.textilCeramica.rigurosaLegend")}</legend>
+
+          {value.subtipo === "TapiceriaFibra" && (
+            <>
+              <label>
+                {t("fields.textilCeramica.composicionFibrasLabel")} <HelpIcon fieldKey="composicion_fibras" />
+                <textarea
+                  rows={2}
+                  value={value.composicionFibras}
+                  onChange={(e) => onChange({ ...value, composicionFibras: e.target.value })}
+                />
+              </label>
+
+              <label>
+                {t("fields.textilCeramica.tintesColoracionLabel")} <HelpIcon fieldKey="tintes_coloracion" />
+                <input
+                  type="text"
+                  value={value.tintesColoracion}
+                  onChange={(e) => onChange({ ...value, tintesColoracion: e.target.value })}
+                />
+              </label>
+
+              <label>
+                {t("fields.textilCeramica.estructuraTejidoLabel")} <HelpIcon fieldKey="estructura_tejido" />
+                <input
+                  type="text"
+                  value={value.estructuraTejido}
+                  onChange={(e) => onChange({ ...value, estructuraTejido: e.target.value })}
+                />
+              </label>
+            </>
+          )}
+
+          {value.subtipo === "CeramicaEscultorica" && (
+            <>
+              <label>
+                {t("fields.textilCeramica.tipoArcillaLabel")} <HelpIcon fieldKey="tipo_arcilla" />
+                <input
+                  type="text"
+                  value={value.tipoArcilla}
+                  onChange={(e) => onChange({ ...value, tipoArcilla: e.target.value })}
+                />
+              </label>
+
+              <label>
+                {t("fields.textilCeramica.metodoConformadoLabel")} <HelpIcon fieldKey="metodo_conformado" />
+                <input
+                  type="text"
+                  value={value.metodoConformado}
+                  onChange={(e) => onChange({ ...value, metodoConformado: e.target.value })}
+                />
+              </label>
+
+              <label>
+                {t("fields.textilCeramica.tratamientoSuperficieLabel")}{" "}
+                <HelpIcon fieldKey="tratamiento_superficie" />
+                <textarea
+                  rows={2}
+                  value={value.tratamientoSuperficie}
+                  onChange={(e) => onChange({ ...value, tratamientoSuperficie: e.target.value })}
+                />
+              </label>
+
+              <label>
+                {t("fields.textilCeramica.tipoCoccionLabel")} <HelpIcon fieldKey="tipo_coccion" />
+                <textarea
+                  rows={2}
+                  value={value.tipoCoccion}
+                  onChange={(e) => onChange({ ...value, tipoCoccion: e.target.value })}
+                />
+              </label>
+            </>
+          )}
+
+          <label>
+            {t("fields.escultura.elementosComplementariosLabel")} <HelpIcon fieldKey="elementos_complementarios" />
+            <input
+              type="text"
+              value={value.elementosComplementarios}
+              onChange={(e) => onChange({ ...value, elementosComplementarios: e.target.value })}
+            />
+          </label>
+
+          <label>
+            {t("fields.escultura.requisitosInstalacionLabel")} <HelpIcon fieldKey="requisitos_instalacion" />
+            <textarea
+              rows={2}
+              value={value.requisitosInstalacion}
+              onChange={(e) => onChange({ ...value, requisitosInstalacion: e.target.value })}
+            />
+          </label>
+        </fieldset>
+      )}
+
+      {categoria === "NuevosMedios" && (
+        <fieldset>
+          <legend>{t("fields.nuevosMedios.rigurosaLegend")}</legend>
+
+          <label>
+            {t("fields.nuevosMedios.naturalezaObraLabel")} <HelpIcon fieldKey="naturaleza_obra" />
+            <textarea
+              rows={2}
+              value={value.naturalezaObra}
+              onChange={(e) => onChange({ ...value, naturalezaObra: e.target.value })}
+            />
+          </label>
+
+          <label>
+            {t("fields.nuevosMedios.componentesEntregadosLabel")} <HelpIcon fieldKey="componentes_entregados" />
+            <textarea
+              rows={2}
+              value={value.componentesEntregados}
+              onChange={(e) => onChange({ ...value, componentesEntregados: e.target.value })}
+            />
+          </label>
+
+          <label>
+            {t("fields.nuevosMedios.planPreservacionDigitalLabel")}{" "}
+            <HelpIcon fieldKey="plan_preservacion_digital" />
+            <textarea
+              rows={2}
+              value={value.planPreservacionDigital}
+              onChange={(e) => onChange({ ...value, planPreservacionDigital: e.target.value })}
+            />
+          </label>
+
+          <label>
+            {t("fields.nuevosMedios.instruccionesReinstalacionLabel")}{" "}
+            <HelpIcon fieldKey="instrucciones_reinstalacion" />
+            <textarea
+              rows={2}
+              value={value.instruccionesReinstalacion}
+              onChange={(e) => onChange({ ...value, instruccionesReinstalacion: e.target.value })}
+            />
+          </label>
+
+          <label>
+            {t("fields.nuevosMedios.derechosExhibicionLabel")} <HelpIcon fieldKey="derechos_exhibicion" />
+            <textarea
+              rows={2}
+              value={value.derechosExhibicion}
+              onChange={(e) => onChange({ ...value, derechosExhibicion: e.target.value })}
+            />
+          </label>
+
+          {value.subtipo === "VideoartFilmes" && (
+            <>
+              <label>
+                {t("fields.nuevosMedios.duracionLoopLabel")} <HelpIcon fieldKey="duracion_loop" />
+                <input
+                  type="text"
+                  value={value.duracionLoop}
+                  onChange={(e) => onChange({ ...value, duracionLoop: e.target.value })}
+                />
+              </label>
+
+              <label>
+                {t("fields.nuevosMedios.especificacionesVideoLabel")}{" "}
+                <HelpIcon fieldKey="especificaciones_video" />
+                <textarea
+                  rows={3}
+                  value={value.especificacionesVideo}
+                  onChange={(e) => onChange({ ...value, especificacionesVideo: e.target.value })}
+                />
+              </label>
+
+              <label>
+                {t("fields.nuevosMedios.audioCanalesLabel")} <HelpIcon fieldKey="audio_canales" />
+                <input
+                  type="text"
+                  value={value.audioCanales}
+                  onChange={(e) => onChange({ ...value, audioCanales: e.target.value })}
+                />
+              </label>
+            </>
+          )}
+
+          {value.subtipo === "ArteDigitalGenerativo" && (
+            <>
+              <label>
+                {t("fields.nuevosMedios.entornoLenguajeLabel")} <HelpIcon fieldKey="entorno_lenguaje" />
+                <input
+                  type="text"
+                  value={value.entornoLenguaje}
+                  onChange={(e) => onChange({ ...value, entornoLenguaje: e.target.value })}
+                />
+              </label>
+
+              <label>
+                {t("fields.nuevosMedios.hardwareRequeridoLabel")} <HelpIcon fieldKey="hardware_requerido" />
+                <textarea
+                  rows={2}
+                  value={value.hardwareRequerido}
+                  onChange={(e) => onChange({ ...value, hardwareRequerido: e.target.value })}
+                />
+              </label>
+
+              <label>
+                {t("fields.nuevosMedios.conectividadLabel")} <HelpIcon fieldKey="conectividad" />
+                <input
+                  type="text"
+                  value={value.conectividad}
+                  onChange={(e) => onChange({ ...value, conectividad: e.target.value })}
+                />
+              </label>
+            </>
+          )}
+
+          {value.subtipo === "InstalacionesSiteSpecific" && (
+            <>
+              <label>
+                {t("fields.nuevosMedios.dimensionesEspacialesLabel")}{" "}
+                <HelpIcon fieldKey="dimensiones_espaciales" />
+                <input
+                  type="text"
+                  value={value.dimensionesEspaciales}
+                  onChange={(e) => onChange({ ...value, dimensionesEspaciales: e.target.value })}
+                />
+              </label>
+
+              <label>
+                {t("fields.nuevosMedios.condicionesIluminacionLabel")}{" "}
+                <HelpIcon fieldKey="condiciones_iluminacion" />
+                <input
+                  type="text"
+                  value={value.condicionesIluminacion}
+                  onChange={(e) => onChange({ ...value, condicionesIluminacion: e.target.value })}
+                />
+              </label>
+
+              <label>
+                {t("fields.nuevosMedios.acondicionamientoAcusticoLabel")}{" "}
+                <HelpIcon fieldKey="acondicionamiento_acustico" />
+                <input
+                  type="text"
+                  value={value.acondicionamientoAcustico}
+                  onChange={(e) => onChange({ ...value, acondicionamientoAcustico: e.target.value })}
+                />
+              </label>
+
+              <label>
+                {t("fields.nuevosMedios.equipamientoExhibicionLabel")}{" "}
+                <HelpIcon fieldKey="equipamiento_exhibicion" />
+                <textarea
+                  rows={2}
+                  value={value.equipamientoExhibicion}
+                  onChange={(e) => onChange({ ...value, equipamientoExhibicion: e.target.value })}
+                />
+              </label>
+
+              <label>
+                {t("fields.escultura.requisitosInstalacionLabel")} <HelpIcon fieldKey="requisitos_instalacion" />
+                <textarea
+                  rows={2}
+                  value={value.requisitosInstalacion}
+                  onChange={(e) => onChange({ ...value, requisitosInstalacion: e.target.value })}
+                />
+              </label>
+            </>
+          )}
+        </fieldset>
+      )}
+
       {mostrarEsSeriada &&
         (categoria === "ObraGrafica" ? (
           value.subtipo && (
@@ -464,7 +835,7 @@ export function ObraDetalleFields({
           <label>
             <input
               type="checkbox"
-              checked={value.esSeriada}
+              checked={value.esSeriada === true}
               onChange={(e) => onChange({ ...value, esSeriada: e.target.checked })}
             />
             {t("field.esSeriada")} <HelpIcon fieldKey="es_seriada" />

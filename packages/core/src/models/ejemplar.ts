@@ -63,4 +63,8 @@ export interface Ejemplar {
   clasificacionPruebaEspecial: ClasificacionPruebaEspecial | null;
   /** Solo aplica a Escultura: puntos de agarre, fragilidad y advertencias de transporte de esta copia. */
   instruccionesManipulacion: string | null;
+  /** Solo aplica a Dibujo: cintas/bisagras usadas para montar esta copia. */
+  adhesivosMontaje: string | null;
+  /** Solo aplica a Dibujo: textos manuscritos, notas de estudio, bocetos al verso o etiquetas de esta copia. */
+  inscripcionesAnotaciones: string | null;
 }

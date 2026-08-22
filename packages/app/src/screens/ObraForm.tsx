@@ -25,7 +25,6 @@ import {
   type EdicionDetalleState,
 } from "./fields/EdicionDetalleFields.js";
 import { HelpIcon } from "../components/HelpIcon.js";
-import { FilePathField } from "../components/FilePathField.js";
 import { ArtistaSelector } from "../components/ArtistaSelector.js";
 import { TagPicker } from "../components/TagPicker.js";
 import { ImageFileField } from "../components/ImageFileField.js";
@@ -139,7 +138,12 @@ export function ObraForm({
     resetForm();
   }
 
-  const esSeriada =
+  function setEsSeriadaChoice(value: boolean) {
+    if (categoria === "Fotografia") setFotografia((prev) => ({ ...prev, esSeriada: value }));
+    else setObraDetalle((prev) => ({ ...prev, esSeriada: value }));
+  }
+
+  const esSeriada: boolean | null =
     categoria === "Fotografia"
       ? fotografia.esSeriada
       : categoria === "ObraGrafica"
@@ -154,22 +158,27 @@ export function ObraForm({
   const cantidadPruebaAutorNum = hayPruebaAutor ? Math.max(0, parseInt(cantidadPruebaAutor, 10) || 0) : 0;
   const excedePruebaAutor =
     hayPruebaAutor && cantidadPruebaAutorNum > cantidadEdicionesNum * 0.1 && !advertenciaPruebaAutorVista;
+  useEscapeToDismiss(excedePruebaAutor, () => setAdvertenciaPruebaAutorVista(true));
 
   // Mantiene un bloque de detalle por cada edicion y prueba de autor,
   // sincronizado con la cantidad tipeada: asi se puede completar info de
   // cada copia (si ya se tiene) en el momento de cargar la obra, en vez de
   // recien poder hacerlo despues editando cada ejemplar en ObraDetail.
+  // Para obra unica (esSeriada === false) tambien arma un bloque, de un solo
+  // ejemplar, para poder cargar sus datos en el momento igual que una edicion.
+  // La prueba de autor puede habilitarse tanto en obra seriada como en unica.
   useEffect(() => {
-    if (!esSeriada) return;
     function resize(arr: EdicionDetalleState[], size: number): EdicionDetalleState[] {
       if (arr.length === size) return arr;
       const next = arr.slice(0, size);
       while (next.length < size) next.push({ ...initialEdicionDetalleState });
       return next;
     }
+    const edicionSize = esSeriada === true ? cantidadEdicionesNum : esSeriada === false ? 1 : 0;
+    const pruebaSize = esSeriada !== null ? cantidadPruebaAutorNum : 0;
     setDetallesEdiciones((prev) => {
-      const edicion = resize(prev.edicion, cantidadEdicionesNum);
-      const prueba_artista = resize(prev.prueba_artista, cantidadPruebaAutorNum);
+      const edicion = resize(prev.edicion, edicionSize);
+      const prueba_artista = resize(prev.prueba_artista, pruebaSize);
       if (edicion === prev.edicion && prueba_artista === prev.prueba_artista) return prev;
       return { edicion, prueba_artista };
     });
@@ -187,6 +196,8 @@ export function ObraForm({
     categoria === "Fotografia" || categoria === "Pintura" || categoria === "ObraGrafica" || categoria === "Dibujo";
   const esObraGrafica = categoria === "ObraGrafica";
   const esEscultura = categoria === "Escultura";
+  const esDibujo = categoria === "Dibujo";
+  const esTextilCeramica = categoria === "TextilCeramica";
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -202,6 +213,9 @@ export function ObraForm({
       }
       if (!categoria) {
         throw new Error(t("obraForm.errorElegirCategoria"));
+      }
+      if (categoria !== "ObraGrafica" && esSeriada === null) {
+        throw new Error(t("obraForm.errorElegirSeriada"));
       }
       const artistaId = esRegistroPersonal ? personalArtista!.id : selectedArtistaId!;
       const cantidad = Math.max(1, parseInt(cantidadTotalEdiciones, 10) || 1);
@@ -287,9 +301,16 @@ export function ObraForm({
                materiales_mixtura, tipo_bastidor, imprimacion_base, profundidad_relieve, configuracion_panel,
                estabilidad_capas, barniz_proteccion, sensibilidad_ambiental, estado_cantos,
                matriz_material, matriz_estado, papel_marca, papel_gramaje, papel_caracteristicas, editor_publicador,
-               materiales_principales, acabado_patina, elementos_complementarios, apta_exterior, requisitos_instalacion
+               materiales_principales, acabado_patina, elementos_complementarios, apta_exterior, requisitos_instalacion,
+               fijacion_acabado, elementos_adicionales,
+               composicion_fibras, tintes_coloracion, estructura_tejido,
+               tipo_arcilla, metodo_conformado, tratamiento_superficie, tipo_coccion,
+               naturaleza_obra, componentes_entregados, plan_preservacion_digital, instrucciones_reinstalacion,
+               derechos_exhibicion, duracion_loop, especificaciones_video, audio_canales,
+               entorno_lenguaje, hardware_requerido, conectividad,
+               dimensiones_espaciales, condiciones_iluminacion, acondicionamiento_acustico, equipamiento_exhibicion
              )
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               id,
               obraDetalle.subtipo || null,
@@ -319,13 +340,39 @@ export function ObraForm({
               obraDetalle.elementosComplementarios || null,
               obraDetalle.aptaExterior || null,
               obraDetalle.requisitosInstalacion || null,
+              obraDetalle.fijacionAcabado || null,
+              obraDetalle.elementosAdicionales || null,
+              obraDetalle.composicionFibras || null,
+              obraDetalle.tintesColoracion || null,
+              obraDetalle.estructuraTejido || null,
+              obraDetalle.tipoArcilla || null,
+              obraDetalle.metodoConformado || null,
+              obraDetalle.tratamientoSuperficie || null,
+              obraDetalle.tipoCoccion || null,
+              obraDetalle.naturalezaObra || null,
+              obraDetalle.componentesEntregados || null,
+              obraDetalle.planPreservacionDigital || null,
+              obraDetalle.instruccionesReinstalacion || null,
+              obraDetalle.derechosExhibicion || null,
+              obraDetalle.duracionLoop || null,
+              obraDetalle.especificacionesVideo || null,
+              obraDetalle.audioCanales || null,
+              obraDetalle.entornoLenguaje || null,
+              obraDetalle.hardwareRequerido || null,
+              obraDetalle.conectividad || null,
+              obraDetalle.dimensionesEspaciales || null,
+              obraDetalle.condicionesIluminacion || null,
+              obraDetalle.acondicionamientoAcustico || null,
+              obraDetalle.equipamientoExhibicion || null,
             ],
           );
         }
 
         const ejemplares = esSeriada
           ? generarEjemplares(cantidad, cantidadPruebaAutorNum)
-          : [generarEjemplarUnico()];
+          : hayPruebaAutor
+            ? generarEjemplares(1, cantidadPruebaAutorNum)
+            : [generarEjemplarUnico()];
         for (const ejemplar of ejemplares) {
           const detalle = detallesEdiciones[ejemplar.tipo]?.[ejemplar.indice - 1];
           await tx.execute(
@@ -335,9 +382,9 @@ export function ObraForm({
                ubicacion_firma, sello_seco_holograma, notas, coa_numero, coa_emisor, coa_fecha, valor_seguro,
                moneda_seguro, vidrio_proteccion_frontal, sistema_cuelgue, coa_sistema_seguridad,
                informe_conservacion, dimensiones_soporte_completo, peso, tipo_firma, clasificacion_prueba_especial,
-               instrucciones_manipulacion
+               instrucciones_manipulacion, adhesivos_montaje, inscripciones_anotaciones
              )
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               id,
               ejemplar.tipo,
@@ -370,6 +417,8 @@ export function ObraForm({
               detalle?.tipoFirma || null,
               detalle?.clasificacionPruebaEspecial || null,
               detalle?.instruccionesManipulacion || null,
+              detalle?.adhesivosMontaje || null,
+              detalle?.inscripcionesAnotaciones || null,
             ],
           );
         }
@@ -541,13 +590,6 @@ export function ObraForm({
       {/* A partir de aca, informacion de la obra: depende de la categoria elegida arriba. */}
       {categoria && (
         <>
-          {esRegistroPersonal && categoria !== "Fotografia" && (
-            <label>
-              {t("obraForm.ubicacionLabel")} <HelpIcon fieldKey="ubicacion_fisica_archivo" />
-              <FilePathField value={ubicacion} onChange={setUbicacion} />
-            </label>
-          )}
-
           {categoria === "Fotografia" && (
             <FotografiaFields
               value={fotografia}
@@ -568,34 +610,41 @@ export function ObraForm({
             <TagPicker value={tags} onChange={setTags} />
           </label>
 
-          {categoria === "Fotografia" && (
-            <label>
-              <input
-                type="checkbox"
-                checked={fotografia.esSeriada}
-                onChange={(e) => setFotografia({ ...fotografia, esSeriada: e.target.checked })}
-              />
-              {t("field.esSeriada")} <HelpIcon fieldKey="es_seriada" />
-            </label>
-          )}
           {categoria === "ObraGrafica" && obraDetalle.subtipo && (
             <p className="field-note">
               {t("fields.pintura.esSeriadaPrefix")} <strong>{esSeriada ? t("common.yes") : t("common.no")}</strong>{" "}
               {t("fields.pintura.esSeriadaSuffix")} <HelpIcon fieldKey="es_seriada" />
             </p>
           )}
-          {categoria && categoria !== "Fotografia" && categoria !== "ObraGrafica" && (
-            <label>
-              <input
-                type="checkbox"
-                checked={obraDetalle.esSeriada}
-                onChange={(e) => setObraDetalle({ ...obraDetalle, esSeriada: e.target.checked })}
-              />
-              {t("field.esSeriada")} <HelpIcon fieldKey="es_seriada" />
-            </label>
+          {categoria && categoria !== "ObraGrafica" && (
+            <fieldset>
+              <legend>
+                {t("field.esSeriada")} <HelpIcon fieldKey="es_seriada" />
+              </legend>
+              <div className="radio-row">
+                <label>
+                  <input
+                    type="radio"
+                    name="esSeriadaChoice"
+                    checked={esSeriada === false}
+                    onChange={() => setEsSeriadaChoice(false)}
+                  />
+                  {t("obraForm.obraUnicaOpcion")}
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="esSeriadaChoice"
+                    checked={esSeriada === true}
+                    onChange={() => setEsSeriadaChoice(true)}
+                  />
+                  {t("obraForm.obraSeriadaOpcion")}
+                </label>
+              </div>
+            </fieldset>
           )}
 
-          {esSeriada && (
+          {esSeriada !== null && (
             <label>
               <input
                 type="checkbox"
@@ -609,7 +658,7 @@ export function ObraForm({
             </label>
           )}
 
-          {esSeriada && hayPruebaAutor && (
+          {esSeriada !== null && hayPruebaAutor && (
             <label>
               {t("obraForm.cantidadPruebaAutorLabel")}
               <input
@@ -620,17 +669,18 @@ export function ObraForm({
                   setCantidadPruebaAutor(e.target.value);
                   setAdvertenciaPruebaAutorVista(true);
                 }}
+                onBlur={() => setAdvertenciaPruebaAutorVista(true)}
               />
             </label>
           )}
 
-          {esSeriada && excedePruebaAutor && (
+          {esSeriada !== null && excedePruebaAutor && (
             <p className="error" role="alert">
               ⚠️ {t("obraForm.advertenciaPruebaAutor")}
             </p>
           )}
 
-          {esSeriada && (
+          {esSeriada === true && (
             <label>
               {t("obraForm.cantidadEdicionesLabel")}
               <input
@@ -642,7 +692,8 @@ export function ObraForm({
             </label>
           )}
 
-          {esSeriada && (detallesEdiciones.edicion.length > 0 || detallesEdiciones.prueba_artista.length > 0) && (
+          {esSeriada !== null &&
+            (detallesEdiciones.edicion.length > 0 || detallesEdiciones.prueba_artista.length > 0) && (
             <div className="obra-form-detalles-ediciones">
               <p className="field-note">{t("obraForm.detalleEdicionesNota")}</p>
               {detallesEdiciones.edicion.map((detalle, i) => {
@@ -669,6 +720,8 @@ export function ObraForm({
                     esGaleria={!esRegistroPersonal}
                     esObraGrafica={esObraGrafica}
                     esEscultura={esEscultura}
+                    esDibujo={esDibujo}
+                    esTextilCeramica={esTextilCeramica}
                   />
                 );
               })}
@@ -696,6 +749,8 @@ export function ObraForm({
                     esGaleria={!esRegistroPersonal}
                     esObraGrafica={esObraGrafica}
                     esEscultura={esEscultura}
+                    esDibujo={esDibujo}
+                    esTextilCeramica={esTextilCeramica}
                   />
                 );
               })}

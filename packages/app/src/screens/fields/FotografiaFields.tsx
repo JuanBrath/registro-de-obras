@@ -18,7 +18,7 @@ export interface FotografiaFieldsState {
   dimensiones: string;
   tecnica: string;
   escalaPorTamanos: string;
-  esSeriada: boolean;
+  esSeriada: boolean | null;
   serieProyecto: string;
   // Solo Analogica Clasica
   clasificacionPositivado: ClasificacionPositivado | "";
@@ -60,7 +60,7 @@ export const initialFotografiaFieldsState: FotografiaFieldsState = {
   dimensiones: "",
   tecnica: "",
   escalaPorTamanos: "",
-  esSeriada: false,
+  esSeriada: null,
   serieProyecto: "",
   clasificacionPositivado: "",
   procesoQuimicoAnalogica: "",
@@ -499,7 +499,7 @@ export function FotografiaFields({
         <label>
           <input
             type="checkbox"
-            checked={value.esSeriada}
+            checked={value.esSeriada === true}
             onChange={(e) => onChange({ ...value, esSeriada: e.target.checked })}
           />
           {t("field.esSeriada")} <HelpIcon fieldKey="es_seriada" />

@@ -28,6 +28,8 @@ export interface EdicionDetalleState {
   tipoFirma: string;
   clasificacionPruebaEspecial: string;
   instruccionesManipulacion: string;
+  adhesivosMontaje: string;
+  inscripcionesAnotaciones: string;
 }
 
 export const initialEdicionDetalleState: EdicionDetalleState = {
@@ -57,6 +59,8 @@ export const initialEdicionDetalleState: EdicionDetalleState = {
   tipoFirma: "",
   clasificacionPruebaEspecial: "",
   instruccionesManipulacion: "",
+  adhesivosMontaje: "",
+  inscripcionesAnotaciones: "",
 };
 
 function resumenEdicion(value: EdicionDetalleState): string[] {
@@ -83,6 +87,8 @@ export function EdicionDetalleRow({
   esGaleria,
   esObraGrafica,
   esEscultura,
+  esDibujo,
+  esTextilCeramica,
 }: {
   numero: string;
   value: EdicionDetalleState;
@@ -98,6 +104,8 @@ export function EdicionDetalleRow({
   esGaleria: boolean;
   esObraGrafica: boolean;
   esEscultura: boolean;
+  esDibujo: boolean;
+  esTextilCeramica: boolean;
 }) {
   const { t } = useLanguage();
 
@@ -176,7 +184,7 @@ export function EdicionDetalleRow({
           />
         </label>
 
-        {(esFotografia || esObraGrafica || esEscultura) && (
+        {(esFotografia || esObraGrafica || esEscultura || esDibujo) && (
           <>
             <label>
               {t("obraDetail.dimensionesSoporteCompletoLabel")}{" "}
@@ -239,10 +247,20 @@ export function EdicionDetalleRow({
                 onChange={(e) => onChange({ ...value, sistemaCuelgue: e.target.value })}
               />
             </label>
+            {esDibujo && (
+              <label>
+                {t("fields.dibujo.adhesivosMontajeLabel")} <HelpIcon fieldKey="adhesivos_montaje" />
+                <input
+                  type="text"
+                  value={value.adhesivosMontaje}
+                  onChange={(e) => onChange({ ...value, adhesivosMontaje: e.target.value })}
+                />
+              </label>
+            )}
           </>
         )}
 
-        {(esFotografia || esObraGrafica || esEscultura) && (
+        {(esFotografia || esObraGrafica || esEscultura || esDibujo || esTextilCeramica) && (
           <label>
             {t("obraDetail.ubicacionFirmaLabel")} <HelpIcon fieldKey="ubicacion_firma" />
             <input
@@ -351,7 +369,7 @@ export function EdicionDetalleRow({
           </>
         )}
 
-        {esEscultura && (
+        {(esEscultura || esTextilCeramica) && (
           <label>
             {t("fields.escultura.instruccionesManipulacionLabel")}{" "}
             <HelpIcon fieldKey="instrucciones_manipulacion" />
@@ -359,6 +377,18 @@ export function EdicionDetalleRow({
               rows={2}
               value={value.instruccionesManipulacion}
               onChange={(e) => onChange({ ...value, instruccionesManipulacion: e.target.value })}
+            />
+          </label>
+        )}
+
+        {esDibujo && (
+          <label>
+            {t("fields.dibujo.inscripcionesAnotacionesLabel")}{" "}
+            <HelpIcon fieldKey="inscripciones_anotaciones" />
+            <textarea
+              rows={2}
+              value={value.inscripcionesAnotaciones}
+              onChange={(e) => onChange({ ...value, inscripcionesAnotaciones: e.target.value })}
             />
           </label>
         )}

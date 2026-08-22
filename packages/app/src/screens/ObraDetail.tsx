@@ -31,7 +31,6 @@ import { VentaForm, type VentaExistente } from "../components/VentaForm.js";
 import { Modal } from "../components/Modal.js";
 import { TagPicker } from "../components/TagPicker.js";
 import { ArtistaSelector } from "../components/ArtistaSelector.js";
-import { FilePathField } from "../components/FilePathField.js";
 import { ImageFileField } from "../components/ImageFileField.js";
 import { HelpIcon } from "../components/HelpIcon.js";
 import { todayISO } from "../utils/today.js";
@@ -121,6 +120,30 @@ interface ObraExtRow {
   elementos_complementarios?: string | null;
   apta_exterior?: string | null;
   requisitos_instalacion?: string | null;
+  fijacion_acabado?: string | null;
+  elementos_adicionales?: string | null;
+  composicion_fibras?: string | null;
+  tintes_coloracion?: string | null;
+  estructura_tejido?: string | null;
+  tipo_arcilla?: string | null;
+  metodo_conformado?: string | null;
+  tratamiento_superficie?: string | null;
+  tipo_coccion?: string | null;
+  naturaleza_obra?: string | null;
+  componentes_entregados?: string | null;
+  plan_preservacion_digital?: string | null;
+  instrucciones_reinstalacion?: string | null;
+  derechos_exhibicion?: string | null;
+  duracion_loop?: string | null;
+  especificaciones_video?: string | null;
+  audio_canales?: string | null;
+  entorno_lenguaje?: string | null;
+  hardware_requerido?: string | null;
+  conectividad?: string | null;
+  dimensiones_espaciales?: string | null;
+  condiciones_iluminacion?: string | null;
+  acondicionamiento_acustico?: string | null;
+  equipamiento_exhibicion?: string | null;
 }
 
 interface EjemplarRow {
@@ -158,6 +181,8 @@ interface EjemplarRow {
   tipo_firma: string | null;
   clasificacion_prueba_especial: string | null;
   instrucciones_manipulacion: string | null;
+  adhesivos_montaje: string | null;
+  inscripciones_anotaciones: string | null;
 }
 
 interface VentaRow {
@@ -313,6 +338,100 @@ function buildObraDescripcionLineas(
     }
     if (ext?.requisitos_instalacion) {
       lineas.push(`${t("fields.escultura.requisitosInstalacionLabel")}: ${ext.requisitos_instalacion}`);
+    }
+  }
+  if (obra.categoria_obra === "Dibujo") {
+    if (ext?.papel_marca) lineas.push(`${t("fields.obraGrafica.papelMarcaLabel")}: ${ext.papel_marca}`);
+    if (ext?.papel_gramaje) lineas.push(`${t("fields.obraGrafica.papelGramajeLabel")}: ${ext.papel_gramaje}`);
+    if (ext?.papel_caracteristicas) {
+      lineas.push(`${t("fields.obraGrafica.papelCaracteristicasLabel")}: ${ext.papel_caracteristicas}`);
+    }
+    if (ext?.fijacion_acabado) lineas.push(`${t("fields.dibujo.fijacionAcabadoLabel")}: ${ext.fijacion_acabado}`);
+    if (ext?.elementos_adicionales) {
+      lineas.push(`${t("fields.dibujo.elementosAdicionalesLabel")}: ${ext.elementos_adicionales}`);
+    }
+  }
+  if (obra.categoria_obra === "TextilCeramica") {
+    if (ext?.subtipo === "TapiceriaFibra") {
+      if (ext?.composicion_fibras) {
+        lineas.push(`${t("fields.textilCeramica.composicionFibrasLabel")}: ${ext.composicion_fibras}`);
+      }
+      if (ext?.tintes_coloracion) {
+        lineas.push(`${t("fields.textilCeramica.tintesColoracionLabel")}: ${ext.tintes_coloracion}`);
+      }
+      if (ext?.estructura_tejido) {
+        lineas.push(`${t("fields.textilCeramica.estructuraTejidoLabel")}: ${ext.estructura_tejido}`);
+      }
+    }
+    if (ext?.subtipo === "CeramicaEscultorica") {
+      if (ext?.tipo_arcilla) lineas.push(`${t("fields.textilCeramica.tipoArcillaLabel")}: ${ext.tipo_arcilla}`);
+      if (ext?.metodo_conformado) {
+        lineas.push(`${t("fields.textilCeramica.metodoConformadoLabel")}: ${ext.metodo_conformado}`);
+      }
+      if (ext?.tratamiento_superficie) {
+        lineas.push(`${t("fields.textilCeramica.tratamientoSuperficieLabel")}: ${ext.tratamiento_superficie}`);
+      }
+      if (ext?.tipo_coccion) lineas.push(`${t("fields.textilCeramica.tipoCoccionLabel")}: ${ext.tipo_coccion}`);
+    }
+    if (ext?.elementos_complementarios) {
+      lineas.push(`${t("fields.escultura.elementosComplementariosLabel")}: ${ext.elementos_complementarios}`);
+    }
+    if (ext?.requisitos_instalacion) {
+      lineas.push(`${t("fields.escultura.requisitosInstalacionLabel")}: ${ext.requisitos_instalacion}`);
+    }
+  }
+  if (obra.categoria_obra === "NuevosMedios") {
+    if (ext?.naturaleza_obra) {
+      lineas.push(`${t("fields.nuevosMedios.naturalezaObraLabel")}: ${ext.naturaleza_obra}`);
+    }
+    if (ext?.componentes_entregados) {
+      lineas.push(`${t("fields.nuevosMedios.componentesEntregadosLabel")}: ${ext.componentes_entregados}`);
+    }
+    if (ext?.plan_preservacion_digital) {
+      lineas.push(`${t("fields.nuevosMedios.planPreservacionDigitalLabel")}: ${ext.plan_preservacion_digital}`);
+    }
+    if (ext?.instrucciones_reinstalacion) {
+      lineas.push(
+        `${t("fields.nuevosMedios.instruccionesReinstalacionLabel")}: ${ext.instrucciones_reinstalacion}`,
+      );
+    }
+    if (ext?.derechos_exhibicion) {
+      lineas.push(`${t("fields.nuevosMedios.derechosExhibicionLabel")}: ${ext.derechos_exhibicion}`);
+    }
+    if (ext?.subtipo === "VideoartFilmes") {
+      if (ext?.duracion_loop) lineas.push(`${t("fields.nuevosMedios.duracionLoopLabel")}: ${ext.duracion_loop}`);
+      if (ext?.especificaciones_video) {
+        lineas.push(`${t("fields.nuevosMedios.especificacionesVideoLabel")}: ${ext.especificaciones_video}`);
+      }
+      if (ext?.audio_canales) lineas.push(`${t("fields.nuevosMedios.audioCanalesLabel")}: ${ext.audio_canales}`);
+    }
+    if (ext?.subtipo === "ArteDigitalGenerativo") {
+      if (ext?.entorno_lenguaje) {
+        lineas.push(`${t("fields.nuevosMedios.entornoLenguajeLabel")}: ${ext.entorno_lenguaje}`);
+      }
+      if (ext?.hardware_requerido) {
+        lineas.push(`${t("fields.nuevosMedios.hardwareRequeridoLabel")}: ${ext.hardware_requerido}`);
+      }
+      if (ext?.conectividad) lineas.push(`${t("fields.nuevosMedios.conectividadLabel")}: ${ext.conectividad}`);
+    }
+    if (ext?.subtipo === "InstalacionesSiteSpecific") {
+      if (ext?.dimensiones_espaciales) {
+        lineas.push(`${t("fields.nuevosMedios.dimensionesEspacialesLabel")}: ${ext.dimensiones_espaciales}`);
+      }
+      if (ext?.condiciones_iluminacion) {
+        lineas.push(`${t("fields.nuevosMedios.condicionesIluminacionLabel")}: ${ext.condiciones_iluminacion}`);
+      }
+      if (ext?.acondicionamiento_acustico) {
+        lineas.push(
+          `${t("fields.nuevosMedios.acondicionamientoAcusticoLabel")}: ${ext.acondicionamiento_acustico}`,
+        );
+      }
+      if (ext?.equipamiento_exhibicion) {
+        lineas.push(`${t("fields.nuevosMedios.equipamientoExhibicionLabel")}: ${ext.equipamiento_exhibicion}`);
+      }
+      if (ext?.requisitos_instalacion) {
+        lineas.push(`${t("fields.escultura.requisitosInstalacionLabel")}: ${ext.requisitos_instalacion}`);
+      }
     }
   }
   if (obra.categoria_obra === "Fotografia") {
@@ -512,7 +631,14 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
                     materiales_mixtura, tipo_bastidor, imprimacion_base, profundidad_relieve, configuracion_panel,
                     estabilidad_capas, barniz_proteccion, sensibilidad_ambiental, estado_cantos,
                     matriz_material, matriz_estado, papel_marca, papel_gramaje, papel_caracteristicas, editor_publicador,
-                    materiales_principales, acabado_patina, elementos_complementarios, apta_exterior, requisitos_instalacion
+                    materiales_principales, acabado_patina, elementos_complementarios, apta_exterior, requisitos_instalacion,
+                    fijacion_acabado, elementos_adicionales,
+                    composicion_fibras, tintes_coloracion, estructura_tejido,
+                    tipo_arcilla, metodo_conformado, tratamiento_superficie, tipo_coccion,
+                    naturaleza_obra, componentes_entregados, plan_preservacion_digital, instrucciones_reinstalacion,
+                    derechos_exhibicion, duracion_loop, especificaciones_video, audio_canales,
+                    entorno_lenguaje, hardware_requerido, conectividad,
+                    dimensiones_espaciales, condiciones_iluminacion, acondicionamiento_acustico, equipamiento_exhibicion
              FROM obra_detalle WHERE obra_id = ?`,
             [obraId],
           );
@@ -525,7 +651,8 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
           `SELECT id, tipo, numero, estado, venta_id, fecha_impresion, tipo_impresion, soporte_impresion, tipo_tintas, taller_impresion, ubicacion_actual, dimensiones, tipo_enmarcado, tamano_final_enmarcado, ubicacion_firma, sello_seco_holograma, fecha_limite, notas, precio_venta, moneda_venta,
                   coa_numero, coa_emisor, coa_fecha, valor_seguro, moneda_seguro, vidrio_proteccion_frontal, sistema_cuelgue,
                   coa_sistema_seguridad, informe_conservacion, dimensiones_soporte_completo, peso,
-                  tipo_firma, clasificacion_prueba_especial, instrucciones_manipulacion
+                  tipo_firma, clasificacion_prueba_especial, instrucciones_manipulacion,
+                  adhesivos_montaje, inscripciones_anotaciones
            FROM ejemplar WHERE obra_id = ? ORDER BY tipo, indice`,
           [obraId],
         );
@@ -829,6 +956,8 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       tipoFirma: string;
       clasificacionPruebaEspecial: string;
       instruccionesManipulacion: string;
+      adhesivosMontaje: string;
+      inscripcionesAnotaciones: string;
     },
   ) {
     if (!context) return;
@@ -841,7 +970,8 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
            precio_venta = ?, moneda_venta = ?, coa_numero = ?, coa_emisor = ?, coa_fecha = ?, valor_seguro = ?,
            moneda_seguro = ?, vidrio_proteccion_frontal = ?, sistema_cuelgue = ?, coa_sistema_seguridad = ?,
            informe_conservacion = ?, dimensiones_soporte_completo = ?, peso = ?, tipo_firma = ?,
-           clasificacion_prueba_especial = ?, instrucciones_manipulacion = ?
+           clasificacion_prueba_especial = ?, instrucciones_manipulacion = ?, adhesivos_montaje = ?,
+           inscripciones_anotaciones = ?
          WHERE id = ?`,
         [
           fields.estado,
@@ -874,6 +1004,8 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
           fields.tipoFirma || null,
           fields.clasificacionPruebaEspecial || null,
           fields.instruccionesManipulacion || null,
+          fields.adhesivosMontaje || null,
+          fields.inscripcionesAnotaciones || null,
           ejemplarId,
         ],
       );
@@ -1044,8 +1176,15 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
                materiales_mixtura, tipo_bastidor, imprimacion_base, profundidad_relieve, configuracion_panel,
                estabilidad_capas, barniz_proteccion, sensibilidad_ambiental, estado_cantos,
                matriz_material, matriz_estado, papel_marca, papel_gramaje, papel_caracteristicas, editor_publicador,
-               materiales_principales, acabado_patina, elementos_complementarios, apta_exterior, requisitos_instalacion
-             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+               materiales_principales, acabado_patina, elementos_complementarios, apta_exterior, requisitos_instalacion,
+               fijacion_acabado, elementos_adicionales,
+               composicion_fibras, tintes_coloracion, estructura_tejido,
+               tipo_arcilla, metodo_conformado, tratamiento_superficie, tipo_coccion,
+               naturaleza_obra, componentes_entregados, plan_preservacion_digital, instrucciones_reinstalacion,
+               derechos_exhibicion, duracion_loop, especificaciones_video, audio_canales,
+               entorno_lenguaje, hardware_requerido, conectividad,
+               dimensiones_espaciales, condiciones_iluminacion, acondicionamiento_acustico, equipamiento_exhibicion
+             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
           : `UPDATE obra_detalle SET
                subtipo = ?, tecnica_material = ?, soporte = ?, tecnica = ?, dimensiones = ?, peso = ?,
                fecha_creacion = ?, materiales_mixtura = ?, tipo_bastidor = ?, imprimacion_base = ?,
@@ -1053,7 +1192,14 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
                sensibilidad_ambiental = ?, estado_cantos = ?, matriz_material = ?, matriz_estado = ?,
                papel_marca = ?, papel_gramaje = ?, papel_caracteristicas = ?, editor_publicador = ?,
                materiales_principales = ?, acabado_patina = ?, elementos_complementarios = ?, apta_exterior = ?,
-               requisitos_instalacion = ?
+               requisitos_instalacion = ?, fijacion_acabado = ?, elementos_adicionales = ?,
+               composicion_fibras = ?, tintes_coloracion = ?, estructura_tejido = ?,
+               tipo_arcilla = ?, metodo_conformado = ?, tratamiento_superficie = ?, tipo_coccion = ?,
+               naturaleza_obra = ?, componentes_entregados = ?, plan_preservacion_digital = ?,
+               instrucciones_reinstalacion = ?, derechos_exhibicion = ?, duracion_loop = ?,
+               especificaciones_video = ?, audio_canales = ?, entorno_lenguaje = ?, hardware_requerido = ?,
+               conectividad = ?, dimensiones_espaciales = ?, condiciones_iluminacion = ?,
+               acondicionamiento_acustico = ?, equipamiento_exhibicion = ?
              WHERE obra_id = ?`;
         const params = cambiaCategoria
           ? [
@@ -1085,6 +1231,30 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
               fields.ext.elementos_complementarios || null,
               fields.ext.apta_exterior || null,
               fields.ext.requisitos_instalacion || null,
+              fields.ext.fijacion_acabado || null,
+              fields.ext.elementos_adicionales || null,
+              fields.ext.composicion_fibras || null,
+              fields.ext.tintes_coloracion || null,
+              fields.ext.estructura_tejido || null,
+              fields.ext.tipo_arcilla || null,
+              fields.ext.metodo_conformado || null,
+              fields.ext.tratamiento_superficie || null,
+              fields.ext.tipo_coccion || null,
+              fields.ext.naturaleza_obra || null,
+              fields.ext.componentes_entregados || null,
+              fields.ext.plan_preservacion_digital || null,
+              fields.ext.instrucciones_reinstalacion || null,
+              fields.ext.derechos_exhibicion || null,
+              fields.ext.duracion_loop || null,
+              fields.ext.especificaciones_video || null,
+              fields.ext.audio_canales || null,
+              fields.ext.entorno_lenguaje || null,
+              fields.ext.hardware_requerido || null,
+              fields.ext.conectividad || null,
+              fields.ext.dimensiones_espaciales || null,
+              fields.ext.condiciones_iluminacion || null,
+              fields.ext.acondicionamiento_acustico || null,
+              fields.ext.equipamiento_exhibicion || null,
             ]
           : [
               fields.ext.subtipo || null,
@@ -1114,6 +1284,30 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
               fields.ext.elementos_complementarios || null,
               fields.ext.apta_exterior || null,
               fields.ext.requisitos_instalacion || null,
+              fields.ext.fijacion_acabado || null,
+              fields.ext.elementos_adicionales || null,
+              fields.ext.composicion_fibras || null,
+              fields.ext.tintes_coloracion || null,
+              fields.ext.estructura_tejido || null,
+              fields.ext.tipo_arcilla || null,
+              fields.ext.metodo_conformado || null,
+              fields.ext.tratamiento_superficie || null,
+              fields.ext.tipo_coccion || null,
+              fields.ext.naturaleza_obra || null,
+              fields.ext.componentes_entregados || null,
+              fields.ext.plan_preservacion_digital || null,
+              fields.ext.instrucciones_reinstalacion || null,
+              fields.ext.derechos_exhibicion || null,
+              fields.ext.duracion_loop || null,
+              fields.ext.especificaciones_video || null,
+              fields.ext.audio_canales || null,
+              fields.ext.entorno_lenguaje || null,
+              fields.ext.hardware_requerido || null,
+              fields.ext.conectividad || null,
+              fields.ext.dimensiones_espaciales || null,
+              fields.ext.condiciones_iluminacion || null,
+              fields.ext.acondicionamiento_acustico || null,
+              fields.ext.equipamiento_exhibicion || null,
               obraId,
             ];
         await tx.execute(upsert, params);
@@ -1555,6 +1749,30 @@ function ObraEditForm({
     elementosComplementarios: ext?.elementos_complementarios ?? "",
     aptaExterior: ext?.apta_exterior ?? "",
     requisitosInstalacion: ext?.requisitos_instalacion ?? "",
+    fijacionAcabado: ext?.fijacion_acabado ?? "",
+    elementosAdicionales: ext?.elementos_adicionales ?? "",
+    composicionFibras: ext?.composicion_fibras ?? "",
+    tintesColoracion: ext?.tintes_coloracion ?? "",
+    estructuraTejido: ext?.estructura_tejido ?? "",
+    tipoArcilla: ext?.tipo_arcilla ?? "",
+    metodoConformado: ext?.metodo_conformado ?? "",
+    tratamientoSuperficie: ext?.tratamiento_superficie ?? "",
+    tipoCoccion: ext?.tipo_coccion ?? "",
+    naturalezaObra: ext?.naturaleza_obra ?? "",
+    componentesEntregados: ext?.componentes_entregados ?? "",
+    planPreservacionDigital: ext?.plan_preservacion_digital ?? "",
+    instruccionesReinstalacion: ext?.instrucciones_reinstalacion ?? "",
+    derechosExhibicion: ext?.derechos_exhibicion ?? "",
+    duracionLoop: ext?.duracion_loop ?? "",
+    especificacionesVideo: ext?.especificaciones_video ?? "",
+    audioCanales: ext?.audio_canales ?? "",
+    entornoLenguaje: ext?.entorno_lenguaje ?? "",
+    hardwareRequerido: ext?.hardware_requerido ?? "",
+    conectividad: ext?.conectividad ?? "",
+    dimensionesEspaciales: ext?.dimensiones_espaciales ?? "",
+    condicionesIluminacion: ext?.condiciones_iluminacion ?? "",
+    acondicionamientoAcustico: ext?.acondicionamiento_acustico ?? "",
+    equipamientoExhibicion: ext?.equipamiento_exhibicion ?? "",
   });
   const eraSeriada = Number(obra.es_seriada) === 1;
   const [esSeriada, setEsSeriada] = useState(eraSeriada);
@@ -1687,6 +1905,30 @@ function ObraEditForm({
                 elementos_complementarios: obraDetalle.elementosComplementarios,
                 apta_exterior: obraDetalle.aptaExterior,
                 requisitos_instalacion: obraDetalle.requisitosInstalacion,
+                fijacion_acabado: obraDetalle.fijacionAcabado,
+                elementos_adicionales: obraDetalle.elementosAdicionales,
+                composicion_fibras: obraDetalle.composicionFibras,
+                tintes_coloracion: obraDetalle.tintesColoracion,
+                estructura_tejido: obraDetalle.estructuraTejido,
+                tipo_arcilla: obraDetalle.tipoArcilla,
+                metodo_conformado: obraDetalle.metodoConformado,
+                tratamiento_superficie: obraDetalle.tratamientoSuperficie,
+                tipo_coccion: obraDetalle.tipoCoccion,
+                naturaleza_obra: obraDetalle.naturalezaObra,
+                componentes_entregados: obraDetalle.componentesEntregados,
+                plan_preservacion_digital: obraDetalle.planPreservacionDigital,
+                instrucciones_reinstalacion: obraDetalle.instruccionesReinstalacion,
+                derechos_exhibicion: obraDetalle.derechosExhibicion,
+                duracion_loop: obraDetalle.duracionLoop,
+                especificaciones_video: obraDetalle.especificacionesVideo,
+                audio_canales: obraDetalle.audioCanales,
+                entorno_lenguaje: obraDetalle.entornoLenguaje,
+                hardware_requerido: obraDetalle.hardwareRequerido,
+                conectividad: obraDetalle.conectividad,
+                dimensiones_espaciales: obraDetalle.dimensionesEspaciales,
+                condiciones_iluminacion: obraDetalle.condicionesIluminacion,
+                acondicionamiento_acustico: obraDetalle.acondicionamientoAcustico,
+                equipamiento_exhibicion: obraDetalle.equipamientoExhibicion,
               },
         imageFile,
         removeImage: removerImagen,
@@ -1839,13 +2081,6 @@ function ObraEditForm({
         </>
       )}
 
-      {esRegistroPersonal && categoriaObra !== "Fotografia" && (
-        <label>
-          {t("obraDetail.ubicacionFisicaArchivo")} <HelpIcon fieldKey="ubicacion_fisica_archivo" />
-          <FilePathField value={ubicacion} onChange={setUbicacion} />
-        </label>
-      )}
-
       {permiteCambiarSeriada && (
         <>
           <label>
@@ -1956,6 +2191,8 @@ function EjemplarRowView({
     tipoFirma: string;
     clasificacionPruebaEspecial: string;
     instruccionesManipulacion: string;
+    adhesivosMontaje: string;
+    inscripcionesAnotaciones: string;
   }) => void;
   onVender: () => void;
   onEditarVenta: (venta: VentaRow) => void;
@@ -2004,9 +2241,15 @@ function EjemplarRowView({
   const [instruccionesManipulacion, setInstruccionesManipulacion] = useState(
     ejemplar.instrucciones_manipulacion ?? "",
   );
+  const [adhesivosMontaje, setAdhesivosMontaje] = useState(ejemplar.adhesivos_montaje ?? "");
+  const [inscripcionesAnotaciones, setInscripcionesAnotaciones] = useState(
+    ejemplar.inscripciones_anotaciones ?? "",
+  );
   const esFotografia = categoria === "Fotografia";
   const esObraGrafica = categoria === "ObraGrafica";
   const esEscultura = categoria === "Escultura";
+  const esDibujo = categoria === "Dibujo";
+  const esTextilCeramica = categoria === "TextilCeramica";
   const permiteEnmarcado =
     categoria === "Fotografia" || categoria === "Pintura" || categoria === "ObraGrafica" || categoria === "Dibujo";
   const presupuestoBloqueado = ["vendida", "descartada", "coleccion_autor", "destruida"].includes(ejemplar.estado);
@@ -2089,7 +2332,7 @@ function EjemplarRowView({
           <span className="field-label">{t("obraDetail.tamanoEjemplarLabel")}</span>
           <input type="text" value={dimensiones} onChange={(e) => setDimensiones(e.target.value)} />
         </label>
-        {(esFotografia || esObraGrafica || esEscultura) && (
+        {(esFotografia || esObraGrafica || esEscultura || esDibujo) && (
           <>
             <label>
               <span className="field-label">
@@ -2150,9 +2393,21 @@ function EjemplarRowView({
               </span>
               <input type="text" value={sistemaCuelgue} onChange={(e) => setSistemaCuelgue(e.target.value)} />
             </label>
+            {esDibujo && (
+              <label>
+                <span className="field-label">
+                  {t("fields.dibujo.adhesivosMontajeLabel")} <HelpIcon fieldKey="adhesivos_montaje" />
+                </span>
+                <input
+                  type="text"
+                  value={adhesivosMontaje}
+                  onChange={(e) => setAdhesivosMontaje(e.target.value)}
+                />
+              </label>
+            )}
           </>
         )}
-        {(esFotografia || esObraGrafica || esEscultura) && (
+        {(esFotografia || esObraGrafica || esEscultura || esDibujo || esTextilCeramica) && (
           <label>
             <span className="field-label">
               {t("obraDetail.ubicacionFirmaLabel")} <HelpIcon fieldKey="ubicacion_firma" />
@@ -2203,7 +2458,7 @@ function EjemplarRowView({
             </select>
           </label>
         )}
-        {esEscultura && (
+        {(esEscultura || esTextilCeramica) && (
           <label>
             <span className="field-label">
               {t("fields.escultura.instruccionesManipulacionLabel")}{" "}
@@ -2213,6 +2468,19 @@ function EjemplarRowView({
               rows={2}
               value={instruccionesManipulacion}
               onChange={(e) => setInstruccionesManipulacion(e.target.value)}
+            />
+          </label>
+        )}
+        {esDibujo && (
+          <label>
+            <span className="field-label">
+              {t("fields.dibujo.inscripcionesAnotacionesLabel")}{" "}
+              <HelpIcon fieldKey="inscripciones_anotaciones" />
+            </span>
+            <textarea
+              rows={2}
+              value={inscripcionesAnotaciones}
+              onChange={(e) => setInscripcionesAnotaciones(e.target.value)}
             />
           </label>
         )}
@@ -2331,6 +2599,8 @@ function EjemplarRowView({
                 tipoFirma,
                 clasificacionPruebaEspecial,
                 instruccionesManipulacion,
+                adhesivosMontaje,
+                inscripcionesAnotaciones,
               })
             }
           >
@@ -2426,6 +2696,16 @@ function EjemplarRowView({
       {ejemplar.instrucciones_manipulacion && (
         <span>
           {t("fields.escultura.instruccionesManipulacionLabel")}: {ejemplar.instrucciones_manipulacion}
+        </span>
+      )}
+      {ejemplar.adhesivos_montaje && (
+        <span>
+          {t("fields.dibujo.adhesivosMontajeLabel")}: {ejemplar.adhesivos_montaje}
+        </span>
+      )}
+      {ejemplar.inscripciones_anotaciones && (
+        <span>
+          {t("fields.dibujo.inscripcionesAnotacionesLabel")}: {ejemplar.inscripciones_anotaciones}
         </span>
       )}
 
