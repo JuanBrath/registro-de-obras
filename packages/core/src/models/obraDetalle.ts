@@ -9,6 +9,10 @@ export type SubtipoDibujo = "TecnicasSecas" | "TecnicasHumedas" | "EstudiosPrepa
 export type SubtipoTextilCeramica = "TapiceriaFibra" | "CeramicaEscultorica";
 export type SubtipoNuevosMedios = "VideoartFilmes" | "InstalacionesSiteSpecific" | "ArteDigitalGenerativo";
 
+export type MatrizMaterial = "Cobre" | "Zinc" | "Madera" | "PiedraLitografica" | "MallaSerigrafica" | "Otro";
+export type MatrizEstado = "Conservada" | "Cancelada" | "Destruida";
+export type AptaExterior = "Exterior" | "Interior" | "Ambos";
+
 export type SubtipoObraDetalle =
   | SubtipoPintura
   | SubtipoObraGrafica
@@ -38,6 +42,19 @@ export interface ObraDetalle {
   barnizProteccion: string | null;
   sensibilidadAmbiental: string | null;
   estadoCantos: string | null;
+  /** Los siguientes campos solo se muestran en la UI para categoria ObraGrafica. */
+  matrizMaterial: MatrizMaterial | null;
+  matrizEstado: MatrizEstado | null;
+  papelMarca: string | null;
+  papelGramaje: string | null;
+  papelCaracteristicas: string | null;
+  editorPublicador: string | null;
+  /** Los siguientes campos solo se muestran en la UI para categoria Escultura. */
+  materialesPrincipales: string | null;
+  acabadoPatina: string | null;
+  elementosComplementarios: string | null;
+  aptaExterior: AptaExterior | null;
+  requisitosInstalacion: string | null;
 }
 
 export interface NuevaObraDetalle {
@@ -57,5 +74,16 @@ export interface NuevaObraDetalle {
   barnizProteccion?: string | null;
   sensibilidadAmbiental?: string | null;
   estadoCantos?: string | null;
+  matrizMaterial?: MatrizMaterial | null;
+  matrizEstado?: MatrizEstado | null;
+  papelMarca?: string | null;
+  papelGramaje?: string | null;
+  papelCaracteristicas?: string | null;
+  editorPublicador?: string | null;
+  materialesPrincipales?: string | null;
+  acabadoPatina?: string | null;
+  elementosComplementarios?: string | null;
+  aptaExterior?: AptaExterior | null;
+  requisitosInstalacion?: string | null;
   esSeriada: boolean;
 }

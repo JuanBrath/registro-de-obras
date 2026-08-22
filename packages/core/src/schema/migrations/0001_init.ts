@@ -45,6 +45,8 @@ import { migration0045CamposGeneralesObra } from "./0045_campos_generales_obra.j
 import { migration0046ObraDetallePinturaRiguroso } from "./0046_obra_detalle_pintura_riguroso.js";
 import { migration0047ObraFotografiaRiguroso } from "./0047_obra_fotografia_riguroso.js";
 import { migration0048TextoAyudaFormatoMultilinea } from "./0048_texto_ayuda_formato_multilinea.js";
+import { migration0049ObraDetalleGraficaRiguroso } from "./0049_obra_detalle_grafica_riguroso.js";
+import { migration0050ObraDetalleEsculturaRiguroso } from "./0050_obra_detalle_escultura_riguroso.js";
 
 export interface Migration {
   name: string;
@@ -221,4 +223,6 @@ export const ALL_MIGRATIONS: Migration[] = [
   migration0046ObraDetallePinturaRiguroso,
   migration0047ObraFotografiaRiguroso,
   migration0048TextoAyudaFormatoMultilinea,
+  migration0049ObraDetalleGraficaRiguroso,
+  migration0050ObraDetalleEsculturaRiguroso,
 ];

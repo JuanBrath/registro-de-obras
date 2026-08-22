@@ -1,4 +1,6 @@
 export type TipoEjemplar = "edicion" | "prueba_artista";
+export type TipoFirma = "AManoLapiz" | "Monograma" | "EnPlancha" | "SelloTestamentarioTaller";
+export type ClasificacionPruebaEspecial = "PE" | "BAT" | "HC" | "PI" | "FC";
 export type EstadoEjemplar =
   | "disponible"
   | "en_stock"
@@ -55,4 +57,10 @@ export interface Ejemplar {
   /** Medida de la hoja/soporte completo, distinta de "dimensiones" (mancha de imagen). */
   dimensionesSoporteCompleto: string | null;
   peso: string | null;
+  /** Solo aplica a ObraGrafica: metodo por el cual esta firmada esta copia (distinto de ubicacionFirma, que es donde). */
+  tipoFirma: TipoFirma | null;
+  /** Solo aplica a ObraGrafica/Escultura, tipicamente sobre pruebas de artista: P/E, B.A.T., H/C, P/I o F/C. */
+  clasificacionPruebaEspecial: ClasificacionPruebaEspecial | null;
+  /** Solo aplica a Escultura: puntos de agarre, fragilidad y advertencias de transporte de esta copia. */
+  instruccionesManipulacion: string | null;
 }

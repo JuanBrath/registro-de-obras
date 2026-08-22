@@ -36,7 +36,6 @@ import { ImageFileField } from "../components/ImageFileField.js";
 import { HelpIcon } from "../components/HelpIcon.js";
 import { todayISO } from "../utils/today.js";
 import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
-import { isTauri } from "../adapters/detectPlatform.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
 import { savePdfWithDialog } from "../utils/savePdfDialog.js";
 import { formatFechaDDMMYYYY } from "../utils/formatFecha.js";
@@ -111,6 +110,17 @@ interface ObraExtRow {
   barniz_proteccion?: string | null;
   sensibilidad_ambiental?: string | null;
   estado_cantos?: string | null;
+  matriz_material?: string | null;
+  matriz_estado?: string | null;
+  papel_marca?: string | null;
+  papel_gramaje?: string | null;
+  papel_caracteristicas?: string | null;
+  editor_publicador?: string | null;
+  materiales_principales?: string | null;
+  acabado_patina?: string | null;
+  elementos_complementarios?: string | null;
+  apta_exterior?: string | null;
+  requisitos_instalacion?: string | null;
 }
 
 interface EjemplarRow {
@@ -145,6 +155,9 @@ interface EjemplarRow {
   informe_conservacion: string | null;
   dimensiones_soporte_completo: string | null;
   peso: string | null;
+  tipo_firma: string | null;
+  clasificacion_prueba_especial: string | null;
+  instrucciones_manipulacion: string | null;
 }
 
 interface VentaRow {
@@ -193,10 +206,11 @@ function buildObraDescripcionLineas(
   esRegistroPersonal: boolean,
   t: (key: TranslationKey, vars?: Record<string, string | number>) => string,
   // El presupuesto reusa esta descripcion pero, a diferencia de la ficha
-  // completa, no debe incluir la ubicacion del archivo original ni el
-  // software de edicion (son datos internos, no para compartir con un
-  // comprador).
-  { incluirUbicacionArchivo = true, incluirSoftwareEdicion = true, incluirInfoComercial = true } = {},
+  // completa, no debe incluir el software de edicion (son datos internos,
+  // no para compartir con un comprador). La ubicacion fisica del archivo
+  // nunca se incluye aqui: es un dato interno que solo se edita/consulta
+  // desde su propio campo dedicado, no como parte de la info comun.
+  { incluirSoftwareEdicion = true, incluirInfoComercial = true } = {},
 ): string[] {
   const lineas: string[] = [];
   if (obra.subtitulo) lineas.push(t("obraForm.subtituloLabel") + ": " + obra.subtitulo);
@@ -217,9 +231,6 @@ function buildObraDescripcionLineas(
     }
   }
   lineas.push(Number(obra.es_seriada) === 1 ? t("obraDetail.obraSeriada") : t("obraDetail.obraUnica"));
-  if (incluirUbicacionArchivo && esRegistroPersonal && obra.ubicacion_fisica_actual) {
-    lineas.push(`${t("obraDetail.ubicacionArchivoPrefix")} ${obra.ubicacion_fisica_actual}`);
-  }
   if (ext?.tecnica_material) {
     lineas.push(t("obraDetail.tecnica", { valor: t(`fields.pintura.tecnicaMaterial${ext.tecnica_material}` as TranslationKey) }));
   }
@@ -266,6 +277,43 @@ function buildObraDescripcionLineas(
       lineas.push(`${t("fields.pintura.sensibilidadAmbientalLabel")}: ${ext.sensibilidad_ambiental}`);
     }
     if (ext?.estado_cantos) lineas.push(`${t("fields.pintura.estadoCantosLabel")}: ${ext.estado_cantos}`);
+  }
+  if (obra.categoria_obra === "ObraGrafica") {
+    if (ext?.matriz_material) {
+      lineas.push(
+        `${t("fields.obraGrafica.matrizMaterialLabel")}: ${t(`fields.obraGrafica.matrizMaterial${ext.matriz_material}` as TranslationKey)}`,
+      );
+    }
+    if (ext?.matriz_estado) {
+      lineas.push(
+        `${t("fields.obraGrafica.matrizEstadoLabel")}: ${t(`fields.obraGrafica.matrizEstado${ext.matriz_estado}` as TranslationKey)}`,
+      );
+    }
+    if (ext?.papel_marca) lineas.push(`${t("fields.obraGrafica.papelMarcaLabel")}: ${ext.papel_marca}`);
+    if (ext?.papel_gramaje) lineas.push(`${t("fields.obraGrafica.papelGramajeLabel")}: ${ext.papel_gramaje}`);
+    if (ext?.papel_caracteristicas) {
+      lineas.push(`${t("fields.obraGrafica.papelCaracteristicasLabel")}: ${ext.papel_caracteristicas}`);
+    }
+    if (ext?.editor_publicador) {
+      lineas.push(`${t("fields.obraGrafica.editorPublicadorLabel")}: ${ext.editor_publicador}`);
+    }
+  }
+  if (obra.categoria_obra === "Escultura") {
+    if (ext?.materiales_principales) {
+      lineas.push(`${t("fields.escultura.materialesPrincipalesLabel")}: ${ext.materiales_principales}`);
+    }
+    if (ext?.acabado_patina) lineas.push(`${t("fields.escultura.acabadoPatinaLabel")}: ${ext.acabado_patina}`);
+    if (ext?.elementos_complementarios) {
+      lineas.push(`${t("fields.escultura.elementosComplementariosLabel")}: ${ext.elementos_complementarios}`);
+    }
+    if (ext?.apta_exterior) {
+      lineas.push(
+        `${t("fields.escultura.aptaExteriorLabel")}: ${t(`fields.escultura.aptaExterior${ext.apta_exterior}` as TranslationKey)}`,
+      );
+    }
+    if (ext?.requisitos_instalacion) {
+      lineas.push(`${t("fields.escultura.requisitosInstalacionLabel")}: ${ext.requisitos_instalacion}`);
+    }
   }
   if (obra.categoria_obra === "Fotografia") {
     if (ext?.serie_proyecto) lineas.push(`${t("fields.fotografia.serieProyectoLabel")}: ${ext.serie_proyecto}`);
@@ -462,7 +510,9 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
           const rows = await context.db.query<ObraExtRow>(
             `SELECT subtipo, tecnica_material, soporte, tecnica, dimensiones, peso, fecha_creacion,
                     materiales_mixtura, tipo_bastidor, imprimacion_base, profundidad_relieve, configuracion_panel,
-                    estabilidad_capas, barniz_proteccion, sensibilidad_ambiental, estado_cantos
+                    estabilidad_capas, barniz_proteccion, sensibilidad_ambiental, estado_cantos,
+                    matriz_material, matriz_estado, papel_marca, papel_gramaje, papel_caracteristicas, editor_publicador,
+                    materiales_principales, acabado_patina, elementos_complementarios, apta_exterior, requisitos_instalacion
              FROM obra_detalle WHERE obra_id = ?`,
             [obraId],
           );
@@ -474,7 +524,8 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
         const ejemplarRows = await context.db.query<EjemplarRow>(
           `SELECT id, tipo, numero, estado, venta_id, fecha_impresion, tipo_impresion, soporte_impresion, tipo_tintas, taller_impresion, ubicacion_actual, dimensiones, tipo_enmarcado, tamano_final_enmarcado, ubicacion_firma, sello_seco_holograma, fecha_limite, notas, precio_venta, moneda_venta,
                   coa_numero, coa_emisor, coa_fecha, valor_seguro, moneda_seguro, vidrio_proteccion_frontal, sistema_cuelgue,
-                  coa_sistema_seguridad, informe_conservacion, dimensiones_soporte_completo, peso
+                  coa_sistema_seguridad, informe_conservacion, dimensiones_soporte_completo, peso,
+                  tipo_firma, clasificacion_prueba_especial, instrucciones_manipulacion
            FROM ejemplar WHERE obra_id = ? ORDER BY tipo, indice`,
           [obraId],
         );
@@ -522,16 +573,6 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoadingFullImage(false);
-    }
-  }
-
-  async function handleAbrirUbicacion(path: string) {
-    if (!isTauri()) return;
-    try {
-      const { revealItemInDir } = await import("@tauri-apps/plugin-opener");
-      await revealItemInDir(path);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
     }
   }
 
@@ -700,7 +741,6 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       const textWidth = pageWidth - textX - marginLeft;
 
       const lineas = buildObraDescripcionLineas(obra, ext, esRegistroPersonal, t, {
-        incluirUbicacionArchivo: false,
         incluirSoftwareEdicion: false,
         incluirInfoComercial: false,
       });
@@ -786,6 +826,9 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       informeConservacion: string;
       dimensionesSoporteCompleto: string;
       peso: string;
+      tipoFirma: string;
+      clasificacionPruebaEspecial: string;
+      instruccionesManipulacion: string;
     },
   ) {
     if (!context) return;
@@ -797,7 +840,8 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
            tamano_final_enmarcado = ?, ubicacion_firma = ?, sello_seco_holograma = ?, fecha_limite = ?, notas = ?,
            precio_venta = ?, moneda_venta = ?, coa_numero = ?, coa_emisor = ?, coa_fecha = ?, valor_seguro = ?,
            moneda_seguro = ?, vidrio_proteccion_frontal = ?, sistema_cuelgue = ?, coa_sistema_seguridad = ?,
-           informe_conservacion = ?, dimensiones_soporte_completo = ?, peso = ?
+           informe_conservacion = ?, dimensiones_soporte_completo = ?, peso = ?, tipo_firma = ?,
+           clasificacion_prueba_especial = ?, instrucciones_manipulacion = ?
          WHERE id = ?`,
         [
           fields.estado,
@@ -827,6 +871,9 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
           fields.informeConservacion || null,
           fields.dimensionesSoporteCompleto || null,
           fields.peso || null,
+          fields.tipoFirma || null,
+          fields.clasificacionPruebaEspecial || null,
+          fields.instruccionesManipulacion || null,
           ejemplarId,
         ],
       );
@@ -995,13 +1042,18 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
           ? `INSERT INTO obra_detalle (
                obra_id, subtipo, tecnica_material, soporte, tecnica, dimensiones, peso, fecha_creacion,
                materiales_mixtura, tipo_bastidor, imprimacion_base, profundidad_relieve, configuracion_panel,
-               estabilidad_capas, barniz_proteccion, sensibilidad_ambiental, estado_cantos
-             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+               estabilidad_capas, barniz_proteccion, sensibilidad_ambiental, estado_cantos,
+               matriz_material, matriz_estado, papel_marca, papel_gramaje, papel_caracteristicas, editor_publicador,
+               materiales_principales, acabado_patina, elementos_complementarios, apta_exterior, requisitos_instalacion
+             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
           : `UPDATE obra_detalle SET
                subtipo = ?, tecnica_material = ?, soporte = ?, tecnica = ?, dimensiones = ?, peso = ?,
                fecha_creacion = ?, materiales_mixtura = ?, tipo_bastidor = ?, imprimacion_base = ?,
                profundidad_relieve = ?, configuracion_panel = ?, estabilidad_capas = ?, barniz_proteccion = ?,
-               sensibilidad_ambiental = ?, estado_cantos = ?
+               sensibilidad_ambiental = ?, estado_cantos = ?, matriz_material = ?, matriz_estado = ?,
+               papel_marca = ?, papel_gramaje = ?, papel_caracteristicas = ?, editor_publicador = ?,
+               materiales_principales = ?, acabado_patina = ?, elementos_complementarios = ?, apta_exterior = ?,
+               requisitos_instalacion = ?
              WHERE obra_id = ?`;
         const params = cambiaCategoria
           ? [
@@ -1022,6 +1074,17 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
               fields.ext.barniz_proteccion || null,
               fields.ext.sensibilidad_ambiental || null,
               fields.ext.estado_cantos || null,
+              fields.ext.matriz_material || null,
+              fields.ext.matriz_estado || null,
+              fields.ext.papel_marca || null,
+              fields.ext.papel_gramaje || null,
+              fields.ext.papel_caracteristicas || null,
+              fields.ext.editor_publicador || null,
+              fields.ext.materiales_principales || null,
+              fields.ext.acabado_patina || null,
+              fields.ext.elementos_complementarios || null,
+              fields.ext.apta_exterior || null,
+              fields.ext.requisitos_instalacion || null,
             ]
           : [
               fields.ext.subtipo || null,
@@ -1040,6 +1103,17 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
               fields.ext.barniz_proteccion || null,
               fields.ext.sensibilidad_ambiental || null,
               fields.ext.estado_cantos || null,
+              fields.ext.matriz_material || null,
+              fields.ext.matriz_estado || null,
+              fields.ext.papel_marca || null,
+              fields.ext.papel_gramaje || null,
+              fields.ext.papel_caracteristicas || null,
+              fields.ext.editor_publicador || null,
+              fields.ext.materiales_principales || null,
+              fields.ext.acabado_patina || null,
+              fields.ext.elementos_complementarios || null,
+              fields.ext.apta_exterior || null,
+              fields.ext.requisitos_instalacion || null,
               obraId,
             ];
         await tx.execute(upsert, params);
@@ -1183,22 +1257,6 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
                 return labelKey ? <p>{t("obraDetail.subtipoNoEditable", { subtipo: t(labelKey) })}</p> : null;
               })()}
             <p>{Number(obra.es_seriada) === 1 ? t("obraDetail.obraSeriada") : t("obraDetail.obraUnica")}</p>
-            {esRegistroPersonal && (
-              <p>
-                {t("obraDetail.ubicacionArchivoPrefix")}{" "}
-                {obra.ubicacion_fisica_actual ? (
-                  <button
-                    type="button"
-                    className="link-button"
-                    onClick={() => handleAbrirUbicacion(obra.ubicacion_fisica_actual!)}
-                  >
-                    {obra.ubicacion_fisica_actual}
-                  </button>
-                ) : (
-                  "—"
-                )}
-              </p>
-            )}
             {ext?.tecnica_material && (
               <p>{t("obraDetail.tecnica", { valor: t(`fields.pintura.tecnicaMaterial${ext.tecnica_material}` as TranslationKey) })}</p>
             )}
@@ -1486,6 +1544,17 @@ function ObraEditForm({
     barnizProteccion: ext?.barniz_proteccion ?? "",
     sensibilidadAmbiental: ext?.sensibilidad_ambiental ?? "",
     estadoCantos: ext?.estado_cantos ?? "",
+    matrizMaterial: ext?.matriz_material ?? "",
+    matrizEstado: ext?.matriz_estado ?? "",
+    papelMarca: ext?.papel_marca ?? "",
+    papelGramaje: ext?.papel_gramaje ?? "",
+    papelCaracteristicas: ext?.papel_caracteristicas ?? "",
+    editorPublicador: ext?.editor_publicador ?? "",
+    materialesPrincipales: ext?.materiales_principales ?? "",
+    acabadoPatina: ext?.acabado_patina ?? "",
+    elementosComplementarios: ext?.elementos_complementarios ?? "",
+    aptaExterior: ext?.apta_exterior ?? "",
+    requisitosInstalacion: ext?.requisitos_instalacion ?? "",
   });
   const eraSeriada = Number(obra.es_seriada) === 1;
   const [esSeriada, setEsSeriada] = useState(eraSeriada);
@@ -1607,6 +1676,17 @@ function ObraEditForm({
                 barniz_proteccion: obraDetalle.barnizProteccion,
                 sensibilidad_ambiental: obraDetalle.sensibilidadAmbiental,
                 estado_cantos: obraDetalle.estadoCantos,
+                matriz_material: obraDetalle.matrizMaterial,
+                matriz_estado: obraDetalle.matrizEstado,
+                papel_marca: obraDetalle.papelMarca,
+                papel_gramaje: obraDetalle.papelGramaje,
+                papel_caracteristicas: obraDetalle.papelCaracteristicas,
+                editor_publicador: obraDetalle.editorPublicador,
+                materiales_principales: obraDetalle.materialesPrincipales,
+                acabado_patina: obraDetalle.acabadoPatina,
+                elementos_complementarios: obraDetalle.elementosComplementarios,
+                apta_exterior: obraDetalle.aptaExterior,
+                requisitos_instalacion: obraDetalle.requisitosInstalacion,
               },
         imageFile,
         removeImage: removerImagen,
@@ -1873,6 +1953,9 @@ function EjemplarRowView({
     informeConservacion: string;
     dimensionesSoporteCompleto: string;
     peso: string;
+    tipoFirma: string;
+    clasificacionPruebaEspecial: string;
+    instruccionesManipulacion: string;
   }) => void;
   onVender: () => void;
   onEditarVenta: (venta: VentaRow) => void;
@@ -1914,7 +1997,16 @@ function EjemplarRowView({
     ejemplar.dimensiones_soporte_completo ?? "",
   );
   const [peso, setPeso] = useState(ejemplar.peso ?? "");
+  const [tipoFirma, setTipoFirma] = useState(ejemplar.tipo_firma ?? "");
+  const [clasificacionPruebaEspecial, setClasificacionPruebaEspecial] = useState(
+    ejemplar.clasificacion_prueba_especial ?? "",
+  );
+  const [instruccionesManipulacion, setInstruccionesManipulacion] = useState(
+    ejemplar.instrucciones_manipulacion ?? "",
+  );
   const esFotografia = categoria === "Fotografia";
+  const esObraGrafica = categoria === "ObraGrafica";
+  const esEscultura = categoria === "Escultura";
   const permiteEnmarcado =
     categoria === "Fotografia" || categoria === "Pintura" || categoria === "ObraGrafica" || categoria === "Dibujo";
   const presupuestoBloqueado = ["vendida", "descartada", "coleccion_autor", "destruida"].includes(ejemplar.estado);
@@ -1975,7 +2067,7 @@ function EjemplarRowView({
           <span className="field-label">{t("obraDetail.fechaImpresion")}</span>
           <input type="date" value={fechaImpresion} onChange={(e) => setFechaImpresion(e.target.value)} />
         </label>
-        {esFotografiaDigital && (
+        {(esFotografiaDigital || esObraGrafica) && (
           <label>
             <span className="field-label">{t("obraDetail.tipoImpresionLabel")}</span>
             <input type="text" value={tipoImpresion} onChange={(e) => setTipoImpresion(e.target.value)} />
@@ -1985,7 +2077,7 @@ function EjemplarRowView({
           <span className="field-label">{t("obraDetail.soporteImpresion")}</span>
           <input type="text" value={soporteImpresion} onChange={(e) => setSoporteImpresion(e.target.value)} />
         </label>
-        {esFotografiaDigitalOSintografia && (
+        {(esFotografiaDigitalOSintografia || esObraGrafica) && (
           <label>
             <span className="field-label">
               {t("obraDetail.tipoTintasLabel")} <HelpIcon fieldKey="tipo_tintas" />
@@ -1997,7 +2089,7 @@ function EjemplarRowView({
           <span className="field-label">{t("obraDetail.tamanoEjemplarLabel")}</span>
           <input type="text" value={dimensiones} onChange={(e) => setDimensiones(e.target.value)} />
         </label>
-        {esFotografia && (
+        {(esFotografia || esObraGrafica || esEscultura) && (
           <>
             <label>
               <span className="field-label">
@@ -2018,7 +2110,7 @@ function EjemplarRowView({
             </label>
           </>
         )}
-        {esFotografiaDigital && (
+        {(esFotografiaDigital || esObraGrafica || esEscultura) && (
           <label>
             <span className="field-label">
               {t("obraDetail.tallerImpresionLabel")} <HelpIcon fieldKey="taller_impresion" />
@@ -2060,25 +2152,69 @@ function EjemplarRowView({
             </label>
           </>
         )}
-        {categoria === "Fotografia" && (
-          <>
-            <label>
-              <span className="field-label">
-                {t("obraDetail.ubicacionFirmaLabel")} <HelpIcon fieldKey="ubicacion_firma" />
-              </span>
-              <input type="text" value={ubicacionFirma} onChange={(e) => setUbicacionFirma(e.target.value)} />
-            </label>
-            <label>
-              <span className="field-label">
-                {t("obraDetail.selloSecoHologramaLabel")} <HelpIcon fieldKey="sello_seco_holograma" />
-              </span>
-              <input
-                type="text"
-                value={selloSecoHolograma}
-                onChange={(e) => setSelloSecoHolograma(e.target.value)}
-              />
-            </label>
-          </>
+        {(esFotografia || esObraGrafica || esEscultura) && (
+          <label>
+            <span className="field-label">
+              {t("obraDetail.ubicacionFirmaLabel")} <HelpIcon fieldKey="ubicacion_firma" />
+            </span>
+            <input type="text" value={ubicacionFirma} onChange={(e) => setUbicacionFirma(e.target.value)} />
+          </label>
+        )}
+        {esObraGrafica && (
+          <label>
+            <span className="field-label">
+              {t("fields.obraGrafica.tipoFirmaLabel")} <HelpIcon fieldKey="tipo_firma" />
+            </span>
+            <select value={tipoFirma} onChange={(e) => setTipoFirma(e.target.value)}>
+              <option value="">—</option>
+              <option value="AManoLapiz">{t("fields.obraGrafica.tipoFirmaAManoLapiz")}</option>
+              <option value="Monograma">{t("fields.obraGrafica.tipoFirmaMonograma")}</option>
+              <option value="EnPlancha">{t("fields.obraGrafica.tipoFirmaEnPlancha")}</option>
+              <option value="SelloTestamentarioTaller">
+                {t("fields.obraGrafica.tipoFirmaSelloTestamentarioTaller")}
+              </option>
+            </select>
+          </label>
+        )}
+        {(esFotografia || esObraGrafica) && (
+          <label>
+            <span className="field-label">
+              {t("obraDetail.selloSecoHologramaLabel")} <HelpIcon fieldKey="sello_seco_holograma" />
+            </span>
+            <input type="text" value={selloSecoHolograma} onChange={(e) => setSelloSecoHolograma(e.target.value)} />
+          </label>
+        )}
+        {(esObraGrafica || esEscultura) && ejemplar.tipo === "prueba_artista" && (
+          <label>
+            <span className="field-label">
+              {t("fields.obraGrafica.clasificacionPruebaEspecialLabel")}{" "}
+              <HelpIcon fieldKey="clasificacion_prueba_especial" />
+            </span>
+            <select
+              value={clasificacionPruebaEspecial}
+              onChange={(e) => setClasificacionPruebaEspecial(e.target.value)}
+            >
+              <option value="">{t("fields.obraGrafica.clasificacionPruebaEspecialNA")}</option>
+              <option value="PE">{t("fields.obraGrafica.clasificacionPruebaEspecialPE")}</option>
+              <option value="BAT">{t("fields.obraGrafica.clasificacionPruebaEspecialBAT")}</option>
+              <option value="HC">{t("fields.obraGrafica.clasificacionPruebaEspecialHC")}</option>
+              <option value="PI">{t("fields.obraGrafica.clasificacionPruebaEspecialPI")}</option>
+              <option value="FC">{t("fields.obraGrafica.clasificacionPruebaEspecialFC")}</option>
+            </select>
+          </label>
+        )}
+        {esEscultura && (
+          <label>
+            <span className="field-label">
+              {t("fields.escultura.instruccionesManipulacionLabel")}{" "}
+              <HelpIcon fieldKey="instrucciones_manipulacion" />
+            </span>
+            <textarea
+              rows={2}
+              value={instruccionesManipulacion}
+              onChange={(e) => setInstruccionesManipulacion(e.target.value)}
+            />
+          </label>
         )}
         <label>
           <span className="field-label">{t("obraDetail.ubicacionActualCopia")}</span>
@@ -2192,6 +2328,9 @@ function EjemplarRowView({
                 informeConservacion,
                 dimensionesSoporteCompleto,
                 peso,
+                tipoFirma,
+                clasificacionPruebaEspecial,
+                instruccionesManipulacion,
               })
             }
           >
@@ -2252,6 +2391,20 @@ function EjemplarRowView({
       {ejemplar.sello_seco_holograma && (
         <span>{t("obraDetail.selloSecoHolograma", { valor: ejemplar.sello_seco_holograma })}</span>
       )}
+      {ejemplar.tipo_firma && (
+        <span>
+          {t("obraDetail.tipoFirmaResumen", {
+            valor: t(`fields.obraGrafica.tipoFirma${ejemplar.tipo_firma}` as TranslationKey),
+          })}
+        </span>
+      )}
+      {ejemplar.clasificacion_prueba_especial && (
+        <span>
+          {t("obraDetail.clasificacionPruebaEspecialResumen", {
+            valor: t(`fields.obraGrafica.clasificacionPruebaEspecial${ejemplar.clasificacion_prueba_especial}` as TranslationKey),
+          })}
+        </span>
+      )}
       <span>{t("common.ubicacion", { ubicacion: ejemplar.ubicacion_actual || "—" })}</span>
       {ejemplar.precio_venta != null && (
         <span>
@@ -2269,6 +2422,11 @@ function EjemplarRowView({
       )}
       {ejemplar.informe_conservacion && (
         <span>{t("obraDetail.informeConservacionResumen", { valor: ejemplar.informe_conservacion })}</span>
+      )}
+      {ejemplar.instrucciones_manipulacion && (
+        <span>
+          {t("fields.escultura.instruccionesManipulacionLabel")}: {ejemplar.instrucciones_manipulacion}
+        </span>
       )}
 
       {venta && (

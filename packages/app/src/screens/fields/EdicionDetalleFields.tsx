@@ -1,5 +1,5 @@
 import { HelpIcon } from "../../components/HelpIcon.js";
-import { useLanguage } from "../../i18n/LanguageContext.js";
+import { useLanguage, type TranslationKey } from "../../i18n/LanguageContext.js";
 
 export interface EdicionDetalleState {
   fechaImpresion: string;
@@ -25,6 +25,9 @@ export interface EdicionDetalleState {
   informeConservacion: string;
   dimensionesSoporteCompleto: string;
   peso: string;
+  tipoFirma: string;
+  clasificacionPruebaEspecial: string;
+  instruccionesManipulacion: string;
 }
 
 export const initialEdicionDetalleState: EdicionDetalleState = {
@@ -51,6 +54,9 @@ export const initialEdicionDetalleState: EdicionDetalleState = {
   informeConservacion: "",
   dimensionesSoporteCompleto: "",
   peso: "",
+  tipoFirma: "",
+  clasificacionPruebaEspecial: "",
+  instruccionesManipulacion: "",
 };
 
 function resumenEdicion(value: EdicionDetalleState): string[] {
@@ -75,6 +81,8 @@ export function EdicionDetalleRow({
   permiteEnmarcado,
   esPruebaArtista,
   esGaleria,
+  esObraGrafica,
+  esEscultura,
 }: {
   numero: string;
   value: EdicionDetalleState;
@@ -88,6 +96,8 @@ export function EdicionDetalleRow({
   permiteEnmarcado: boolean;
   esPruebaArtista: boolean;
   esGaleria: boolean;
+  esObraGrafica: boolean;
+  esEscultura: boolean;
 }) {
   const { t } = useLanguage();
 
@@ -99,6 +109,24 @@ export function EdicionDetalleRow({
           {esPruebaArtista && <HelpIcon fieldKey="prueba_artista_info" />}
         </legend>
 
+        {(esObraGrafica || esEscultura) && esPruebaArtista && (
+          <label>
+            {t("fields.obraGrafica.clasificacionPruebaEspecialLabel")}{" "}
+            <HelpIcon fieldKey="clasificacion_prueba_especial" />
+            <select
+              value={value.clasificacionPruebaEspecial}
+              onChange={(e) => onChange({ ...value, clasificacionPruebaEspecial: e.target.value })}
+            >
+              <option value="">{t("fields.obraGrafica.clasificacionPruebaEspecialNA")}</option>
+              <option value="PE">{t("fields.obraGrafica.clasificacionPruebaEspecialPE")}</option>
+              <option value="BAT">{t("fields.obraGrafica.clasificacionPruebaEspecialBAT")}</option>
+              <option value="HC">{t("fields.obraGrafica.clasificacionPruebaEspecialHC")}</option>
+              <option value="PI">{t("fields.obraGrafica.clasificacionPruebaEspecialPI")}</option>
+              <option value="FC">{t("fields.obraGrafica.clasificacionPruebaEspecialFC")}</option>
+            </select>
+          </label>
+        )}
+
         <label>
           {t("obraDetail.fechaImpresion")}
           <input
@@ -108,7 +136,7 @@ export function EdicionDetalleRow({
           />
         </label>
 
-        {esFotografiaDigital && (
+        {(esFotografiaDigital || esObraGrafica) && (
           <label>
             {t("obraDetail.tipoImpresionLabel")}
             <input
@@ -128,7 +156,7 @@ export function EdicionDetalleRow({
           />
         </label>
 
-        {esFotografiaDigitalOSintografia && (
+        {(esFotografiaDigitalOSintografia || esObraGrafica) && (
           <label>
             {t("obraDetail.tipoTintasLabel")} <HelpIcon fieldKey="tipo_tintas" />
             <input
@@ -148,7 +176,7 @@ export function EdicionDetalleRow({
           />
         </label>
 
-        {esFotografia && (
+        {(esFotografia || esObraGrafica || esEscultura) && (
           <>
             <label>
               {t("obraDetail.dimensionesSoporteCompletoLabel")}{" "}
@@ -166,7 +194,7 @@ export function EdicionDetalleRow({
           </>
         )}
 
-        {esFotografiaDigital && (
+        {(esFotografiaDigital || esObraGrafica || esEscultura) && (
           <label>
             {t("obraDetail.tallerImpresionLabel")} <HelpIcon fieldKey="taller_impresion" />
             <input
@@ -214,25 +242,39 @@ export function EdicionDetalleRow({
           </>
         )}
 
-        {esFotografia && (
-          <>
-            <label>
-              {t("obraDetail.ubicacionFirmaLabel")} <HelpIcon fieldKey="ubicacion_firma" />
-              <input
-                type="text"
-                value={value.ubicacionFirma}
-                onChange={(e) => onChange({ ...value, ubicacionFirma: e.target.value })}
-              />
-            </label>
-            <label>
-              {t("obraDetail.selloSecoHologramaLabel")} <HelpIcon fieldKey="sello_seco_holograma" />
-              <input
-                type="text"
-                value={value.selloSecoHolograma}
-                onChange={(e) => onChange({ ...value, selloSecoHolograma: e.target.value })}
-              />
-            </label>
-          </>
+        {(esFotografia || esObraGrafica || esEscultura) && (
+          <label>
+            {t("obraDetail.ubicacionFirmaLabel")} <HelpIcon fieldKey="ubicacion_firma" />
+            <input
+              type="text"
+              value={value.ubicacionFirma}
+              onChange={(e) => onChange({ ...value, ubicacionFirma: e.target.value })}
+            />
+          </label>
+        )}
+        {esObraGrafica && (
+          <label>
+            {t("fields.obraGrafica.tipoFirmaLabel")} <HelpIcon fieldKey="tipo_firma" />
+            <select value={value.tipoFirma} onChange={(e) => onChange({ ...value, tipoFirma: e.target.value })}>
+              <option value="">—</option>
+              <option value="AManoLapiz">{t("fields.obraGrafica.tipoFirmaAManoLapiz")}</option>
+              <option value="Monograma">{t("fields.obraGrafica.tipoFirmaMonograma")}</option>
+              <option value="EnPlancha">{t("fields.obraGrafica.tipoFirmaEnPlancha")}</option>
+              <option value="SelloTestamentarioTaller">
+                {t("fields.obraGrafica.tipoFirmaSelloTestamentarioTaller")}
+              </option>
+            </select>
+          </label>
+        )}
+        {(esFotografia || esObraGrafica) && (
+          <label>
+            {t("obraDetail.selloSecoHologramaLabel")} <HelpIcon fieldKey="sello_seco_holograma" />
+            <input
+              type="text"
+              value={value.selloSecoHolograma}
+              onChange={(e) => onChange({ ...value, selloSecoHolograma: e.target.value })}
+            />
+          </label>
         )}
 
         <label>
@@ -309,6 +351,18 @@ export function EdicionDetalleRow({
           </>
         )}
 
+        {esEscultura && (
+          <label>
+            {t("fields.escultura.instruccionesManipulacionLabel")}{" "}
+            <HelpIcon fieldKey="instrucciones_manipulacion" />
+            <textarea
+              rows={2}
+              value={value.instruccionesManipulacion}
+              onChange={(e) => onChange({ ...value, instruccionesManipulacion: e.target.value })}
+            />
+          </label>
+        )}
+
         <label>
           {t("obraDetail.notasEjemplarLabel")}
           <textarea rows={2} value={value.notas} onChange={(e) => onChange({ ...value, notas: e.target.value })} />
@@ -330,6 +384,11 @@ export function EdicionDetalleRow({
         {numero}
         {esPruebaArtista && <HelpIcon fieldKey="prueba_artista_info" />}
       </strong>
+      {(esObraGrafica || esEscultura) && value.clasificacionPruebaEspecial && (
+        <span>
+          {t(`fields.obraGrafica.clasificacionPruebaEspecial${value.clasificacionPruebaEspecial}` as TranslationKey)}
+        </span>
+      )}
       {resumen.length > 0 ? (
         resumen.map((parte, i) => <span key={i}>{parte}</span>)
       ) : (

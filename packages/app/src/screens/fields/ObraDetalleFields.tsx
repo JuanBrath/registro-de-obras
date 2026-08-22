@@ -26,6 +26,19 @@ export interface ObraDetalleFieldsState {
   barnizProteccion: string;
   sensibilidadAmbiental: string;
   estadoCantos: string;
+  /** Los siguientes campos solo se muestran para categoria ObraGrafica. */
+  matrizMaterial: string;
+  matrizEstado: string;
+  papelMarca: string;
+  papelGramaje: string;
+  papelCaracteristicas: string;
+  editorPublicador: string;
+  /** Los siguientes campos solo se muestran para categoria Escultura. */
+  materialesPrincipales: string;
+  acabadoPatina: string;
+  elementosComplementarios: string;
+  aptaExterior: string;
+  requisitosInstalacion: string;
 }
 
 export const initialObraDetalleFieldsState: ObraDetalleFieldsState = {
@@ -46,6 +59,17 @@ export const initialObraDetalleFieldsState: ObraDetalleFieldsState = {
   barnizProteccion: "",
   sensibilidadAmbiental: "",
   estadoCantos: "",
+  matrizMaterial: "",
+  matrizEstado: "",
+  papelMarca: "",
+  papelGramaje: "",
+  papelCaracteristicas: "",
+  editorPublicador: "",
+  materialesPrincipales: "",
+  acabadoPatina: "",
+  elementosComplementarios: "",
+  aptaExterior: "",
+  requisitosInstalacion: "",
 };
 
 interface CategoriaConfig {
@@ -304,6 +328,122 @@ export function ObraDetalleFields({
               type="text"
               value={value.estadoCantos}
               onChange={(e) => onChange({ ...value, estadoCantos: e.target.value })}
+            />
+          </label>
+        </fieldset>
+      )}
+
+      {categoria === "ObraGrafica" && (
+        <fieldset>
+          <legend>{t("fields.obraGrafica.rigurosaLegend")}</legend>
+
+          <label>
+            {t("fields.obraGrafica.matrizMaterialLabel")} <HelpIcon fieldKey="matriz_material" />
+            <select
+              value={value.matrizMaterial}
+              onChange={(e) => onChange({ ...value, matrizMaterial: e.target.value })}
+            >
+              <option value="">—</option>
+              <option value="Cobre">{t("fields.obraGrafica.matrizMaterialCobre")}</option>
+              <option value="Zinc">{t("fields.obraGrafica.matrizMaterialZinc")}</option>
+              <option value="Madera">{t("fields.obraGrafica.matrizMaterialMadera")}</option>
+              <option value="PiedraLitografica">{t("fields.obraGrafica.matrizMaterialPiedraLitografica")}</option>
+              <option value="MallaSerigrafica">{t("fields.obraGrafica.matrizMaterialMallaSerigrafica")}</option>
+              <option value="Otro">{t("fields.obraGrafica.matrizMaterialOtro")}</option>
+            </select>
+          </label>
+
+          <label>
+            {t("fields.obraGrafica.matrizEstadoLabel")} <HelpIcon fieldKey="matriz_estado" />
+            <select value={value.matrizEstado} onChange={(e) => onChange({ ...value, matrizEstado: e.target.value })}>
+              <option value="">—</option>
+              <option value="Conservada">{t("fields.obraGrafica.matrizEstadoConservada")}</option>
+              <option value="Cancelada">{t("fields.obraGrafica.matrizEstadoCancelada")}</option>
+              <option value="Destruida">{t("fields.obraGrafica.matrizEstadoDestruida")}</option>
+            </select>
+          </label>
+
+          <label>
+            {t("fields.obraGrafica.papelMarcaLabel")} <HelpIcon fieldKey="papel_marca" />
+            <input type="text" value={value.papelMarca} onChange={(e) => onChange({ ...value, papelMarca: e.target.value })} />
+          </label>
+
+          <label>
+            {t("fields.obraGrafica.papelGramajeLabel")} <HelpIcon fieldKey="papel_gramaje" />
+            <input
+              type="text"
+              value={value.papelGramaje}
+              onChange={(e) => onChange({ ...value, papelGramaje: e.target.value })}
+            />
+          </label>
+
+          <label>
+            {t("fields.obraGrafica.papelCaracteristicasLabel")} <HelpIcon fieldKey="papel_caracteristicas" />
+            <textarea
+              rows={2}
+              value={value.papelCaracteristicas}
+              onChange={(e) => onChange({ ...value, papelCaracteristicas: e.target.value })}
+            />
+          </label>
+
+          <label>
+            {t("fields.obraGrafica.editorPublicadorLabel")} <HelpIcon fieldKey="editor_publicador" />
+            <input
+              type="text"
+              value={value.editorPublicador}
+              onChange={(e) => onChange({ ...value, editorPublicador: e.target.value })}
+            />
+          </label>
+        </fieldset>
+      )}
+
+      {categoria === "Escultura" && (
+        <fieldset>
+          <legend>{t("fields.escultura.rigurosaLegend")}</legend>
+
+          <label>
+            {t("fields.escultura.materialesPrincipalesLabel")} <HelpIcon fieldKey="materiales_principales" />
+            <textarea
+              rows={2}
+              value={value.materialesPrincipales}
+              onChange={(e) => onChange({ ...value, materialesPrincipales: e.target.value })}
+            />
+          </label>
+
+          <label>
+            {t("fields.escultura.acabadoPatinaLabel")} <HelpIcon fieldKey="acabado_patina" />
+            <input
+              type="text"
+              value={value.acabadoPatina}
+              onChange={(e) => onChange({ ...value, acabadoPatina: e.target.value })}
+            />
+          </label>
+
+          <label>
+            {t("fields.escultura.elementosComplementariosLabel")} <HelpIcon fieldKey="elementos_complementarios" />
+            <input
+              type="text"
+              value={value.elementosComplementarios}
+              onChange={(e) => onChange({ ...value, elementosComplementarios: e.target.value })}
+            />
+          </label>
+
+          <label>
+            {t("fields.escultura.aptaExteriorLabel")} <HelpIcon fieldKey="apta_exterior" />
+            <select value={value.aptaExterior} onChange={(e) => onChange({ ...value, aptaExterior: e.target.value })}>
+              <option value="">—</option>
+              <option value="Exterior">{t("fields.escultura.aptaExteriorExterior")}</option>
+              <option value="Interior">{t("fields.escultura.aptaExteriorInterior")}</option>
+              <option value="Ambos">{t("fields.escultura.aptaExteriorAmbos")}</option>
+            </select>
+          </label>
+
+          <label>
+            {t("fields.escultura.requisitosInstalacionLabel")} <HelpIcon fieldKey="requisitos_instalacion" />
+            <textarea
+              rows={2}
+              value={value.requisitosInstalacion}
+              onChange={(e) => onChange({ ...value, requisitosInstalacion: e.target.value })}
             />
           </label>
         </fieldset>

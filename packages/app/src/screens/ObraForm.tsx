@@ -185,6 +185,8 @@ export function ObraForm({
     (fotografia.subtipoFotografia === "DigitalFineArt" || fotografia.subtipoFotografia === "Sintografia");
   const permiteEnmarcado =
     categoria === "Fotografia" || categoria === "Pintura" || categoria === "ObraGrafica" || categoria === "Dibujo";
+  const esObraGrafica = categoria === "ObraGrafica";
+  const esEscultura = categoria === "Escultura";
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -283,9 +285,11 @@ export function ObraForm({
             `INSERT INTO obra_detalle (
                obra_id, subtipo, tecnica_material, soporte, tecnica, dimensiones, peso, fecha_creacion,
                materiales_mixtura, tipo_bastidor, imprimacion_base, profundidad_relieve, configuracion_panel,
-               estabilidad_capas, barniz_proteccion, sensibilidad_ambiental, estado_cantos
+               estabilidad_capas, barniz_proteccion, sensibilidad_ambiental, estado_cantos,
+               matriz_material, matriz_estado, papel_marca, papel_gramaje, papel_caracteristicas, editor_publicador,
+               materiales_principales, acabado_patina, elementos_complementarios, apta_exterior, requisitos_instalacion
              )
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               id,
               obraDetalle.subtipo || null,
@@ -304,6 +308,17 @@ export function ObraForm({
               obraDetalle.barnizProteccion || null,
               obraDetalle.sensibilidadAmbiental || null,
               obraDetalle.estadoCantos || null,
+              obraDetalle.matrizMaterial || null,
+              obraDetalle.matrizEstado || null,
+              obraDetalle.papelMarca || null,
+              obraDetalle.papelGramaje || null,
+              obraDetalle.papelCaracteristicas || null,
+              obraDetalle.editorPublicador || null,
+              obraDetalle.materialesPrincipales || null,
+              obraDetalle.acabadoPatina || null,
+              obraDetalle.elementosComplementarios || null,
+              obraDetalle.aptaExterior || null,
+              obraDetalle.requisitosInstalacion || null,
             ],
           );
         }
@@ -319,9 +334,10 @@ export function ObraForm({
                tipo_tintas, taller_impresion, ubicacion_actual, dimensiones, tipo_enmarcado, tamano_final_enmarcado,
                ubicacion_firma, sello_seco_holograma, notas, coa_numero, coa_emisor, coa_fecha, valor_seguro,
                moneda_seguro, vidrio_proteccion_frontal, sistema_cuelgue, coa_sistema_seguridad,
-               informe_conservacion, dimensiones_soporte_completo, peso
+               informe_conservacion, dimensiones_soporte_completo, peso, tipo_firma, clasificacion_prueba_especial,
+               instrucciones_manipulacion
              )
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               id,
               ejemplar.tipo,
@@ -351,6 +367,9 @@ export function ObraForm({
               detalle?.informeConservacion || null,
               detalle?.dimensionesSoporteCompleto || null,
               detalle?.peso || null,
+              detalle?.tipoFirma || null,
+              detalle?.clasificacionPruebaEspecial || null,
+              detalle?.instruccionesManipulacion || null,
             ],
           );
         }
@@ -648,6 +667,8 @@ export function ObraForm({
                     permiteEnmarcado={permiteEnmarcado}
                     esPruebaArtista={false}
                     esGaleria={!esRegistroPersonal}
+                    esObraGrafica={esObraGrafica}
+                    esEscultura={esEscultura}
                   />
                 );
               })}
@@ -673,6 +694,8 @@ export function ObraForm({
                     permiteEnmarcado={permiteEnmarcado}
                     esPruebaArtista={true}
                     esGaleria={!esRegistroPersonal}
+                    esObraGrafica={esObraGrafica}
+                    esEscultura={esEscultura}
                   />
                 );
               })}

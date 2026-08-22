@@ -171,6 +171,8 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
       "0046_obra_detalle_pintura_riguroso",
       "0047_obra_fotografia_riguroso",
       "0048_texto_ayuda_formato_multilinea",
+      "0049_obra_detalle_grafica_riguroso",
+      "0050_obra_detalle_escultura_riguroso",
     ]);
   });
 
