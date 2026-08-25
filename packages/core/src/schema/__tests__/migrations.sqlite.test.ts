@@ -176,6 +176,10 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
       "0051_obra_detalle_dibujo_riguroso",
       "0052_obra_detalle_textil_ceramica_riguroso",
       "0053_obra_detalle_nuevos_medios_riguroso",
+      "0054_perfil_firma_digital",
+      "0055_artista_bio_ingles",
+      "0056_venta_desglose_financiero",
+      "0057_venta_destino_confidencialidad",
     ]);
   });
 

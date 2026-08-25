@@ -9,5 +9,6 @@ export interface GaleriaPerfil {
   x: string | null;
   notas: string | null;
   logoPath: string | null;
+  firmaPath: string | null;
   cuit: string | null;
 }

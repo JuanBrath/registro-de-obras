@@ -1,25 +1,29 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { artistaFotoPath, artistaLogoPath } from "@registro/core";
+import { artistaFirmaPath, artistaFotoPath, artistaLogoPath } from "@registro/core";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { bytesToObjectUrl } from "../utils/imageObjectUrl.js";
 import { ImageFileField } from "../components/ImageFileField.js";
 import { HelpIcon } from "../components/HelpIcon.js";
 import { LinkField } from "../components/LinkField.js";
+import { Modal } from "../components/Modal.js";
+import { InformesModal } from "../components/InformesModal.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
 import { savePdfWithDialog } from "../utils/savePdfDialog.js";
-import { formatFechaDDMMYYYY } from "../utils/formatFecha.js";
-import { detectImageFormat } from "../utils/detectImageFormat.js";
 import { buildWebUrl, buildInstagramUrl, buildFacebookUrl, buildXUrl, buildMailtoUrl } from "../utils/socialLinks.js";
-import { drawPdfHeader, writeWrappedText } from "../utils/pdfBranding.js";
+import type { FirmaEleccion } from "../utils/pdfBranding.js";
+import { type InformeIdioma } from "../reports/informeIdioma.js";
+import { resolveFirmaBytes, resolveMembreteLogoBytes } from "../reports/reportBranding.js";
+import { buildPersonalBiografiaPdfBytes, buildPersonalFichaCompletaPdfBytes } from "../reports/personalReports.js";
 
-export function PersonalProfileForm({ onExit, onCancel }: { onExit: () => void; onCancel?: () => void }) {
-  const { context, personalArtista: existing, reloadPersonalArtista } = useWorkspace();
-  const { t } = useLanguage();
+export function PersonalProfileForm({ onExit }: { onExit: () => void }) {
+  const { context, personalArtista: existing, reloadPersonalArtista, galeriaPerfil } = useWorkspace();
+  const { t, idioma } = useLanguage();
 
   const [nombreCompleto, setNombreCompleto] = useState(existing?.nombreCompleto ?? "");
   const [fechaNacimiento, setFechaNacimiento] = useState(existing?.fechaNacimiento ?? "");
   const [bio, setBio] = useState(existing?.bio ?? "");
+  const [bioEn, setBioEn] = useState(existing?.bioEn ?? "");
   const [email, setEmail] = useState(existing?.email ?? "");
   const [telefono, setTelefono] = useState(existing?.telefono ?? "");
   const [web, setWeb] = useState(existing?.web ?? "");
@@ -35,6 +39,9 @@ export function PersonalProfileForm({ onExit, onCancel }: { onExit: () => void; 
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
   const logoObjectUrlRef = useRef<string | null>(null);
+  const [firmaFile, setFirmaFile] = useState<File | null>(null);
+  const [firmaPreviewUrl, setFirmaPreviewUrl] = useState<string | null>(null);
+  const firmaObjectUrlRef = useRef<string | null>(null);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +49,13 @@ export function PersonalProfileForm({ onExit, onCancel }: { onExit: () => void; 
   const [generandoPdf, setGenerandoPdf] = useState(false);
   const [pdfMensaje, setPdfMensaje] = useState<string | null>(null);
   useEscapeToDismiss(pdfMensaje, setPdfMensaje);
+  const [informesMenuAbierto, setInformesMenuAbierto] = useState(false);
+  const [informeSeleccionId, setInformeSeleccionId] = useState("completa");
+  const [informeIdioma, setInformeIdioma] = useState<InformeIdioma>("es");
+  const [informeFirma, setInformeFirma] = useState<FirmaEleccion>("ninguna");
+  const [firmaBytesDisponibles, setFirmaBytesDisponibles] = useState<Uint8Array | null>(null);
+  const [imagenAmpliada, setImagenAmpliada] = useState<{ url: string; alt: string } | null>(null);
+  useEscapeToDismiss(imagenAmpliada, setImagenAmpliada);
   const [guardadoMensaje, setGuardadoMensaje] = useState<string | null>(null);
   useEscapeToDismiss(guardadoMensaje, setGuardadoMensaje);
   const [salirBloqueadoMensaje, setSalirBloqueadoMensaje] = useState<string | null>(null);
@@ -55,6 +69,7 @@ export function PersonalProfileForm({ onExit, onCancel }: { onExit: () => void; 
     nombreCompleto !== (existing?.nombreCompleto ?? "") ||
     fechaNacimiento !== (existing?.fechaNacimiento ?? "") ||
     bio !== (existing?.bio ?? "") ||
+    bioEn !== (existing?.bioEn ?? "") ||
     notas !== (existing?.notas ?? "") ||
     email !== (existing?.email ?? "") ||
     telefono !== (existing?.telefono ?? "") ||
@@ -65,7 +80,8 @@ export function PersonalProfileForm({ onExit, onCancel }: { onExit: () => void; 
     facebook !== (existing?.facebook ?? "") ||
     cuit !== (existing?.cuit ?? "") ||
     fotoFile !== null ||
-    logoFile !== null;
+    logoFile !== null ||
+    firmaFile !== null;
 
   useEffect(() => {
     if (!context || !existing?.fotoPath) return;
@@ -101,6 +117,23 @@ export function PersonalProfileForm({ onExit, onCancel }: { onExit: () => void; 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [context, existing?.logoPath]);
 
+  useEffect(() => {
+    if (!context || !existing?.firmaPath) return;
+    context.fs
+      .readFile(existing.firmaPath)
+      .then((bytes) => {
+        if (firmaObjectUrlRef.current) URL.revokeObjectURL(firmaObjectUrlRef.current);
+        const url = bytesToObjectUrl(bytes);
+        firmaObjectUrlRef.current = url;
+        setFirmaPreviewUrl(url);
+      })
+      .catch(() => {});
+    return () => {
+      if (firmaObjectUrlRef.current) URL.revokeObjectURL(firmaObjectUrlRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [context, existing?.firmaPath]);
+
   if (!context) return null;
 
   function handleFotoChange(file: File | null) {
@@ -123,6 +156,16 @@ export function PersonalProfileForm({ onExit, onCancel }: { onExit: () => void; 
     }
   }
 
+  function handleFirmaChange(file: File | null) {
+    setFirmaFile(file);
+    if (file) {
+      if (firmaObjectUrlRef.current) URL.revokeObjectURL(firmaObjectUrlRef.current);
+      const url = URL.createObjectURL(file);
+      firmaObjectUrlRef.current = url;
+      setFirmaPreviewUrl(url);
+    }
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setSubmitting(true);
@@ -135,11 +178,12 @@ export function PersonalProfileForm({ onExit, onCancel }: { onExit: () => void; 
       if (existing) {
         artistaId = existing.id;
         await db.execute(
-          `UPDATE artista SET nombre_completo = ?, fecha_nacimiento = ?, bio = ?, email = ?, telefono = ?, web = ?, instagram = ?, direccion = ?, x = ?, facebook = ?, cuit = ?, notas = ? WHERE id = ?`,
+          `UPDATE artista SET nombre_completo = ?, fecha_nacimiento = ?, bio = ?, bio_en = ?, email = ?, telefono = ?, web = ?, instagram = ?, direccion = ?, x = ?, facebook = ?, cuit = ?, notas = ? WHERE id = ?`,
           [
             nombreCompleto,
             fechaNacimiento || null,
             bio || null,
+            bioEn || null,
             email || null,
             telefono || null,
             web || null,
@@ -154,11 +198,12 @@ export function PersonalProfileForm({ onExit, onCancel }: { onExit: () => void; 
         );
       } else {
         const result = await db.execute(
-          `INSERT INTO artista (nombre_completo, es_propio, fecha_nacimiento, bio, email, telefono, web, instagram, direccion, x, facebook, cuit, notas) VALUES (?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO artista (nombre_completo, es_propio, fecha_nacimiento, bio, bio_en, email, telefono, web, instagram, direccion, x, facebook, cuit, notas) VALUES (?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             nombreCompleto,
             fechaNacimiento || null,
             bio || null,
+            bioEn || null,
             email || null,
             telefono || null,
             web || null,
@@ -190,8 +235,17 @@ export function PersonalProfileForm({ onExit, onCancel }: { onExit: () => void; 
         await db.execute(`UPDATE artista SET logo_path = ? WHERE id = ?`, [path, artistaId]);
       }
 
+      if (firmaFile) {
+        const ext = firmaFile.name.split(".").pop() || "jpg";
+        const bytes = new Uint8Array(await firmaFile.arrayBuffer());
+        const path = artistaFirmaPath(artistaId, ext);
+        await fs.writeFile(path, bytes);
+        await db.execute(`UPDATE artista SET firma_path = ? WHERE id = ?`, [path, artistaId]);
+      }
+
       setFotoFile(null);
       setLogoFile(null);
+      setFirmaFile(null);
       await reloadPersonalArtista();
       setGuardadoMensaje(t("profile.datosGuardados"));
     } catch (err) {
@@ -209,21 +263,21 @@ export function PersonalProfileForm({ onExit, onCancel }: { onExit: () => void; 
     onExit();
   }
 
-  async function handleGenerarPdf() {
+  async function handleAbrirInformesMenu() {
+    setInformeSeleccionId("completa");
+    setInformeIdioma(idioma);
+    setInformeFirma("ninguna");
+    setPdfMensaje(null);
+    setFirmaBytesDisponibles(context ? await resolveFirmaBytes(context, existing, galeriaPerfil) : null);
+    setInformesMenuAbierto(true);
+  }
+
+  async function handleGenerarInforme() {
     if (!context) return;
     setGenerandoPdf(true);
     setError(null);
     setPdfMensaje(null);
     try {
-      // jsPDF es pesado: se carga recien al generar el PDF, no en el bundle
-      // principal de la app (mismo criterio que en ObraDetail/VentasReport).
-      const { default: jsPDF } = await import("jspdf");
-      const doc = new jsPDF({ unit: "mm", format: "a4" });
-      const marginLeft = 14;
-      const startY = await drawPdfHeader(doc, nombreCompleto || t("profile.tituloMisDatos"), { marginLeft });
-      const imageBoxSize = 60;
-      let textX = marginLeft;
-
       let imgBytes: Uint8Array | null = null;
       try {
         if (fotoFile) {
@@ -235,53 +289,36 @@ export function PersonalProfileForm({ onExit, onCancel }: { onExit: () => void; 
         imgBytes = null;
       }
 
-      if (imgBytes) {
-        const formato = detectImageFormat(imgBytes);
-        if (formato) {
-          const blob = new Blob([imgBytes as BlobPart]);
-          const bitmap = await createImageBitmap(blob);
-          let displayW = imageBoxSize;
-          let displayH = imageBoxSize / (bitmap.width / bitmap.height);
-          if (displayH > imageBoxSize) {
-            displayH = imageBoxSize;
-            displayW = imageBoxSize * (bitmap.width / bitmap.height);
-          }
-          bitmap.close();
-          doc.addImage(imgBytes, formato, marginLeft, startY, displayW, displayH);
-          textX = marginLeft + imageBoxSize + 8;
-        }
-      }
+      const logoBytes = await resolveMembreteLogoBytes(context, existing, galeriaPerfil);
+      const brandOpts = { idioma: informeIdioma, logoBytes, firma: informeFirma, firmaBytes: firmaBytesDisponibles };
+      const datos = {
+        nombreCompleto,
+        fechaNacimiento,
+        bio,
+        bioEn,
+        notas,
+        email,
+        telefono,
+        web,
+        instagram,
+        direccion,
+        x,
+        facebook,
+        cuit,
+      };
 
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const textWidth = pageWidth - textX - marginLeft;
-      let textY = startY + 5;
+      const bytes =
+        informeSeleccionId === "biografia"
+          ? await buildPersonalBiografiaPdfBytes(datos, imgBytes, brandOpts)
+          : await buildPersonalFichaCompletaPdfBytes(datos, imgBytes, brandOpts);
 
-      const lineas: string[] = [];
-      if (fechaNacimiento) lineas.push(`${t("artistas.fechaNacimiento")}: ${formatFechaDDMMYYYY(fechaNacimiento)}`);
-      if (email) lineas.push(`${t("profile.mail")}: ${email}`);
-      if (telefono) lineas.push(`${t("artistas.telefono")}: ${telefono}`);
-      if (web) lineas.push(`${t("profile.paginaWeb")}: ${web}`);
-      if (instagram) lineas.push(`${t("artistas.instagram")}: ${instagram}`);
-      if (facebook) lineas.push(`${t("artistas.facebook")}: ${facebook}`);
-      if (x) lineas.push(`${t("artistas.x")}: ${x}`);
-      if (direccion) lineas.push(`${t("artistas.direccion")}: ${direccion}`);
-      if (cuit) lineas.push(`${t("common.cuit")}: ${cuit}`);
-      for (const linea of lineas) {
-        textY = writeWrappedText(doc, linea, textX, textY, textWidth);
-      }
-
-      if (bio) {
-        textY += 3;
-        doc.setFontSize(11);
-        textY = writeWrappedText(doc, t("artistas.bio"), textX, textY, textWidth, { lineHeight: 6 });
-        doc.setFontSize(10);
-        writeWrappedText(doc, bio, textX, textY, textWidth);
-      }
-
-      const bytes = new Uint8Array(doc.output("arraybuffer"));
-      const fileName = `perfil_${(nombreCompleto || "titular").trim().replace(/\s+/g, "_")}.pdf`;
+      const sufijo = informeSeleccionId === "biografia" ? "_biografia" : "";
+      const fileName = `perfil_${(nombreCompleto || "titular").trim().replace(/\s+/g, "_")}${sufijo}.pdf`;
       const guardado = await savePdfWithDialog(bytes, fileName);
-      if (guardado) setPdfMensaje(t("profile.pdfGenerado"));
+      if (guardado) {
+        setInformesMenuAbierto(false);
+        setPdfMensaje(t("profile.pdfGenerado"));
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -295,19 +332,54 @@ export function PersonalProfileForm({ onExit, onCancel }: { onExit: () => void; 
         {t("profile.tituloMisDatos")} <HelpIcon fieldKey="perfil_personal_nota" />
       </h2>
 
-      {fotoPreviewUrl && <img src={fotoPreviewUrl} alt={t("profile.fotoAlt")} className="artista-foto-preview" />}
+      <div className="imagen-campo">
+        <span className="field-label">{t("artistas.foto")}</span>
+        {fotoPreviewUrl && (
+          <button
+            type="button"
+            className="imagen-preview-button"
+            onClick={() => setImagenAmpliada({ url: fotoPreviewUrl, alt: t("profile.fotoAlt") })}
+          >
+            <img src={fotoPreviewUrl} alt={t("profile.fotoAlt")} className="artista-foto-preview" />
+          </button>
+        )}
+        <ImageFileField
+          value={fotoFile}
+          onChange={handleFotoChange}
+          hasImage={Boolean(existing?.fotoPath)}
+          showFileName={false}
+        />
+      </div>
 
-      <label>
-        {t("artistas.foto")}
-        <ImageFileField value={fotoFile} onChange={handleFotoChange} />
-      </label>
+      <div className="imagen-campo">
+        <span className="field-label">{t("profile.logo")}</span>
+        {logoPreviewUrl && (
+          <button
+            type="button"
+            className="imagen-preview-button"
+            onClick={() => setImagenAmpliada({ url: logoPreviewUrl, alt: t("profile.logoAlt") })}
+          >
+            <img src={logoPreviewUrl} alt={t("profile.logoAlt")} className="perfil-imagen-preview" />
+          </button>
+        )}
+        <ImageFileField value={logoFile} onChange={handleLogoChange} hasImage={Boolean(existing?.logoPath)} />
+      </div>
 
-      {logoPreviewUrl && <img src={logoPreviewUrl} alt={t("profile.logoAlt")} className="artista-foto-preview" />}
-
-      <label>
-        {t("profile.logo")}
-        <ImageFileField value={logoFile} onChange={handleLogoChange} />
-      </label>
+      <div className="imagen-campo">
+        <span className="field-label">
+          {t("profile.firmaDigital")} <HelpIcon fieldKey="firma_digital" />
+        </span>
+        {firmaPreviewUrl && (
+          <button
+            type="button"
+            className="imagen-preview-button"
+            onClick={() => setImagenAmpliada({ url: firmaPreviewUrl, alt: t("profile.firmaAlt") })}
+          >
+            <img src={firmaPreviewUrl} alt={t("profile.firmaAlt")} className="perfil-imagen-preview" />
+          </button>
+        )}
+        <ImageFileField value={firmaFile} onChange={handleFirmaChange} hasImage={Boolean(existing?.firmaPath)} />
+      </div>
 
       <label>
         {t("artistaSelector.nombreCompleto")}
@@ -322,6 +394,11 @@ export function PersonalProfileForm({ onExit, onCancel }: { onExit: () => void; 
       <label>
         {t("artistas.bio")}
         <textarea rows={4} value={bio} onChange={(e) => setBio(e.target.value)} />
+      </label>
+
+      <label>
+        {t("artistas.bioEnLabel")} <HelpIcon fieldKey="bio_en" />
+        <textarea rows={4} value={bioEn} onChange={(e) => setBioEn(e.target.value)} />
       </label>
 
       <label>
@@ -369,19 +446,12 @@ export function PersonalProfileForm({ onExit, onCancel }: { onExit: () => void; 
         <button type="submit" disabled={submitting}>
           {submitting ? t("common.saving") : t("profile.guardarMisDatos")}
         </button>
-        <button type="button" onClick={handleGenerarPdf} disabled={generandoPdf}>
-          {generandoPdf ? t("common.saving") : t("profile.generarPdf")}
+        <button type="button" onClick={handleAbrirInformesMenu} disabled={generandoPdf}>
+          {generandoPdf ? t("common.saving") : t("common.generarInforme")}
         </button>
-        {!existing && (
-          <button type="button" onClick={handleSalir} disabled={submitting}>
-            {t("profile.salir")}
-          </button>
-        )}
-        {onCancel && (
-          <button type="button" onClick={onCancel} disabled={submitting}>
-            {t("common.cancel")}
-          </button>
-        )}
+        <button type="button" onClick={handleSalir} disabled={submitting}>
+          {t("common.back")}
+        </button>
       </div>
 
       {guardadoMensaje && (
@@ -406,6 +476,32 @@ export function PersonalProfileForm({ onExit, onCancel }: { onExit: () => void; 
         <p className="error" role="alert">
           ⚠️ {t("obraForm.errorNoSePudoGuardar", { error })}
         </p>
+      )}
+
+      {informesMenuAbierto && (
+        <InformesModal
+          titulo={t("informes.tituloDe", { nombre: nombreCompleto || t("profile.tituloMisDatos") })}
+          opciones={[
+            { id: "completa", label: t("profile.informeOpcionCompleta") },
+            { id: "biografia", label: t("profile.informeOpcionBiografia") },
+          ]}
+          selectedId={informeSeleccionId}
+          onSelectId={setInformeSeleccionId}
+          idioma={informeIdioma}
+          onIdiomaChange={setInformeIdioma}
+          firma={informeFirma}
+          onFirmaChange={setInformeFirma}
+          firmaDigitalDisponible={firmaBytesDisponibles !== null}
+          onGenerar={handleGenerarInforme}
+          generando={generandoPdf}
+          onClose={() => setInformesMenuAbierto(false)}
+        />
+      )}
+
+      {imagenAmpliada && (
+        <Modal onClose={() => setImagenAmpliada(null)} wide className="modal-content-image">
+          <img src={imagenAmpliada.url} alt={imagenAmpliada.alt} className="obra-full-image" />
+        </Modal>
       )}
     </form>
   );

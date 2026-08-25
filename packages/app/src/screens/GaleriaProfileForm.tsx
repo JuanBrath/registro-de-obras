@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { galeriaLogoPath } from "@registro/core";
+import { galeriaFirmaPath, galeriaLogoPath } from "@registro/core";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { LinkField } from "../components/LinkField.js";
 import { ImageFileField } from "../components/ImageFileField.js";
+import { HelpIcon } from "../components/HelpIcon.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
 import { savePdfWithDialog } from "../utils/savePdfDialog.js";
@@ -21,11 +22,12 @@ interface GaleriaPerfilRow {
   x: string | null;
   notas: string | null;
   logo_path: string | null;
+  firma_path: string | null;
   cuit: string | null;
 }
 
 export function GaleriaProfileForm({ onBack }: { onBack: () => void }) {
-  const { context } = useWorkspace();
+  const { context, reloadGaleriaPerfil } = useWorkspace();
   const { t } = useLanguage();
 
   const [existing, setExisting] = useState<GaleriaPerfilRow | null>(null);
@@ -43,6 +45,9 @@ export function GaleriaProfileForm({ onBack }: { onBack: () => void }) {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
   const logoObjectUrlRef = useRef<string | null>(null);
+  const [firmaFile, setFirmaFile] = useState<File | null>(null);
+  const [firmaPreviewUrl, setFirmaPreviewUrl] = useState<string | null>(null);
+  const firmaObjectUrlRef = useRef<string | null>(null);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,14 +71,15 @@ export function GaleriaProfileForm({ onBack }: { onBack: () => void }) {
     x !== (existing?.x ?? "") ||
     notas !== (existing?.notas ?? "") ||
     cuit !== (existing?.cuit ?? "") ||
-    logoFile !== null;
+    logoFile !== null ||
+    firmaFile !== null;
 
   useEffect(() => {
     if (!context) return;
     setLoading(true);
     context.db
       .query<GaleriaPerfilRow>(
-        `SELECT nombre, direccion, telefono, email, web, instagram, facebook, x, notas, logo_path, cuit FROM galeria_perfil WHERE id = 1`,
+        `SELECT nombre, direccion, telefono, email, web, instagram, facebook, x, notas, logo_path, firma_path, cuit FROM galeria_perfil WHERE id = 1`,
       )
       .then((rows) => {
         const row = rows[0] ?? null;
@@ -99,11 +105,23 @@ export function GaleriaProfileForm({ onBack }: { onBack: () => void }) {
             })
             .catch(() => {});
         }
+        if (row?.firma_path) {
+          context.fs
+            .readFile(row.firma_path)
+            .then((bytes) => {
+              if (firmaObjectUrlRef.current) URL.revokeObjectURL(firmaObjectUrlRef.current);
+              const url = bytesToObjectUrl(bytes);
+              firmaObjectUrlRef.current = url;
+              setFirmaPreviewUrl(url);
+            })
+            .catch(() => {});
+        }
       })
       .catch((err) => setError(err instanceof Error ? err.message : String(err)))
       .finally(() => setLoading(false));
     return () => {
       if (logoObjectUrlRef.current) URL.revokeObjectURL(logoObjectUrlRef.current);
+      if (firmaObjectUrlRef.current) URL.revokeObjectURL(firmaObjectUrlRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [context]);
@@ -117,6 +135,16 @@ export function GaleriaProfileForm({ onBack }: { onBack: () => void }) {
       const url = URL.createObjectURL(file);
       logoObjectUrlRef.current = url;
       setLogoPreviewUrl(url);
+    }
+  }
+
+  function handleFirmaChange(file: File | null) {
+    setFirmaFile(file);
+    if (file) {
+      if (firmaObjectUrlRef.current) URL.revokeObjectURL(firmaObjectUrlRef.current);
+      const url = URL.createObjectURL(file);
+      firmaObjectUrlRef.current = url;
+      setFirmaPreviewUrl(url);
     }
   }
 
@@ -152,8 +180,32 @@ export function GaleriaProfileForm({ onBack }: { onBack: () => void }) {
         await context!.db.execute(`UPDATE galeria_perfil SET logo_path = ? WHERE id = 1`, [logoPath]);
       }
 
-      setExisting({ nombre, direccion, telefono, email, web, instagram, facebook, x, notas, logo_path: logoPath, cuit });
+      let firmaPath = existing?.firma_path ?? null;
+      if (firmaFile) {
+        const ext = firmaFile.name.split(".").pop() || "jpg";
+        const bytes = new Uint8Array(await firmaFile.arrayBuffer());
+        firmaPath = galeriaFirmaPath(ext);
+        await context!.fs.writeFile(firmaPath, bytes);
+        await context!.db.execute(`UPDATE galeria_perfil SET firma_path = ? WHERE id = 1`, [firmaPath]);
+      }
+
+      setExisting({
+        nombre,
+        direccion,
+        telefono,
+        email,
+        web,
+        instagram,
+        facebook,
+        x,
+        notas,
+        logo_path: logoPath,
+        firma_path: firmaPath,
+        cuit,
+      });
       setLogoFile(null);
+      setFirmaFile(null);
+      await reloadGaleriaPerfil();
       setGuardadoMensaje(t("galeriaProfile.datosGuardados"));
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -220,12 +272,19 @@ export function GaleriaProfileForm({ onBack }: { onBack: () => void }) {
     <form className="obra-form profile-form" onSubmit={handleSubmit}>
       <h2>{t("galeriaProfile.titulo")}</h2>
 
-      {logoPreviewUrl && <img src={logoPreviewUrl} alt={t("galeriaProfile.logoAlt")} className="artista-foto-preview" />}
+      <div className="imagen-campo">
+        <span className="field-label">{t("galeriaProfile.logo")}</span>
+        {logoPreviewUrl && <img src={logoPreviewUrl} alt={t("galeriaProfile.logoAlt")} className="perfil-imagen-preview" />}
+        <ImageFileField value={logoFile} onChange={handleLogoChange} hasImage={Boolean(existing?.logo_path)} />
+      </div>
 
-      <label>
-        {t("galeriaProfile.logo")}
-        <ImageFileField value={logoFile} onChange={handleLogoChange} />
-      </label>
+      <div className="imagen-campo">
+        <span className="field-label">
+          {t("galeriaProfile.firmaDigital")} <HelpIcon fieldKey="firma_digital" />
+        </span>
+        {firmaPreviewUrl && <img src={firmaPreviewUrl} alt={t("galeriaProfile.firmaAlt")} className="perfil-imagen-preview" />}
+        <ImageFileField value={firmaFile} onChange={handleFirmaChange} hasImage={Boolean(existing?.firma_path)} />
+      </div>
 
       <label>
         {t("galeriaProfile.nombreLabel")}

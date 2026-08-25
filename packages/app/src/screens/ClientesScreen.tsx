@@ -3,11 +3,28 @@ import type { TipoCliente } from "@registro/core";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { LinkField } from "../components/LinkField.js";
 import { HelpIcon } from "../components/HelpIcon.js";
+import { InformesModal } from "../components/InformesModal.js";
 import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
 import { buildMailtoUrl } from "../utils/socialLinks.js";
 import { focusNextOnEnter } from "../utils/focusNextOnEnter.js";
 import { formatFechaDDMMYYYY } from "../utils/formatFecha.js";
+import { todayISO } from "../utils/today.js";
+import { savePdfWithDialog } from "../utils/savePdfDialog.js";
+import type { FirmaEleccion } from "../utils/pdfBranding.js";
+import type { InformeIdioma } from "../reports/informeIdioma.js";
+import { resolveFirmaBytes, resolveMembreteLogoBytes } from "../reports/reportBranding.js";
+import {
+  buildClienteConDatosPdfBytes,
+  buildClienteEnBlancoPdfBytes,
+  buildClienteHistorialPdfBytes,
+  type ClienteHistorialVentaRow,
+} from "../reports/clienteReports.js";
+
+function primerDiaMesActual(): string {
+  const hoy = new Date();
+  return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}-01`;
+}
 
 const TIPOS_CLIENTE: { value: TipoCliente; labelKey: TranslationKey }[] = [
   { value: "ColeccionistaPrivado", labelKey: "clientes.tipoColeccionistaPrivado" },
@@ -44,8 +61,8 @@ export interface ClienteFields {
 }
 
 export function ClientesScreen({ onBack }: { onBack: () => void }) {
-  const { context } = useWorkspace();
-  const { t } = useLanguage();
+  const { context, personalArtista, galeriaPerfil } = useWorkspace();
+  const { t, idioma } = useLanguage();
   const [clientes, setClientes] = useState<ClienteRow[]>([]);
   const [busqueda, setBusqueda] = useState("");
   const [loading, setLoading] = useState(true);
@@ -68,6 +85,46 @@ export function ClientesScreen({ onBack }: { onBack: () => void }) {
   const [mostrandoAlta, setMostrandoAlta] = useState(false);
   const [fichaId, setFichaId] = useState<number | null>(null);
   const [fichaModo, setFichaModo] = useState<"consultar" | "editar">("consultar");
+
+  const [fichaBlancoAbierta, setFichaBlancoAbierta] = useState(false);
+  const [fichaBlancoIdioma, setFichaBlancoIdioma] = useState<InformeIdioma>("es");
+  const [fichaBlancoFirma, setFichaBlancoFirma] = useState<FirmaEleccion>("ninguna");
+  const [fichaBlancoFirmaBytes, setFichaBlancoFirmaBytes] = useState<Uint8Array | null>(null);
+  const [fichaBlancoGenerando, setFichaBlancoGenerando] = useState(false);
+  const [fichaBlancoMensaje, setFichaBlancoMensaje] = useState<string | null>(null);
+  useEscapeToDismiss(fichaBlancoMensaje, setFichaBlancoMensaje);
+
+  async function handleAbrirFichaBlanco() {
+    setFichaBlancoIdioma(idioma);
+    setFichaBlancoFirma("ninguna");
+    setFichaBlancoMensaje(null);
+    setFichaBlancoFirmaBytes(context ? await resolveFirmaBytes(context, personalArtista, galeriaPerfil) : null);
+    setFichaBlancoAbierta(true);
+  }
+
+  async function handleGenerarFichaBlanco() {
+    if (!context) return;
+    setFichaBlancoGenerando(true);
+    setError(null);
+    try {
+      const logoBytes = await resolveMembreteLogoBytes(context, personalArtista, galeriaPerfil);
+      const bytes = await buildClienteEnBlancoPdfBytes("", false, {
+        idioma: fichaBlancoIdioma,
+        logoBytes,
+        firma: fichaBlancoFirma,
+        firmaBytes: fichaBlancoFirmaBytes,
+      });
+      const guardado = await savePdfWithDialog(bytes, "ficha_cliente_en_blanco.pdf");
+      if (guardado) {
+        setFichaBlancoAbierta(false);
+        setFichaBlancoMensaje(t("clientes.informeGenerado"));
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setFichaBlancoGenerando(false);
+    }
+  }
 
   function resetForm() {
     setNombre("");
@@ -192,16 +249,44 @@ export function ClientesScreen({ onBack }: { onBack: () => void }) {
       <div className="obras-list-header">
         <h1>{t("clientes.title")}</h1>
         <div className="header-actions">
-          {!mostrandoAlta && (
-            <button type="button" onClick={() => setMostrandoAlta(true)}>
-              {t("clientes.nuevoCliente")}
-            </button>
+          {!mostrandoAlta && fichaId === null && (
+            <>
+              <button type="button" onClick={() => setMostrandoAlta(true)}>
+                {t("clientes.nuevoCliente")}
+              </button>
+              <button type="button" onClick={handleAbrirFichaBlanco}>
+                {t("clientes.generarFichaBlanco")}
+              </button>
+            </>
           )}
           <button type="button" onClick={handleVolver}>
             {t("common.back")}
           </button>
         </div>
       </div>
+
+      {fichaBlancoMensaje && fichaId === null && !mostrandoAlta && (
+        <p className="success" role="status">
+          ✅ {fichaBlancoMensaje}
+        </p>
+      )}
+
+      {fichaBlancoAbierta && (
+        <InformesModal
+          titulo={t("clientes.generarFichaBlanco")}
+          opciones={[{ id: "blanco", label: t("clientes.informeOpcionBlancoCliente") }]}
+          selectedId="blanco"
+          onSelectId={() => {}}
+          idioma={fichaBlancoIdioma}
+          onIdiomaChange={setFichaBlancoIdioma}
+          firma={fichaBlancoFirma}
+          onFirmaChange={setFichaBlancoFirma}
+          firmaDigitalDisponible={fichaBlancoFirmaBytes !== null}
+          onGenerar={handleGenerarFichaBlanco}
+          generando={fichaBlancoGenerando}
+          onClose={() => setFichaBlancoAbierta(false)}
+        />
+      )}
 
       {mostrandoAlta && (
         <form className="obra-form" onSubmit={handleSubmit} onKeyDown={focusNextOnEnter}>
@@ -355,12 +440,24 @@ function ClienteRowView({
   onDelete: () => Promise<void>;
   onSave: (fields: ClienteFields) => Promise<void>;
 }) {
-  const { t } = useLanguage();
+  const { context, personalArtista, galeriaPerfil } = useWorkspace();
+  const { t, idioma } = useLanguage();
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   useEscapeToDismiss(error, setError);
+
+  const [informesMenuAbierto, setInformesMenuAbierto] = useState(false);
+  const [informeSeleccionId, setInformeSeleccionId] = useState("conDatos");
+  const [informeIdioma, setInformeIdioma] = useState<InformeIdioma>("es");
+  const [informeFirma, setInformeFirma] = useState<FirmaEleccion>("ninguna");
+  const [firmaBytesDisponibles, setFirmaBytesDisponibles] = useState<Uint8Array | null>(null);
+  const [generandoInforme, setGenerandoInforme] = useState(false);
+  const [informeMensaje, setInformeMensaje] = useState<string | null>(null);
+  useEscapeToDismiss(informeMensaje, setInformeMensaje);
+  const [historialFechaDesde, setHistorialFechaDesde] = useState(primerDiaMesActual());
+  const [historialFechaHasta, setHistorialFechaHasta] = useState(todayISO());
 
   const [activeTab, setActiveTab] = useState<"datos" | "historial">("datos");
   const [nombre, setNombre] = useState(cliente.nombre);
@@ -397,6 +494,101 @@ function ClienteRowView({
     }
   }
 
+  async function handleAbrirInformesMenu() {
+    setInformeSeleccionId("conDatos");
+    setInformeIdioma(idioma);
+    setInformeFirma("ninguna");
+    setHistorialFechaDesde(primerDiaMesActual());
+    setHistorialFechaHasta(todayISO());
+    setInformeMensaje(null);
+    setFirmaBytesDisponibles(context ? await resolveFirmaBytes(context, personalArtista, galeriaPerfil) : null);
+    setInformesMenuAbierto(true);
+  }
+
+  async function handleGenerarInforme() {
+    if (!context) return;
+    setGenerandoInforme(true);
+    setError(null);
+    setInformeMensaje(null);
+    try {
+      const logoBytes = await resolveMembreteLogoBytes(context, personalArtista, galeriaPerfil);
+      const brandOpts = { idioma: informeIdioma, logoBytes, firma: informeFirma, firmaBytes: firmaBytesDisponibles };
+      const base = cliente.nombre.trim().replace(/[^a-zA-Z0-9]+/g, "_") || "cliente";
+      let bytes: Uint8Array;
+      let nombreArchivo: string;
+
+      if (informeSeleccionId === "conDatos") {
+        bytes = await buildClienteConDatosPdfBytes(
+          {
+            nombre: cliente.nombre,
+            tipoCliente: cliente.tipo_cliente ?? "",
+            domicilio: cliente.domicilio ?? "",
+            ciudad: cliente.ciudad ?? "",
+            pais: cliente.pais ?? "",
+            email: cliente.email ?? "",
+            telefono: cliente.telefono ?? "",
+            cuit: cliente.cuit ?? "",
+            perfilIntereses: cliente.perfil_intereses ?? "",
+            notas: cliente.notas ?? "",
+          },
+          brandOpts,
+        );
+        nombreArchivo = `cliente_${base}.pdf`;
+      } else if (informeSeleccionId === "blancoInterno") {
+        bytes = await buildClienteEnBlancoPdfBytes(cliente.nombre, true, brandOpts);
+        nombreArchivo = `cliente_${base}_completar.pdf`;
+      } else if (informeSeleccionId === "blancoCliente") {
+        bytes = await buildClienteEnBlancoPdfBytes(cliente.nombre, false, brandOpts);
+        nombreArchivo = "ficha_cliente_completar.pdf";
+      } else {
+        const rows = await context.db.query<ClienteHistorialVentaRow>(
+          `SELECT venta.fecha_venta, obra.titulo as obra_titulo, ejemplar.numero as ejemplar_numero,
+                  ejemplar.soporte_impresion, ejemplar.dimensiones, venta.valor_venta, venta.moneda, venta.numero_certificado
+           FROM venta
+           JOIN obra ON obra.id = venta.obra_id
+           LEFT JOIN ejemplar ON ejemplar.id = venta.ejemplar_id
+           WHERE venta.cliente_id = ? AND venta.fecha_venta BETWEEN ? AND ?
+           ORDER BY venta.fecha_venta DESC`,
+          [cliente.id, historialFechaDesde, historialFechaHasta],
+        );
+        bytes = await buildClienteHistorialPdfBytes(cliente.nombre, rows, historialFechaDesde, historialFechaHasta, brandOpts);
+        nombreArchivo = `historial_compras_${base}.pdf`;
+      }
+
+      const guardado = await savePdfWithDialog(bytes, nombreArchivo);
+      if (guardado) {
+        setInformesMenuAbierto(false);
+        setInformeMensaje(t("clientes.informeGenerado"));
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setGenerandoInforme(false);
+    }
+  }
+
+  const informeOpciones = [
+    { id: "conDatos", label: t("clientes.informeOpcionConDatos") },
+    { id: "blancoInterno", label: t("clientes.informeOpcionBlancoInterno") },
+    { id: "blancoCliente", label: t("clientes.informeOpcionBlancoCliente") },
+    {
+      id: "historial",
+      label: t("clientes.informeOpcionHistorial"),
+      extra: (
+        <div className="form-row-2">
+          <label>
+            <span className="field-label">{t("clientes.historialFechasDesde")}</span>
+            <input type="date" value={historialFechaDesde} onChange={(e) => setHistorialFechaDesde(e.target.value)} />
+          </label>
+          <label>
+            <span className="field-label">{t("clientes.historialFechasHasta")}</span>
+            <input type="date" value={historialFechaHasta} onChange={(e) => setHistorialFechaHasta(e.target.value)} />
+          </label>
+        </div>
+      ),
+    },
+  ];
+
   if (modo !== "compacto") {
     const soloLectura = modo === "consultar";
     return (
@@ -424,6 +616,9 @@ function ClienteRowView({
           <>
             <HistorialCompras clienteId={cliente.id} />
             <div className="obra-form-saved-actions">
+              <button type="button" onClick={handleAbrirInformesMenu}>
+                {t("common.generarInforme")}
+              </button>
               <button type="button" onClick={onCerrarFicha}>
                 {t("common.close")}
               </button>
@@ -519,6 +714,9 @@ function ClienteRowView({
               <textarea rows={3} value={notas} onChange={(e) => setNotas(e.target.value)} disabled={soloLectura} />
             </label>
             <div className="obra-form-saved-actions">
+              <button type="button" onClick={handleAbrirInformesMenu}>
+                {t("common.generarInforme")}
+              </button>
               {soloLectura ? (
                 <button type="button" onClick={onCerrarFicha}>
                   {t("common.close")}
@@ -534,12 +732,34 @@ function ClienteRowView({
                 </>
               )}
             </div>
+            {informeMensaje && (
+              <p className="success" role="status">
+                ✅ {informeMensaje}
+              </p>
+            )}
             {error && (
               <p className="error" role="alert">
                 ⚠️ {error}
               </p>
             )}
           </>
+        )}
+
+        {informesMenuAbierto && (
+          <InformesModal
+            titulo={t("informes.tituloDe", { nombre: cliente.nombre })}
+            opciones={informeOpciones}
+            selectedId={informeSeleccionId}
+            onSelectId={setInformeSeleccionId}
+            idioma={informeIdioma}
+            onIdiomaChange={setInformeIdioma}
+            firma={informeFirma}
+            onFirmaChange={setInformeFirma}
+            firmaDigitalDisponible={firmaBytesDisponibles !== null}
+            onGenerar={handleGenerarInforme}
+            generando={generandoInforme}
+            onClose={() => setInformesMenuAbierto(false)}
+          />
         )}
       </div>
     );

@@ -1,5 +1,5 @@
-import { useEffect, useState, type FormEvent } from "react";
-import { calcularPorcentajeComision, type Moneda, type TipoVenta } from "@registro/core";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { calcularPorcentajeComision, type EstadoLiquidacion, type EstadoPago, type Moneda, type TipoVenta } from "@registro/core";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { HelpIcon } from "./HelpIcon.js";
 import { todayISO } from "../utils/today.js";
@@ -25,6 +25,28 @@ export interface VentaExistente {
   numeroCertificado: number | null;
   ivaPorcentaje: number | null;
   ivaMonto: number | null;
+  precioLista: number | null;
+  motivoDescuento: string | null;
+  tipoCambio: number | null;
+  retencionesMonto: number | null;
+  arancelesMonto: number | null;
+  costoEnmarcado: number | null;
+  costoPeana: number | null;
+  costoEmbalaje: number | null;
+  costoTransporte: number | null;
+  costoSeguro: number | null;
+  estadoPago: EstadoPago | null;
+  metodoPago: string | null;
+  fechaCobro: string | null;
+  estadoLiquidacion: EstadoLiquidacion | null;
+  droitSuiteAplica: boolean;
+  droitSuitePorcentaje: number | null;
+  droitSuiteMonto: number | null;
+  direccionEntrega: string | null;
+  ciudadEntrega: string | null;
+  paisEntrega: string | null;
+  confidencial: boolean;
+  clausulaReventa: string | null;
 }
 
 interface ClienteOption {
@@ -32,6 +54,9 @@ interface ClienteOption {
   nombre: string;
   email: string | null;
   telefono: string | null;
+  domicilio: string | null;
+  ciudad: string | null;
+  pais: string | null;
 }
 
 function redondearMonto(n: number): number {
@@ -96,15 +121,151 @@ export function VentaForm({
     existingVenta?.ivaPorcentaje != null ? String(existingVenta.ivaPorcentaje) : "",
   );
   const [ivaMonto, setIvaMonto] = useState(existingVenta?.ivaMonto != null ? String(existingVenta.ivaMonto) : "");
+  const [precioLista, setPrecioLista] = useState(
+    existingVenta?.precioLista != null ? String(existingVenta.precioLista) : "",
+  );
+  const [motivoDescuento, setMotivoDescuento] = useState(existingVenta?.motivoDescuento ?? "");
+  const [tipoCambio, setTipoCambio] = useState(existingVenta?.tipoCambio != null ? String(existingVenta.tipoCambio) : "");
+  const [retencionesMonto, setRetencionesMonto] = useState(
+    existingVenta?.retencionesMonto != null ? String(existingVenta.retencionesMonto) : "",
+  );
+  const [arancelesMonto, setArancelesMonto] = useState(
+    existingVenta?.arancelesMonto != null ? String(existingVenta.arancelesMonto) : "",
+  );
+  const [costoEnmarcado, setCostoEnmarcado] = useState(
+    existingVenta?.costoEnmarcado != null ? String(existingVenta.costoEnmarcado) : "",
+  );
+  const [costoPeana, setCostoPeana] = useState(existingVenta?.costoPeana != null ? String(existingVenta.costoPeana) : "");
+  const [costoEmbalaje, setCostoEmbalaje] = useState(
+    existingVenta?.costoEmbalaje != null ? String(existingVenta.costoEmbalaje) : "",
+  );
+  const [costoTransporte, setCostoTransporte] = useState(
+    existingVenta?.costoTransporte != null ? String(existingVenta.costoTransporte) : "",
+  );
+  const [costoSeguro, setCostoSeguro] = useState(
+    existingVenta?.costoSeguro != null ? String(existingVenta.costoSeguro) : "",
+  );
+  const [estadoPago, setEstadoPago] = useState<EstadoPago | "">(existingVenta?.estadoPago ?? "");
+  const [metodoPago, setMetodoPago] = useState(existingVenta?.metodoPago ?? "");
+  const [fechaCobro, setFechaCobro] = useState(existingVenta?.fechaCobro ?? "");
+  const [estadoLiquidacion, setEstadoLiquidacion] = useState<EstadoLiquidacion | "">(
+    existingVenta?.estadoLiquidacion ?? "",
+  );
+  const [droitSuiteAplica, setDroitSuiteAplica] = useState(existingVenta?.droitSuiteAplica ?? false);
+  const [droitSuitePorcentaje, setDroitSuitePorcentaje] = useState(
+    existingVenta?.droitSuitePorcentaje != null ? String(existingVenta.droitSuitePorcentaje) : "",
+  );
+  const [droitSuiteMonto, setDroitSuiteMonto] = useState(
+    existingVenta?.droitSuiteMonto != null ? String(existingVenta.droitSuiteMonto) : "",
+  );
+  const [direccionEntrega, setDireccionEntrega] = useState(existingVenta?.direccionEntrega ?? "");
+  const [ciudadEntrega, setCiudadEntrega] = useState(existingVenta?.ciudadEntrega ?? "");
+  const [paisEntrega, setPaisEntrega] = useState(existingVenta?.paisEntrega ?? "");
+  const [confidencial, setConfidencial] = useState(existingVenta?.confidencial ?? false);
+  const [clausulaReventa, setClausulaReventa] = useState(existingVenta?.clausulaReventa ?? "");
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   useEscapeToDismiss(error, setError);
+  const [confirmandoSalir, setConfirmandoSalir] = useState(false);
+  useEscapeToDismiss(confirmandoSalir, () => setConfirmandoSalir(false));
+
+  // Snapshot de los valores con los que arranco el formulario (tal como los
+  // calcula cada useState de arriba), para poder avisar antes de descartar
+  // cambios sin guardar al volver — se toma una sola vez, en el primer render.
+  const valoresInicialesRef = useRef(
+    JSON.stringify({
+      tipo: existingVenta?.tipo ?? "venta",
+      clienteId: existingVenta?.clienteId ?? null,
+      compradorNombre: existingVenta?.compradorNombre ?? "",
+      compradorEmail: existingVenta?.compradorEmail ?? "",
+      compradorTelefono: existingVenta?.compradorTelefono ?? "",
+      fechaVenta: existingVenta?.fechaVenta ?? todayISO(),
+      lugarVenta: existingVenta?.lugarVenta ?? "",
+      moneda: existingVenta?.moneda ?? "ARS",
+      valorVenta: existingVenta ? String(existingVenta.valorVenta) : "",
+      aplicaComision: existingVenta?.aplicaComision ?? false,
+      porcentajeComision: existingVenta?.porcentajeComision != null ? String(existingVenta.porcentajeComision) : "",
+      montoComision: existingVenta?.montoComision != null ? String(existingVenta.montoComision) : "",
+      ivaPorcentaje: existingVenta?.ivaPorcentaje != null ? String(existingVenta.ivaPorcentaje) : "",
+      ivaMonto: existingVenta?.ivaMonto != null ? String(existingVenta.ivaMonto) : "",
+      precioLista: existingVenta?.precioLista != null ? String(existingVenta.precioLista) : "",
+      motivoDescuento: existingVenta?.motivoDescuento ?? "",
+      tipoCambio: existingVenta?.tipoCambio != null ? String(existingVenta.tipoCambio) : "",
+      retencionesMonto: existingVenta?.retencionesMonto != null ? String(existingVenta.retencionesMonto) : "",
+      arancelesMonto: existingVenta?.arancelesMonto != null ? String(existingVenta.arancelesMonto) : "",
+      costoEnmarcado: existingVenta?.costoEnmarcado != null ? String(existingVenta.costoEnmarcado) : "",
+      costoPeana: existingVenta?.costoPeana != null ? String(existingVenta.costoPeana) : "",
+      costoEmbalaje: existingVenta?.costoEmbalaje != null ? String(existingVenta.costoEmbalaje) : "",
+      costoTransporte: existingVenta?.costoTransporte != null ? String(existingVenta.costoTransporte) : "",
+      costoSeguro: existingVenta?.costoSeguro != null ? String(existingVenta.costoSeguro) : "",
+      estadoPago: existingVenta?.estadoPago ?? "",
+      metodoPago: existingVenta?.metodoPago ?? "",
+      fechaCobro: existingVenta?.fechaCobro ?? "",
+      estadoLiquidacion: existingVenta?.estadoLiquidacion ?? "",
+      droitSuiteAplica: existingVenta?.droitSuiteAplica ?? false,
+      droitSuitePorcentaje: existingVenta?.droitSuitePorcentaje != null ? String(existingVenta.droitSuitePorcentaje) : "",
+      droitSuiteMonto: existingVenta?.droitSuiteMonto != null ? String(existingVenta.droitSuiteMonto) : "",
+      direccionEntrega: existingVenta?.direccionEntrega ?? "",
+      ciudadEntrega: existingVenta?.ciudadEntrega ?? "",
+      paisEntrega: existingVenta?.paisEntrega ?? "",
+      confidencial: existingVenta?.confidencial ?? false,
+      clausulaReventa: existingVenta?.clausulaReventa ?? "",
+    }),
+  ).current;
+
+  const isDirty =
+    JSON.stringify({
+      tipo,
+      clienteId,
+      compradorNombre,
+      compradorEmail,
+      compradorTelefono,
+      fechaVenta,
+      lugarVenta,
+      moneda,
+      valorVenta,
+      aplicaComision,
+      porcentajeComision,
+      montoComision,
+      ivaPorcentaje,
+      ivaMonto,
+      precioLista,
+      motivoDescuento,
+      tipoCambio,
+      retencionesMonto,
+      arancelesMonto,
+      costoEnmarcado,
+      costoPeana,
+      costoEmbalaje,
+      costoTransporte,
+      costoSeguro,
+      estadoPago,
+      metodoPago,
+      fechaCobro,
+      estadoLiquidacion,
+      droitSuiteAplica,
+      droitSuitePorcentaje,
+      droitSuiteMonto,
+      direccionEntrega,
+      ciudadEntrega,
+      paisEntrega,
+      confidencial,
+      clausulaReventa,
+    }) !== valoresInicialesRef;
+
+  function handleVolverClick() {
+    if (isDirty) {
+      setConfirmandoSalir(true);
+      return;
+    }
+    onCancel();
+  }
 
   useEffect(() => {
     if (!context) return;
     context.db
-      .query<ClienteOption>("SELECT id, nombre, email, telefono FROM cliente ORDER BY nombre")
+      .query<ClienteOption>("SELECT id, nombre, email, telefono, domicilio, ciudad, pais FROM cliente ORDER BY nombre")
       .then(setClientes)
       .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -124,6 +285,9 @@ export function VentaForm({
       setCompradorNombre(cliente.nombre);
       setCompradorEmail(cliente.email ?? "");
       setCompradorTelefono(cliente.telefono ?? "");
+      setDireccionEntrega(cliente.domicilio ?? "");
+      setCiudadEntrega(cliente.ciudad ?? "");
+      setPaisEntrega(cliente.pais ?? "");
     }
   }
 
@@ -142,7 +306,15 @@ export function VentaForm({
       ]);
       const nuevoId = result.lastInsertId;
       if (!nuevoId) throw new Error(t("clientes.title"));
-      const nuevoCliente: ClienteOption = { id: nuevoId, nombre, email, telefono };
+      const nuevoCliente: ClienteOption = {
+        id: nuevoId,
+        nombre,
+        email,
+        telefono,
+        domicilio: null,
+        ciudad: null,
+        pais: null,
+      };
       setClientes((prev) => [...prev, nuevoCliente].sort((a, b) => a.nombre.localeCompare(b.nombre)));
       setClienteId(nuevoId);
       setCompradorNombre(nuevoCliente.nombre);
@@ -191,6 +363,22 @@ export function VentaForm({
     );
   }
 
+  function handleDroitSuitePorcentajeChange(nuevoPorcentaje: string) {
+    setDroitSuitePorcentaje(nuevoPorcentaje);
+    const valor = parseFloat(valorVenta) || 0;
+    const pct = parseFloat(nuevoPorcentaje);
+    setDroitSuiteMonto(!isNaN(pct) && valor > 0 ? String(redondearMonto(valor * (pct / 100))) : "");
+  }
+
+  function handleDroitSuiteMontoChange(nuevoMonto: string) {
+    setDroitSuiteMonto(nuevoMonto);
+    const valor = parseFloat(valorVenta) || 0;
+    const monto = parseFloat(nuevoMonto);
+    setDroitSuitePorcentaje(
+      !isNaN(monto) && valor > 0 ? String(redondearPorcentaje(calcularPorcentajeComision(valor, monto))) : "",
+    );
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setSubmitting(true);
@@ -206,13 +394,41 @@ export function VentaForm({
       const ivaPorcentajeNum = aplicaIva ? parseFloat(ivaPorcentaje) || 0 : null;
       const ivaMontoNum = aplicaIva ? parseFloat(ivaMonto) || 0 : null;
 
+      const precioListaNum = !esDonacion && precioLista !== "" ? parseFloat(precioLista) || 0 : null;
+      const motivoDescuentoVal = !esDonacion ? motivoDescuento || null : null;
+      const tipoCambioNum = !esDonacion && tipoCambio !== "" ? parseFloat(tipoCambio) || 0 : null;
+      const aplicaFiscalExtra = !esDonacion && esGaleria;
+      const retencionesMontoNum = aplicaFiscalExtra && retencionesMonto !== "" ? parseFloat(retencionesMonto) || 0 : null;
+      const arancelesMontoNum = aplicaFiscalExtra && arancelesMonto !== "" ? parseFloat(arancelesMonto) || 0 : null;
+      const costoEnmarcadoNum = !esDonacion && costoEnmarcado !== "" ? parseFloat(costoEnmarcado) || 0 : null;
+      const costoPeanaNum = !esDonacion && costoPeana !== "" ? parseFloat(costoPeana) || 0 : null;
+      const costoEmbalajeNum = !esDonacion && costoEmbalaje !== "" ? parseFloat(costoEmbalaje) || 0 : null;
+      const costoTransporteNum = !esDonacion && costoTransporte !== "" ? parseFloat(costoTransporte) || 0 : null;
+      const costoSeguroNum = !esDonacion && costoSeguro !== "" ? parseFloat(costoSeguro) || 0 : null;
+      const estadoPagoVal = !esDonacion && estadoPago !== "" ? estadoPago : null;
+      const metodoPagoVal = !esDonacion ? metodoPago || null : null;
+      const fechaCobroVal = !esDonacion && fechaCobro !== "" ? fechaCobro : null;
+      const estadoLiquidacionVal = aplicaFiscalExtra && estadoLiquidacion !== "" ? estadoLiquidacion : null;
+      const droitSuiteAplicaVal = aplicaFiscalExtra && droitSuiteAplica;
+      const droitSuitePorcentajeNum = droitSuiteAplicaVal ? parseFloat(droitSuitePorcentaje) || 0 : null;
+      const droitSuiteMontoNum = droitSuiteAplicaVal ? parseFloat(droitSuiteMonto) || 0 : null;
+      const direccionEntregaVal = direccionEntrega || null;
+      const ciudadEntregaVal = ciudadEntrega || null;
+      const paisEntregaVal = paisEntrega || null;
+      const clausulaReventaVal = clausulaReventa || null;
+
       if (existingVenta) {
         await db.transaction(async (tx) => {
           await tx.execute(
             `UPDATE venta SET
                cliente_id = ?, comprador_nombre = ?, comprador_email = ?, comprador_telefono = ?, fecha_venta = ?,
                lugar_venta = ?, valor_venta = ?, moneda = ?, aplica_comision = ?, porcentaje_comision = ?,
-               monto_comision = ?, monto_neto_artista = ?, iva_porcentaje = ?, iva_monto = ?
+               monto_comision = ?, monto_neto_artista = ?, iva_porcentaje = ?, iva_monto = ?,
+               precio_lista = ?, motivo_descuento = ?, tipo_cambio = ?, retenciones_monto = ?, aranceles_monto = ?,
+               costo_enmarcado = ?, costo_peana = ?, costo_embalaje = ?, costo_transporte = ?, costo_seguro = ?,
+               estado_pago = ?, metodo_pago = ?, fecha_cobro = ?, estado_liquidacion = ?,
+               droit_suite_aplica = ?, droit_suite_porcentaje = ?, droit_suite_monto = ?,
+               direccion_entrega = ?, ciudad_entrega = ?, pais_entrega = ?, confidencial = ?, clausula_reventa = ?
              WHERE id = ?`,
             [
               clienteId,
@@ -229,6 +445,28 @@ export function VentaForm({
               montoNetoArtista,
               ivaPorcentajeNum,
               ivaMontoNum,
+              precioListaNum,
+              motivoDescuentoVal,
+              tipoCambioNum,
+              retencionesMontoNum,
+              arancelesMontoNum,
+              costoEnmarcadoNum,
+              costoPeanaNum,
+              costoEmbalajeNum,
+              costoTransporteNum,
+              costoSeguroNum,
+              estadoPagoVal,
+              metodoPagoVal,
+              fechaCobroVal,
+              estadoLiquidacionVal,
+              droitSuiteAplicaVal ? 1 : 0,
+              droitSuitePorcentajeNum,
+              droitSuiteMontoNum,
+              direccionEntregaVal,
+              ciudadEntregaVal,
+              paisEntregaVal,
+              confidencial ? 1 : 0,
+              clausulaReventaVal,
               existingVenta.id,
             ],
           );
@@ -252,9 +490,14 @@ export function VentaForm({
             `INSERT INTO venta (
                obra_id, ejemplar_id, tipo, cliente_id, comprador_nombre, comprador_email, comprador_telefono,
                fecha_venta, lugar_venta, valor_venta, moneda, aplica_comision, porcentaje_comision, monto_comision,
-               monto_neto_artista, numero_certificado, iva_porcentaje, iva_monto
+               monto_neto_artista, numero_certificado, iva_porcentaje, iva_monto,
+               precio_lista, motivo_descuento, tipo_cambio, retenciones_monto, aranceles_monto,
+               costo_enmarcado, costo_peana, costo_embalaje, costo_transporte, costo_seguro,
+               estado_pago, metodo_pago, fecha_cobro, estado_liquidacion,
+               droit_suite_aplica, droit_suite_porcentaje, droit_suite_monto,
+               direccion_entrega, ciudad_entrega, pais_entrega, confidencial, clausula_reventa
              )
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               obraId,
               ejemplarId,
@@ -274,6 +517,28 @@ export function VentaForm({
               numeroCertificado,
               ivaPorcentajeNum,
               ivaMontoNum,
+              precioListaNum,
+              motivoDescuentoVal,
+              tipoCambioNum,
+              retencionesMontoNum,
+              arancelesMontoNum,
+              costoEnmarcadoNum,
+              costoPeanaNum,
+              costoEmbalajeNum,
+              costoTransporteNum,
+              costoSeguroNum,
+              estadoPagoVal,
+              metodoPagoVal,
+              fechaCobroVal,
+              estadoLiquidacionVal,
+              droitSuiteAplicaVal ? 1 : 0,
+              droitSuitePorcentajeNum,
+              droitSuiteMontoNum,
+              direccionEntregaVal,
+              ciudadEntregaVal,
+              paisEntregaVal,
+              confidencial ? 1 : 0,
+              clausulaReventaVal,
             ],
           );
           const ventaId = insertVenta.lastInsertId;
@@ -352,8 +617,10 @@ export function VentaForm({
         <label>
           {t("ventaForm.clienteRegistrado")}
           <div className="artista-selector-row">
-            <select value={clienteId ?? ""} onChange={(e) => handleClienteChange(e.target.value)}>
-              <option value="">{t("ventaForm.clienteSinRegistrar")}</option>
+            <select required value={clienteId ?? ""} onChange={(e) => handleClienteChange(e.target.value)}>
+              <option value="" disabled>
+                {t("ventaForm.seleccionarCliente")}
+              </option>
               {clientes.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.nombre}
@@ -361,12 +628,15 @@ export function VentaForm({
               ))}
             </select>
             {!addingCliente && (
-              <button type="button" className="link-button" onClick={() => setAddingCliente(true)}>
+              <button type="button" onClick={() => setAddingCliente(true)}>
                 {t("clientes.nuevoCliente")}
               </button>
             )}
           </div>
         </label>
+        {!clienteId && compradorNombre && (
+          <p className="field-note">{t("ventaForm.compradorSinVincular", { nombre: compradorNombre })}</p>
+        )}
 
         {addingCliente && (
           <div className="artista-selector-new">
@@ -411,28 +681,35 @@ export function VentaForm({
         )}
       </div>
 
-      <label>
-        {esDonacion ? t("ventaForm.destinatarioDonacion") : t("ventaForm.comprador")}
-        <input
-          type="text"
-          required
-          value={compradorNombre}
-          onChange={(e) => {
-            setCompradorNombre(e.target.value);
-            setClienteId(null);
-          }}
-        />
-      </label>
+      <fieldset>
+        <legend>{t("ventaForm.entregaLegend")}</legend>
+        <div className="venta-form-row-2">
+          <label>
+            {t("ventaForm.direccionEntregaLabel")} <HelpIcon fieldKey="direccion_entrega_venta" />
+            <input type="text" value={direccionEntrega} onChange={(e) => setDireccionEntrega(e.target.value)} />
+          </label>
+          <label>
+            {t("ventaForm.ciudadEntregaLabel")}
+            <input type="text" value={ciudadEntrega} onChange={(e) => setCiudadEntrega(e.target.value)} />
+          </label>
+        </div>
+        <label>
+          {t("ventaForm.paisEntregaLabel")}
+          <input type="text" value={paisEntrega} onChange={(e) => setPaisEntrega(e.target.value)} />
+        </label>
+      </fieldset>
 
-      <label>
-        {t("ventaForm.mailComprador")}
-        <input type="email" value={compradorEmail} onChange={(e) => setCompradorEmail(e.target.value)} />
-      </label>
-
-      <label>
-        {t("ventaForm.telefonoComprador")}
-        <input type="tel" value={compradorTelefono} onChange={(e) => setCompradorTelefono(e.target.value)} />
-      </label>
+      <fieldset>
+        <legend>{t("ventaForm.confidencialidadLegend")}</legend>
+        <label>
+          <input type="checkbox" checked={confidencial} onChange={(e) => setConfidencial(e.target.checked)} />
+          {t("ventaForm.confidencialLabel")} <HelpIcon fieldKey="confidencial_venta" />
+        </label>
+        <label>
+          {t("ventaForm.clausulaReventaLabel")} <HelpIcon fieldKey="clausula_reventa" />
+          <textarea rows={3} value={clausulaReventa} onChange={(e) => setClausulaReventa(e.target.value)} />
+        </label>
+      </fieldset>
 
       <label>
         {esVenta ? t("ventaForm.fechaVenta") : esDonacion ? t("ventaForm.fechaDonacion") : t("ventaForm.fechaReserva")}
@@ -465,6 +742,87 @@ export function VentaForm({
             <input type="number" min={0} step="0.01" required value={valorVenta} onChange={(e) => setValorVenta(e.target.value)} />
           </label>
         </div>
+      )}
+
+      {!esDonacion && (
+        <>
+          <div className="venta-form-row-2">
+            <label>
+              {t("ventaForm.precioListaLabel")} <HelpIcon fieldKey="precio_lista" />
+              <input type="number" min={0} step="0.01" value={precioLista} onChange={(e) => setPrecioLista(e.target.value)} />
+            </label>
+            <label>
+              {t("ventaForm.motivoDescuentoLabel")}
+              <input type="text" value={motivoDescuento} onChange={(e) => setMotivoDescuento(e.target.value)} />
+            </label>
+          </div>
+
+          {moneda !== "ARS" && (
+            <label>
+              {t("ventaForm.tipoCambioLabel")} <HelpIcon fieldKey="tipo_cambio" />
+              <input type="number" min={0} step="0.0001" value={tipoCambio} onChange={(e) => setTipoCambio(e.target.value)} />
+            </label>
+          )}
+
+          <fieldset>
+            <legend>{t("ventaForm.costosAsociadosLegend")}</legend>
+            <div className="venta-form-row-2">
+              <label>
+                {t("ventaForm.costoEnmarcadoLabel")}
+                <input type="number" min={0} step="0.01" value={costoEnmarcado} onChange={(e) => setCostoEnmarcado(e.target.value)} />
+              </label>
+              <label>
+                {t("ventaForm.costoPeanaLabel")}
+                <input type="number" min={0} step="0.01" value={costoPeana} onChange={(e) => setCostoPeana(e.target.value)} />
+              </label>
+            </div>
+            <div className="venta-form-row-2">
+              <label>
+                {t("ventaForm.costoEmbalajeLabel")}
+                <input type="number" min={0} step="0.01" value={costoEmbalaje} onChange={(e) => setCostoEmbalaje(e.target.value)} />
+              </label>
+              <label>
+                {t("ventaForm.costoTransporteLabel")}
+                <input
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={costoTransporte}
+                  onChange={(e) => setCostoTransporte(e.target.value)}
+                />
+              </label>
+            </div>
+            <label>
+              {t("ventaForm.costoSeguroLabel")} <HelpIcon fieldKey="costo_seguro_venta" />
+              <input type="number" min={0} step="0.01" value={costoSeguro} onChange={(e) => setCostoSeguro(e.target.value)} />
+            </label>
+          </fieldset>
+
+          <fieldset>
+            <legend>{t("ventaForm.condicionPagoLegend")}</legend>
+            <label>
+              {t("ventaForm.estadoPagoLabel")}
+              <select value={estadoPago} onChange={(e) => setEstadoPago(e.target.value as EstadoPago | "")}>
+                <option value="">—</option>
+                <option value="pagado">{t("ventaForm.estadoPagoPagado")}</option>
+                <option value="pendiente">{t("ventaForm.estadoPagoPendiente")}</option>
+                <option value="en_cuotas">{t("ventaForm.estadoPagoEnCuotas")}</option>
+              </select>
+            </label>
+            <div className="venta-form-row-2">
+              <label>
+                {t("ventaForm.metodoPagoLabel")}
+                <input type="text" value={metodoPago} onChange={(e) => setMetodoPago(e.target.value)} />
+              </label>
+              {estadoPago !== "pendiente" && (
+                <label>
+                  {t("ventaForm.fechaCobroLabel")}
+                  <input type="date" value={fechaCobro} onChange={(e) => setFechaCobro(e.target.value)} />
+                </label>
+              )}
+            </div>
+          </fieldset>
+        </>
       )}
 
       {esGaleria && !esDonacion && (
@@ -509,6 +867,18 @@ export function VentaForm({
                   )}`}
                 />
               </label>
+              <label>
+                {t("ventaForm.estadoLiquidacionLabel")} <HelpIcon fieldKey="estado_liquidacion" />
+                <select
+                  value={estadoLiquidacion}
+                  onChange={(e) => setEstadoLiquidacion(e.target.value as EstadoLiquidacion | "")}
+                >
+                  <option value="">—</option>
+                  <option value="pendiente">{t("ventaForm.estadoLiquidacionPendiente")}</option>
+                  <option value="liquidado">{t("ventaForm.estadoLiquidacionLiquidado")}</option>
+                  <option value="comprobante_emitido">{t("ventaForm.estadoLiquidacionComprobanteEmitido")}</option>
+                </select>
+              </label>
             </>
           )}
           <div className="venta-form-valor-row">
@@ -534,6 +904,61 @@ export function VentaForm({
               />
             </label>
           </div>
+          <div className="venta-form-row-2">
+            <label>
+              {t("ventaForm.retencionesLabel")}
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={retencionesMonto}
+                onChange={(e) => setRetencionesMonto(e.target.value)}
+              />
+            </label>
+            <label>
+              {t("ventaForm.arancelesLabel")}
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={arancelesMonto}
+                onChange={(e) => setArancelesMonto(e.target.value)}
+              />
+            </label>
+          </div>
+
+          <fieldset>
+            <legend>{t("ventaForm.droitSuiteLegend")}</legend>
+            <label>
+              <input type="checkbox" checked={droitSuiteAplica} onChange={(e) => setDroitSuiteAplica(e.target.checked)} />
+              {t("ventaForm.droitSuiteAplica")} <HelpIcon fieldKey="droit_suite" />
+            </label>
+            {droitSuiteAplica && (
+              <div className="venta-form-row-2">
+                <label>
+                  {t("ventaForm.droitSuitePorcentajeLabel")}
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    step="0.1"
+                    value={droitSuitePorcentaje}
+                    onChange={(e) => handleDroitSuitePorcentajeChange(e.target.value)}
+                  />
+                </label>
+                <label>
+                  {t("ventaForm.droitSuiteMontoLabel")}
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={droitSuiteMonto}
+                    onChange={(e) => handleDroitSuiteMontoChange(e.target.value)}
+                  />
+                </label>
+              </div>
+            )}
+          </fieldset>
         </>
       )}
 
@@ -549,10 +974,24 @@ export function VentaForm({
                   ? t("ventaForm.confirmarDonacion")
                   : t("ventaForm.confirmarReserva")}
         </button>
-        <button type="button" onClick={onCancel} disabled={submitting}>
-          {t("common.cancel")}
+        <button type="button" onClick={handleVolverClick} disabled={submitting}>
+          {t("common.back")}
         </button>
       </div>
+
+      {confirmandoSalir && (
+        <div className="confirm-box">
+          <p>{t("ventaForm.confirmarSalirSinGuardar")}</p>
+          <div className="obra-form-saved-actions">
+            <button type="button" onClick={onCancel}>
+              {t("ventaForm.salirSinGuardar")}
+            </button>
+            <button type="button" onClick={() => setConfirmandoSalir(false)}>
+              {t("ventaForm.seguirEditando")}
+            </button>
+          </div>
+        </div>
+      )}
 
       {error && (
         <p className="error" role="alert">

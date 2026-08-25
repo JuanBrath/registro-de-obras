@@ -50,12 +50,7 @@ function WorkspaceScreens() {
       // Sin perfil todavia no hay "home" al que volver dentro del workspace
       // (needsPersonalProfile fuerza esta pantalla): la unica salida real es
       // cerrar el workspace y volver al selector Personal/Galeria.
-      content = (
-        <PersonalProfileForm
-          onExit={needsPersonalProfile ? close : goHome}
-          onCancel={needsPersonalProfile ? close : goHome}
-        />
-      );
+      content = <PersonalProfileForm onExit={needsPersonalProfile ? close : goHome} />;
       break;
     case "nueva-obra":
       content = (

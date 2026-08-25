@@ -24,7 +24,7 @@ interface LanguageContextValue {
 
 const LanguageReactContext = createContext<LanguageContextValue | null>(null);
 
-function interpolate(text: string, vars?: Record<string, string | number>): string {
+export function interpolate(text: string, vars?: Record<string, string | number>): string {
   if (!vars) return text;
   let result = text;
   for (const [key, value] of Object.entries(vars)) {

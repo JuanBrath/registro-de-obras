@@ -50,6 +50,10 @@ import { migration0050ObraDetalleEsculturaRiguroso } from "./0050_obra_detalle_e
 import { migration0051ObraDetalleDibujoRiguroso } from "./0051_obra_detalle_dibujo_riguroso.js";
 import { migration0052ObraDetalleTextilCeramicaRiguroso } from "./0052_obra_detalle_textil_ceramica_riguroso.js";
 import { migration0053ObraDetalleNuevosMediosRiguroso } from "./0053_obra_detalle_nuevos_medios_riguroso.js";
+import { migration0054PerfilFirmaDigital } from "./0054_perfil_firma_digital.js";
+import { migration0055ArtistaBioIngles } from "./0055_artista_bio_ingles.js";
+import { migration0056VentaDesgloseFinanciero } from "./0056_venta_desglose_financiero.js";
+import { migration0057VentaDestinoConfidencialidad } from "./0057_venta_destino_confidencialidad.js";
 
 export interface Migration {
   name: string;
@@ -231,4 +235,8 @@ export const ALL_MIGRATIONS: Migration[] = [
   migration0051ObraDetalleDibujoRiguroso,
   migration0052ObraDetalleTextilCeramicaRiguroso,
   migration0053ObraDetalleNuevosMediosRiguroso,
+  migration0054PerfilFirmaDigital,
+  migration0055ArtistaBioIngles,
+  migration0056VentaDesgloseFinanciero,
+  migration0057VentaDestinoConfidencialidad,
 ];

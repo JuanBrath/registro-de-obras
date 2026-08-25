@@ -10,10 +10,16 @@ export function ImageFileField({
   value,
   onChange,
   disabled = false,
+  hasImage = false,
+  showFileName = true,
 }: {
   value: File | null;
   onChange: (file: File | null) => void;
   disabled?: boolean;
+  /** Ya existe una imagen guardada (aunque todavia no se eligio un archivo nuevo en esta sesion). */
+  hasImage?: boolean;
+  /** Si el campo ya muestra una miniatura propia, el nombre del archivo es redundante. */
+  showFileName?: boolean;
 }) {
   const { t } = useLanguage();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -47,10 +53,18 @@ export function ImageFileField({
         onChange={handleChange}
       />
       <span className="image-file-field-name">
-        {procesando ? t("common.loading") : value ? value.name : t("imageFileField.ningunoSeleccionado")}
+        {procesando
+          ? t("common.loading")
+          : !showFileName
+            ? ""
+            : value
+              ? value.name
+              : hasImage
+                ? ""
+                : t("imageFileField.ningunoSeleccionado")}
       </span>
       <button type="button" onClick={() => inputRef.current?.click()} disabled={procesando || disabled}>
-        {t("imageFileField.elegirImagen")}
+        {value || hasImage ? t("imageFileField.cambiarImagen") : t("imageFileField.elegirImagen")}
       </button>
     </div>
   );

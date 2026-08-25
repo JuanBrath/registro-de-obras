@@ -5,6 +5,7 @@ export interface NuevoArtistaFields {
   nombreCompleto: string;
   fechaNacimiento?: string | null;
   bio?: string | null;
+  bioEn?: string | null;
   telefono?: string | null;
   email?: string | null;
   web?: string | null;
@@ -43,18 +44,19 @@ export async function createArtista(
 
     const result = await tx.execute(
       `INSERT INTO artista (
-         numero_artista, nombre_completo, es_propio, fecha_nacimiento, bio, telefono, email, web, instagram,
+         numero_artista, nombre_completo, es_propio, fecha_nacimiento, bio, bio_en, telefono, email, web, instagram,
          direccion, x, facebook, linkedin, notas, nombre_artistico, nacionalidad, lugar_nacimiento,
          lugar_fallecimiento, fecha_fallecimiento, lugar_residencia_trabajo, declaracion_artista,
          formacion_academica, exposiciones_individuales, exposiciones_colectivas, premios_becas_reconocimientos,
          colecciones, publicaciones_prensa
        )
-       VALUES (?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         numeroArtista,
         fields.nombreCompleto,
         fields.fechaNacimiento ?? null,
         fields.bio ?? null,
+        fields.bioEn ?? null,
         fields.telefono ?? null,
         fields.email ?? null,
         fields.web ?? null,

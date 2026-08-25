@@ -14,10 +14,12 @@ export interface Artista {
   linkedin: string | null;
   fotoPath: string | null;
   logoPath: string | null;
+  firmaPath: string | null;
   cuit: string | null;
   notas: string | null;
   fechaNacimiento: string | null;
   bio: string | null;
+  bioEn: string | null;
   nombreArtistico: string | null;
   lugarNacimiento: string | null;
   lugarFallecimiento: string | null;
@@ -49,10 +51,12 @@ export interface NuevoArtista {
   linkedin?: string | null;
   fotoPath?: string | null;
   logoPath?: string | null;
+  firmaPath?: string | null;
   cuit?: string | null;
   notas?: string | null;
   fechaNacimiento?: string | null;
   bio?: string | null;
+  bioEn?: string | null;
   nombreArtistico?: string | null;
   lugarNacimiento?: string | null;
   lugarFallecimiento?: string | null;

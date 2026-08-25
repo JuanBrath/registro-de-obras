@@ -10,6 +10,8 @@ import {
   parseTags,
   puedeDeshacerSerie,
   type CategoriaObra,
+  type EstadoLiquidacion,
+  type EstadoPago,
   type Moneda,
   type SubtipoObraGrafica,
   type TipoVenta,
@@ -40,7 +42,18 @@ import { savePdfWithDialog } from "../utils/savePdfDialog.js";
 import { formatFechaDDMMYYYY } from "../utils/formatFecha.js";
 import { detectImageFormat } from "../utils/detectImageFormat.js";
 import { focusNextOnEnter } from "../utils/focusNextOnEnter.js";
-import { drawPdfHeader, writeWrappedText } from "../utils/pdfBranding.js";
+import { drawPdfHeader, drawSignatureBlock, writeWrappedText, type FirmaEleccion } from "../utils/pdfBranding.js";
+import { InformesModal } from "../components/InformesModal.js";
+import { tInforme, type InformeIdioma } from "../reports/informeIdioma.js";
+import { resolveFirmaBytes, resolveMembreteLogoBytes } from "../reports/reportBranding.js";
+import { buildObraSeriesDetalladoPdfBytes, type ObraEjemplarDetalle } from "../reports/obraReports.js";
+import {
+  buildCoaPdfBytes,
+  buildComprobanteVentaPdfBytes,
+  buildContratoPdfBytes,
+  buildPresupuestoPdfBytes,
+  buildRemitoPdfBytes,
+} from "../reports/ventaReports.js";
 
 interface ObraRow {
   id: number;
@@ -202,6 +215,28 @@ interface VentaRow {
   numero_certificado: number | null;
   iva_porcentaje: number | null;
   iva_monto: number | null;
+  precio_lista: number | null;
+  motivo_descuento: string | null;
+  tipo_cambio: number | null;
+  retenciones_monto: number | null;
+  aranceles_monto: number | null;
+  costo_enmarcado: number | null;
+  costo_peana: number | null;
+  costo_embalaje: number | null;
+  costo_transporte: number | null;
+  costo_seguro: number | null;
+  estado_pago: EstadoPago | null;
+  metodo_pago: string | null;
+  fecha_cobro: string | null;
+  estado_liquidacion: EstadoLiquidacion | null;
+  droit_suite_aplica: number;
+  droit_suite_porcentaje: number | null;
+  droit_suite_monto: number | null;
+  direccion_entrega: string | null;
+  ciudad_entrega: string | null;
+  pais_entrega: string | null;
+  confidencial: number;
+  clausula_reventa: string | null;
 }
 
 function toVentaExistente(v: VentaRow): VentaExistente {
@@ -222,6 +257,28 @@ function toVentaExistente(v: VentaRow): VentaExistente {
     numeroCertificado: v.numero_certificado,
     ivaPorcentaje: v.iva_porcentaje,
     ivaMonto: v.iva_monto,
+    precioLista: v.precio_lista,
+    motivoDescuento: v.motivo_descuento,
+    tipoCambio: v.tipo_cambio,
+    retencionesMonto: v.retenciones_monto,
+    arancelesMonto: v.aranceles_monto,
+    costoEnmarcado: v.costo_enmarcado,
+    costoPeana: v.costo_peana,
+    costoEmbalaje: v.costo_embalaje,
+    costoTransporte: v.costo_transporte,
+    costoSeguro: v.costo_seguro,
+    estadoPago: v.estado_pago,
+    metodoPago: v.metodo_pago,
+    fechaCobro: v.fecha_cobro,
+    estadoLiquidacion: v.estado_liquidacion,
+    droitSuiteAplica: Number(v.droit_suite_aplica) === 1,
+    droitSuitePorcentaje: v.droit_suite_porcentaje,
+    droitSuiteMonto: v.droit_suite_monto,
+    direccionEntrega: v.direccion_entrega,
+    ciudadEntrega: v.ciudad_entrega,
+    paisEntrega: v.pais_entrega,
+    confidencial: Number(v.confidencial) === 1,
+    clausulaReventa: v.clausula_reventa,
   };
 }
 
@@ -544,8 +601,8 @@ function buildObraDescripcionLineas(
 }
 
 export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => void }) {
-  const { context } = useWorkspace();
-  const { t } = useLanguage();
+  const { context, personalArtista, galeriaPerfil } = useWorkspace();
+  const { t, idioma } = useLanguage();
   const esRegistroPersonal = context?.workspace === "personal";
 
   const [obra, setObra] = useState<ObraRow | null>(null);
@@ -567,12 +624,25 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
   const [generandoFichaPdf, setGenerandoFichaPdf] = useState(false);
   const [fichaPdfMensaje, setFichaPdfMensaje] = useState<string | null>(null);
   useEscapeToDismiss(fichaPdfMensaje, setFichaPdfMensaje);
-  const [fichaPdfSeleccionAbierta, setFichaPdfSeleccionAbierta] = useState(false);
+  const [informesMenuAbierto, setInformesMenuAbierto] = useState(false);
+  const [informeSeleccionId, setInformeSeleccionId] = useState("completa");
+  const [informeIdioma, setInformeIdioma] = useState<InformeIdioma>("es");
+  const [informeFirma, setInformeFirma] = useState<FirmaEleccion>("ninguna");
+  const [firmaBytesDisponibles, setFirmaBytesDisponibles] = useState<Uint8Array | null>(null);
   const [fichaPdfIncluirTodas, setFichaPdfIncluirTodas] = useState(true);
   const [fichaPdfSeleccionadas, setFichaPdfSeleccionadas] = useState<Set<number>>(new Set());
-  const [generandoPresupuestoId, setGenerandoPresupuestoId] = useState<number | null>(null);
-  const [presupuestoMensaje, setPresupuestoMensaje] = useState<string | null>(null);
-  useEscapeToDismiss(presupuestoMensaje, setPresupuestoMensaje);
+  const [ventaInformeTarget, setVentaInformeTarget] = useState<{ ejemplar: EjemplarRow; venta: VentaRow | undefined } | null>(
+    null,
+  );
+  const [ventaInformeSeleccionId, setVentaInformeSeleccionId] = useState("presupuesto");
+  const [ventaInformeIdioma, setVentaInformeIdioma] = useState<InformeIdioma>("es");
+  const [ventaInformeFirma, setVentaInformeFirma] = useState<FirmaEleccion>("ninguna");
+  const [generandoVentaInforme, setGenerandoVentaInforme] = useState(false);
+  const [ventaInformeMensaje, setVentaInformeMensaje] = useState<string | null>(null);
+  useEscapeToDismiss(ventaInformeMensaje, setVentaInformeMensaje);
+  const [rofrPlazoAnios, setRofrPlazoAnios] = useState("3");
+  const [rofrPlazoDias, setRofrPlazoDias] = useState("30");
+  const [rofrCriterioPrecio, setRofrCriterioPrecio] = useState("");
   const objectUrlRef = useRef<string | null>(null);
   const fullImageUrlRef = useRef<string | null>(null);
 
@@ -660,7 +730,12 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       }
 
       const ventaRows = await context.db.query<VentaRow>(
-        `SELECT id, tipo, cliente_id, comprador_nombre, comprador_email, comprador_telefono, fecha_venta, lugar_venta, valor_venta, moneda, aplica_comision, porcentaje_comision, monto_comision, numero_certificado, iva_porcentaje, iva_monto
+        `SELECT id, tipo, cliente_id, comprador_nombre, comprador_email, comprador_telefono, fecha_venta, lugar_venta, valor_venta, moneda, aplica_comision, porcentaje_comision, monto_comision, numero_certificado, iva_porcentaje, iva_monto,
+                precio_lista, motivo_descuento, tipo_cambio, retenciones_monto, aranceles_monto,
+                costo_enmarcado, costo_peana, costo_embalaje, costo_transporte, costo_seguro,
+                estado_pago, metodo_pago, fecha_cobro, estado_liquidacion,
+                droit_suite_aplica, droit_suite_porcentaje, droit_suite_monto,
+                direccion_entrega, ciudad_entrega, pais_entrega, confidencial, clausula_reventa
          FROM venta WHERE obra_id = ?`,
         [obraId],
       );
@@ -703,21 +778,116 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
     }
   }
 
-  function handleGenerarFichaPdfClick() {
+  async function handleAbrirInformesMenu() {
     if (!obra) return;
-    if (Number(obra.es_seriada) === 1 && ejemplares.length > 0) {
-      setFichaPdfIncluirTodas(true);
-      setFichaPdfSeleccionadas(new Set());
-      setFichaPdfSeleccionAbierta(true);
-    } else {
-      handleGenerarFichaPdf(ejemplares);
-    }
+    setInformeSeleccionId("completa");
+    setFichaPdfIncluirTodas(true);
+    setFichaPdfSeleccionadas(new Set());
+    setInformeIdioma(idioma);
+    setInformeFirma("ninguna");
+    setFirmaBytesDisponibles(context ? await resolveFirmaBytes(context, personalArtista, galeriaPerfil) : null);
+    setInformesMenuAbierto(true);
   }
 
-  async function handleConfirmarFichaPdf() {
-    const incluidos = fichaPdfIncluirTodas ? ejemplares : ejemplares.filter((ej) => fichaPdfSeleccionadas.has(ej.id));
-    setFichaPdfSeleccionAbierta(false);
-    await handleGenerarFichaPdf(incluidos);
+  async function handleConfirmarInforme() {
+    if (informeSeleccionId === "completa") {
+      const incluidos = fichaPdfIncluirTodas ? ejemplares : ejemplares.filter((ej) => fichaPdfSeleccionadas.has(ej.id));
+      setInformesMenuAbierto(false);
+      await handleGenerarFichaPdf(incluidos);
+      return;
+    }
+    setInformesMenuAbierto(false);
+    await handleGenerarInformeSeries(informeSeleccionId as "disponibles" | "no_disponibles" | "primera_disponible");
+  }
+
+  function formatearVentaTexto(ej: EjemplarRow): string | null {
+    const venta = ej.venta_id ? ventas[ej.venta_id] : undefined;
+    if (!venta) return null;
+    return `${tInforme(
+      informeIdioma,
+      venta.tipo === "venta" ? "common.vendida" : venta.tipo === "donacion" ? "common.donada" : "common.reservada",
+    )} — ${venta.comprador_nombre} (${formatFechaDDMMYYYY(venta.fecha_venta)})`;
+  }
+
+  async function handleGenerarInformeSeries(tipo: "disponibles" | "no_disponibles" | "primera_disponible") {
+    if (!obra || !context) return;
+    setGenerandoFichaPdf(true);
+    setError(null);
+    setFichaPdfMensaje(null);
+    try {
+      const filtradas =
+        tipo === "disponibles"
+          ? ejemplares.filter((ej) => ej.estado === "disponible")
+          : tipo === "no_disponibles"
+            ? ejemplares.filter((ej) => ej.estado !== "disponible")
+            : ejemplares.filter((ej) => ej.estado === "disponible").slice(0, 1);
+
+      const ejemplaresDetalle: ObraEjemplarDetalle[] = filtradas.map((ej) => ({
+        numero: ej.numero,
+        estado: ej.estado,
+        fecha_impresion: ej.fecha_impresion,
+        tipo_impresion: ej.tipo_impresion,
+        soporte_impresion: ej.soporte_impresion,
+        tipo_tintas: ej.tipo_tintas,
+        taller_impresion: ej.taller_impresion,
+        ubicacion_actual: ej.ubicacion_actual,
+        dimensiones: ej.dimensiones,
+        tipo_enmarcado: ej.tipo_enmarcado,
+        tamano_final_enmarcado: ej.tamano_final_enmarcado,
+        ubicacion_firma: ej.ubicacion_firma,
+        sello_seco_holograma: ej.sello_seco_holograma,
+        notas: ej.notas,
+        coa_numero: ej.coa_numero,
+        coa_emisor: ej.coa_emisor,
+        coa_fecha: ej.coa_fecha,
+        coa_sistema_seguridad: ej.coa_sistema_seguridad,
+        valor_seguro: ej.valor_seguro,
+        moneda_seguro: ej.moneda_seguro,
+        vidrio_proteccion_frontal: ej.vidrio_proteccion_frontal,
+        sistema_cuelgue: ej.sistema_cuelgue,
+        informe_conservacion: ej.informe_conservacion,
+        dimensiones_soporte_completo: ej.dimensiones_soporte_completo,
+        peso: ej.peso,
+        tipo_firma: ej.tipo_firma,
+        clasificacion_prueba_especial: ej.clasificacion_prueba_especial,
+        instrucciones_manipulacion: ej.instrucciones_manipulacion,
+        adhesivos_montaje: ej.adhesivos_montaje,
+        inscripciones_anotaciones: ej.inscripciones_anotaciones,
+        ventaTexto: formatearVentaTexto(ej),
+      }));
+
+      let imgBytes: Uint8Array | null = null;
+      const imagenPath = obra.imagen_alta_resolucion_path || obra.miniatura_path;
+      if (imagenPath) {
+        try {
+          imgBytes = await context.fs.readFile(imagenPath);
+        } catch {
+          imgBytes = null;
+        }
+      }
+
+      const logoBytes = await resolveMembreteLogoBytes(context, personalArtista, galeriaPerfil);
+      const lineas = buildObraDescripcionLineas(obra, ext, esRegistroPersonal, (key, vars) => tInforme(informeIdioma, key, vars));
+      const mensajeSinSeries = t(
+        tipo === "disponibles" ? "obraDetail.sinSeriesDisponibles" : "obraDetail.sinSeriesNoDisponibles",
+      );
+
+      const bytes = await buildObraSeriesDetalladoPdfBytes(obra.titulo, imgBytes, lineas, ejemplaresDetalle, mensajeSinSeries, {
+        idioma: informeIdioma,
+        logoBytes,
+        firma: informeFirma,
+        firmaBytes: firmaBytesDisponibles,
+      });
+
+      const sufijo = tipo === "disponibles" ? "_disponibles" : tipo === "no_disponibles" ? "_no_disponibles" : "_primera_disponible";
+      const nombreArchivo = `series_${obra.titulo.replace(/[^a-zA-Z0-9]+/g, "_")}${sufijo}.pdf`;
+      const guardado = await savePdfWithDialog(bytes, nombreArchivo);
+      if (guardado) setFichaPdfMensaje(t("obraDetail.fichaPdfGenerada"));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setGenerandoFichaPdf(false);
+    }
   }
 
   async function handleGenerarFichaPdf(ejemplaresIncluidos: EjemplarRow[]) {
@@ -734,7 +904,11 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       ]);
       const doc = new jsPDF({ unit: "mm", format: "a4" });
       const marginLeft = 14;
-      const startY = await drawPdfHeader(doc, obra.titulo, { marginLeft });
+      const logoBytes = await resolveMembreteLogoBytes(context, personalArtista, galeriaPerfil);
+      const startY = await drawPdfHeader(doc, obra.titulo, { marginLeft, logoBytes });
+      // La foto queda pegada al membrete como antes; solo el texto de datos
+      // gana mas aire respecto de la linea dorada del encabezado.
+      const textStartY = startY + 10;
       const imageBoxSize = 70;
       let textX = marginLeft;
       let imageBottom = startY;
@@ -769,9 +943,9 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       const pageWidth = doc.internal.pageSize.getWidth();
       const textWidth = pageWidth - textX - marginLeft;
 
-      const lineas = buildObraDescripcionLineas(obra, ext, esRegistroPersonal, t);
+      const lineas = buildObraDescripcionLineas(obra, ext, esRegistroPersonal, (key, vars) => tInforme(informeIdioma, key, vars));
 
-      let textY = startY;
+      let textY = textStartY;
       for (const linea of lineas) {
         textY = writeWrappedText(doc, linea, textX, textY, textWidth, { lineHeight: 6 });
       }
@@ -784,30 +958,39 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
         headStyles: { fontStyle: "normal" },
         head: [
           [
-            t("ventasReport.colSerie"),
-            t("obraDetail.estadoLabel"),
-            t("obraDetail.fechaImpresion"),
-            t("obraDetail.soporteImpresion"),
-            t("obraDetail.tamanoEjemplarLabel"),
-            t("obraDetail.ventaReserva"),
+            tInforme(informeIdioma, "ventasReport.colSerie"),
+            tInforme(informeIdioma, "obraDetail.estadoLabel"),
+            tInforme(informeIdioma, "obraDetail.fechaImpresion"),
+            tInforme(informeIdioma, "obraDetail.soporteImpresion"),
+            tInforme(informeIdioma, "obraDetail.tamanoEjemplarLabel"),
+            tInforme(informeIdioma, "obraDetail.ventaReserva"),
           ],
         ],
         body: ejemplaresIncluidos.map((ej) => {
           const venta = ej.venta_id ? ventas[ej.venta_id] : undefined;
           const ventaTexto = venta
-            ? `${t(
+            ? `${tInforme(
+                informeIdioma,
                 venta.tipo === "venta" ? "common.vendida" : venta.tipo === "donacion" ? "common.donada" : "common.reservada",
               )} — ${venta.comprador_nombre} (${formatFechaDDMMYYYY(venta.fecha_venta)})`
             : "—";
           return [
             ej.numero,
-            t(`estado.${ej.estado}` as TranslationKey),
+            tInforme(informeIdioma, `estado.${ej.estado}` as TranslationKey),
             ej.fecha_impresion ? formatFechaDDMMYYYY(ej.fecha_impresion) : "—",
             ej.soporte_impresion ?? "—",
             ej.dimensiones ?? "—",
             ventaTexto,
           ];
         }),
+      });
+
+      const finalY = (doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? tableStartY;
+      await drawSignatureBlock(doc, finalY + 10, {
+        idioma: informeIdioma,
+        firma: informeFirma,
+        firmaBytes: firmaBytesDisponibles,
+        marginLeft,
       });
 
       const bytes = new Uint8Array(doc.output("arraybuffer"));
@@ -821,105 +1004,174 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
     }
   }
 
+  function presupuestoBloqueadoPara(estado: string): boolean {
+    return ["vendida", "descartada", "coleccion_autor", "destruida"].includes(estado);
+  }
+
+  async function handleAbrirInformesVenta(ejemplar: EjemplarRow) {
+    if (!context) return;
+    const venta = ejemplar.venta_id ? ventas[ejemplar.venta_id] : undefined;
+    setVentaInformeTarget({ ejemplar, venta });
+    const defaultId = !presupuestoBloqueadoPara(ejemplar.estado)
+      ? "presupuesto"
+      : venta?.tipo === "donacion"
+        ? "coa"
+        : "comprobante";
+    setVentaInformeSeleccionId(defaultId);
+    setVentaInformeIdioma(idioma);
+    setVentaInformeFirma("ninguna");
+    setRofrPlazoAnios("3");
+    setRofrPlazoDias("30");
+    setRofrCriterioPrecio("");
+    setVentaInformeMensaje(null);
+    setFirmaBytesDisponibles(await resolveFirmaBytes(context, personalArtista, galeriaPerfil));
+  }
+
   // Documento distinto de la ficha: la ficha describe toda la obra con todas
-  // sus series; el presupuesto es para ofrecer/cotizar una unica serie
-  // puntual, asi que lleva los datos de la obra mas solo esa serie.
-  async function handleGenerarPresupuesto(ejemplar: EjemplarRow) {
-    if (!obra || !context) return;
-    setGenerandoPresupuestoId(ejemplar.id);
+  // sus series; estos documentos son puntuales de una unica serie (y, salvo
+  // el presupuesto, de una venta ya registrada).
+  async function handleGenerarInformeVenta() {
+    if (!obra || !context || !ventaInformeTarget) return;
+    const { ejemplar, venta } = ventaInformeTarget;
+    setGenerandoVentaInforme(true);
     setError(null);
-    setPresupuestoMensaje(null);
+    setVentaInformeMensaje(null);
     try {
-      const { default: jsPDF } = await import("jspdf");
-      const doc = new jsPDF({ unit: "mm", format: "a4" });
-      const marginLeft = 14;
-      const startY = await drawPdfHeader(doc, t("obraDetail.presupuestoTitulo", { titulo: obra.titulo }), {
-        marginLeft,
-      });
-      const imageBoxSize = 70;
-      let textX = marginLeft;
-      let imageBottom = startY;
+      const logoBytes = await resolveMembreteLogoBytes(context, personalArtista, galeriaPerfil);
+      const tr = (key: TranslationKey, vars?: Record<string, string | number>) => tInforme(ventaInformeIdioma, key, vars);
+      const brandOpts = { idioma: ventaInformeIdioma, logoBytes, firma: ventaInformeFirma, firmaBytes: firmaBytesDisponibles };
+      const base = `${obra.titulo.replace(/[^a-zA-Z0-9]+/g, "_")}_${ejemplar.numero.replace(/[^a-zA-Z0-9]+/g, "_")}`;
 
-      const imagenPath = obra.imagen_alta_resolucion_path || obra.miniatura_path;
-      if (imagenPath) {
-        try {
-          const imgBytes = await context.fs.readFile(imagenPath);
-          const formato = detectImageFormat(imgBytes);
-          if (formato) {
-            const blob = new Blob([imgBytes as BlobPart]);
-            const bitmap = await createImageBitmap(blob);
-            let displayW = imageBoxSize;
-            let displayH = imageBoxSize / (bitmap.width / bitmap.height);
-            if (displayH > imageBoxSize) {
-              displayH = imageBoxSize;
-              displayW = imageBoxSize * (bitmap.width / bitmap.height);
-            }
-            bitmap.close();
-            doc.addImage(imgBytes, formato, marginLeft, startY, displayW, displayH);
-            imageBottom = startY + displayH;
-            textX = marginLeft + imageBoxSize + 8;
+      const obraDatos = {
+        titulo: obra.titulo,
+        autor: obra.nombre_completo,
+        codigoInventario: obra.codigo_inventario ?? "",
+        informeConservacion: ejemplar.informe_conservacion ?? "",
+        descripcionLineas: buildObraDescripcionLineas(obra, ext, esRegistroPersonal, tr, {
+          incluirSoftwareEdicion: false,
+          incluirInfoComercial: false,
+        }),
+        serie: {
+          numero: ejemplar.numero,
+          precioVenta: ejemplar.precio_venta,
+          monedaVenta: ejemplar.moneda_venta ?? "ARS",
+          fechaImpresion: ejemplar.fecha_impresion ?? "",
+          tipoImpresion: ejemplar.tipo_impresion ?? "",
+          soporteImpresion: ejemplar.soporte_impresion ?? "",
+          tallerImpresion: ejemplar.taller_impresion ?? "",
+          dimensiones: ejemplar.dimensiones ?? "",
+          tipoEnmarcado: ejemplar.tipo_enmarcado ?? "",
+          tamanoFinalEnmarcado: ejemplar.tamano_final_enmarcado ?? "",
+          notas: ejemplar.notas ?? "",
+        },
+      };
+
+      let bytes: Uint8Array;
+      let nombreArchivo: string;
+
+      if (ventaInformeSeleccionId === "presupuesto") {
+        let imgBytes: Uint8Array | null = null;
+        const imagenPath = obra.imagen_alta_resolucion_path || obra.miniatura_path;
+        if (imagenPath) {
+          try {
+            imgBytes = await context.fs.readFile(imagenPath);
+          } catch {
+            imgBytes = null;
           }
-        } catch {
-          // Si falta el archivo o no se puede leer, el presupuesto se genera sin imagen.
         }
+        bytes = await buildPresupuestoPdfBytes(obraDatos, imgBytes, brandOpts);
+        nombreArchivo = `presupuesto_${base}.pdf`;
+      } else if (venta) {
+        const ventaDatos = {
+          tipo: venta.tipo,
+          fechaVenta: venta.fecha_venta,
+          lugarVenta: venta.lugar_venta ?? "",
+          valorVenta: venta.valor_venta,
+          moneda: venta.moneda,
+          precioLista: venta.precio_lista,
+          motivoDescuento: venta.motivo_descuento ?? "",
+          tipoCambio: venta.tipo_cambio,
+          metodoPago: venta.metodo_pago ?? "",
+          estadoPago: venta.estado_pago ?? "",
+          fechaCobro: venta.fecha_cobro ?? "",
+          numeroCertificado: venta.numero_certificado,
+          ivaPorcentaje: venta.iva_porcentaje,
+          ivaMonto: venta.iva_monto,
+          retencionesMonto: venta.retenciones_monto,
+          arancelesMonto: venta.aranceles_monto,
+          costoEnmarcado: venta.costo_enmarcado,
+          costoPeana: venta.costo_peana,
+          costoEmbalaje: venta.costo_embalaje,
+          costoTransporte: venta.costo_transporte,
+          costoSeguro: venta.costo_seguro,
+          direccionEntrega: venta.direccion_entrega ?? "",
+          ciudadEntrega: venta.ciudad_entrega ?? "",
+          paisEntrega: venta.pais_entrega ?? "",
+          confidencial: Number(venta.confidencial) === 1,
+          clausulaReventa: venta.clausula_reventa ?? "",
+        };
+
+        let compradorDomicilio = "";
+        let compradorCuit = "";
+        if (venta.cliente_id) {
+          const rows = await context.db.query<{ domicilio: string | null; cuit: string | null }>(
+            "SELECT domicilio, cuit FROM cliente WHERE id = ?",
+            [venta.cliente_id],
+          );
+          compradorDomicilio = rows[0]?.domicilio ?? "";
+          compradorCuit = rows[0]?.cuit ?? "";
+        }
+        const compradorDatos = {
+          nombre: venta.comprador_nombre,
+          email: venta.comprador_email ?? "",
+          telefono: venta.comprador_telefono ?? "",
+          domicilio: compradorDomicilio,
+          cuit: compradorCuit,
+        };
+
+        if (ventaInformeSeleccionId === "comprobante") {
+          bytes = await buildComprobanteVentaPdfBytes(obraDatos, ventaDatos, compradorDatos, brandOpts);
+          nombreArchivo = `comprobante_${base}.pdf`;
+        } else if (ventaInformeSeleccionId === "coa") {
+          bytes = await buildCoaPdfBytes(obraDatos, ventaDatos, compradorDatos, brandOpts);
+          nombreArchivo = `coa_${base}.pdf`;
+        } else if (ventaInformeSeleccionId === "remito") {
+          bytes = await buildRemitoPdfBytes(obraDatos, ventaDatos, compradorDatos, brandOpts);
+          nombreArchivo = `remito_${base}.pdf`;
+        } else {
+          const esRofr = ventaInformeSeleccionId === "contratoRofr";
+          const vendedorDatos = {
+            nombre: esRegistroPersonal ? personalArtista?.nombreCompleto ?? "" : galeriaPerfil?.nombre ?? "",
+            cuit: (esRegistroPersonal ? personalArtista?.cuit : galeriaPerfil?.cuit) ?? "",
+            domicilio: (esRegistroPersonal ? personalArtista?.direccion : galeriaPerfil?.direccion) ?? "",
+          };
+          bytes = await buildContratoPdfBytes(
+            obraDatos,
+            ventaDatos,
+            compradorDatos,
+            vendedorDatos,
+            esRofr ? "rofr" : "estandar",
+            esRofr
+              ? {
+                  plazoAnios: parseInt(rofrPlazoAnios, 10) || 3,
+                  plazoDias: parseInt(rofrPlazoDias, 10) || 30,
+                  criterioPrecio: rofrCriterioPrecio,
+                }
+              : null,
+            { logoBytes, firma: ventaInformeFirma, firmaBytes: firmaBytesDisponibles },
+          );
+          nombreArchivo = `contrato_${esRofr ? "rofr_" : ""}${base}.pdf`;
+        }
+      } else {
+        return;
       }
 
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const textWidth = pageWidth - textX - marginLeft;
-
-      const lineas = buildObraDescripcionLineas(obra, ext, esRegistroPersonal, t, {
-        incluirSoftwareEdicion: false,
-        incluirInfoComercial: false,
-      });
-
-      let textY = startY;
-      for (const linea of lineas) {
-        textY = writeWrappedText(doc, linea, textX, textY, textWidth, { lineHeight: 6 });
-      }
-
-      const serieLineas: string[] = [];
-      serieLineas.push(`${t("ventasReport.colSerie")}: ${ejemplar.numero}`);
-      if (ejemplar.precio_venta != null) {
-        serieLineas.push(
-          t("obraDetail.valorSerie", { moneda: ejemplar.moneda_venta ?? "ARS", valor: ejemplar.precio_venta }),
-        );
-      }
-      if (ejemplar.fecha_impresion) {
-        serieLineas.push(`${t("obraDetail.fechaImpresion")}: ${formatFechaDDMMYYYY(ejemplar.fecha_impresion)}`);
-      }
-      if (ejemplar.tipo_impresion) serieLineas.push(`${t("obraDetail.tipoImpresionLabel")}: ${ejemplar.tipo_impresion}`);
-      if (ejemplar.soporte_impresion) {
-        serieLineas.push(`${t("obraDetail.soporteImpresion")}: ${ejemplar.soporte_impresion}`);
-      }
-      if (ejemplar.taller_impresion) {
-        serieLineas.push(`${t("obraDetail.tallerImpresionLabel")}: ${ejemplar.taller_impresion}`);
-      }
-      if (ejemplar.dimensiones) serieLineas.push(`${t("obraDetail.tamanoEjemplarLabel")}: ${ejemplar.dimensiones}`);
-      if (ejemplar.tipo_enmarcado) serieLineas.push(`${t("obraDetail.tipoEnmarcadoLabel")}: ${ejemplar.tipo_enmarcado}`);
-      if (ejemplar.tamano_final_enmarcado) {
-        serieLineas.push(`${t("obraDetail.tamanoFinalEnmarcadoLabel")}: ${ejemplar.tamano_final_enmarcado}`);
-      }
-      if (ejemplar.notas) serieLineas.push(`${t("obraDetail.notasEjemplarLabel")}: ${ejemplar.notas}`);
-
-      let bottomY = Math.max(imageBottom, textY) + 8;
-      doc.setFont("Inter", "medium");
-      bottomY = writeWrappedText(doc, t("obraDetail.presupuestoSerieSubtitulo"), marginLeft, bottomY, pageWidth - marginLeft * 2, {
-        lineHeight: 6,
-      });
-      doc.setFont("Inter", "normal");
-      bottomY += 2;
-      for (const linea of serieLineas) {
-        bottomY = writeWrappedText(doc, linea, marginLeft, bottomY, pageWidth - marginLeft * 2, { lineHeight: 6 });
-      }
-
-      const bytes = new Uint8Array(doc.output("arraybuffer"));
-      const nombreArchivo = `presupuesto_${obra.titulo.replace(/[^a-zA-Z0-9]+/g, "_")}_${ejemplar.numero.replace(/[^a-zA-Z0-9]+/g, "_")}.pdf`;
       const guardado = await savePdfWithDialog(bytes, nombreArchivo);
-      if (guardado) setPresupuestoMensaje(t("obraDetail.presupuestoPdfGenerado"));
+      if (guardado) setVentaInformeMensaje(t("ventaForm.informeGenerado"));
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
-      setGenerandoPresupuestoId(null);
+      setGenerandoVentaInforme(false);
     }
   }
 
@@ -1464,8 +1716,8 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
               <button type="button" onClick={() => setEditingObra(true)}>
                 {t("obraDetail.editarObra")}
               </button>
-              <button type="button" onClick={handleGenerarFichaPdfClick} disabled={generandoFichaPdf}>
-                {generandoFichaPdf ? t("common.saving") : t("obraDetail.generarFichaPdf")}
+              <button type="button" onClick={handleAbrirInformesMenu} disabled={generandoFichaPdf}>
+                {generandoFichaPdf ? t("common.saving") : t("common.generarInforme")}
               </button>
               <button type="button" onClick={() => setConfirmingDelete(true)}>
                 {t("obraDetail.eliminarObra")}
@@ -1530,81 +1782,161 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
               onEditarVenta={(venta) => setVentaTarget({ ejemplarId: ej.id, existingVenta: toVentaExistente(venta) })}
               onAnularVenta={(venta, nuevoEstado) => handleAnularVenta(venta, ej.id, nuevoEstado)}
               anulando={anulandoVenta}
-              onGenerarPresupuesto={() => handleGenerarPresupuesto(ej)}
-              generandoPresupuesto={generandoPresupuestoId === ej.id}
+              onAbrirInformes={() => handleAbrirInformesVenta(ej)}
             />
           ))}
-          {presupuestoMensaje && (
-            <p className="success" role="status">
-              ✅ {presupuestoMensaje}
-            </p>
-          )}
         </div>
       )}
 
-      {fichaPdfSeleccionAbierta && (
-        <Modal onClose={() => setFichaPdfSeleccionAbierta(false)}>
-          <h2>{t("obraDetail.fichaPdfSeleccionTitulo")}</h2>
-          <label className="ficha-pdf-alcance-opcion">
-            <input
-              type="radio"
-              name="fichaPdfAlcance"
-              checked={fichaPdfIncluirTodas}
-              onChange={() => setFichaPdfIncluirTodas(true)}
-            />
-            {t("obraDetail.fichaPdfTodasLasSeries")}
-          </label>
-          <label className="ficha-pdf-alcance-opcion">
-            <input
-              type="radio"
-              name="fichaPdfAlcance"
-              checked={!fichaPdfIncluirTodas}
-              onChange={() => setFichaPdfIncluirTodas(false)}
-            />
-            {t("obraDetail.fichaPdfSeriesEspecificas")}
-          </label>
-          {!fichaPdfIncluirTodas && (
-            <div className="ficha-pdf-series-checklist">
-              {ejemplares.map((ej) => (
-                <label key={ej.id} className="ficha-pdf-serie-opcion">
-                  <input
-                    type="checkbox"
-                    checked={fichaPdfSeleccionadas.has(ej.id)}
-                    onChange={(e) => {
-                      setFichaPdfSeleccionadas((prev) => {
-                        const next = new Set(prev);
-                        if (e.target.checked) next.add(ej.id);
-                        else next.delete(ej.id);
-                        return next;
-                      });
-                    }}
-                  />
-                  {ej.numero}
-                </label>
-              ))}
-            </div>
-          )}
-          <div className="obra-form-saved-actions">
-            <button
-              type="button"
-              onClick={handleConfirmarFichaPdf}
-              disabled={generandoFichaPdf || (!fichaPdfIncluirTodas && fichaPdfSeleccionadas.size === 0)}
-            >
-              {generandoFichaPdf ? t("common.saving") : t("obraDetail.generarFichaPdf")}
-            </button>
-            <button
-              type="button"
-              onClick={() => setFichaPdfSeleccionAbierta(false)}
-              disabled={generandoFichaPdf}
-            >
-              {t("common.cancel")}
-            </button>
-          </div>
-        </Modal>
+      {informesMenuAbierto && obra && (
+        <InformesModal
+          titulo={t("informes.tituloDe", { nombre: obra.titulo })}
+          opciones={[
+            {
+              id: "completa",
+              label: t("obraDetail.informeOpcionFichaPdf"),
+              extra:
+                Number(obra.es_seriada) === 1 && ejemplares.length > 0 ? (
+                  <>
+                    <label className="ficha-pdf-alcance-opcion">
+                      <input
+                        type="radio"
+                        name="fichaPdfAlcance"
+                        checked={fichaPdfIncluirTodas}
+                        onChange={() => setFichaPdfIncluirTodas(true)}
+                      />
+                      {t("obraDetail.fichaPdfTodasLasSeries")}
+                    </label>
+                    <label className="ficha-pdf-alcance-opcion">
+                      <input
+                        type="radio"
+                        name="fichaPdfAlcance"
+                        checked={!fichaPdfIncluirTodas}
+                        onChange={() => setFichaPdfIncluirTodas(false)}
+                      />
+                      {t("obraDetail.fichaPdfSeriesEspecificas")}
+                    </label>
+                    {!fichaPdfIncluirTodas && (
+                      <div className="ficha-pdf-series-checklist">
+                        {ejemplares.map((ej) => (
+                          <label key={ej.id} className="ficha-pdf-serie-opcion">
+                            <input
+                              type="checkbox"
+                              checked={fichaPdfSeleccionadas.has(ej.id)}
+                              onChange={(e) => {
+                                setFichaPdfSeleccionadas((prev) => {
+                                  const next = new Set(prev);
+                                  if (e.target.checked) next.add(ej.id);
+                                  else next.delete(ej.id);
+                                  return next;
+                                });
+                              }}
+                            />
+                            {ej.numero}
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : undefined,
+            },
+            { id: "no_disponibles", label: t("obraDetail.informeOpcionNoDisponibles") },
+            { id: "disponibles", label: t("obraDetail.informeOpcionDisponibles") },
+            { id: "primera_disponible", label: t("obraDetail.informeOpcionPrimeraDisponible") },
+          ]}
+          selectedId={informeSeleccionId}
+          onSelectId={setInformeSeleccionId}
+          idioma={informeIdioma}
+          onIdiomaChange={setInformeIdioma}
+          firma={informeFirma}
+          onFirmaChange={setInformeFirma}
+          firmaDigitalDisponible={firmaBytesDisponibles !== null}
+          onGenerar={handleConfirmarInforme}
+          generando={generandoFichaPdf}
+          disabled={informeSeleccionId === "completa" && !fichaPdfIncluirTodas && fichaPdfSeleccionadas.size === 0}
+          onClose={() => setInformesMenuAbierto(false)}
+        />
       )}
 
+      {ventaInformeTarget &&
+        (() => {
+          const { ejemplar, venta } = ventaInformeTarget;
+          const opciones = [
+            ...(!presupuestoBloqueadoPara(ejemplar.estado)
+              ? [{ id: "presupuesto", label: t("obraDetail.generarPresupuesto") }]
+              : []),
+            ...(venta && venta.tipo !== "donacion" ? [{ id: "comprobante", label: t("ventaForm.informeOpcionComprobante") }] : []),
+            ...(venta ? [{ id: "coa", label: t("ventaForm.informeOpcionCoa") }] : []),
+            ...(venta ? [{ id: "remito", label: t("ventaForm.informeOpcionRemito") }] : []),
+            ...(venta && venta.tipo === "venta"
+              ? [{ id: "contratoEstandar", label: t("ventaForm.informeOpcionContratoEstandar"), hideIdioma: true }]
+              : []),
+            ...(venta && venta.tipo === "venta"
+              ? [
+                  {
+                    id: "contratoRofr",
+                    label: t("ventaForm.informeOpcionContratoRofr"),
+                    hideIdioma: true,
+                    extra: (
+                      <>
+                        <div className="venta-form-row-2">
+                          <label>
+                            <span className="field-label">{t("ventaForm.plazoAniosLabel")}</span>
+                            <input
+                              type="number"
+                              min={1}
+                              value={rofrPlazoAnios}
+                              onChange={(e) => setRofrPlazoAnios(e.target.value)}
+                            />
+                          </label>
+                          <label>
+                            <span className="field-label">{t("ventaForm.plazoDiasLabel")}</span>
+                            <input
+                              type="number"
+                              min={1}
+                              value={rofrPlazoDias}
+                              onChange={(e) => setRofrPlazoDias(e.target.value)}
+                            />
+                          </label>
+                        </div>
+                        <label>
+                          <span className="field-label">{t("ventaForm.criterioPrecioLabel")}</span>
+                          <input
+                            type="text"
+                            value={rofrCriterioPrecio}
+                            onChange={(e) => setRofrCriterioPrecio(e.target.value)}
+                          />
+                        </label>
+                      </>
+                    ),
+                  },
+                ]
+              : []),
+          ];
+          return (
+            <InformesModal
+              titulo={t("ventaForm.informesButton")}
+              opciones={opciones}
+              selectedId={ventaInformeSeleccionId}
+              onSelectId={setVentaInformeSeleccionId}
+              idioma={ventaInformeIdioma}
+              onIdiomaChange={setVentaInformeIdioma}
+              firma={ventaInformeFirma}
+              onFirmaChange={setVentaInformeFirma}
+              firmaDigitalDisponible={firmaBytesDisponibles !== null}
+              onGenerar={handleGenerarInformeVenta}
+              generando={generandoVentaInforme}
+              mensaje={ventaInformeMensaje}
+              onClose={() => {
+                setVentaInformeTarget(null);
+                setVentaInformeMensaje(null);
+              }}
+            />
+          );
+        })()}
+
       {ventaTarget && (
-        <Modal onClose={() => setVentaTarget(null)}>
+        <Modal onClose={() => setVentaTarget(null)} className="modal-content-drawer">
           <VentaForm
             obraId={obraId}
             ejemplarId={ventaTarget.ejemplarId}
@@ -2148,8 +2480,7 @@ function EjemplarRowView({
   onEditarVenta,
   onAnularVenta,
   anulando,
-  onGenerarPresupuesto,
-  generandoPresupuesto,
+  onAbrirInformes,
 }: {
   ejemplar: EjemplarRow;
   categoria: CategoriaObra;
@@ -2198,8 +2529,7 @@ function EjemplarRowView({
   onEditarVenta: (venta: VentaRow) => void;
   onAnularVenta: (venta: VentaRow, nuevoEstado: string) => void;
   anulando: boolean;
-  onGenerarPresupuesto: () => void;
-  generandoPresupuesto: boolean;
+  onAbrirInformes: () => void;
 }) {
   const { t } = useLanguage();
   const [estado, setEstado] = useState(ejemplar.estado);
@@ -2252,7 +2582,6 @@ function EjemplarRowView({
   const esTextilCeramica = categoria === "TextilCeramica";
   const permiteEnmarcado =
     categoria === "Fotografia" || categoria === "Pintura" || categoria === "ObraGrafica" || categoria === "Dibujo";
-  const presupuestoBloqueado = ["vendida", "descartada", "coleccion_autor", "destruida"].includes(ejemplar.estado);
   const [ventaBloqueada, setVentaBloqueada] = useState<string | null>(null);
   useEscapeToDismiss(ventaBloqueada, setVentaBloqueada);
   const [confirmingAnular, setConfirmingAnular] = useState(false);
@@ -2775,9 +3104,9 @@ function EjemplarRowView({
             )}
           </button>
         )}
-        {!presupuestoBloqueado && (
-          <button type="button" onClick={onGenerarPresupuesto} disabled={generandoPresupuesto}>
-            {generandoPresupuesto ? t("common.saving") : t("obraDetail.generarPresupuesto")}
+        {(!["descartada", "coleccion_autor", "destruida"].includes(ejemplar.estado) || venta) && (
+          <button type="button" onClick={onAbrirInformes}>
+            {t("ventaForm.informesButton")}
           </button>
         )}
       </div>

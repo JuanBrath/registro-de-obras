@@ -12,7 +12,16 @@ import { savePdfWithDialog } from "../utils/savePdfDialog.js";
 import { formatFechaDDMMYYYY } from "../utils/formatFecha.js";
 import { detectImageFormat } from "../utils/detectImageFormat.js";
 import { focusNextOnEnter } from "../utils/focusNextOnEnter.js";
-import { drawPdfHeader, writeWrappedText } from "../utils/pdfBranding.js";
+import {
+  drawPdfHeader,
+  drawSignatureBlock,
+  writeBilingualParagraph,
+  writeWrappedText,
+  type FirmaEleccion,
+} from "../utils/pdfBranding.js";
+import { InformesModal } from "../components/InformesModal.js";
+import { tInforme, type InformeIdioma } from "../reports/informeIdioma.js";
+import { resolveFirmaBytes, resolveMembreteLogoBytes } from "../reports/reportBranding.js";
 import { formatNumeroArtista } from "../utils/formatNumeroArtista.js";
 import {
   buildWebUrl,
@@ -29,6 +38,7 @@ interface ArtistaRow {
   nombre_completo: string;
   fecha_nacimiento: string | null;
   bio: string | null;
+  bio_en: string | null;
   telefono: string | null;
   email: string | null;
   web: string | null;
@@ -58,6 +68,7 @@ export interface ArtistaFields {
   nombreCompleto: string;
   fechaNacimiento: string;
   bio: string;
+  bioEn: string;
   telefono: string;
   email: string;
   web: string;
@@ -89,6 +100,8 @@ interface FichaArtistaFields {
   numeroArtista?: string | null;
   fechaNacimiento: string;
   bio: string;
+  bioEn: string;
+  notas: string;
   telefono: string;
   email: string;
   web: string;
@@ -114,15 +127,24 @@ interface FichaArtistaFields {
 
 // Genera el PDF con la ficha del artista (usado tanto desde el alta como
 // desde la edicion de un artista existente, para no duplicar el layout).
-async function generarFichaArtistaPdfBytes(t: TFn, fields: FichaArtistaFields, imgBytes: Uint8Array | null) {
+async function generarFichaArtistaPdfBytes(
+  t: TFn,
+  fields: FichaArtistaFields,
+  imgBytes: Uint8Array | null,
+  firmaOpts: { idioma: InformeIdioma; logoBytes: Uint8Array | null; firma: FirmaEleccion; firmaBytes: Uint8Array | null },
+) {
   // jsPDF es pesado: se carga recien al generar el PDF (mismo criterio que
   // en PersonalProfileForm/ObraDetail/VentasReport).
   const { default: jsPDF } = await import("jspdf");
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const marginLeft = 14;
-  const startY = await drawPdfHeader(doc, fields.nombreCompleto || t("artistas.title"), { marginLeft });
+  const startY = await drawPdfHeader(doc, fields.nombreCompleto || t("artistas.title"), {
+    marginLeft,
+    logoBytes: firmaOpts.logoBytes,
+  });
   const imageBoxSize = 60;
   let textX = marginLeft;
+  let imageBottom = startY;
 
   if (imgBytes) {
     const formato = detectImageFormat(imgBytes);
@@ -138,6 +160,7 @@ async function generarFichaArtistaPdfBytes(t: TFn, fields: FichaArtistaFields, i
       bitmap.close();
       doc.addImage(imgBytes, formato, marginLeft, startY, displayW, displayH);
       textX = marginLeft + imageBoxSize + 8;
+      imageBottom = startY + displayH;
     }
   }
 
@@ -174,16 +197,24 @@ async function generarFichaArtistaPdfBytes(t: TFn, fields: FichaArtistaFields, i
     textY = writeWrappedText(doc, linea, textX, textY, textWidth);
   }
 
+  // La biografia (y todo lo que viene despues: declaracion, formacion,
+  // exposiciones, etc.) arranca debajo de la foto y de los datos personales,
+  // no al costado, y usa todo el ancho de la hoja.
+  const bodyX = marginLeft;
+  const bodyWidth = pageWidth - marginLeft * 2;
+  let bodyY = Math.max(imageBottom, textY) + 8;
+
   function agregarParrafo(titulo: string, texto: string) {
     if (!texto) return;
-    textY += 3;
+    bodyY += 3;
     doc.setFontSize(11);
-    textY = writeWrappedText(doc, titulo, textX, textY, textWidth, { lineHeight: 6 });
+    bodyY = writeWrappedText(doc, titulo, bodyX, bodyY, bodyWidth, { lineHeight: 6 });
     doc.setFontSize(10);
-    textY = writeWrappedText(doc, texto, textX, textY, textWidth);
+    bodyY = writeWrappedText(doc, texto, bodyX, bodyY, bodyWidth);
   }
 
-  agregarParrafo(t("artistas.bio"), fields.bio);
+  bodyY = writeBilingualParagraph(doc, firmaOpts.idioma, "artistas.bio", fields.bio, fields.bioEn, bodyX, bodyY, bodyWidth);
+  bodyY = writeBilingualParagraph(doc, firmaOpts.idioma, "artistas.notas", fields.notas, "", bodyX, bodyY, bodyWidth);
   agregarParrafo(t("artistas.declaracionArtistaLabel"), fields.declaracionArtista);
   agregarParrafo(t("artistas.formacionAcademicaLabel"), fields.formacionAcademica);
   agregarParrafo(t("artistas.exposicionesIndividualesLabel"), fields.exposicionesIndividuales);
@@ -192,12 +223,19 @@ async function generarFichaArtistaPdfBytes(t: TFn, fields: FichaArtistaFields, i
   agregarParrafo(t("artistas.coleccionesLabel"), fields.colecciones);
   agregarParrafo(t("artistas.publicacionesPrensaLabel"), fields.publicacionesPrensa);
 
+  await drawSignatureBlock(doc, bodyY + 10, {
+    idioma: firmaOpts.idioma,
+    firma: firmaOpts.firma,
+    firmaBytes: firmaOpts.firmaBytes,
+    marginLeft,
+  });
+
   return new Uint8Array(doc.output("arraybuffer"));
 }
 
 export function ArtistasScreen({ onBack }: { onBack: () => void }) {
-  const { context } = useWorkspace();
-  const { t } = useLanguage();
+  const { context, personalArtista, galeriaPerfil } = useWorkspace();
+  const { t, idioma } = useLanguage();
   const [artistas, setArtistas] = useState<ArtistaRow[]>([]);
   const [busqueda, setBusqueda] = useState("");
   const [thumbnails, setThumbnails] = useState<Record<number, string>>({});
@@ -209,6 +247,7 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
   const [nombreCompleto, setNombreCompleto] = useState("");
   const [fechaNacimiento, setFechaNacimiento] = useState("");
   const [bio, setBio] = useState("");
+  const [bioEn, setBioEn] = useState("");
   const [telefono, setTelefono] = useState("");
   const [email, setEmail] = useState("");
   const [web, setWeb] = useState("");
@@ -245,6 +284,10 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
   const [generandoPdf, setGenerandoPdf] = useState(false);
   const [pdfMensaje, setPdfMensaje] = useState<string | null>(null);
   useEscapeToDismiss(pdfMensaje, setPdfMensaje);
+  const [informesMenuAbierto, setInformesMenuAbierto] = useState(false);
+  const [informeIdioma, setInformeIdioma] = useState<InformeIdioma>("es");
+  const [informeFirma, setInformeFirma] = useState<FirmaEleccion>("ninguna");
+  const [firmaBytesDisponibles, setFirmaBytesDisponibles] = useState<Uint8Array | null>(null);
   // Mientras se consulta/edita un artista, los demas no se muestran debajo
   // (se ve solo el que esta abierto, no toda la lista mezclada con la ficha).
   const [fichaId, setFichaId] = useState<number | null>(null);
@@ -260,6 +303,7 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
     setNombreCompleto("");
     setFechaNacimiento("");
     setBio("");
+    setBioEn("");
     setTelefono("");
     setEmail("");
     setWeb("");
@@ -295,7 +339,7 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
     setError(null);
     try {
       const rows = await context.db.query<ArtistaRow>(
-        `SELECT id, numero_artista, nombre_completo, fecha_nacimiento, bio, telefono, email, web, instagram,
+        `SELECT id, numero_artista, nombre_completo, fecha_nacimiento, bio, bio_en, telefono, email, web, instagram,
                 direccion, x, facebook, linkedin, notas, foto_path, nombre_artistico, lugar_nacimiento,
                 lugar_fallecimiento, nacionalidad, fecha_fallecimiento, lugar_residencia_trabajo,
                 declaracion_artista, formacion_academica, exposiciones_individuales, exposiciones_colectivas,
@@ -360,6 +404,7 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
         nombreCompleto,
         fechaNacimiento: fechaNacimiento || null,
         bio: bio || null,
+        bioEn: bioEn || null,
         telefono: telefono || null,
         email: email || null,
         web: web || null,
@@ -435,19 +480,30 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
     onBack();
   }
 
+  async function handleAbrirInformesMenu() {
+    setInformeIdioma(idioma);
+    setInformeFirma("ninguna");
+    setFirmaBytesDisponibles(context ? await resolveFirmaBytes(context, personalArtista, galeriaPerfil) : null);
+    setInformesMenuAbierto(true);
+  }
+
   async function handleGenerarPdf() {
+    setInformesMenuAbierto(false);
     setGenerandoPdf(true);
     setFormError(null);
     setPdfMensaje(null);
     try {
       const imgBytes = fotoFile ? new Uint8Array(await fotoFile.arrayBuffer()) : null;
+      const logoBytes = context ? await resolveMembreteLogoBytes(context, personalArtista, galeriaPerfil) : null;
       const bytes = await generarFichaArtistaPdfBytes(
-        t,
+        (key, vars) => tInforme(informeIdioma, key, vars),
         {
           nombreCompleto,
           numeroArtista: nextNumero,
           fechaNacimiento,
           bio,
+          bioEn,
+          notas,
           telefono,
           email,
           web,
@@ -471,6 +527,7 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
           publicacionesPrensa,
         },
         imgBytes,
+        { idioma: informeIdioma, logoBytes, firma: informeFirma, firmaBytes: firmaBytesDisponibles },
       );
       const fileName = `artista_${(nombreCompleto || "sin_nombre").trim().replace(/\s+/g, "_")}.pdf`;
       const guardado = await savePdfWithDialog(bytes, fileName);
@@ -497,7 +554,7 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
     if (!context) return;
     await context.db.execute(
       `UPDATE artista SET
-         nombre_completo = ?, fecha_nacimiento = ?, bio = ?, telefono = ?, email = ?, web = ?, instagram = ?,
+         nombre_completo = ?, fecha_nacimiento = ?, bio = ?, bio_en = ?, telefono = ?, email = ?, web = ?, instagram = ?,
          direccion = ?, x = ?, facebook = ?, linkedin = ?, notas = ?, nombre_artistico = ?, nacionalidad = ?,
          lugar_nacimiento = ?, lugar_fallecimiento = ?, fecha_fallecimiento = ?, lugar_residencia_trabajo = ?,
          declaracion_artista = ?, formacion_academica = ?, exposiciones_individuales = ?,
@@ -507,6 +564,7 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
         fields.nombreCompleto,
         fields.fechaNacimiento || null,
         fields.bio || null,
+        fields.bioEn || null,
         fields.telefono || null,
         fields.email || null,
         fields.web || null,
@@ -708,6 +766,13 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
 
           <label>
             <span className="field-label">
+              {t("artistas.bioEnLabel")} <HelpIcon fieldKey="bio_en" />
+            </span>
+            <textarea rows={4} value={bioEn} onChange={(e) => setBioEn(e.target.value)} />
+          </label>
+
+          <label>
+            <span className="field-label">
               {t("artistas.declaracionArtistaLabel")} <HelpIcon fieldKey="artista_declaracion" />
             </span>
             <textarea
@@ -795,13 +860,30 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
           <button type="submit" disabled={submitting}>
             {submitting ? t("common.saving") : t("artistas.agregarArtista")}
           </button>
-          <button type="button" onClick={handleGenerarPdf} disabled={generandoPdf}>
-            {generandoPdf ? t("common.saving") : t("artistas.generarPdf")}
+          <button type="button" onClick={handleAbrirInformesMenu} disabled={generandoPdf}>
+            {generandoPdf ? t("common.saving") : t("common.generarInforme")}
           </button>
           <button type="button" onClick={handleCancelarAlta} disabled={submitting}>
             {t("common.cancel")}
           </button>
         </div>
+
+        {informesMenuAbierto && (
+          <InformesModal
+            titulo={t("informes.tituloDe", { nombre: nombreCompleto || t("artistas.title") })}
+            opciones={[{ id: "ficha", label: t("artistas.informeOpcionFichaPdf") }]}
+            selectedId="ficha"
+            onSelectId={() => {}}
+            idioma={informeIdioma}
+            onIdiomaChange={setInformeIdioma}
+            firma={informeFirma}
+            onFirmaChange={setInformeFirma}
+            firmaDigitalDisponible={firmaBytesDisponibles !== null}
+            onGenerar={handleGenerarPdf}
+            generando={generandoPdf}
+            onClose={() => setInformesMenuAbierto(false)}
+          />
+        )}
 
         {duplicadoBloqueado && (
           <div className="confirm-box">
@@ -910,7 +992,8 @@ function ArtistaRowView({
   onDelete: () => Promise<void>;
   onSave: (fields: ArtistaFields, newFoto: File | null) => Promise<void>;
 }) {
-  const { t } = useLanguage();
+  const { context, personalArtista, galeriaPerfil } = useWorkspace();
+  const { t, idioma } = useLanguage();
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -920,6 +1003,7 @@ function ArtistaRowView({
   const [nombreCompleto, setNombreCompleto] = useState(artista.nombre_completo);
   const [fechaNacimiento, setFechaNacimiento] = useState(artista.fecha_nacimiento ?? "");
   const [bio, setBio] = useState(artista.bio ?? "");
+  const [bioEn, setBioEn] = useState(artista.bio_en ?? "");
   const [telefono, setTelefono] = useState(artista.telefono ?? "");
   const [email, setEmail] = useState(artista.email ?? "");
   const [web, setWeb] = useState(artista.web ?? "");
@@ -954,8 +1038,20 @@ function ArtistaRowView({
   const [generandoPdf, setGenerandoPdf] = useState(false);
   const [pdfMensaje, setPdfMensaje] = useState<string | null>(null);
   useEscapeToDismiss(pdfMensaje, setPdfMensaje);
+  const [informesMenuAbierto, setInformesMenuAbierto] = useState(false);
+  const [informeIdioma, setInformeIdioma] = useState<InformeIdioma>("es");
+  const [informeFirma, setInformeFirma] = useState<FirmaEleccion>("ninguna");
+  const [firmaBytesDisponibles, setFirmaBytesDisponibles] = useState<Uint8Array | null>(null);
+
+  async function handleAbrirInformesMenu() {
+    setInformeIdioma(idioma);
+    setInformeFirma("ninguna");
+    setFirmaBytesDisponibles(context ? await resolveFirmaBytes(context, personalArtista, galeriaPerfil) : null);
+    setInformesMenuAbierto(true);
+  }
 
   async function handleGenerarPdf() {
+    setInformesMenuAbierto(false);
     setGenerandoPdf(true);
     setError(null);
     setPdfMensaje(null);
@@ -968,13 +1064,16 @@ function ArtistaRowView({
           .then((r) => r.arrayBuffer())
           .then((b) => new Uint8Array(b));
       }
+      const logoBytes = context ? await resolveMembreteLogoBytes(context, personalArtista, galeriaPerfil) : null;
       const bytes = await generarFichaArtistaPdfBytes(
-        t,
+        (key, vars) => tInforme(informeIdioma, key, vars),
         {
           nombreCompleto,
           numeroArtista: artista.numero_artista,
           fechaNacimiento,
           bio,
+          bioEn,
+          notas,
           telefono,
           email,
           web,
@@ -998,6 +1097,7 @@ function ArtistaRowView({
           publicacionesPrensa,
         },
         imgBytes,
+        { idioma: informeIdioma, logoBytes, firma: informeFirma, firmaBytes: firmaBytesDisponibles },
       );
       const fileName = `artista_${(nombreCompleto || "sin_nombre").trim().replace(/\s+/g, "_")}.pdf`;
       const guardado = await savePdfWithDialog(bytes, fileName);
@@ -1032,6 +1132,7 @@ function ArtistaRowView({
           nombreCompleto,
           fechaNacimiento,
           bio,
+          bioEn,
           telefono,
           email,
           web,
@@ -1247,6 +1348,13 @@ function ArtistaRowView({
 
           <label>
             <span className="field-label">
+              {t("artistas.bioEnLabel")} <HelpIcon fieldKey="bio_en" />
+            </span>
+            <textarea rows={3} value={bioEn} onChange={(e) => setBioEn(e.target.value)} disabled={soloLectura} />
+          </label>
+
+          <label>
+            <span className="field-label">
               {t("artistas.declaracionArtistaLabel")} <HelpIcon fieldKey="artista_declaracion" />
             </span>
             <textarea
@@ -1344,8 +1452,8 @@ function ArtistaRowView({
         <div className="obra-form-saved-actions">
           {soloLectura ? (
             <>
-              <button type="button" onClick={handleGenerarPdf} disabled={generandoPdf}>
-                {generandoPdf ? t("common.saving") : t("artistas.generarPdf")}
+              <button type="button" onClick={handleAbrirInformesMenu} disabled={generandoPdf}>
+                {generandoPdf ? t("common.saving") : t("common.generarInforme")}
               </button>
               <button type="button" onClick={onCerrarFicha}>
                 {t("common.close")}
@@ -1356,8 +1464,8 @@ function ArtistaRowView({
               <button type="button" onClick={handleSaveEdit} disabled={saving}>
                 {saving ? t("common.saving") : t("common.save")}
               </button>
-              <button type="button" onClick={handleGenerarPdf} disabled={generandoPdf}>
-                {generandoPdf ? t("common.saving") : t("artistas.generarPdf")}
+              <button type="button" onClick={handleAbrirInformesMenu} disabled={generandoPdf}>
+                {generandoPdf ? t("common.saving") : t("common.generarInforme")}
               </button>
               <button type="button" onClick={onCerrarFicha} disabled={saving}>
                 {t("common.cancel")}
@@ -1365,6 +1473,23 @@ function ArtistaRowView({
             </>
           )}
         </div>
+
+        {informesMenuAbierto && (
+          <InformesModal
+            titulo={t("informes.tituloDe", { nombre: artista.nombre_completo })}
+            opciones={[{ id: "ficha", label: t("artistas.informeOpcionFichaPdf") }]}
+            selectedId="ficha"
+            onSelectId={() => {}}
+            idioma={informeIdioma}
+            onIdiomaChange={setInformeIdioma}
+            firma={informeFirma}
+            onFirmaChange={setInformeFirma}
+            firmaDigitalDisponible={firmaBytesDisponibles !== null}
+            onGenerar={handleGenerarPdf}
+            generando={generandoPdf}
+            onClose={() => setInformesMenuAbierto(false)}
+          />
+        )}
 
         {pdfMensaje && (
           <p className="success" role="status">

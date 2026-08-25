@@ -21,3 +21,11 @@ export function artistaLogoPath(idArtista: number, ext: string): string {
 export function galeriaLogoPath(ext: string): string {
   return `galeria/logo.${ext}`;
 }
+
+export function artistaFirmaPath(idArtista: number, ext: string): string {
+  return `artistas/${idArtista}/firma.${ext}`;
+}
+
+export function galeriaFirmaPath(ext: string): string {
+  return `galeria/firma.${ext}`;
+}

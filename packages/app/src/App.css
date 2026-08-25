@@ -174,7 +174,7 @@ input[type="date"] {
   gap: 0.5rem 0.25rem;
 }
 
-.obra-form label > *:not(.help-icon-wrapper):not([type="checkbox"]) {
+.obra-form label > *:not(.help-icon-wrapper):not([type="checkbox"]):not([type="radio"]) {
   flex: 1 1 100%;
 }
 
@@ -885,7 +885,7 @@ input[type="date"] {
   gap: 0.5rem 0.25rem;
 }
 
-.ejemplar-row-editing label > *:not(.help-icon-wrapper):not([type="checkbox"]) {
+.ejemplar-row-editing label > *:not(.help-icon-wrapper):not([type="checkbox"]):not([type="radio"]) {
   flex: 1 1 100%;
 }
 
@@ -910,6 +910,11 @@ input[type="date"] {
   display: flex;
   align-items: center;
   gap: 0.4rem;
+  /* Los formularios que envuelven este radio (.obra-form, .ejemplar-row-editing,
+     .venta-form) fuerzan flex-wrap:wrap en cualquier <label>, lo que hace que
+     el punto se vaya a su propia fila cuando el texto es largo. !important
+     asegura que el punto y el texto siempre queden en la misma fila aca. */
+  flex-wrap: nowrap !important;
 }
 
 .form-row-2 > label {
@@ -945,7 +950,7 @@ input[type="date"] {
 }
 
 .venta-form {
-  max-width: 480px;
+  max-width: 640px;
   margin: 1.5rem auto 0;
   display: flex;
   flex-direction: column;
@@ -963,7 +968,7 @@ input[type="date"] {
   gap: 0.5rem 0.25rem;
 }
 
-.venta-form label > *:not(.help-icon-wrapper):not([type="checkbox"]) {
+.venta-form label > *:not(.help-icon-wrapper):not([type="checkbox"]):not([type="radio"]) {
   flex: 1 1 100%;
 }
 
@@ -987,6 +992,20 @@ input[type="date"] {
 
 .venta-form-valor-row input[type="number"] {
   flex: 1;
+}
+
+/* A diferencia de .venta-form-valor-row (pensada para un select angosto +
+   un monto ancho), esta es para pares de campos parejos entre si — evita
+   que una etiqueta larga (ej. "Aranceles aduaneros") aplaste al campo de al
+   lado, que era la causa de los campos superpuestos. */
+.venta-form-row-2 {
+  display: flex;
+  gap: 1rem;
+}
+
+.venta-form-row-2 > label {
+  flex: 1;
+  min-width: 0;
 }
 
 .artista-selector-row {
@@ -1023,6 +1042,7 @@ input[type="date"] {
   align-items: center;
   gap: 0.3rem;
   cursor: pointer;
+  flex-wrap: nowrap !important;
 }
 
 .ficha-pdf-alcance-opcion {
@@ -1031,6 +1051,7 @@ input[type="date"] {
   gap: 0.4rem;
   margin-top: 0.5rem;
   cursor: pointer;
+  flex-wrap: nowrap !important;
 }
 
 .ficha-pdf-series-checklist {
@@ -1047,6 +1068,7 @@ input[type="date"] {
   align-items: center;
   gap: 0.3rem;
   cursor: pointer;
+  flex-wrap: nowrap !important;
 }
 
 .artistas-list {
@@ -1056,13 +1078,66 @@ input[type="date"] {
   gap: 0.5rem;
 }
 
+.informes-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0.75rem 0;
+}
+
+.informes-opcion {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  cursor: pointer;
+  flex-wrap: nowrap !important;
+}
+
+.informes-opcion input[type="radio"] {
+  flex: 0 0 auto !important;
+  margin-top: 0.2rem;
+}
+
+.informes-fieldset {
+  margin: 1rem 0;
+}
+
 .artista-foto-preview {
   width: 120px;
   height: 120px;
   object-fit: cover;
-  border-radius: 999px;
+  border-radius: 8px;
   background: var(--bg-panel);
-  align-self: center;
+}
+
+/* Para logo y firma (a diferencia de la foto de perfil) se muestra la
+   imagen tal cual es: sin recorte circular ni color de fondo detras, para
+   que si el archivo tiene transparencia se vea transparente de verdad. */
+.perfil-imagen-preview {
+  max-width: 200px;
+  max-height: 120px;
+  object-fit: contain;
+}
+
+/* Titulo, vista previa y control de archivo de una imagen de perfil (foto,
+   logo, firma): siempre alineados a la izquierda, con el titulo arriba de
+   la imagen, en vez de centrados como el resto de los campos de texto. */
+.imagen-campo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+/* Envuelve la miniatura para hacerla clickeable (ver en tamano completo)
+   sin agregarle ningun fondo ni recuadro propio. */
+.imagen-preview-button {
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  line-height: 0;
+  display: block;
 }
 
 .artista-foto-thumb {
@@ -1126,6 +1201,15 @@ input[type="date"] {
 
 .modal-content-wide {
   max-width: 90vw;
+}
+
+/* Panel lateral: se pega al borde derecho de la pantalla en vez de quedar
+   centrado, y es mas ancho, para formularios largos (ej. venta) que no
+   entran comodos en el modal chico centrado. */
+.modal-content-drawer {
+  margin-left: auto;
+  margin-right: 0;
+  max-width: min(92vw, 640px);
 }
 
 .ventas-report-filtros {
