@@ -180,6 +180,9 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
       "0055_artista_bio_ingles",
       "0056_venta_desglose_financiero",
       "0057_venta_destino_confidencialidad",
+      "0058_obra_fotografia_datos_captura",
+      "0059_venta_asesor",
+      "0060_reserva_resultado",
     ]);
   });
 

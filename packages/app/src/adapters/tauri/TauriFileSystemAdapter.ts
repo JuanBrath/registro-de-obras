@@ -52,3 +52,9 @@ export async function pickTauriFilePath(): Promise<string | null> {
   const selected = await open({ directory: false, multiple: false });
   return typeof selected === "string" ? selected : null;
 }
+
+/** Reads the bytes of an absolute path the user already picked explicitly (e.g. via pickTauriFilePath), to read its metadata. */
+export async function readAbsoluteFileBytes(path: string): Promise<Uint8Array> {
+  const bytes = await invoke<number[]>("fs_read_absolute", { path });
+  return new Uint8Array(bytes);
+}

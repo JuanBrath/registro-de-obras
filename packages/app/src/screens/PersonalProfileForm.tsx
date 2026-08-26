@@ -52,6 +52,7 @@ export function PersonalProfileForm({ onExit }: { onExit: () => void }) {
   const [informesMenuAbierto, setInformesMenuAbierto] = useState(false);
   const [informeSeleccionId, setInformeSeleccionId] = useState("completa");
   const [informeIdioma, setInformeIdioma] = useState<InformeIdioma>("es");
+  const [informeIncluirLogo, setInformeIncluirLogo] = useState(true);
   const [informeFirma, setInformeFirma] = useState<FirmaEleccion>("ninguna");
   const [firmaBytesDisponibles, setFirmaBytesDisponibles] = useState<Uint8Array | null>(null);
   const [imagenAmpliada, setImagenAmpliada] = useState<{ url: string; alt: string } | null>(null);
@@ -266,6 +267,7 @@ export function PersonalProfileForm({ onExit }: { onExit: () => void }) {
   async function handleAbrirInformesMenu() {
     setInformeSeleccionId("completa");
     setInformeIdioma(idioma);
+    setInformeIncluirLogo(true);
     setInformeFirma("ninguna");
     setPdfMensaje(null);
     setFirmaBytesDisponibles(context ? await resolveFirmaBytes(context, existing, galeriaPerfil) : null);
@@ -290,7 +292,13 @@ export function PersonalProfileForm({ onExit }: { onExit: () => void }) {
       }
 
       const logoBytes = await resolveMembreteLogoBytes(context, existing, galeriaPerfil);
-      const brandOpts = { idioma: informeIdioma, logoBytes, firma: informeFirma, firmaBytes: firmaBytesDisponibles };
+      const brandOpts = {
+        idioma: informeIdioma,
+        logoBytes,
+        incluirLogo: informeIncluirLogo,
+        firma: informeFirma,
+        firmaBytes: firmaBytesDisponibles,
+      };
       const datos = {
         nombreCompleto,
         fechaNacimiento,
@@ -489,6 +497,8 @@ export function PersonalProfileForm({ onExit }: { onExit: () => void }) {
           onSelectId={setInformeSeleccionId}
           idioma={informeIdioma}
           onIdiomaChange={setInformeIdioma}
+          incluirLogo={informeIncluirLogo}
+          onIncluirLogoChange={setInformeIncluirLogo}
           firma={informeFirma}
           onFirmaChange={setInformeFirma}
           firmaDigitalDisponible={firmaBytesDisponibles !== null}

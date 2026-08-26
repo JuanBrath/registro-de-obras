@@ -31,6 +31,7 @@ import { ImageFileField } from "../components/ImageFileField.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
 import { focusNextOnEnter } from "../utils/focusNextOnEnter.js";
+import type { ArchivoMetadata } from "../utils/readImageMetadata.js";
 
 export function ObraForm({
   onEditProfile,
@@ -97,6 +98,20 @@ export function ObraForm({
   useEffect(() => {
     tituloInputRef.current?.focus();
   }, []);
+
+  function aplicarMetadataFotografia(metadata: ArchivoMetadata | null | undefined) {
+    if (!metadata) return;
+    setFotografia((prev) => ({
+      ...prev,
+      fechaCaptura: metadata.fechaCaptura ?? prev.fechaCaptura,
+      softwareEdicion: metadata.software ?? prev.softwareEdicion,
+      camara: metadata.camara ?? prev.camara,
+      iso: metadata.iso ?? prev.iso,
+      velocidadObturador: metadata.velocidadObturador ?? prev.velocidadObturador,
+      diafragma: metadata.diafragma ?? prev.diafragma,
+      distanciaFocal: metadata.distanciaFocal ?? prev.distanciaFocal,
+    }));
+  }
 
   function handleImageChange(file: File | null) {
     setImageFile(file);
@@ -252,10 +267,11 @@ export function ObraForm({
                viraje_conservacion, formato_negativo, estado_negativo, formato_archivo_maestro, espacio_color,
                condiciones_custodia_archivo, proceso_quimico_historicos, preparacion_soporte, metales_sales,
                pieza_unica_o_matriz, estructura_objeto, contenedor_estuche, incluye_copia_coleccionista,
-               detalle_copia_coleccionista, creditos_editoriales, isbn, colofon, motor_ia, prompt_parametros,
+               detalle_copia_coleccionista, creditos_editoriales, isbn, colofon, camara, iso, velocidad_obturador,
+               diafragma, distancia_focal, motor_ia, prompt_parametros,
                flujo_generativo, intervencion_postproduccion, soporte_salida, declaracion_derechos_ia
              )
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               id,
               fotografia.subtipoFotografia,
@@ -286,6 +302,11 @@ export function ObraForm({
               fotografia.creditosEditoriales || null,
               fotografia.isbn || null,
               fotografia.colofon || null,
+              fotografia.camara || null,
+              fotografia.iso || null,
+              fotografia.velocidadObturador || null,
+              fotografia.diafragma || null,
+              fotografia.distanciaFocal || null,
               fotografia.motorIa || null,
               fotografia.promptParametros || null,
               fotografia.flujoGenerativo || null,
@@ -598,6 +619,7 @@ export function ObraForm({
               mostrarEsSeriada={false}
               ubicacion={ubicacion}
               onUbicacionChange={setUbicacion}
+              onUbicacionMetadata={aplicarMetadataFotografia}
               mostrarUbicacion={esRegistroPersonal}
             />
           )}

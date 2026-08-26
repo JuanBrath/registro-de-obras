@@ -76,9 +76,11 @@ export async function fittedImageSize(bytes: Uint8Array, maxSize: number): Promi
  * Dibuja el encabezado de marca compartido por todos los PDF de la app:
  * logo + titulo en Montserrat Bold dorado + linea divisoria dorada de
  * 0.5pt. Si se pasa `logoBytes` (logo propio de la galeria o del titular
- * personal) se usa ese en vez del monograma GS por defecto. Deja el doc
- * con la fuente Inter (normal, negro, 10pt) lista para el resto del
- * contenido. Devuelve el Y en mm donde debe continuar.
+ * personal) se usa ese en vez del monograma GS por defecto; si `incluirLogo`
+ * es false no se dibuja ningun logo (ni siquiera el monograma) y el titulo
+ * arranca pegado al margen izquierdo. Deja el doc con la fuente Inter
+ * (normal, negro, 10pt) lista para el resto del contenido. Devuelve el Y en
+ * mm donde debe continuar.
  */
 export async function drawPdfHeader(
   doc: jsPDF,
@@ -87,25 +89,31 @@ export async function drawPdfHeader(
     marginLeft = 14,
     marginRight = 14,
     logoBytes: customLogoBytes,
-  }: { marginLeft?: number; marginRight?: number; logoBytes?: Uint8Array | null } = {},
+    incluirLogo = true,
+  }: { marginLeft?: number; marginRight?: number; logoBytes?: Uint8Array | null; incluirLogo?: boolean } = {},
 ): Promise<number> {
   await registerBrandFonts(doc);
-  const { logoBytes: gsLogoBytes } = await loadBrandAssets();
 
   const logoSize = 12;
   const logoY = 10;
-  const customFormato = customLogoBytes ? detectImageFormat(customLogoBytes) : null;
-  if (customLogoBytes && customFormato) {
-    const { width, height } = await fittedImageSize(customLogoBytes, logoSize);
-    doc.addImage(customLogoBytes, customFormato, marginLeft, logoY, width, height);
-  } else {
-    doc.addImage(gsLogoBytes, "PNG", marginLeft, logoY, logoSize, logoSize);
+  let titleX = marginLeft;
+
+  if (incluirLogo) {
+    const { logoBytes: gsLogoBytes } = await loadBrandAssets();
+    const customFormato = customLogoBytes ? detectImageFormat(customLogoBytes) : null;
+    if (customLogoBytes && customFormato) {
+      const { width, height } = await fittedImageSize(customLogoBytes, logoSize);
+      doc.addImage(customLogoBytes, customFormato, marginLeft, logoY, width, height);
+    } else {
+      doc.addImage(gsLogoBytes, "PNG", marginLeft, logoY, logoSize, logoSize);
+    }
+    titleX = marginLeft + logoSize + 4;
   }
 
   doc.setFont("Montserrat", "bold");
   doc.setFontSize(17);
   doc.setTextColor(...GALERIS_GOLD);
-  doc.text(title, marginLeft + logoSize + 4, logoY + logoSize / 2 + 3);
+  doc.text(title, titleX, logoY + logoSize / 2 + 3);
 
   const dividerY = logoY + logoSize + 4;
   const pageWidth = doc.internal.pageSize.getWidth();

@@ -9,6 +9,7 @@ import { HelpIcon } from "../../components/HelpIcon.js";
 import { FilePathField } from "../../components/FilePathField.js";
 import { todayISO } from "../../utils/today.js";
 import { useLanguage } from "../../i18n/LanguageContext.js";
+import type { ArchivoMetadata } from "../../utils/readImageMetadata.js";
 
 export interface FotografiaFieldsState {
   subtipoFotografia: SubtipoFotografia;
@@ -43,6 +44,12 @@ export interface FotografiaFieldsState {
   creditosEditoriales: string;
   isbn: string;
   colofon: string;
+  // Datos de captura (no aplican a Sintografia)
+  camara: string;
+  iso: string;
+  velocidadObturador: string;
+  diafragma: string;
+  distanciaFocal: string;
   // Solo Sintografia
   motorIa: string;
   promptParametros: string;
@@ -81,6 +88,11 @@ export const initialFotografiaFieldsState: FotografiaFieldsState = {
   creditosEditoriales: "",
   isbn: "",
   colofon: "",
+  camara: "",
+  iso: "",
+  velocidadObturador: "",
+  diafragma: "",
+  distanciaFocal: "",
   motorIa: "",
   promptParametros: "",
   flujoGenerativo: "",
@@ -96,6 +108,7 @@ export function FotografiaFields({
   mostrarEsSeriada = true,
   ubicacion,
   onUbicacionChange,
+  onUbicacionMetadata,
   mostrarUbicacion = false,
 }: {
   value: FotografiaFieldsState;
@@ -104,6 +117,8 @@ export function FotografiaFields({
   mostrarEsSeriada?: boolean;
   ubicacion?: string;
   onUbicacionChange?: (next: string) => void;
+  /** Metadatos (EXIF) leidos del archivo cuando se indica su ubicacion. */
+  onUbicacionMetadata?: (metadata: ArchivoMetadata | null) => void;
   mostrarUbicacion?: boolean;
 }) {
   const { t } = useLanguage();
@@ -139,7 +154,11 @@ export function FotografiaFields({
         (value.subtipoFotografia === "DigitalFineArt" || value.subtipoFotografia === "Sintografia" ? (
           <label>
             {t("obraForm.ubicacionArchivoLabel")} <HelpIcon fieldKey="ubicacion_fisica_archivo" />
-            <FilePathField value={ubicacion ?? ""} onChange={(next) => onUbicacionChange?.(next)} />
+            <FilePathField
+              value={ubicacion ?? ""}
+              onChange={(next) => onUbicacionChange?.(next)}
+              onMetadata={onUbicacionMetadata}
+            />
           </label>
         ) : (
           <label>
@@ -149,7 +168,8 @@ export function FotografiaFields({
         ))}
 
       <label>
-        {value.subtipoFotografia === "Sintografia" ? t("field.fechaCreacion") : t("fields.fotografia.fechaCaptura")}
+        {value.subtipoFotografia === "Sintografia" ? t("field.fechaCreacion") : t("fields.fotografia.fechaCaptura")}{" "}
+        <HelpIcon fieldKey="datos_exif" />
         <input
           type="date"
           value={value.fechaCaptura}
@@ -165,6 +185,48 @@ export function FotografiaFields({
           onChange={(e) => onChange({ ...value, fechaEdicion: e.target.value })}
         />
       </label>
+
+      {value.subtipoFotografia !== "Sintografia" && (
+        <fieldset>
+          <legend>{t("fields.fotografia.datosCapturaLegend")} <HelpIcon fieldKey="datos_captura" /></legend>
+          <label>
+            {t("fields.fotografia.camaraLabel")}
+            <input type="text" value={value.camara} onChange={(e) => onChange({ ...value, camara: e.target.value })} />
+          </label>
+          <div className="venta-form-row-2">
+            <label>
+              {t("fields.fotografia.isoLabel")}
+              <input type="text" value={value.iso} onChange={(e) => onChange({ ...value, iso: e.target.value })} />
+            </label>
+            <label>
+              {t("fields.fotografia.velocidadObturadorLabel")}
+              <input
+                type="text"
+                value={value.velocidadObturador}
+                onChange={(e) => onChange({ ...value, velocidadObturador: e.target.value })}
+              />
+            </label>
+          </div>
+          <div className="venta-form-row-2">
+            <label>
+              {t("fields.fotografia.diafragmaLabel")}
+              <input
+                type="text"
+                value={value.diafragma}
+                onChange={(e) => onChange({ ...value, diafragma: e.target.value })}
+              />
+            </label>
+            <label>
+              {t("fields.fotografia.distanciaFocalLabel")}
+              <input
+                type="text"
+                value={value.distanciaFocal}
+                onChange={(e) => onChange({ ...value, distanciaFocal: e.target.value })}
+              />
+            </label>
+          </div>
+        </fieldset>
+      )}
 
       <label>
         {t("fields.fotografia.dimensiones")} <HelpIcon fieldKey="dimensiones_fotografia" />
@@ -483,12 +545,6 @@ export function FotografiaFields({
             onChange={(e) => onChange({ ...value, softwareEdicion: e.target.value })}
           />
         </label>
-      )}
-
-      {mostrarSoftwareEdicion && value.subtipoFotografia === "DigitalFineArt" && (
-        <p className="field-note">
-          {t("fields.fotografia.exifNotaPre")} <HelpIcon fieldKey="datos_exif" /> {t("fields.fotografia.exifNotaPost")}
-        </p>
       )}
 
       {value.subtipoFotografia === "Sintografia" && (

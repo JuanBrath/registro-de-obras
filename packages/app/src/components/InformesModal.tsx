@@ -27,6 +27,8 @@ export function InformesModal({
   onSelectId,
   idioma,
   onIdiomaChange,
+  incluirLogo,
+  onIncluirLogoChange,
   firma,
   onFirmaChange,
   firmaDigitalDisponible,
@@ -42,6 +44,8 @@ export function InformesModal({
   onSelectId: (id: string) => void;
   idioma: InformeIdioma;
   onIdiomaChange: (idioma: InformeIdioma) => void;
+  incluirLogo: boolean;
+  onIncluirLogoChange: (incluirLogo: boolean) => void;
   firma: FirmaEleccion;
   onFirmaChange: (firma: FirmaEleccion) => void;
   firmaDigitalDisponible: boolean;
@@ -95,6 +99,20 @@ export function InformesModal({
           </div>
         </fieldset>
       )}
+
+      <fieldset className="informes-fieldset">
+        <legend>{t("informes.logoLegend")}</legend>
+        <div className="radio-row">
+          <label>
+            <input type="radio" name="informeLogo" checked={incluirLogo} onChange={() => onIncluirLogoChange(true)} />
+            {t("informes.logoConLogo")}
+          </label>
+          <label>
+            <input type="radio" name="informeLogo" checked={!incluirLogo} onChange={() => onIncluirLogoChange(false)} />
+            {t("informes.logoSinLogo")}
+          </label>
+        </div>
+      </fieldset>
 
       <fieldset className="informes-fieldset">
         <legend>{t("informes.firmaLegend")}</legend>

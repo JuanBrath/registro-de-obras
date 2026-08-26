@@ -42,6 +42,7 @@ import { savePdfWithDialog } from "../utils/savePdfDialog.js";
 import { formatFechaDDMMYYYY } from "../utils/formatFecha.js";
 import { detectImageFormat } from "../utils/detectImageFormat.js";
 import { focusNextOnEnter } from "../utils/focusNextOnEnter.js";
+import type { ArchivoMetadata } from "../utils/readImageMetadata.js";
 import { drawPdfHeader, drawSignatureBlock, writeWrappedText, type FirmaEleccion } from "../utils/pdfBranding.js";
 import { InformesModal } from "../components/InformesModal.js";
 import { tInforme, type InformeIdioma } from "../reports/informeIdioma.js";
@@ -100,6 +101,11 @@ interface ObraExtRow {
   creditos_editoriales?: string | null;
   isbn?: string | null;
   colofon?: string | null;
+  camara?: string | null;
+  iso?: string | null;
+  velocidad_obturador?: string | null;
+  diafragma?: string | null;
+  distancia_focal?: string | null;
   motor_ia?: string | null;
   prompt_parametros?: string | null;
   flujo_generativo?: string | null;
@@ -237,6 +243,7 @@ interface VentaRow {
   pais_entrega: string | null;
   confidencial: number;
   clausula_reventa: string | null;
+  asesor_venta: string | null;
 }
 
 function toVentaExistente(v: VentaRow): VentaExistente {
@@ -279,6 +286,7 @@ function toVentaExistente(v: VentaRow): VentaExistente {
     paisEntrega: v.pais_entrega,
     confidencial: Number(v.confidencial) === 1,
     clausulaReventa: v.clausula_reventa,
+    asesorVenta: v.asesor_venta,
   };
 }
 
@@ -627,6 +635,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
   const [informesMenuAbierto, setInformesMenuAbierto] = useState(false);
   const [informeSeleccionId, setInformeSeleccionId] = useState("completa");
   const [informeIdioma, setInformeIdioma] = useState<InformeIdioma>("es");
+  const [informeIncluirLogo, setInformeIncluirLogo] = useState(true);
   const [informeFirma, setInformeFirma] = useState<FirmaEleccion>("ninguna");
   const [firmaBytesDisponibles, setFirmaBytesDisponibles] = useState<Uint8Array | null>(null);
   const [fichaPdfIncluirTodas, setFichaPdfIncluirTodas] = useState(true);
@@ -636,6 +645,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
   );
   const [ventaInformeSeleccionId, setVentaInformeSeleccionId] = useState("presupuesto");
   const [ventaInformeIdioma, setVentaInformeIdioma] = useState<InformeIdioma>("es");
+  const [ventaInformeIncluirLogo, setVentaInformeIncluirLogo] = useState(true);
   const [ventaInformeFirma, setVentaInformeFirma] = useState<FirmaEleccion>("ninguna");
   const [generandoVentaInforme, setGenerandoVentaInforme] = useState(false);
   const [ventaInformeMensaje, setVentaInformeMensaje] = useState<string | null>(null);
@@ -689,7 +699,8 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
                     viraje_conservacion, formato_negativo, estado_negativo, formato_archivo_maestro, espacio_color,
                     condiciones_custodia_archivo, proceso_quimico_historicos, preparacion_soporte, metales_sales,
                     pieza_unica_o_matriz, estructura_objeto, contenedor_estuche, incluye_copia_coleccionista,
-                    detalle_copia_coleccionista, creditos_editoriales, isbn, colofon, motor_ia, prompt_parametros,
+                    detalle_copia_coleccionista, creditos_editoriales, isbn, colofon, camara, iso,
+                    velocidad_obturador, diafragma, distancia_focal, motor_ia, prompt_parametros,
                     flujo_generativo, intervencion_postproduccion, soporte_salida, declaracion_derechos_ia
              FROM obra_fotografia WHERE obra_id = ?`,
             [obraId],
@@ -735,7 +746,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
                 costo_enmarcado, costo_peana, costo_embalaje, costo_transporte, costo_seguro,
                 estado_pago, metodo_pago, fecha_cobro, estado_liquidacion,
                 droit_suite_aplica, droit_suite_porcentaje, droit_suite_monto,
-                direccion_entrega, ciudad_entrega, pais_entrega, confidencial, clausula_reventa
+                direccion_entrega, ciudad_entrega, pais_entrega, confidencial, clausula_reventa, asesor_venta
          FROM venta WHERE obra_id = ?`,
         [obraId],
       );
@@ -784,6 +795,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
     setFichaPdfIncluirTodas(true);
     setFichaPdfSeleccionadas(new Set());
     setInformeIdioma(idioma);
+    setInformeIncluirLogo(true);
     setInformeFirma("ninguna");
     setFirmaBytesDisponibles(context ? await resolveFirmaBytes(context, personalArtista, galeriaPerfil) : null);
     setInformesMenuAbierto(true);
@@ -875,6 +887,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       const bytes = await buildObraSeriesDetalladoPdfBytes(obra.titulo, imgBytes, lineas, ejemplaresDetalle, mensajeSinSeries, {
         idioma: informeIdioma,
         logoBytes,
+        incluirLogo: informeIncluirLogo,
         firma: informeFirma,
         firmaBytes: firmaBytesDisponibles,
       });
@@ -905,7 +918,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       const doc = new jsPDF({ unit: "mm", format: "a4" });
       const marginLeft = 14;
       const logoBytes = await resolveMembreteLogoBytes(context, personalArtista, galeriaPerfil);
-      const startY = await drawPdfHeader(doc, obra.titulo, { marginLeft, logoBytes });
+      const startY = await drawPdfHeader(doc, obra.titulo, { marginLeft, logoBytes, incluirLogo: informeIncluirLogo });
       // La foto queda pegada al membrete como antes; solo el texto de datos
       // gana mas aire respecto de la linea dorada del encabezado.
       const textStartY = startY + 10;
@@ -1019,6 +1032,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
         : "comprobante";
     setVentaInformeSeleccionId(defaultId);
     setVentaInformeIdioma(idioma);
+    setVentaInformeIncluirLogo(true);
     setVentaInformeFirma("ninguna");
     setRofrPlazoAnios("3");
     setRofrPlazoDias("30");
@@ -1039,7 +1053,13 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
     try {
       const logoBytes = await resolveMembreteLogoBytes(context, personalArtista, galeriaPerfil);
       const tr = (key: TranslationKey, vars?: Record<string, string | number>) => tInforme(ventaInformeIdioma, key, vars);
-      const brandOpts = { idioma: ventaInformeIdioma, logoBytes, firma: ventaInformeFirma, firmaBytes: firmaBytesDisponibles };
+      const brandOpts = {
+        idioma: ventaInformeIdioma,
+        logoBytes,
+        incluirLogo: ventaInformeIncluirLogo,
+        firma: ventaInformeFirma,
+        firmaBytes: firmaBytesDisponibles,
+      };
       const base = `${obra.titulo.replace(/[^a-zA-Z0-9]+/g, "_")}_${ejemplar.numero.replace(/[^a-zA-Z0-9]+/g, "_")}`;
 
       const obraDatos = {
@@ -1158,7 +1178,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
                   criterioPrecio: rofrCriterioPrecio,
                 }
               : null,
-            { logoBytes, firma: ventaInformeFirma, firmaBytes: firmaBytesDisponibles },
+            { logoBytes, incluirLogo: ventaInformeIncluirLogo, firma: ventaInformeFirma, firmaBytes: firmaBytesDisponibles },
           );
           nombreArchivo = `contrato_${esRofr ? "rofr_" : ""}${base}.pdf`;
         }
@@ -1354,9 +1374,10 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
                viraje_conservacion, formato_negativo, estado_negativo, formato_archivo_maestro, espacio_color,
                condiciones_custodia_archivo, proceso_quimico_historicos, preparacion_soporte, metales_sales,
                pieza_unica_o_matriz, estructura_objeto, contenedor_estuche, incluye_copia_coleccionista,
-               detalle_copia_coleccionista, creditos_editoriales, isbn, colofon, motor_ia, prompt_parametros,
+               detalle_copia_coleccionista, creditos_editoriales, isbn, colofon, camara, iso, velocidad_obturador,
+               diafragma, distancia_focal, motor_ia, prompt_parametros,
                flujo_generativo, intervencion_postproduccion, soporte_salida, declaracion_derechos_ia
-             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
           : `UPDATE obra_fotografia SET
                subtipo_fotografia = ?, fecha_captura = ?, anio_toma = ?, fecha_edicion = ?, software_edicion = ?,
                dimensiones = ?, tecnica = ?, escala_por_tamanos = ?, serie_proyecto = ?,
@@ -1365,7 +1386,8 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
                condiciones_custodia_archivo = ?, proceso_quimico_historicos = ?, preparacion_soporte = ?,
                metales_sales = ?, pieza_unica_o_matriz = ?, estructura_objeto = ?, contenedor_estuche = ?,
                incluye_copia_coleccionista = ?, detalle_copia_coleccionista = ?, creditos_editoriales = ?,
-               isbn = ?, colofon = ?, motor_ia = ?, prompt_parametros = ?, flujo_generativo = ?,
+               isbn = ?, colofon = ?, camara = ?, iso = ?, velocidad_obturador = ?, diafragma = ?, distancia_focal = ?,
+               motor_ia = ?, prompt_parametros = ?, flujo_generativo = ?,
                intervencion_postproduccion = ?, soporte_salida = ?, declaracion_derechos_ia = ?
              WHERE obra_id = ?`;
         const softwareEdicion = esRegistroPersonal ? fields.ext.software_edicion || null : null;
@@ -1394,6 +1416,11 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
           fields.ext.creditos_editoriales || null,
           fields.ext.isbn || null,
           fields.ext.colofon || null,
+          fields.ext.camara || null,
+          fields.ext.iso || null,
+          fields.ext.velocidad_obturador || null,
+          fields.ext.diafragma || null,
+          fields.ext.distancia_focal || null,
           fields.ext.motor_ia || null,
           fields.ext.prompt_parametros || null,
           fields.ext.flujo_generativo || null,
@@ -1647,10 +1674,62 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
         } else {
           await tx.execute("UPDATE obra SET estado = ? WHERE id = ?", [nuevoEstado, obraId]);
         }
+        if (venta.tipo === "reserva") {
+          await tx.execute(
+            `INSERT INTO reserva_resultado (obra_id, artista_id, fecha_reserva, resultado, valor_venta, moneda)
+             VALUES (?, ?, ?, 'caida', ?, ?)`,
+            [obraId, obra?.artista_id ?? null, venta.fecha_venta, venta.valor_venta, venta.moneda],
+          );
+        }
         await tx.execute("DELETE FROM venta WHERE id = ?", [venta.id]);
         await tx.execute("INSERT INTO historial_evento (obra_id, tipo, descripcion) VALUES (?, 'cambio_estado', ?)", [
           obraId,
           `${venta.tipo === "venta" ? "Venta" : venta.tipo === "donacion" ? "Donación" : "Reserva"} anulada (comprador: ${venta.comprador_nombre})`,
+        ]);
+      });
+      await reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setAnulandoVenta(false);
+    }
+  }
+
+  async function handleConfirmarVenta(venta: VentaRow, ejemplarId: number | null) {
+    if (!context) return;
+    setAnulandoVenta(true);
+    setError(null);
+    try {
+      await context.db.transaction(async (tx) => {
+        const counter = await tx.query<{ siguiente_numero: number }>(
+          "SELECT siguiente_numero FROM certificado_contador WHERE id = 1",
+        );
+        const numeroCertificado = counter[0].siguiente_numero;
+        await tx.execute("UPDATE certificado_contador SET siguiente_numero = siguiente_numero + 1 WHERE id = 1");
+
+        await tx.execute("UPDATE venta SET tipo = 'venta', numero_certificado = ? WHERE id = ?", [
+          numeroCertificado,
+          venta.id,
+        ]);
+
+        if (ejemplarId) {
+          await tx.execute("UPDATE ejemplar SET estado = 'vendida' WHERE id = ?", [ejemplarId]);
+          if (Number(obra?.es_seriada) !== 1) {
+            await tx.execute("UPDATE obra SET estado = 'vendida' WHERE id = ?", [obraId]);
+          }
+        } else {
+          await tx.execute("UPDATE obra SET estado = 'vendida' WHERE id = ?", [obraId]);
+        }
+
+        await tx.execute(
+          `INSERT INTO reserva_resultado (obra_id, artista_id, fecha_reserva, resultado, valor_venta, moneda)
+           VALUES (?, ?, ?, 'cumplida', ?, ?)`,
+          [obraId, obra?.artista_id ?? null, venta.fecha_venta, venta.valor_venta, venta.moneda],
+        );
+
+        await tx.execute("INSERT INTO historial_evento (obra_id, tipo, descripcion) VALUES (?, 'venta', ?)", [
+          obraId,
+          `Reserva confirmada como venta — certificado #${numeroCertificado}`,
         ]);
       });
       await reload();
@@ -1781,6 +1860,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
               onVender={() => setVentaTarget({ ejemplarId: ej.id })}
               onEditarVenta={(venta) => setVentaTarget({ ejemplarId: ej.id, existingVenta: toVentaExistente(venta) })}
               onAnularVenta={(venta, nuevoEstado) => handleAnularVenta(venta, ej.id, nuevoEstado)}
+              onConfirmarVenta={(venta) => handleConfirmarVenta(venta, ej.id)}
               anulando={anulandoVenta}
               onAbrirInformes={() => handleAbrirInformesVenta(ej)}
             />
@@ -1848,6 +1928,8 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
           onSelectId={setInformeSeleccionId}
           idioma={informeIdioma}
           onIdiomaChange={setInformeIdioma}
+          incluirLogo={informeIncluirLogo}
+          onIncluirLogoChange={setInformeIncluirLogo}
           firma={informeFirma}
           onFirmaChange={setInformeFirma}
           firmaDigitalDisponible={firmaBytesDisponibles !== null}
@@ -1921,6 +2003,8 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
               onSelectId={setVentaInformeSeleccionId}
               idioma={ventaInformeIdioma}
               onIdiomaChange={setVentaInformeIdioma}
+              incluirLogo={ventaInformeIncluirLogo}
+              onIncluirLogoChange={setVentaInformeIncluirLogo}
               firma={ventaInformeFirma}
               onFirmaChange={setVentaInformeFirma}
               firmaDigitalDisponible={firmaBytesDisponibles !== null}
@@ -2045,6 +2129,11 @@ function ObraEditForm({
     creditosEditoriales: ext?.creditos_editoriales ?? "",
     isbn: ext?.isbn ?? "",
     colofon: ext?.colofon ?? "",
+    camara: ext?.camara ?? "",
+    iso: ext?.iso ?? "",
+    velocidadObturador: ext?.velocidad_obturador ?? "",
+    diafragma: ext?.diafragma ?? "",
+    distanciaFocal: ext?.distancia_focal ?? "",
     motorIa: ext?.motor_ia ?? "",
     promptParametros: ext?.prompt_parametros ?? "",
     flujoGenerativo: (ext?.flujo_generativo ?? "") as FotografiaFieldsState["flujoGenerativo"],
@@ -2134,6 +2223,20 @@ function ObraEditForm({
     tituloInputRef.current?.focus();
   }, []);
 
+  function aplicarMetadataFotografia(metadata: ArchivoMetadata | null | undefined) {
+    if (!metadata) return;
+    setFotografia((prev) => ({
+      ...prev,
+      fechaCaptura: metadata.fechaCaptura ?? prev.fechaCaptura,
+      softwareEdicion: metadata.software ?? prev.softwareEdicion,
+      camara: metadata.camara ?? prev.camara,
+      iso: metadata.iso ?? prev.iso,
+      velocidadObturador: metadata.velocidadObturador ?? prev.velocidadObturador,
+      diafragma: metadata.diafragma ?? prev.diafragma,
+      distanciaFocal: metadata.distanciaFocal ?? prev.distanciaFocal,
+    }));
+  }
+
   function handleImageChange(file: File | null) {
     setImageFile(file);
     setRemoverImagen(false);
@@ -2202,6 +2305,11 @@ function ObraEditForm({
                 creditos_editoriales: fotografia.creditosEditoriales,
                 isbn: fotografia.isbn,
                 colofon: fotografia.colofon,
+                camara: fotografia.camara,
+                iso: fotografia.iso,
+                velocidad_obturador: fotografia.velocidadObturador,
+                diafragma: fotografia.diafragma,
+                distancia_focal: fotografia.distanciaFocal,
                 motor_ia: fotografia.motorIa,
                 prompt_parametros: fotografia.promptParametros,
                 flujo_generativo: fotografia.flujoGenerativo,
@@ -2382,6 +2490,7 @@ function ObraEditForm({
           mostrarEsSeriada={false}
           ubicacion={ubicacion}
           onUbicacionChange={setUbicacion}
+          onUbicacionMetadata={aplicarMetadataFotografia}
           mostrarUbicacion={esRegistroPersonal}
         />
       ) : (
@@ -2479,6 +2588,7 @@ function EjemplarRowView({
   onVender,
   onEditarVenta,
   onAnularVenta,
+  onConfirmarVenta,
   anulando,
   onAbrirInformes,
 }: {
@@ -2528,6 +2638,7 @@ function EjemplarRowView({
   onVender: () => void;
   onEditarVenta: (venta: VentaRow) => void;
   onAnularVenta: (venta: VentaRow, nuevoEstado: string) => void;
+  onConfirmarVenta: (venta: VentaRow) => void;
   anulando: boolean;
   onAbrirInformes: () => void;
 }) {
@@ -3091,6 +3202,11 @@ function EjemplarRowView({
                   ? "common.editarDonacion"
                   : "common.editarReserva",
             )}
+          </button>
+        )}
+        {venta && venta.tipo === "reserva" && (
+          <button type="button" onClick={() => onConfirmarVenta(venta)} disabled={anulando}>
+            {t("common.confirmarVenta")}
           </button>
         )}
         {venta && (

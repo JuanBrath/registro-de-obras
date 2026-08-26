@@ -85,6 +85,16 @@ pub fn fs_write_absolute(path: String, data: Vec<u8>) -> Result<(), String> {
     fs::write(path, data).map_err(|e| e.to_string())
 }
 
+/// Reads an arbitrary absolute path with no root/traversal check — the read
+/// counterpart of fs_write_absolute, used to read metadata (EXIF) from a file
+/// the user already picked explicitly via a native "Open" dialog (e.g. the
+/// photography "ubicacion del archivo" field), which lives outside the
+/// workspace root that fs_read_file is sandboxed to.
+#[tauri::command]
+pub fn fs_read_absolute(path: String) -> Result<Vec<u8>, String> {
+    fs::read(path).map_err(|e| e.to_string())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -150,5 +160,16 @@ mod tests {
         fs_write_absolute(target_str, vec![1, 2, 3]).unwrap();
 
         assert_eq!(fs::read(&target).unwrap(), vec![1, 2, 3]);
+    }
+
+    #[test]
+    fn read_absolute_reads_the_exact_given_path() {
+        let root = temp_root("read_absolute");
+        let target = root.join("foto.jpg");
+        fs::write(&target, vec![4, 5, 6]).unwrap();
+
+        let bytes = fs_read_absolute(target.to_string_lossy().to_string()).unwrap();
+
+        assert_eq!(bytes, vec![4, 5, 6]);
     }
 }

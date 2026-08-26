@@ -49,6 +49,7 @@ export interface Venta {
   paisEntrega: string | null;
   confidencial: boolean;
   clausulaReventa: string | null;
+  asesorVenta: string | null;
   fechaRegistro: string;
 }
 

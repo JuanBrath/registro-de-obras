@@ -88,6 +88,7 @@ export function ClientesScreen({ onBack }: { onBack: () => void }) {
 
   const [fichaBlancoAbierta, setFichaBlancoAbierta] = useState(false);
   const [fichaBlancoIdioma, setFichaBlancoIdioma] = useState<InformeIdioma>("es");
+  const [fichaBlancoIncluirLogo, setFichaBlancoIncluirLogo] = useState(true);
   const [fichaBlancoFirma, setFichaBlancoFirma] = useState<FirmaEleccion>("ninguna");
   const [fichaBlancoFirmaBytes, setFichaBlancoFirmaBytes] = useState<Uint8Array | null>(null);
   const [fichaBlancoGenerando, setFichaBlancoGenerando] = useState(false);
@@ -96,6 +97,7 @@ export function ClientesScreen({ onBack }: { onBack: () => void }) {
 
   async function handleAbrirFichaBlanco() {
     setFichaBlancoIdioma(idioma);
+    setFichaBlancoIncluirLogo(true);
     setFichaBlancoFirma("ninguna");
     setFichaBlancoMensaje(null);
     setFichaBlancoFirmaBytes(context ? await resolveFirmaBytes(context, personalArtista, galeriaPerfil) : null);
@@ -111,6 +113,7 @@ export function ClientesScreen({ onBack }: { onBack: () => void }) {
       const bytes = await buildClienteEnBlancoPdfBytes("", false, {
         idioma: fichaBlancoIdioma,
         logoBytes,
+        incluirLogo: fichaBlancoIncluirLogo,
         firma: fichaBlancoFirma,
         firmaBytes: fichaBlancoFirmaBytes,
       });
@@ -279,6 +282,8 @@ export function ClientesScreen({ onBack }: { onBack: () => void }) {
           onSelectId={() => {}}
           idioma={fichaBlancoIdioma}
           onIdiomaChange={setFichaBlancoIdioma}
+          incluirLogo={fichaBlancoIncluirLogo}
+          onIncluirLogoChange={setFichaBlancoIncluirLogo}
           firma={fichaBlancoFirma}
           onFirmaChange={setFichaBlancoFirma}
           firmaDigitalDisponible={fichaBlancoFirmaBytes !== null}
@@ -451,6 +456,7 @@ function ClienteRowView({
   const [informesMenuAbierto, setInformesMenuAbierto] = useState(false);
   const [informeSeleccionId, setInformeSeleccionId] = useState("conDatos");
   const [informeIdioma, setInformeIdioma] = useState<InformeIdioma>("es");
+  const [informeIncluirLogo, setInformeIncluirLogo] = useState(true);
   const [informeFirma, setInformeFirma] = useState<FirmaEleccion>("ninguna");
   const [firmaBytesDisponibles, setFirmaBytesDisponibles] = useState<Uint8Array | null>(null);
   const [generandoInforme, setGenerandoInforme] = useState(false);
@@ -497,6 +503,7 @@ function ClienteRowView({
   async function handleAbrirInformesMenu() {
     setInformeSeleccionId("conDatos");
     setInformeIdioma(idioma);
+    setInformeIncluirLogo(true);
     setInformeFirma("ninguna");
     setHistorialFechaDesde(primerDiaMesActual());
     setHistorialFechaHasta(todayISO());
@@ -512,7 +519,13 @@ function ClienteRowView({
     setInformeMensaje(null);
     try {
       const logoBytes = await resolveMembreteLogoBytes(context, personalArtista, galeriaPerfil);
-      const brandOpts = { idioma: informeIdioma, logoBytes, firma: informeFirma, firmaBytes: firmaBytesDisponibles };
+      const brandOpts = {
+        idioma: informeIdioma,
+        logoBytes,
+        incluirLogo: informeIncluirLogo,
+        firma: informeFirma,
+        firmaBytes: firmaBytesDisponibles,
+      };
       const base = cliente.nombre.trim().replace(/[^a-zA-Z0-9]+/g, "_") || "cliente";
       let bytes: Uint8Array;
       let nombreArchivo: string;
@@ -753,6 +766,8 @@ function ClienteRowView({
             onSelectId={setInformeSeleccionId}
             idioma={informeIdioma}
             onIdiomaChange={setInformeIdioma}
+            incluirLogo={informeIncluirLogo}
+            onIncluirLogoChange={setInformeIncluirLogo}
             firma={informeFirma}
             onFirmaChange={setInformeFirma}
             firmaDigitalDisponible={firmaBytesDisponibles !== null}

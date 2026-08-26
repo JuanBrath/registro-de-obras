@@ -54,6 +54,9 @@ import { migration0054PerfilFirmaDigital } from "./0054_perfil_firma_digital.js"
 import { migration0055ArtistaBioIngles } from "./0055_artista_bio_ingles.js";
 import { migration0056VentaDesgloseFinanciero } from "./0056_venta_desglose_financiero.js";
 import { migration0057VentaDestinoConfidencialidad } from "./0057_venta_destino_confidencialidad.js";
+import { migration0058ObraFotografiaDatosCaptura } from "./0058_obra_fotografia_datos_captura.js";
+import { migration0059VentaAsesor } from "./0059_venta_asesor.js";
+import { migration0060ReservaResultado } from "./0060_reserva_resultado.js";
 
 export interface Migration {
   name: string;
@@ -239,4 +242,7 @@ export const ALL_MIGRATIONS: Migration[] = [
   migration0055ArtistaBioIngles,
   migration0056VentaDesgloseFinanciero,
   migration0057VentaDestinoConfidencialidad,
+  migration0058ObraFotografiaDatosCaptura,
+  migration0059VentaAsesor,
+  migration0060ReservaResultado,
 ];

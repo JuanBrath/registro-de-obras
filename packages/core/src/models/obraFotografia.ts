@@ -23,6 +23,12 @@ export interface ObraFotografia {
   softwareEdicion: string | null;
   /** Solo se completa cuando subtipoFotografia = 'DigitalFineArt'. */
   datosExif: DatosExif | null;
+  /** Datos de captura: no aplican a Sintografia (no hay camara real). */
+  camara: string | null;
+  iso: string | null;
+  velocidadObturador: string | null;
+  diafragma: string | null;
+  distanciaFocal: string | null;
   /** Tamano de la imagen impresa, en milimetros (ej. "300 x 450 mm"). */
   dimensiones: string | null;
   /** Tecnica utilizada (ej. "toma directa", "intervenida"). */
@@ -70,6 +76,11 @@ export interface NuevaObraFotografia {
   fechaEdicion?: string | null;
   softwareEdicion?: string | null;
   datosExif?: DatosExif | null;
+  camara?: string | null;
+  iso?: string | null;
+  velocidadObturador?: string | null;
+  diafragma?: string | null;
+  distanciaFocal?: string | null;
   dimensiones?: string | null;
   tecnica?: string | null;
   escalaPorTamanos?: string | null;

@@ -47,6 +47,7 @@ export interface VentaExistente {
   paisEntrega: string | null;
   confidencial: boolean;
   clausulaReventa: string | null;
+  asesorVenta: string | null;
 }
 
 interface ClienteOption {
@@ -163,6 +164,7 @@ export function VentaForm({
   const [paisEntrega, setPaisEntrega] = useState(existingVenta?.paisEntrega ?? "");
   const [confidencial, setConfidencial] = useState(existingVenta?.confidencial ?? false);
   const [clausulaReventa, setClausulaReventa] = useState(existingVenta?.clausulaReventa ?? "");
+  const [asesorVenta, setAsesorVenta] = useState(existingVenta?.asesorVenta ?? "");
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -211,6 +213,7 @@ export function VentaForm({
       paisEntrega: existingVenta?.paisEntrega ?? "",
       confidencial: existingVenta?.confidencial ?? false,
       clausulaReventa: existingVenta?.clausulaReventa ?? "",
+      asesorVenta: existingVenta?.asesorVenta ?? "",
     }),
   ).current;
 
@@ -252,6 +255,7 @@ export function VentaForm({
       paisEntrega,
       confidencial,
       clausulaReventa,
+      asesorVenta,
     }) !== valoresInicialesRef;
 
   function handleVolverClick() {
@@ -416,6 +420,7 @@ export function VentaForm({
       const ciudadEntregaVal = ciudadEntrega || null;
       const paisEntregaVal = paisEntrega || null;
       const clausulaReventaVal = clausulaReventa || null;
+      const asesorVentaVal = !esDonacion ? asesorVenta || null : null;
 
       if (existingVenta) {
         await db.transaction(async (tx) => {
@@ -428,7 +433,8 @@ export function VentaForm({
                costo_enmarcado = ?, costo_peana = ?, costo_embalaje = ?, costo_transporte = ?, costo_seguro = ?,
                estado_pago = ?, metodo_pago = ?, fecha_cobro = ?, estado_liquidacion = ?,
                droit_suite_aplica = ?, droit_suite_porcentaje = ?, droit_suite_monto = ?,
-               direccion_entrega = ?, ciudad_entrega = ?, pais_entrega = ?, confidencial = ?, clausula_reventa = ?
+               direccion_entrega = ?, ciudad_entrega = ?, pais_entrega = ?, confidencial = ?, clausula_reventa = ?,
+               asesor_venta = ?
              WHERE id = ?`,
             [
               clienteId,
@@ -467,6 +473,7 @@ export function VentaForm({
               paisEntregaVal,
               confidencial ? 1 : 0,
               clausulaReventaVal,
+              asesorVentaVal,
               existingVenta.id,
             ],
           );
@@ -495,9 +502,9 @@ export function VentaForm({
                costo_enmarcado, costo_peana, costo_embalaje, costo_transporte, costo_seguro,
                estado_pago, metodo_pago, fecha_cobro, estado_liquidacion,
                droit_suite_aplica, droit_suite_porcentaje, droit_suite_monto,
-               direccion_entrega, ciudad_entrega, pais_entrega, confidencial, clausula_reventa
+               direccion_entrega, ciudad_entrega, pais_entrega, confidencial, clausula_reventa, asesor_venta
              )
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               obraId,
               ejemplarId,
@@ -539,6 +546,7 @@ export function VentaForm({
               paisEntregaVal,
               confidencial ? 1 : 0,
               clausulaReventaVal,
+              asesorVentaVal,
             ],
           );
           const ventaId = insertVenta.lastInsertId;
@@ -721,6 +729,13 @@ export function VentaForm({
         <HelpIcon fieldKey="lugar_venta" />
         <input type="text" value={lugarVenta} onChange={(e) => setLugarVenta(e.target.value)} />
       </label>
+
+      {!esDonacion && (
+        <label>
+          {t("ventaForm.asesorVentaLabel")} <HelpIcon fieldKey="asesor_venta" />
+          <input type="text" value={asesorVenta} onChange={(e) => setAsesorVenta(e.target.value)} />
+        </label>
+      )}
 
       {esDonacion ? (
         <p className="field-note">{t("ventaForm.notaSinValorComercial")}</p>

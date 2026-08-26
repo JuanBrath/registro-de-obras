@@ -1,9 +1,19 @@
 import { isTauri } from "../adapters/detectPlatform.js";
-import { pickTauriFilePath } from "../adapters/tauri/TauriFileSystemAdapter.js";
+import { pickTauriFilePath, readAbsoluteFileBytes } from "../adapters/tauri/TauriFileSystemAdapter.js";
 import { openLocalPath } from "../utils/openExternalUrl.js";
+import { readImageMetadata, type ArchivoMetadata } from "../utils/readImageMetadata.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
 
-export function FilePathField({ value, onChange }: { value: string; onChange: (next: string) => void }) {
+export function FilePathField({
+  value,
+  onChange,
+  onMetadata,
+}: {
+  value: string;
+  onChange: (next: string) => void;
+  /** Metadatos (EXIF) leidos del archivo elegido, si se pueden leer. */
+  onMetadata?: (metadata: ArchivoMetadata | null) => void;
+}) {
   const { t } = useLanguage();
 
   if (!isTauri()) {
@@ -13,7 +23,15 @@ export function FilePathField({ value, onChange }: { value: string; onChange: (n
 
   async function handlePick() {
     const picked = await pickTauriFilePath();
-    if (picked) onChange(picked);
+    if (!picked) return;
+    onChange(picked);
+    if (!onMetadata) return;
+    try {
+      onMetadata(readImageMetadata(await readAbsoluteFileBytes(picked)));
+    } catch {
+      // El archivo puede no ser una imagen legible o no tener permisos de lectura — no rompe el flujo.
+      onMetadata(null);
+    }
   }
 
   return (

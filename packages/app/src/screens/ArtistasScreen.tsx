@@ -131,7 +131,13 @@ async function generarFichaArtistaPdfBytes(
   t: TFn,
   fields: FichaArtistaFields,
   imgBytes: Uint8Array | null,
-  firmaOpts: { idioma: InformeIdioma; logoBytes: Uint8Array | null; firma: FirmaEleccion; firmaBytes: Uint8Array | null },
+  firmaOpts: {
+    idioma: InformeIdioma;
+    logoBytes: Uint8Array | null;
+    incluirLogo: boolean;
+    firma: FirmaEleccion;
+    firmaBytes: Uint8Array | null;
+  },
 ) {
   // jsPDF es pesado: se carga recien al generar el PDF (mismo criterio que
   // en PersonalProfileForm/ObraDetail/VentasReport).
@@ -141,6 +147,7 @@ async function generarFichaArtistaPdfBytes(
   const startY = await drawPdfHeader(doc, fields.nombreCompleto || t("artistas.title"), {
     marginLeft,
     logoBytes: firmaOpts.logoBytes,
+    incluirLogo: firmaOpts.incluirLogo,
   });
   const imageBoxSize = 60;
   let textX = marginLeft;
@@ -286,6 +293,7 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
   useEscapeToDismiss(pdfMensaje, setPdfMensaje);
   const [informesMenuAbierto, setInformesMenuAbierto] = useState(false);
   const [informeIdioma, setInformeIdioma] = useState<InformeIdioma>("es");
+  const [informeIncluirLogo, setInformeIncluirLogo] = useState(true);
   const [informeFirma, setInformeFirma] = useState<FirmaEleccion>("ninguna");
   const [firmaBytesDisponibles, setFirmaBytesDisponibles] = useState<Uint8Array | null>(null);
   // Mientras se consulta/edita un artista, los demas no se muestran debajo
@@ -482,6 +490,7 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
 
   async function handleAbrirInformesMenu() {
     setInformeIdioma(idioma);
+    setInformeIncluirLogo(true);
     setInformeFirma("ninguna");
     setFirmaBytesDisponibles(context ? await resolveFirmaBytes(context, personalArtista, galeriaPerfil) : null);
     setInformesMenuAbierto(true);
@@ -527,7 +536,7 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
           publicacionesPrensa,
         },
         imgBytes,
-        { idioma: informeIdioma, logoBytes, firma: informeFirma, firmaBytes: firmaBytesDisponibles },
+        { idioma: informeIdioma, logoBytes, incluirLogo: informeIncluirLogo, firma: informeFirma, firmaBytes: firmaBytesDisponibles },
       );
       const fileName = `artista_${(nombreCompleto || "sin_nombre").trim().replace(/\s+/g, "_")}.pdf`;
       const guardado = await savePdfWithDialog(bytes, fileName);
@@ -876,6 +885,8 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
             onSelectId={() => {}}
             idioma={informeIdioma}
             onIdiomaChange={setInformeIdioma}
+            incluirLogo={informeIncluirLogo}
+            onIncluirLogoChange={setInformeIncluirLogo}
             firma={informeFirma}
             onFirmaChange={setInformeFirma}
             firmaDigitalDisponible={firmaBytesDisponibles !== null}
@@ -1040,11 +1051,13 @@ function ArtistaRowView({
   useEscapeToDismiss(pdfMensaje, setPdfMensaje);
   const [informesMenuAbierto, setInformesMenuAbierto] = useState(false);
   const [informeIdioma, setInformeIdioma] = useState<InformeIdioma>("es");
+  const [informeIncluirLogo, setInformeIncluirLogo] = useState(true);
   const [informeFirma, setInformeFirma] = useState<FirmaEleccion>("ninguna");
   const [firmaBytesDisponibles, setFirmaBytesDisponibles] = useState<Uint8Array | null>(null);
 
   async function handleAbrirInformesMenu() {
     setInformeIdioma(idioma);
+    setInformeIncluirLogo(true);
     setInformeFirma("ninguna");
     setFirmaBytesDisponibles(context ? await resolveFirmaBytes(context, personalArtista, galeriaPerfil) : null);
     setInformesMenuAbierto(true);
@@ -1097,7 +1110,7 @@ function ArtistaRowView({
           publicacionesPrensa,
         },
         imgBytes,
-        { idioma: informeIdioma, logoBytes, firma: informeFirma, firmaBytes: firmaBytesDisponibles },
+        { idioma: informeIdioma, logoBytes, incluirLogo: informeIncluirLogo, firma: informeFirma, firmaBytes: firmaBytesDisponibles },
       );
       const fileName = `artista_${(nombreCompleto || "sin_nombre").trim().replace(/\s+/g, "_")}.pdf`;
       const guardado = await savePdfWithDialog(bytes, fileName);
@@ -1482,6 +1495,8 @@ function ArtistaRowView({
             onSelectId={() => {}}
             idioma={informeIdioma}
             onIdiomaChange={setInformeIdioma}
+            incluirLogo={informeIncluirLogo}
+            onIncluirLogoChange={setInformeIncluirLogo}
             firma={informeFirma}
             onFirmaChange={setInformeFirma}
             firmaDigitalDisponible={firmaBytesDisponibles !== null}
