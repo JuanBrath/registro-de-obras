@@ -5,8 +5,20 @@ import { bytesToObjectUrl } from "../utils/imageObjectUrl.js";
 import { Modal } from "../components/Modal.js";
 import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
+import { formatFechaDDMMYYYY } from "../utils/formatFecha.js";
 import type { ObrasListFiltros } from "./ObrasList.js";
 import { subtipoTranslationKey } from "./fields/ObraDetalleFields.js";
+
+interface PrimeraSerieDisponible {
+  numero: string;
+  fecha_impresion: string | null;
+  soporte_impresion: string | null;
+  dimensiones: string | null;
+  ubicacion_actual: string | null;
+  precio_venta: number | null;
+  moneda_venta: string | null;
+  notas: string | null;
+}
 
 interface FotoRow {
   id: number;
@@ -72,7 +84,9 @@ export function GaleriaFotos({
   const [selectedSubtipo, setSelectedSubtipo] = useState<string | null>(filtrosIniciales?.selectedSubtipo ?? null);
   const [soloMarcadas, setSoloMarcadas] = useState(filtrosIniciales?.soloMarcadas ?? false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const [mostrarInfo, setMostrarInfo] = useState(false);
+  const [infoAbierta, setInfoAbierta] = useState(false);
+  const [primeraSerieDisponible, setPrimeraSerieDisponible] = useState<PrimeraSerieDisponible | null>(null);
+  const [cargandoSerieDisponible, setCargandoSerieDisponible] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [loadingLightbox, setLoadingLightbox] = useState(false);
   const objectUrlsRef = useRef<string[]>([]);
@@ -269,19 +283,39 @@ export function GaleriaFotos({
   function closeLightbox() {
     setLightboxIndex(null);
     setLightboxUrl(null);
-    setMostrarInfo(false);
+    setInfoAbierta(false);
   }
 
   function showNext() {
     setLightboxIndex((i) => (i === null || filteredFotos.length === 0 ? null : (i + 1) % filteredFotos.length));
-    setMostrarInfo(false);
+    setInfoAbierta(false);
   }
 
   function showPrev() {
     setLightboxIndex((i) =>
       i === null || filteredFotos.length === 0 ? null : (i - 1 + filteredFotos.length) % filteredFotos.length,
     );
-    setMostrarInfo(false);
+    setInfoAbierta(false);
+  }
+
+  async function abrirInfo(obraId: number) {
+    setInfoAbierta(true);
+    setPrimeraSerieDisponible(null);
+    if (!context) return;
+    setCargandoSerieDisponible(true);
+    try {
+      const rows = await context.db.query<PrimeraSerieDisponible>(
+        `SELECT numero, fecha_impresion, soporte_impresion, dimensiones, ubicacion_actual, precio_venta, moneda_venta, notas
+         FROM ejemplar
+         WHERE obra_id = ? AND tipo = 'edicion' AND estado = 'disponible'
+         ORDER BY indice ASC
+         LIMIT 1`,
+        [obraId],
+      );
+      setPrimeraSerieDisponible(rows[0] ?? null);
+    } finally {
+      setCargandoSerieDisponible(false);
+    }
   }
 
   if (!context) return null;
@@ -451,8 +485,8 @@ export function GaleriaFotos({
               {filteredFotos[lightboxIndex] && (
                 <button
                   type="button"
-                  className={`lightbox-info-button${mostrarInfo ? " activo" : ""}`}
-                  onClick={() => setMostrarInfo((prev) => !prev)}
+                  className={`lightbox-info-button${infoAbierta ? " activo" : ""}`}
+                  onClick={() => abrirInfo(filteredFotos[lightboxIndex].id)}
                   aria-label={t("galeria.verInfo")}
                   title={t("galeria.verInfo")}
                 >
@@ -460,49 +494,100 @@ export function GaleriaFotos({
                 </button>
               )}
             </p>
-            {mostrarInfo && filteredFotos[lightboxIndex] && (
-              <div className="lightbox-info">
-                {filteredFotos[lightboxIndex].nombre_completo && (
-                  <span>{filteredFotos[lightboxIndex].nombre_completo}</span>
-                )}
-                <span>
-                  {t(`categoria.${filteredFotos[lightboxIndex].categoria_obra}` as TranslationKey)}
-                  {" — "}
-                  {Number(filteredFotos[lightboxIndex].es_seriada) === 1
-                    ? t("obrasList.seriada")
-                    : t("obrasList.unica")}
-                </span>
-                {Number(filteredFotos[lightboxIndex].es_seriada) === 1 ? (
-                  (() => {
-                    const foto = filteredFotos[lightboxIndex];
-                    const disponibles = Number(foto.ejemplares_disponible) || 0;
-                    const total = Number(foto.total_ejemplares) || 0;
-                    const claseDisponibles = disponibles > 0 ? "disponible" : "vendida";
-                    return (
-                      <>
-                        <span className={`obra-card-estado obra-card-estado-${claseDisponibles}`}>
-                          {t("obrasList.fraccionDisponibles", { disponibles, total })}
+          </div>
+        </Modal>
+      )}
+
+      {infoAbierta && lightboxIndex !== null && filteredFotos[lightboxIndex] && (
+        <Modal onClose={() => setInfoAbierta(false)}>
+          <div className="lightbox-info">
+            {filteredFotos[lightboxIndex].nombre_completo && <span>{filteredFotos[lightboxIndex].nombre_completo}</span>}
+            <span>
+              {t(`categoria.${filteredFotos[lightboxIndex].categoria_obra}` as TranslationKey)}
+              {" — "}
+              {Number(filteredFotos[lightboxIndex].es_seriada) === 1 ? t("obrasList.seriada") : t("obrasList.unica")}
+            </span>
+            {Number(filteredFotos[lightboxIndex].es_seriada) === 1 ? (
+              (() => {
+                const foto = filteredFotos[lightboxIndex];
+                const disponibles = Number(foto.ejemplares_disponible) || 0;
+                const total = Number(foto.total_ejemplares) || 0;
+                const claseDisponibles = disponibles > 0 ? "disponible" : "vendida";
+                return (
+                  <>
+                    <span className={`obra-card-estado obra-card-estado-${claseDisponibles}`}>
+                      {t("obrasList.fraccionDisponibles", { disponibles, total })}
+                    </span>
+                    {FRAGMENTOS_ESTADO.map(({ estado, key, campo }) => {
+                      const n = Number(foto[campo]) || 0;
+                      if (n === 0) return null;
+                      return (
+                        <span key={estado} className={`obra-card-estado obra-card-estado-${estado}`}>
+                          {t(key, { n })}
                         </span>
-                        {FRAGMENTOS_ESTADO.map(({ estado, key, campo }) => {
-                          const n = Number(foto[campo]) || 0;
-                          if (n === 0) return null;
-                          return (
-                            <span key={estado} className={`obra-card-estado obra-card-estado-${estado}`}>
-                              {t(key, { n })}
-                            </span>
-                          );
-                        })}
-                      </>
-                    );
-                  })()
-                ) : (
-                  <span className={`obra-card-estado obra-card-estado-${filteredFotos[lightboxIndex].estado}`}>
-                    {t(`estado.${filteredFotos[lightboxIndex].estado}` as TranslationKey)}
-                  </span>
-                )}
-              </div>
+                      );
+                    })}
+                  </>
+                );
+              })()
+            ) : (
+              <span className={`obra-card-estado obra-card-estado-${filteredFotos[lightboxIndex].estado}`}>
+                {t(`estado.${filteredFotos[lightboxIndex].estado}` as TranslationKey)}
+              </span>
             )}
           </div>
+
+          {Number(filteredFotos[lightboxIndex].es_seriada) === 1 && (
+            <div className="lightbox-info-serie">
+              <h3>{t("galeria.primeraSerieDisponibleTitulo")}</h3>
+              {cargandoSerieDisponible && <p>{t("common.loading")}</p>}
+              {!cargandoSerieDisponible && !primeraSerieDisponible && <p>{t("galeria.sinSerieDisponible")}</p>}
+              {!cargandoSerieDisponible && primeraSerieDisponible && (
+                <dl className="lightbox-info-serie-datos">
+                  <dt>{t("obraDetail.serieNumeroLabel")}</dt>
+                  <dd>{primeraSerieDisponible.numero}</dd>
+                  {primeraSerieDisponible.fecha_impresion && (
+                    <>
+                      <dt>{t("obraDetail.fechaImpresion")}</dt>
+                      <dd>{formatFechaDDMMYYYY(primeraSerieDisponible.fecha_impresion)}</dd>
+                    </>
+                  )}
+                  {primeraSerieDisponible.soporte_impresion && (
+                    <>
+                      <dt>{t("obraDetail.soporteImpresion")}</dt>
+                      <dd>{primeraSerieDisponible.soporte_impresion}</dd>
+                    </>
+                  )}
+                  {primeraSerieDisponible.dimensiones && (
+                    <>
+                      <dt>{t("obraDetail.tamanoEjemplarLabel")}</dt>
+                      <dd>{primeraSerieDisponible.dimensiones}</dd>
+                    </>
+                  )}
+                  {primeraSerieDisponible.ubicacion_actual && (
+                    <>
+                      <dt>{t("obraDetail.ubicacionActualCopia")}</dt>
+                      <dd>{primeraSerieDisponible.ubicacion_actual}</dd>
+                    </>
+                  )}
+                  {primeraSerieDisponible.precio_venta != null && (
+                    <>
+                      <dt>{t("obraDetail.valorLabel")}</dt>
+                      <dd>
+                        {primeraSerieDisponible.moneda_venta} {primeraSerieDisponible.precio_venta}
+                      </dd>
+                    </>
+                  )}
+                  {primeraSerieDisponible.notas && (
+                    <>
+                      <dt>{t("obraDetail.notasEjemplarLabel")}</dt>
+                      <dd>{primeraSerieDisponible.notas}</dd>
+                    </>
+                  )}
+                </dl>
+              )}
+            </div>
+          )}
         </Modal>
       )}
     </div>

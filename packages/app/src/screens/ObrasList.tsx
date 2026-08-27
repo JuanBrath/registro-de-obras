@@ -21,6 +21,7 @@ interface ObraRow {
   estado: string;
   es_seriada: number;
   miniatura_path: string | null;
+  codigo_inventario: string | null;
   tags: string | null;
   artista_id: number | null;
   nombre_completo: string;
@@ -37,6 +38,7 @@ interface ObraRow {
   ejemplares_coleccion_autor: number;
   ejemplares_descartada: number;
   ejemplares_destruida: number;
+  tiene_prueba_artista: number;
   marcada: number;
 }
 
@@ -91,7 +93,8 @@ export function ObrasList({
       setError(null);
       try {
         const rows = await context!.db.query<ObraRow>(
-          `SELECT obra.id, obra.titulo, obra.categoria_obra, obra.estado, obra.es_seriada, obra.miniatura_path, obra.tags,
+          `SELECT obra.id, obra.titulo, obra.categoria_obra, obra.estado, obra.es_seriada, obra.miniatura_path,
+                  obra.codigo_inventario, obra.tags,
                   obra.marcada, obra.artista_id, artista.nombre_completo,
                   obra_fotografia.subtipo_fotografia, obra_detalle.subtipo,
                   COUNT(CASE WHEN ejemplar.tipo = 'edicion' THEN ejemplar.id END) as total_ejemplares,
@@ -104,7 +107,8 @@ export function ObrasList({
                   SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'en_produccion' THEN 1 ELSE 0 END) as ejemplares_en_produccion,
                   SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'coleccion_autor' THEN 1 ELSE 0 END) as ejemplares_coleccion_autor,
                   SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'descartada' THEN 1 ELSE 0 END) as ejemplares_descartada,
-                  SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'destruida' THEN 1 ELSE 0 END) as ejemplares_destruida
+                  SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'destruida' THEN 1 ELSE 0 END) as ejemplares_destruida,
+                  MAX(CASE WHEN ejemplar.tipo = 'prueba_artista' THEN 1 ELSE 0 END) as tiene_prueba_artista
            FROM obra
            LEFT JOIN ejemplar ON ejemplar.obra_id = obra.id
            LEFT JOIN artista ON artista.id = obra.artista_id
@@ -196,11 +200,13 @@ export function ObrasList({
       if (!busquedaNorm) return true;
       const enTitulo = o.titulo.toLowerCase().includes(busquedaNorm);
       const enArtista = !esRegistroPersonal && (o.nombre_completo ?? "").toLowerCase().includes(busquedaNorm);
+      const enNumero = String(o.id).includes(busquedaNorm);
+      const enCodigoInventario = (o.codigo_inventario ?? "").toLowerCase().includes(busquedaNorm);
       // En Personal el buscador es solo por título: el filtro de etiquetas ya
       // tiene su propio desplegable, no hace falta que el buscador tambien
       // matchee por etiqueta ahi.
       const enEtiquetas = !esRegistroPersonal && parseTags(o.tags).some((tag) => tag.toLowerCase().includes(busquedaNorm));
-      return enTitulo || enArtista || enEtiquetas;
+      return enTitulo || enArtista || enNumero || enCodigoInventario || enEtiquetas;
     });
   }, [
     obras,
@@ -396,6 +402,11 @@ export function ObrasList({
                 {" — "}
                 {Number(obra.es_seriada) === 1 ? t("obrasList.seriada") : t("obrasList.unica")}
               </span>
+              {Number(obra.tiene_prueba_artista) === 1 && (
+                <span className="obra-card-estado obra-card-estado-prueba-artista">
+                  {t("obrasList.conPruebaAutor")}
+                </span>
+              )}
               {Number(obra.es_seriada) === 1 ? (
                 (() => {
                   const disponibles = Number(obra.ejemplares_disponible) || 0;

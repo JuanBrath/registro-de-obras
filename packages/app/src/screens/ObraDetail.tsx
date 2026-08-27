@@ -35,7 +35,7 @@ import { TagPicker } from "../components/TagPicker.js";
 import { ArtistaSelector } from "../components/ArtistaSelector.js";
 import { ImageFileField } from "../components/ImageFileField.js";
 import { HelpIcon } from "../components/HelpIcon.js";
-import { todayISO } from "../utils/today.js";
+import { CampoFecha, BotonCalendario, type CampoFechaHandle } from "../components/CampoFecha.js";
 import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
 import { savePdfWithDialog } from "../utils/savePdfDialog.js";
@@ -46,7 +46,7 @@ import type { ArchivoMetadata } from "../utils/readImageMetadata.js";
 import { drawPdfHeader, drawSignatureBlock, writeWrappedText, type FirmaEleccion } from "../utils/pdfBranding.js";
 import { InformesModal } from "../components/InformesModal.js";
 import { tInforme, type InformeIdioma } from "../reports/informeIdioma.js";
-import { resolveFirmaBytes, resolveMembreteLogoBytes } from "../reports/reportBranding.js";
+import { resolveFirmaBytes, resolveMembreteLogoBytes, resolveLocalidad } from "../reports/reportBranding.js";
 import { buildObraSeriesDetalladoPdfBytes, type ObraEjemplarDetalle } from "../reports/obraReports.js";
 import {
   buildCoaPdfBytes,
@@ -78,7 +78,7 @@ interface ObraRow {
 interface ObraExtRow {
   subtipo_fotografia?: string;
   fecha_captura?: string | null;
-  fecha_edicion?: string | null;
+  anio_edicion?: string | null;
   software_edicion?: string | null;
   escala_por_tamanos?: string | null;
   serie_proyecto?: string | null;
@@ -300,7 +300,12 @@ function buildObraDescripcionLineas(
   // no para compartir con un comprador). La ubicacion fisica del archivo
   // nunca se incluye aqui: es un dato interno que solo se edita/consulta
   // desde su propio campo dedicado, no como parte de la info comun.
-  { incluirSoftwareEdicion = true, incluirInfoComercial = true } = {},
+  {
+    incluirSoftwareEdicion = true,
+    incluirInfoComercial = true,
+    incluirDatosTecnicosArchivo = true,
+    incluirTags = true,
+  } = {},
 ): string[] {
   const lineas: string[] = [];
   if (obra.subtitulo) lineas.push(t("obraForm.subtituloLabel") + ": " + obra.subtitulo);
@@ -333,8 +338,8 @@ function buildObraDescripcionLineas(
   if (ext?.fecha_captura) {
     lineas.push(`${t("fields.fotografia.fechaCaptura")}: ${formatFechaDDMMYYYY(ext.fecha_captura)}`);
   }
-  if (ext?.fecha_edicion) {
-    lineas.push(`${t("fields.fotografia.fechaEdicion")}: ${formatFechaDDMMYYYY(ext.fecha_edicion)}`);
+  if (ext?.anio_edicion) {
+    lineas.push(`${t("fields.fotografia.anioEdicion")}: ${ext.anio_edicion}`);
   }
   if (incluirSoftwareEdicion && esRegistroPersonal && ext?.software_edicion) {
     lineas.push(`${t("fields.fotografia.softwareEdicion")}: ${ext.software_edicion}`);
@@ -525,7 +530,7 @@ function buildObraDescripcionLineas(
         lineas.push(`${t("fields.fotografia.estadoNegativoLabel")}: ${ext.estado_negativo}`);
       }
     }
-    if (ext?.subtipo_fotografia === "DigitalFineArt") {
+    if (incluirDatosTecnicosArchivo && ext?.subtipo_fotografia === "DigitalFineArt") {
       if (ext?.formato_archivo_maestro) {
         lineas.push(`${t("fields.fotografia.formatoArchivoMaestroLabel")}: ${ext.formato_archivo_maestro}`);
       }
@@ -603,8 +608,10 @@ function buildObraDescripcionLineas(
       `${t("obraForm.historialProcedenciaExhibicionesLabel")}: ${obra.historial_procedencia_exhibiciones}`,
     );
   }
-  const tags = parseTags(obra.tags);
-  if (tags.length > 0) lineas.push(`${t("obraForm.etiquetasLabel")}: ${tags.join(", ")}`);
+  if (incluirTags) {
+    const tags = parseTags(obra.tags);
+    if (tags.length > 0) lineas.push(`${t("obraForm.etiquetasLabel")}: ${tags.join(", ")}`);
+  }
   return lineas;
 }
 
@@ -636,6 +643,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
   const [informeSeleccionId, setInformeSeleccionId] = useState("completa");
   const [informeIdioma, setInformeIdioma] = useState<InformeIdioma>("es");
   const [informeIncluirLogo, setInformeIncluirLogo] = useState(true);
+  const [informeIncluirFecha, setInformeIncluirFecha] = useState(true);
   const [informeFirma, setInformeFirma] = useState<FirmaEleccion>("ninguna");
   const [firmaBytesDisponibles, setFirmaBytesDisponibles] = useState<Uint8Array | null>(null);
   const [fichaPdfIncluirTodas, setFichaPdfIncluirTodas] = useState(true);
@@ -694,7 +702,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       if (obraRow) {
         if (obraRow.categoria_obra === "Fotografia") {
           const rows = await context.db.query<ObraExtRow>(
-            `SELECT subtipo_fotografia, fecha_captura, fecha_edicion, software_edicion, dimensiones, tecnica,
+            `SELECT subtipo_fotografia, fecha_captura, anio_edicion, software_edicion, dimensiones, tecnica,
                     escala_por_tamanos, serie_proyecto, clasificacion_positivado, proceso_quimico_analogica,
                     viraje_conservacion, formato_negativo, estado_negativo, formato_archivo_maestro, espacio_color,
                     condiciones_custodia_archivo, proceso_quimico_historicos, preparacion_soporte, metales_sales,
@@ -796,6 +804,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
     setFichaPdfSeleccionadas(new Set());
     setInformeIdioma(idioma);
     setInformeIncluirLogo(true);
+    setInformeIncluirFecha(true);
     setInformeFirma("ninguna");
     setFirmaBytesDisponibles(context ? await resolveFirmaBytes(context, personalArtista, galeriaPerfil) : null);
     setInformesMenuAbierto(true);
@@ -809,7 +818,9 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       return;
     }
     setInformesMenuAbierto(false);
-    await handleGenerarInformeSeries(informeSeleccionId as "disponibles" | "no_disponibles" | "primera_disponible");
+    await handleGenerarInformeSeries(
+      informeSeleccionId as "disponibles" | "no_disponibles" | "primera_disponible" | "terceros",
+    );
   }
 
   function formatearVentaTexto(ej: EjemplarRow): string | null {
@@ -821,7 +832,9 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
     )} — ${venta.comprador_nombre} (${formatFechaDDMMYYYY(venta.fecha_venta)})`;
   }
 
-  async function handleGenerarInformeSeries(tipo: "disponibles" | "no_disponibles" | "primera_disponible") {
+  async function handleGenerarInformeSeries(
+    tipo: "disponibles" | "no_disponibles" | "primera_disponible" | "terceros",
+  ) {
     if (!obra || !context) return;
     setGenerandoFichaPdf(true);
     setError(null);
@@ -879,9 +892,17 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       }
 
       const logoBytes = await resolveMembreteLogoBytes(context, personalArtista, galeriaPerfil);
-      const lineas = buildObraDescripcionLineas(obra, ext, esRegistroPersonal, (key, vars) => tInforme(informeIdioma, key, vars));
+      const lineas = buildObraDescripcionLineas(
+        obra,
+        ext,
+        esRegistroPersonal,
+        (key, vars) => tInforme(informeIdioma, key, vars),
+        tipo === "terceros"
+          ? { incluirSoftwareEdicion: false, incluirDatosTecnicosArchivo: false, incluirTags: false }
+          : undefined,
+      );
       const mensajeSinSeries = t(
-        tipo === "disponibles" ? "obraDetail.sinSeriesDisponibles" : "obraDetail.sinSeriesNoDisponibles",
+        tipo === "no_disponibles" ? "obraDetail.sinSeriesNoDisponibles" : "obraDetail.sinSeriesDisponibles",
       );
 
       const bytes = await buildObraSeriesDetalladoPdfBytes(obra.titulo, imgBytes, lineas, ejemplaresDetalle, mensajeSinSeries, {
@@ -890,9 +911,18 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
         incluirLogo: informeIncluirLogo,
         firma: informeFirma,
         firmaBytes: firmaBytesDisponibles,
+        localidad: resolveLocalidad(context, personalArtista, galeriaPerfil),
+        incluirFecha: informeIncluirFecha,
       });
 
-      const sufijo = tipo === "disponibles" ? "_disponibles" : tipo === "no_disponibles" ? "_no_disponibles" : "_primera_disponible";
+      const sufijo =
+        tipo === "disponibles"
+          ? "_disponibles"
+          : tipo === "no_disponibles"
+            ? "_no_disponibles"
+            : tipo === "terceros"
+              ? "_terceros"
+              : "_primera_disponible";
       const nombreArchivo = `series_${obra.titulo.replace(/[^a-zA-Z0-9]+/g, "_")}${sufijo}.pdf`;
       const guardado = await savePdfWithDialog(bytes, nombreArchivo);
       if (guardado) setFichaPdfMensaje(t("obraDetail.fichaPdfGenerada"));
@@ -918,7 +948,14 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       const doc = new jsPDF({ unit: "mm", format: "a4" });
       const marginLeft = 14;
       const logoBytes = await resolveMembreteLogoBytes(context, personalArtista, galeriaPerfil);
-      const startY = await drawPdfHeader(doc, obra.titulo, { marginLeft, logoBytes, incluirLogo: informeIncluirLogo });
+      const localidad = resolveLocalidad(context, personalArtista, galeriaPerfil);
+      const startY = await drawPdfHeader(doc, obra.titulo, {
+        marginLeft,
+        logoBytes,
+        incluirLogo: informeIncluirLogo,
+        localidad,
+        incluirFecha: informeIncluirFecha,
+      });
       // La foto queda pegada al membrete como antes; solo el texto de datos
       // gana mas aire respecto de la linea dorada del encabezado.
       const textStartY = startY + 10;
@@ -1369,7 +1406,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       if (fields.categoria === "Fotografia") {
         const upsert = cambiaCategoria
           ? `INSERT INTO obra_fotografia (
-               obra_id, subtipo_fotografia, fecha_captura, anio_toma, fecha_edicion, software_edicion, dimensiones,
+               obra_id, subtipo_fotografia, fecha_captura, anio_toma, anio_edicion, software_edicion, dimensiones,
                tecnica, escala_por_tamanos, serie_proyecto, clasificacion_positivado, proceso_quimico_analogica,
                viraje_conservacion, formato_negativo, estado_negativo, formato_archivo_maestro, espacio_color,
                condiciones_custodia_archivo, proceso_quimico_historicos, preparacion_soporte, metales_sales,
@@ -1379,7 +1416,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
                flujo_generativo, intervencion_postproduccion, soporte_salida, declaracion_derechos_ia
              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
           : `UPDATE obra_fotografia SET
-               subtipo_fotografia = ?, fecha_captura = ?, anio_toma = ?, fecha_edicion = ?, software_edicion = ?,
+               subtipo_fotografia = ?, fecha_captura = ?, anio_toma = ?, anio_edicion = ?, software_edicion = ?,
                dimensiones = ?, tecnica = ?, escala_por_tamanos = ?, serie_proyecto = ?,
                clasificacion_positivado = ?, proceso_quimico_analogica = ?, viraje_conservacion = ?,
                formato_negativo = ?, estado_negativo = ?, formato_archivo_maestro = ?, espacio_color = ?,
@@ -1434,7 +1471,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
               fields.ext.subtipo_fotografia,
               fields.ext.fecha_captura || null,
               anioToma,
-              fields.ext.fecha_edicion || null,
+              fields.ext.anio_edicion || null,
               softwareEdicion,
               ...camposComunes,
             ]
@@ -1442,7 +1479,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
               fields.ext.subtipo_fotografia,
               fields.ext.fecha_captura || null,
               anioToma,
-              fields.ext.fecha_edicion || null,
+              fields.ext.anio_edicion || null,
               softwareEdicion,
               ...camposComunes,
               obraId,
@@ -1923,6 +1960,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
             { id: "no_disponibles", label: t("obraDetail.informeOpcionNoDisponibles") },
             { id: "disponibles", label: t("obraDetail.informeOpcionDisponibles") },
             { id: "primera_disponible", label: t("obraDetail.informeOpcionPrimeraDisponible") },
+            { id: "terceros", label: t("obraDetail.informeOpcionTerceros") },
           ]}
           selectedId={informeSeleccionId}
           onSelectId={setInformeSeleccionId}
@@ -1930,6 +1968,8 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
           onIdiomaChange={setInformeIdioma}
           incluirLogo={informeIncluirLogo}
           onIncluirLogoChange={setInformeIncluirLogo}
+          incluirFecha={informeIncluirFecha}
+          onIncluirFechaChange={setInformeIncluirFecha}
           firma={informeFirma}
           onFirmaChange={setInformeFirma}
           firmaDigitalDisponible={firmaBytesDisponibles !== null}
@@ -2102,8 +2142,8 @@ function ObraEditForm({
   const [fotografia, setFotografia] = useState<FotografiaFieldsState>({
     ...initialFotografiaFieldsState,
     subtipoFotografia: (ext?.subtipo_fotografia ?? "DigitalFineArt") as FotografiaFieldsState["subtipoFotografia"],
-    fechaCaptura: ext?.fecha_captura ?? todayISO(),
-    fechaEdicion: ext?.fecha_edicion ?? todayISO(),
+    fechaCaptura: ext?.fecha_captura ?? "",
+    anioEdicion: ext?.anio_edicion ?? "",
     softwareEdicion: ext?.software_edicion ?? "",
     tecnica: ext?.tecnica ?? "",
     dimensiones: ext?.dimensiones ?? "",
@@ -2148,7 +2188,7 @@ function ObraEditForm({
     tecnica: ext?.tecnica ?? "",
     dimensiones: ext?.dimensiones ?? "",
     peso: ext?.peso ?? "",
-    fechaCreacion: ext?.fecha_creacion ?? todayISO(),
+    fechaCreacion: ext?.fecha_creacion ?? "",
     esSeriada: false,
     materialesMixtura: ext?.materiales_mixtura ?? "",
     tipoBastidor: ext?.tipo_bastidor ?? "",
@@ -2235,6 +2275,9 @@ function ObraEditForm({
       diafragma: metadata.diafragma ?? prev.diafragma,
       distanciaFocal: metadata.distanciaFocal ?? prev.distanciaFocal,
     }));
+    if (metadata.palabrasClave.length > 0) {
+      setTags((prev) => [...prev, ...metadata.palabrasClave.filter((p) => !prev.includes(p))]);
+    }
   }
 
   function handleImageChange(file: File | null) {
@@ -2280,7 +2323,7 @@ function ObraEditForm({
             ? {
                 subtipo_fotografia: fotografia.subtipoFotografia,
                 fecha_captura: fotografia.fechaCaptura,
-                fecha_edicion: fotografia.fechaEdicion,
+                anio_edicion: fotografia.anioEdicion,
                 software_edicion: fotografia.softwareEdicion,
                 tecnica: fotografia.tecnica,
                 dimensiones: fotografia.dimensiones,
@@ -2430,7 +2473,7 @@ function ObraEditForm({
       )}
 
       <label>
-        {t("obraForm.imagenLabel")}
+        {t("obraForm.imagenLabel")} <HelpIcon fieldKey="imagen_obra" />
         {imagePreviewUrl ? (
           <img src={imagePreviewUrl} alt="" className="obra-edit-imagen-actual" />
         ) : (
@@ -2643,9 +2686,12 @@ function EjemplarRowView({
   onAbrirInformes: () => void;
 }) {
   const { t } = useLanguage();
+  const fechaLimiteRef = useRef<CampoFechaHandle>(null);
+  const fechaImpresionRef = useRef<CampoFechaHandle>(null);
+  const coaFechaRef = useRef<CampoFechaHandle>(null);
   const [estado, setEstado] = useState(ejemplar.estado);
   const [estadoTrasAnular, setEstadoTrasAnular] = useState("en_stock");
-  const [fechaImpresion, setFechaImpresion] = useState(ejemplar.fecha_impresion ?? todayISO());
+  const [fechaImpresion, setFechaImpresion] = useState(ejemplar.fecha_impresion ?? "");
   const [tipoImpresion, setTipoImpresion] = useState(ejemplar.tipo_impresion ?? "");
   const [soporteImpresion, setSoporteImpresion] = useState(ejemplar.soporte_impresion ?? "");
   const [tipoTintas, setTipoTintas] = useState(ejemplar.tipo_tintas ?? "");
@@ -2725,7 +2771,7 @@ function EjemplarRowView({
           <span className="field-label">
             {t("obraDetail.estadoLabel")} <HelpIcon fieldKey="estado_ejemplar" />
           </span>
-          <select value={estado} onChange={(e) => setEstado(e.target.value)}>
+          <select value={estado} onChange={(e) => setEstado(e.target.value)} disabled={!!venta}>
             <option value="disponible">{t("estado.disponible")}</option>
             <option value="en_stock">{t("estado.en_stock")}</option>
             <option value="reservada">{t("estado.reservada")}</option>
@@ -2738,17 +2784,21 @@ function EjemplarRowView({
             <option value="destruida">{t("estado.destruida")}</option>
           </select>
         </label>
+        {venta && <p className="field-note">{t("obraDetail.estadoBloqueadoPorVenta")}</p>}
         {(estado === "exhibicion" || estado === "consignacion") && (
           <label>
             <span className="field-label">
-              {t("obraDetail.fechaLimiteLabel")} <HelpIcon fieldKey="fecha_limite_ejemplar" />
+              {t("obraDetail.fechaLimiteLabel")} <HelpIcon fieldKey="fecha_limite_ejemplar" />{" "}
+              <BotonCalendario onClick={() => fechaLimiteRef.current?.abrirCalendario()} />
             </span>
-            <input type="date" value={fechaLimite} onChange={(e) => setFechaLimite(e.target.value)} />
+            <CampoFecha ref={fechaLimiteRef} valorIso={fechaLimite} onChangeIso={setFechaLimite} />
           </label>
         )}
         <label>
-          <span className="field-label">{t("obraDetail.fechaImpresion")}</span>
-          <input type="date" value={fechaImpresion} onChange={(e) => setFechaImpresion(e.target.value)} />
+          <span className="field-label">
+            {t("obraDetail.fechaImpresion")} <BotonCalendario onClick={() => fechaImpresionRef.current?.abrirCalendario()} />
+          </span>
+          <CampoFecha ref={fechaImpresionRef} valorIso={fechaImpresion} onChangeIso={setFechaImpresion} />
         </label>
         {(esFotografiaDigital || esObraGrafica) && (
           <label>
@@ -2955,9 +3005,10 @@ function EjemplarRowView({
             </label>
             <label>
               <span className="field-label">
-                {t("obraDetail.coaFechaLabel")} <HelpIcon fieldKey="coa_fecha" />
+                {t("obraDetail.coaFechaLabel")} <HelpIcon fieldKey="coa_fecha" />{" "}
+                <BotonCalendario onClick={() => coaFechaRef.current?.abrirCalendario()} />
               </span>
-              <input type="date" value={coaFecha} onChange={(e) => setCoaFecha(e.target.value)} />
+              <CampoFecha ref={coaFechaRef} valorIso={coaFecha} onChangeIso={setCoaFecha} />
             </label>
             <label>
               <span className="field-label">

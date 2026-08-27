@@ -29,6 +29,8 @@ export function InformesModal({
   onIdiomaChange,
   incluirLogo,
   onIncluirLogoChange,
+  incluirFecha,
+  onIncluirFechaChange,
   firma,
   onFirmaChange,
   firmaDigitalDisponible,
@@ -46,6 +48,9 @@ export function InformesModal({
   onIdiomaChange: (idioma: InformeIdioma) => void;
   incluirLogo: boolean;
   onIncluirLogoChange: (incluirLogo: boolean) => void;
+  /** Opcional: solo las pantallas que lo necesiten (por ahora, Obra) muestran el fieldset de incluir/ocultar la fecha del membrete. */
+  incluirFecha?: boolean;
+  onIncluirFechaChange?: (incluirFecha: boolean) => void;
   firma: FirmaEleccion;
   onFirmaChange: (firma: FirmaEleccion) => void;
   firmaDigitalDisponible: boolean;
@@ -113,6 +118,32 @@ export function InformesModal({
           </label>
         </div>
       </fieldset>
+
+      {onIncluirFechaChange && (
+        <fieldset className="informes-fieldset">
+          <legend>{t("informes.fechaLegend")}</legend>
+          <div className="radio-row">
+            <label>
+              <input
+                type="radio"
+                name="informeFecha"
+                checked={!!incluirFecha}
+                onChange={() => onIncluirFechaChange(true)}
+              />
+              {t("informes.fechaConFecha")}
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="informeFecha"
+                checked={!incluirFecha}
+                onChange={() => onIncluirFechaChange(false)}
+              />
+              {t("informes.fechaSinFecha")}
+            </label>
+          </div>
+        </fieldset>
+      )}
 
       <fieldset className="informes-fieldset">
         <legend>{t("informes.firmaLegend")}</legend>

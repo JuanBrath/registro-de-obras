@@ -4,6 +4,17 @@ import { openLocalPath } from "../utils/openExternalUrl.js";
 import { readImageMetadata, type ArchivoMetadata } from "../utils/readImageMetadata.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
 
+// Formatos que readImageMetadata sabe interpretar. Se chequea la extension
+// ANTES de leer el archivo para no cargar en memoria (via IPC) archivos
+// pesados de formatos no soportados (por ejemplo un .psd de varios cientos
+// de MB), que es lo que colgaba la app al elegir un archivo asi.
+const EXTENSIONES_CON_METADATA = ["jpg", "jpeg", "tif", "tiff", "heic", "heif"];
+
+function tieneExtensionConMetadata(path: string): boolean {
+  const extension = path.split(".").pop()?.toLowerCase() ?? "";
+  return EXTENSIONES_CON_METADATA.includes(extension);
+}
+
 export function FilePathField({
   value,
   onChange,
@@ -26,6 +37,10 @@ export function FilePathField({
     if (!picked) return;
     onChange(picked);
     if (!onMetadata) return;
+    if (!tieneExtensionConMetadata(picked)) {
+      onMetadata(null);
+      return;
+    }
     try {
       onMetadata(readImageMetadata(await readAbsoluteFileBytes(picked)));
     } catch {

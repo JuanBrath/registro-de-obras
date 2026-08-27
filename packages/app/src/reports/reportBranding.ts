@@ -32,3 +32,12 @@ export async function resolveFirmaBytes(
   const path = context.workspace === "personal" ? personalArtista?.firmaPath : galeriaPerfil?.firmaPath;
   return readOptional(context, path);
 }
+
+/** Localidad del perfil activo (del autor en personal, o de la galeria en galeria), para el encabezado de los informes. */
+export function resolveLocalidad(
+  context: WorkspaceContext,
+  personalArtista: Artista | null,
+  galeriaPerfil: GaleriaPerfil | null,
+): string | null {
+  return (context.workspace === "personal" ? personalArtista?.localidad : galeriaPerfil?.localidad) ?? null;
+}

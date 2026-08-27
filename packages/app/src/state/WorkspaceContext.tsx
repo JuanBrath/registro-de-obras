@@ -46,6 +46,7 @@ interface ArtistaRow {
   web: string | null;
   instagram: string | null;
   direccion: string | null;
+  localidad: string | null;
   x: string | null;
   facebook: string | null;
   linkedin: string | null;
@@ -85,6 +86,7 @@ function mapArtistaRow(row: ArtistaRow): Artista {
     web: row.web,
     instagram: row.instagram,
     direccion: row.direccion,
+    localidad: row.localidad,
     x: row.x,
     facebook: row.facebook,
     linkedin: row.linkedin,
@@ -122,6 +124,7 @@ async function loadPersonalArtista(context: CoreWorkspaceContext): Promise<Artis
 interface GaleriaPerfilRow {
   nombre: string;
   direccion: string | null;
+  localidad: string | null;
   telefono: string | null;
   email: string | null;
   web: string | null;
@@ -138,6 +141,7 @@ function mapGaleriaPerfilRow(row: GaleriaPerfilRow): GaleriaPerfil {
   return {
     nombre: row.nombre,
     direccion: row.direccion,
+    localidad: row.localidad,
     telefono: row.telefono,
     email: row.email,
     web: row.web,
@@ -154,7 +158,7 @@ function mapGaleriaPerfilRow(row: GaleriaPerfilRow): GaleriaPerfil {
 async function loadGaleriaPerfil(context: CoreWorkspaceContext): Promise<GaleriaPerfil | null> {
   if (context.workspace !== "galeria") return null;
   const rows = await context.db.query<GaleriaPerfilRow>(
-    "SELECT nombre, direccion, telefono, email, web, instagram, facebook, x, notas, logo_path, firma_path, cuit FROM galeria_perfil WHERE id = 1",
+    "SELECT nombre, direccion, localidad, telefono, email, web, instagram, facebook, x, notas, logo_path, firma_path, cuit FROM galeria_perfil WHERE id = 1",
   );
   return rows.length > 0 ? mapGaleriaPerfilRow(rows[0]) : null;
 }

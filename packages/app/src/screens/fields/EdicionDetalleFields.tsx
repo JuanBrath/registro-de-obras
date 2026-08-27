@@ -1,7 +1,10 @@
+import { useRef } from "react";
 import { HelpIcon } from "../../components/HelpIcon.js";
+import { CampoFecha, BotonCalendario, type CampoFechaHandle } from "../../components/CampoFecha.js";
 import { useLanguage, type TranslationKey } from "../../i18n/LanguageContext.js";
 
 export interface EdicionDetalleState {
+  estado: string;
   fechaImpresion: string;
   tipoImpresion: string;
   soporteImpresion: string;
@@ -33,6 +36,7 @@ export interface EdicionDetalleState {
 }
 
 export const initialEdicionDetalleState: EdicionDetalleState = {
+  estado: "disponible",
   fechaImpresion: "",
   tipoImpresion: "",
   soporteImpresion: "",
@@ -108,6 +112,8 @@ export function EdicionDetalleRow({
   esTextilCeramica: boolean;
 }) {
   const { t } = useLanguage();
+  const fechaImpresionRef = useRef<CampoFechaHandle>(null);
+  const coaFechaRef = useRef<CampoFechaHandle>(null);
 
   if (editing) {
     return (
@@ -116,6 +122,22 @@ export function EdicionDetalleRow({
           {numero}
           {esPruebaArtista && <HelpIcon fieldKey="prueba_artista_info" />}
         </legend>
+
+        <label>
+          {t("obraDetail.estadoLabel")} <HelpIcon fieldKey="estado_ejemplar" />
+          <select value={value.estado} onChange={(e) => onChange({ ...value, estado: e.target.value })}>
+            <option value="disponible">{t("estado.disponible")}</option>
+            <option value="en_stock">{t("estado.en_stock")}</option>
+            <option value="reservada">{t("estado.reservada")}</option>
+            <option value="exhibicion">{t("estado.exhibicion")}</option>
+            <option value="vendida">{t("estado.vendida")}</option>
+            <option value="consignacion">{t("estado.consignacion")}</option>
+            <option value="en_produccion">{t("estado.en_produccion")}</option>
+            <option value="coleccion_autor">{t("estado.coleccion_autor")}</option>
+            <option value="descartada">{t("estado.descartada")}</option>
+            <option value="destruida">{t("estado.destruida")}</option>
+          </select>
+        </label>
 
         {(esObraGrafica || esEscultura) && esPruebaArtista && (
           <label>
@@ -136,11 +158,11 @@ export function EdicionDetalleRow({
         )}
 
         <label>
-          {t("obraDetail.fechaImpresion")}
-          <input
-            type="date"
-            value={value.fechaImpresion}
-            onChange={(e) => onChange({ ...value, fechaImpresion: e.target.value })}
+          {t("obraDetail.fechaImpresion")} <BotonCalendario onClick={() => fechaImpresionRef.current?.abrirCalendario()} />
+          <CampoFecha
+            ref={fechaImpresionRef}
+            valorIso={value.fechaImpresion}
+            onChangeIso={(iso) => onChange({ ...value, fechaImpresion: iso })}
           />
         </label>
 
@@ -323,11 +345,12 @@ export function EdicionDetalleRow({
               />
             </label>
             <label>
-              {t("obraDetail.coaFechaLabel")} <HelpIcon fieldKey="coa_fecha" />
-              <input
-                type="date"
-                value={value.coaFecha}
-                onChange={(e) => onChange({ ...value, coaFecha: e.target.value })}
+              {t("obraDetail.coaFechaLabel")} <HelpIcon fieldKey="coa_fecha" />{" "}
+              <BotonCalendario onClick={() => coaFechaRef.current?.abrirCalendario()} />
+              <CampoFecha
+                ref={coaFechaRef}
+                valorIso={value.coaFecha}
+                onChangeIso={(iso) => onChange({ ...value, coaFecha: iso })}
               />
             </label>
             <label>

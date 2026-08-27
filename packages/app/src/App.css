@@ -174,7 +174,7 @@ input[type="date"] {
   gap: 0.5rem 0.25rem;
 }
 
-.obra-form label > *:not(.help-icon-wrapper):not([type="checkbox"]):not([type="radio"]) {
+.obra-form label > *:not(.help-icon-wrapper):not(.campo-fecha-calendario):not([type="checkbox"]):not([type="radio"]) {
   flex: 1 1 100%;
 }
 
@@ -217,6 +217,14 @@ input[type="date"] {
 
 .file-path-field input {
   flex: 1;
+}
+
+.campo-fecha-calendario {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 0.9em;
+  line-height: 1;
 }
 
 .image-file-field {
@@ -430,7 +438,7 @@ input[type="date"] {
 .obra-card img {
   width: 100%;
   aspect-ratio: 1;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
 }
 
@@ -451,7 +459,7 @@ input[type="date"] {
 .galeria-foto-thumb-button img {
   width: 100%;
   aspect-ratio: 1;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
 }
 
@@ -576,6 +584,33 @@ input[type="date"] {
   gap: 0.4rem;
   font-size: 0.85rem;
   color: var(--text);
+}
+
+.lightbox-info-serie {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.lightbox-info-serie h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+}
+
+.lightbox-info-serie-datos {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.25rem 0.75rem;
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.lightbox-info-serie-datos dt {
+  opacity: 0.8;
+}
+
+.lightbox-info-serie-datos dd {
+  margin: 0;
 }
 
 .lightbox-arrow {
@@ -756,6 +791,11 @@ input[type="date"] {
   color: #f57f17;
 }
 
+.obra-card-estado-prueba-artista {
+  background: #e3f2fd;
+  color: #0d47a1;
+}
+
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .obra-card-estado-disponible,
   :root:not([data-theme="light"]) .obra-card-estado-en_stock,
@@ -777,6 +817,11 @@ input[type="date"] {
   :root:not([data-theme="light"]) .obra-card-estado-en_produccion {
     color: #ffcc80;
     background: rgba(245, 127, 23, 0.25);
+  }
+
+  :root:not([data-theme="light"]) .obra-card-estado-prueba-artista {
+    color: #90caf9;
+    background: rgba(13, 71, 161, 0.25);
   }
 }
 
@@ -802,6 +847,11 @@ input[type="date"] {
   background: rgba(245, 127, 23, 0.25);
 }
 
+:root[data-theme="dark"] .obra-card-estado-prueba-artista {
+  color: #90caf9;
+  background: rgba(13, 71, 161, 0.25);
+}
+
 .obra-detail-header {
   display: flex;
   gap: 1.5rem;
@@ -810,17 +860,18 @@ input[type="date"] {
 }
 
 .obra-detail-thumbnail {
-  width: 160px;
-  height: 160px;
-  object-fit: cover;
+  width: 220px;
+  height: 220px;
+  object-fit: contain;
   border-radius: 8px;
   display: block;
+  background: var(--bg-panel);
 }
 
 .obra-edit-imagen-actual {
   width: 120px;
   height: 120px;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 8px;
   background: var(--bg-panel);
   display: block;
@@ -885,7 +936,7 @@ input[type="date"] {
   gap: 0.5rem 0.25rem;
 }
 
-.ejemplar-row-editing label > *:not(.help-icon-wrapper):not([type="checkbox"]):not([type="radio"]) {
+.ejemplar-row-editing label > *:not(.help-icon-wrapper):not(.campo-fecha-calendario):not([type="checkbox"]):not([type="radio"]) {
   flex: 1 1 100%;
 }
 
@@ -968,7 +1019,7 @@ input[type="date"] {
   gap: 0.5rem 0.25rem;
 }
 
-.venta-form label > *:not(.help-icon-wrapper):not([type="checkbox"]):not([type="radio"]) {
+.venta-form label > *:not(.help-icon-wrapper):not(.campo-fecha-calendario):not([type="checkbox"]):not([type="radio"]) {
   flex: 1 1 100%;
 }
 
@@ -1105,7 +1156,7 @@ input[type="date"] {
 .artista-foto-preview {
   width: 120px;
   height: 120px;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 8px;
   background: var(--bg-panel);
 }

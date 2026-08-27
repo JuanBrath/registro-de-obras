@@ -9,6 +9,7 @@ export interface Artista {
   web: string | null;
   instagram: string | null;
   direccion: string | null;
+  localidad: string | null;
   x: string | null;
   facebook: string | null;
   linkedin: string | null;
@@ -46,6 +47,7 @@ export interface NuevoArtista {
   web?: string | null;
   instagram?: string | null;
   direccion?: string | null;
+  localidad?: string | null;
   x?: string | null;
   facebook?: string | null;
   linkedin?: string | null;

@@ -6,6 +6,7 @@ import { bytesToObjectUrl } from "../utils/imageObjectUrl.js";
 import { ImageFileField } from "../components/ImageFileField.js";
 import { LinkField } from "../components/LinkField.js";
 import { HelpIcon } from "../components/HelpIcon.js";
+import { CampoFecha, BotonCalendario, type CampoFechaHandle } from "../components/CampoFecha.js";
 import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
 import { savePdfWithDialog } from "../utils/savePdfDialog.js";
@@ -253,6 +254,7 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
 
   const [nombreCompleto, setNombreCompleto] = useState("");
   const [fechaNacimiento, setFechaNacimiento] = useState("");
+  const fechaNacimientoRef = useRef<CampoFechaHandle>(null);
   const [bio, setBio] = useState("");
   const [bioEn, setBioEn] = useState("");
   const [telefono, setTelefono] = useState("");
@@ -269,6 +271,7 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
   const [lugarNacimiento, setLugarNacimiento] = useState("");
   const [lugarFallecimiento, setLugarFallecimiento] = useState("");
   const [fechaFallecimiento, setFechaFallecimiento] = useState("");
+  const fechaFallecimientoRef = useRef<CampoFechaHandle>(null);
   const [lugarResidenciaTrabajo, setLugarResidenciaTrabajo] = useState("");
   const [declaracionArtista, setDeclaracionArtista] = useState("");
   const [formacionAcademica, setFormacionAcademica] = useState("");
@@ -278,6 +281,25 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
   const [colecciones, setColecciones] = useState("");
   const [publicacionesPrensa, setPublicacionesPrensa] = useState("");
   const [fotoFile, setFotoFile] = useState<File | null>(null);
+  const [fotoPreviewUrl, setFotoPreviewUrl] = useState<string | null>(null);
+  const fotoPreviewUrlRef = useRef<string | null>(null);
+  useEffect(() => {
+    return () => {
+      if (fotoPreviewUrlRef.current) URL.revokeObjectURL(fotoPreviewUrlRef.current);
+    };
+  }, []);
+  function handleFotoChange(file: File | null) {
+    setFotoFile(file);
+    if (fotoPreviewUrlRef.current) URL.revokeObjectURL(fotoPreviewUrlRef.current);
+    if (file) {
+      const url = URL.createObjectURL(file);
+      fotoPreviewUrlRef.current = url;
+      setFotoPreviewUrl(url);
+    } else {
+      fotoPreviewUrlRef.current = null;
+      setFotoPreviewUrl(null);
+    }
+  }
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   useEscapeToDismiss(formError, setFormError);
@@ -335,6 +357,9 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
     setColecciones("");
     setPublicacionesPrensa("");
     setFotoFile(null);
+    if (fotoPreviewUrlRef.current) URL.revokeObjectURL(fotoPreviewUrlRef.current);
+    fotoPreviewUrlRef.current = null;
+    setFotoPreviewUrl(null);
     setFormError(null);
     setPdfMensaje(null);
     setDuplicadoBloqueado(null);
@@ -646,7 +671,8 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
 
         <label>
           <span className="field-label">{t("artistas.foto")}</span>
-          <ImageFileField value={fotoFile} onChange={setFotoFile} />
+          {fotoPreviewUrl && <img src={fotoPreviewUrl} alt="" className="artista-foto-preview" />}
+          <ImageFileField value={fotoFile} onChange={handleFotoChange} />
         </label>
 
         <fieldset>
@@ -677,17 +703,19 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
 
           <div className="form-row-2">
             <label>
-              <span className="field-label">{t("artistas.fechaNacimiento")}</span>
-              <input type="date" value={fechaNacimiento} onChange={(e) => setFechaNacimiento(e.target.value)} />
+              <span className="field-label">
+                {t("artistas.fechaNacimiento")}{" "}
+                <BotonCalendario onClick={() => fechaNacimientoRef.current?.abrirCalendario()} />
+              </span>
+              <CampoFecha ref={fechaNacimientoRef} valorIso={fechaNacimiento} onChangeIso={setFechaNacimiento} />
             </label>
 
             <label>
-              <span className="field-label">{t("artistas.fechaFallecimientoLabel")}</span>
-              <input
-                type="date"
-                value={fechaFallecimiento}
-                onChange={(e) => setFechaFallecimiento(e.target.value)}
-              />
+              <span className="field-label">
+                {t("artistas.fechaFallecimientoLabel")}{" "}
+                <BotonCalendario onClick={() => fechaFallecimientoRef.current?.abrirCalendario()} />
+              </span>
+              <CampoFecha ref={fechaFallecimientoRef} valorIso={fechaFallecimiento} onChangeIso={setFechaFallecimiento} />
             </label>
           </div>
 
@@ -1013,6 +1041,7 @@ function ArtistaRowView({
 
   const [nombreCompleto, setNombreCompleto] = useState(artista.nombre_completo);
   const [fechaNacimiento, setFechaNacimiento] = useState(artista.fecha_nacimiento ?? "");
+  const fechaNacimientoRef = useRef<CampoFechaHandle>(null);
   const [bio, setBio] = useState(artista.bio ?? "");
   const [bioEn, setBioEn] = useState(artista.bio_en ?? "");
   const [telefono, setTelefono] = useState(artista.telefono ?? "");
@@ -1029,6 +1058,7 @@ function ArtistaRowView({
   const [lugarNacimiento, setLugarNacimiento] = useState(artista.lugar_nacimiento ?? "");
   const [lugarFallecimiento, setLugarFallecimiento] = useState(artista.lugar_fallecimiento ?? "");
   const [fechaFallecimiento, setFechaFallecimiento] = useState(artista.fecha_fallecimiento ?? "");
+  const fechaFallecimientoRef = useRef<CampoFechaHandle>(null);
   const [lugarResidenciaTrabajo, setLugarResidenciaTrabajo] = useState(
     artista.lugar_residencia_trabajo ?? "",
   );
@@ -1046,6 +1076,28 @@ function ArtistaRowView({
   const [colecciones, setColecciones] = useState(artista.colecciones ?? "");
   const [publicacionesPrensa, setPublicacionesPrensa] = useState(artista.publicaciones_prensa ?? "");
   const [fotoFile, setFotoFile] = useState<File | null>(null);
+  const [fotoPreviewUrl, setFotoPreviewUrl] = useState<string | null>(fotoUrl ?? null);
+  const fotoPreviewUrlRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!fotoFile) setFotoPreviewUrl(fotoUrl ?? null);
+  }, [fotoUrl, fotoFile]);
+  useEffect(() => {
+    return () => {
+      if (fotoPreviewUrlRef.current) URL.revokeObjectURL(fotoPreviewUrlRef.current);
+    };
+  }, []);
+  function handleFotoChange(file: File | null) {
+    setFotoFile(file);
+    if (fotoPreviewUrlRef.current) URL.revokeObjectURL(fotoPreviewUrlRef.current);
+    if (file) {
+      const url = URL.createObjectURL(file);
+      fotoPreviewUrlRef.current = url;
+      setFotoPreviewUrl(url);
+    } else {
+      fotoPreviewUrlRef.current = null;
+      setFotoPreviewUrl(fotoUrl ?? null);
+    }
+  }
   const [generandoPdf, setGenerandoPdf] = useState(false);
   const [pdfMensaje, setPdfMensaje] = useState<string | null>(null);
   useEscapeToDismiss(pdfMensaje, setPdfMensaje);
@@ -1187,7 +1239,10 @@ function ArtistaRowView({
         <h2>{artista.nombre_completo}</h2>
         <label>
           <span className="field-label">{t("artistas.foto")}</span>
-          <ImageFileField value={fotoFile} onChange={setFotoFile} disabled={soloLectura} />
+          {fotoPreviewUrl && (
+            <img src={fotoPreviewUrl} alt={artista.nombre_completo} className="artista-foto-preview" />
+          )}
+          <ImageFileField value={fotoFile} onChange={handleFotoChange} disabled={soloLectura} hasImage={!!fotoUrl} />
         </label>
         <fieldset>
           <legend>{t("artistas.seccionIdentificacion")}</legend>
@@ -1224,20 +1279,29 @@ function ArtistaRowView({
 
           <div className="form-row-2">
             <label>
-              <span className="field-label">{t("artistas.fechaNacimiento")}</span>
-              <input
-                type="date"
-                value={fechaNacimiento}
-                onChange={(e) => setFechaNacimiento(e.target.value)}
+              <span className="field-label">
+                {t("artistas.fechaNacimiento")}{" "}
+                <BotonCalendario onClick={() => fechaNacimientoRef.current?.abrirCalendario()} disabled={soloLectura} />
+              </span>
+              <CampoFecha
+                ref={fechaNacimientoRef}
+                valorIso={fechaNacimiento}
+                onChangeIso={setFechaNacimiento}
                 disabled={soloLectura}
               />
             </label>
             <label>
-              <span className="field-label">{t("artistas.fechaFallecimientoLabel")}</span>
-              <input
-                type="date"
-                value={fechaFallecimiento}
-                onChange={(e) => setFechaFallecimiento(e.target.value)}
+              <span className="field-label">
+                {t("artistas.fechaFallecimientoLabel")}{" "}
+                <BotonCalendario
+                  onClick={() => fechaFallecimientoRef.current?.abrirCalendario()}
+                  disabled={soloLectura}
+                />
+              </span>
+              <CampoFecha
+                ref={fechaFallecimientoRef}
+                valorIso={fechaFallecimiento}
+                onChangeIso={setFechaFallecimiento}
                 disabled={soloLectura}
               />
             </label>

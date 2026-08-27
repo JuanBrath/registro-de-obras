@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import type {
   SubtipoFotografia,
   ClasificacionPositivado,
@@ -7,14 +8,14 @@ import type {
 } from "@registro/core";
 import { HelpIcon } from "../../components/HelpIcon.js";
 import { FilePathField } from "../../components/FilePathField.js";
-import { todayISO } from "../../utils/today.js";
+import { CampoFecha, BotonCalendario, type CampoFechaHandle } from "../../components/CampoFecha.js";
 import { useLanguage } from "../../i18n/LanguageContext.js";
 import type { ArchivoMetadata } from "../../utils/readImageMetadata.js";
 
 export interface FotografiaFieldsState {
   subtipoFotografia: SubtipoFotografia;
   fechaCaptura: string;
-  fechaEdicion: string;
+  anioEdicion: string;
   softwareEdicion: string;
   dimensiones: string;
   tecnica: string;
@@ -61,8 +62,8 @@ export interface FotografiaFieldsState {
 
 export const initialFotografiaFieldsState: FotografiaFieldsState = {
   subtipoFotografia: "DigitalFineArt",
-  fechaCaptura: todayISO(),
-  fechaEdicion: todayISO(),
+  fechaCaptura: "",
+  anioEdicion: "",
   softwareEdicion: "",
   dimensiones: "",
   tecnica: "",
@@ -122,6 +123,7 @@ export function FotografiaFields({
   mostrarUbicacion?: boolean;
 }) {
   const { t } = useLanguage();
+  const fechaCapturaRef = useRef<CampoFechaHandle>(null);
 
   return (
     <fieldset>
@@ -169,20 +171,23 @@ export function FotografiaFields({
 
       <label>
         {value.subtipoFotografia === "Sintografia" ? t("field.fechaCreacion") : t("fields.fotografia.fechaCaptura")}{" "}
-        <HelpIcon fieldKey="datos_exif" />
-        <input
-          type="date"
-          value={value.fechaCaptura}
-          onChange={(e) => onChange({ ...value, fechaCaptura: e.target.value })}
+        <BotonCalendario onClick={() => fechaCapturaRef.current?.abrirCalendario()} />
+        <CampoFecha
+          ref={fechaCapturaRef}
+          valorIso={value.fechaCaptura}
+          onChangeIso={(iso) => onChange({ ...value, fechaCaptura: iso })}
         />
       </label>
 
       <label>
-        {t("fields.fotografia.fechaEdicion")}
+        {t("fields.fotografia.anioEdicion")}
         <input
-          type="date"
-          value={value.fechaEdicion}
-          onChange={(e) => onChange({ ...value, fechaEdicion: e.target.value })}
+          type="text"
+          inputMode="numeric"
+          placeholder="AAAA"
+          maxLength={4}
+          value={value.anioEdicion}
+          onChange={(e) => onChange({ ...value, anioEdicion: e.target.value.replace(/\D/g, "").slice(0, 4) })}
         />
       </label>
 

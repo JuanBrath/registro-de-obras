@@ -6,6 +6,8 @@ import gsMonogramaUrl from "../assets/brand/gs-monograma.png?url";
 import { detectImageFormat } from "./detectImageFormat.js";
 import { tInforme, type InformeIdioma } from "../reports/informeIdioma.js";
 import type { TranslationKey } from "../i18n/LanguageContext.js";
+import { todayISO } from "./today.js";
+import { formatFechaDDMMYYYY } from "./formatFecha.js";
 
 export const GALERIS_GOLD: [number, number, number] = [201, 162, 71]; // #C9A247
 
@@ -90,13 +92,27 @@ export async function drawPdfHeader(
     marginRight = 14,
     logoBytes: customLogoBytes,
     incluirLogo = true,
-  }: { marginLeft?: number; marginRight?: number; logoBytes?: Uint8Array | null; incluirLogo?: boolean } = {},
+    localidad,
+    // Por defecto en false: solo los informes que resuelven una localidad y
+    // ofrecen el control "con/sin fecha" (por ahora, Obra) deben mostrar
+    // algo arriba de la linea del membrete aparte del logo.
+    incluirFecha = false,
+  }: {
+    marginLeft?: number;
+    marginRight?: number;
+    logoBytes?: Uint8Array | null;
+    incluirLogo?: boolean;
+    /** Localidad del autor (Studio) o de la galeria (Space); se muestra arriba a la derecha, junto a la fecha si corresponde. */
+    localidad?: string | null;
+    /** Si se muestra la fecha del dia junto a la localidad, arriba de la linea del membrete. */
+    incluirFecha?: boolean;
+  } = {},
 ): Promise<number> {
   await registerBrandFonts(doc);
 
   const logoSize = 12;
   const logoY = 10;
-  let titleX = marginLeft;
+  const pageWidth = doc.internal.pageSize.getWidth();
 
   if (incluirLogo) {
     const { logoBytes: gsLogoBytes } = await loadBrandAssets();
@@ -107,25 +123,35 @@ export async function drawPdfHeader(
     } else {
       doc.addImage(gsLogoBytes, "PNG", marginLeft, logoY, logoSize, logoSize);
     }
-    titleX = marginLeft + logoSize + 4;
   }
 
-  doc.setFont("Montserrat", "bold");
-  doc.setFontSize(17);
-  doc.setTextColor(...GALERIS_GOLD);
-  doc.text(title, titleX, logoY + logoSize / 2 + 3);
+  // Arriba de la linea del membrete solo va el logo (izquierda) y la
+  // localidad/fecha (derecha) — todo el resto del contenido, incluido el
+  // titulo, se dibuja despues de la linea.
+  if (localidad || incluirFecha) {
+    const partes = [localidad, incluirFecha ? formatFechaDDMMYYYY(todayISO()) : null].filter(Boolean);
+    doc.setFont("Inter", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    doc.text(partes.join(" — "), pageWidth - marginRight, logoY + logoSize / 2 + 3, { align: "right" });
+  }
 
   const dividerY = logoY + logoSize + 4;
-  const pageWidth = doc.internal.pageSize.getWidth();
   doc.setDrawColor(...GALERIS_GOLD);
   doc.setLineWidth((0.5 * 25.4) / 72); // 0.5pt en mm (unidad por defecto de jsPDF)
   doc.line(marginLeft, dividerY, pageWidth - marginRight, dividerY);
+
+  const tituloY = dividerY + 10;
+  doc.setFont("Montserrat", "bold");
+  doc.setFontSize(17);
+  doc.setTextColor(...GALERIS_GOLD);
+  doc.text(title, marginLeft, tituloY);
 
   doc.setFont("Inter", "normal");
   doc.setFontSize(10);
   doc.setTextColor(0, 0, 0);
 
-  return dividerY + 6;
+  return tituloY + 8;
 }
 
 /**

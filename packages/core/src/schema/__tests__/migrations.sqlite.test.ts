@@ -183,6 +183,10 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
       "0058_obra_fotografia_datos_captura",
       "0059_venta_asesor",
       "0060_reserva_resultado",
+      "0061_ayuda_ubicacion_archivo_metadatos",
+      "0062_ayuda_imagen_obra",
+      "0063_localidad_autor_galeria",
+      "0064_obra_fotografia_anio_edicion",
     ]);
   });
 

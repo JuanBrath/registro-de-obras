@@ -4,6 +4,7 @@ import { useWorkspace } from "../state/WorkspaceContext.js";
 import { bytesToObjectUrl } from "../utils/imageObjectUrl.js";
 import { ImageFileField } from "../components/ImageFileField.js";
 import { HelpIcon } from "../components/HelpIcon.js";
+import { CampoFecha, BotonCalendario, type CampoFechaHandle } from "../components/CampoFecha.js";
 import { LinkField } from "../components/LinkField.js";
 import { Modal } from "../components/Modal.js";
 import { InformesModal } from "../components/InformesModal.js";
@@ -22,6 +23,7 @@ export function PersonalProfileForm({ onExit }: { onExit: () => void }) {
 
   const [nombreCompleto, setNombreCompleto] = useState(existing?.nombreCompleto ?? "");
   const [fechaNacimiento, setFechaNacimiento] = useState(existing?.fechaNacimiento ?? "");
+  const fechaNacimientoRef = useRef<CampoFechaHandle>(null);
   const [bio, setBio] = useState(existing?.bio ?? "");
   const [bioEn, setBioEn] = useState(existing?.bioEn ?? "");
   const [email, setEmail] = useState(existing?.email ?? "");
@@ -29,6 +31,7 @@ export function PersonalProfileForm({ onExit }: { onExit: () => void }) {
   const [web, setWeb] = useState(existing?.web ?? "");
   const [instagram, setInstagram] = useState(existing?.instagram ?? "");
   const [direccion, setDireccion] = useState(existing?.direccion ?? "");
+  const [localidad, setLocalidad] = useState(existing?.localidad ?? "");
   const [x, setX] = useState(existing?.x ?? "");
   const [facebook, setFacebook] = useState(existing?.facebook ?? "");
   const [cuit, setCuit] = useState(existing?.cuit ?? "");
@@ -77,6 +80,7 @@ export function PersonalProfileForm({ onExit }: { onExit: () => void }) {
     web !== (existing?.web ?? "") ||
     instagram !== (existing?.instagram ?? "") ||
     direccion !== (existing?.direccion ?? "") ||
+    localidad !== (existing?.localidad ?? "") ||
     x !== (existing?.x ?? "") ||
     facebook !== (existing?.facebook ?? "") ||
     cuit !== (existing?.cuit ?? "") ||
@@ -179,7 +183,7 @@ export function PersonalProfileForm({ onExit }: { onExit: () => void }) {
       if (existing) {
         artistaId = existing.id;
         await db.execute(
-          `UPDATE artista SET nombre_completo = ?, fecha_nacimiento = ?, bio = ?, bio_en = ?, email = ?, telefono = ?, web = ?, instagram = ?, direccion = ?, x = ?, facebook = ?, cuit = ?, notas = ? WHERE id = ?`,
+          `UPDATE artista SET nombre_completo = ?, fecha_nacimiento = ?, bio = ?, bio_en = ?, email = ?, telefono = ?, web = ?, instagram = ?, direccion = ?, localidad = ?, x = ?, facebook = ?, cuit = ?, notas = ? WHERE id = ?`,
           [
             nombreCompleto,
             fechaNacimiento || null,
@@ -190,6 +194,7 @@ export function PersonalProfileForm({ onExit }: { onExit: () => void }) {
             web || null,
             instagram || null,
             direccion || null,
+            localidad || null,
             x || null,
             facebook || null,
             cuit || null,
@@ -199,7 +204,7 @@ export function PersonalProfileForm({ onExit }: { onExit: () => void }) {
         );
       } else {
         const result = await db.execute(
-          `INSERT INTO artista (nombre_completo, es_propio, fecha_nacimiento, bio, bio_en, email, telefono, web, instagram, direccion, x, facebook, cuit, notas) VALUES (?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO artista (nombre_completo, es_propio, fecha_nacimiento, bio, bio_en, email, telefono, web, instagram, direccion, localidad, x, facebook, cuit, notas) VALUES (?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             nombreCompleto,
             fechaNacimiento || null,
@@ -210,6 +215,7 @@ export function PersonalProfileForm({ onExit }: { onExit: () => void }) {
             web || null,
             instagram || null,
             direccion || null,
+            localidad || null,
             x || null,
             facebook || null,
             cuit || null,
@@ -395,8 +401,8 @@ export function PersonalProfileForm({ onExit }: { onExit: () => void }) {
       </label>
 
       <label>
-        {t("artistas.fechaNacimiento")}
-        <input type="date" value={fechaNacimiento} onChange={(e) => setFechaNacimiento(e.target.value)} />
+        {t("artistas.fechaNacimiento")} <BotonCalendario onClick={() => fechaNacimientoRef.current?.abrirCalendario()} />
+        <CampoFecha ref={fechaNacimientoRef} valorIso={fechaNacimiento} onChangeIso={setFechaNacimiento} />
       </label>
 
       <label>
@@ -427,6 +433,10 @@ export function PersonalProfileForm({ onExit }: { onExit: () => void }) {
         <label>
           {t("artistas.direccion")}
           <input type="text" value={direccion} onChange={(e) => setDireccion(e.target.value)} />
+        </label>
+        <label>
+          {t("artistas.localidad")} <HelpIcon fieldKey="localidad" />
+          <input type="text" value={localidad} onChange={(e) => setLocalidad(e.target.value)} />
         </label>
         <label>
           {t("common.cuit")}

@@ -6,6 +6,7 @@ export interface ArchivoMetadata {
   velocidadObturador: string | null;
   diafragma: string | null;
   distanciaFocal: string | null;
+  palabrasClave: string[];
 }
 
 const VACIO: ArchivoMetadata = {
@@ -16,6 +17,7 @@ const VACIO: ArchivoMetadata = {
   velocidadObturador: null,
   diafragma: null,
   distanciaFocal: null,
+  palabrasClave: [],
 };
 
 // Tipos de campo TIFF y su tamano en bytes por elemento (spec EXIF/TIFF 6.0).
@@ -137,7 +139,7 @@ function extraerDeTiff(view: DataView, tiffStart: number): ArchivoMetadata {
     }
   }
 
-  return { fechaCaptura, software, camara, iso, velocidadObturador, diafragma, distanciaFocal };
+  return { fechaCaptura, software, camara, iso, velocidadObturador, diafragma, distanciaFocal, palabrasClave: [] };
 }
 
 /** JPEG: recorre los marcadores buscando el segmento APP1 con cabecera "Exif\0\0". */
@@ -177,6 +179,131 @@ function leerExifDeTiff(bytes: Uint8Array, view: DataView): ArchivoMetadata | nu
     (bytes[0] === 0x4d && bytes[1] === 0x4d && bytes[2] === 0x00 && bytes[3] === 0x2a);
   if (!esIntelOMotorola) return null;
   return extraerDeTiff(view, 0);
+}
+
+/**
+ * Palabras clave / keywords del archivo (IPTC y XMP), independiente del EXIF:
+ * viven en segmentos distintos (IPTC dentro de un bloque "Photoshop 3.0" y
+ * XMP como paquete XML propio), no dentro de la estructura TIFF/EXIF.
+ */
+
+/** Registros IIM (IPTC) dentro del rango dado: cada uno es marca 0x1C, registro, dataset, largo(2) y datos. Dataset 2:25 = Keywords. */
+function extraerPalabrasClaveDeIptc(bytes: Uint8Array, view: DataView, inicio: number, fin: number): string[] {
+  const palabras: string[] = [];
+  let pos = inicio;
+  while (pos + 5 <= fin) {
+    if (bytes[pos] !== 0x1c) break;
+    const registro = bytes[pos + 1];
+    const dataset = bytes[pos + 2];
+    const largo = view.getUint16(pos + 3, false);
+    pos += 5;
+    if (pos + largo > fin) break;
+    if (registro === 2 && dataset === 25) {
+      const texto = new TextDecoder("utf-8").decode(bytes.subarray(pos, pos + largo)).trim();
+      if (texto) palabras.push(texto);
+    }
+    pos += largo;
+  }
+  return palabras;
+}
+
+/** dc:subject dentro de un paquete XMP (texto XML plano): una lista rdf:Bag/rdf:Seq de items rdf:li. */
+function extraerPalabrasClaveDeXmp(xml: string): string[] {
+  const bloque = xml.match(/<dc:subject>([\s\S]*?)<\/dc:subject>/);
+  if (!bloque) return [];
+  return [...bloque[1].matchAll(/<rdf:li[^>]*>([\s\S]*?)<\/rdf:li>/g)].map((m) => m[1].trim()).filter(Boolean);
+}
+
+const FIRMA_PHOTOSHOP = "Photoshop 3.0";
+
+/** Bloques de recursos "8BIM" dentro del segmento Photoshop; el recurso 0x0404 es el bloque IPTC-NAA. */
+function leerPalabrasClaveDePhotoshop(bytes: Uint8Array, view: DataView, inicio: number, fin: number): string[] {
+  let pos = inicio;
+  while (pos + 8 <= fin) {
+    if (String.fromCharCode(bytes[pos], bytes[pos + 1], bytes[pos + 2], bytes[pos + 3]) !== "8BIM") break;
+    const resourceId = view.getUint16(pos + 4, false);
+    const nombreLen = bytes[pos + 6];
+    let p = pos + 7 + nombreLen;
+    if ((nombreLen + 1) % 2 !== 0) p += 1; // el nombre Pascal se rellena para terminar en un offset par.
+    if (p + 4 > fin) break;
+    const tamano = view.getUint32(p, false);
+    p += 4;
+    if (p + tamano > fin) break;
+    if (resourceId === 0x0404) return extraerPalabrasClaveDeIptc(bytes, view, p, p + tamano);
+    pos = p + tamano + (tamano % 2);
+  }
+  return [];
+}
+
+const FIRMA_XMP = "http://ns.adobe.com/xap/1.0/";
+
+/**
+ * JPEG: a diferencia del EXIF (que se queda con el primer APP1 y corta), acá
+ * hay que recorrer TODOS los segmentos, porque IPTC vive en un APP13 y XMP en
+ * un APP1 aparte del de Exif (puede haber mas de un APP1 en el mismo archivo).
+ */
+function leerPalabrasClaveDeJpeg(bytes: Uint8Array, view: DataView): string[] {
+  if (bytes.length < 4 || bytes[0] !== 0xff || bytes[1] !== 0xd8) return [];
+  const palabras: string[] = [];
+  let pos = 2;
+  while (pos + 4 <= bytes.length) {
+    if (bytes[pos] !== 0xff) break;
+    const marker = bytes[pos + 1];
+    if (marker === 0xd8 || marker === 0xd9) {
+      pos += 2;
+      continue;
+    }
+    const largo = view.getUint16(pos + 2, false);
+    const inicioPayload = pos + 4;
+    const finPayload = pos + 2 + largo;
+    if (marker === 0xed && inicioPayload + FIRMA_PHOTOSHOP.length <= bytes.length) {
+      const firma = new TextDecoder("ascii").decode(bytes.subarray(inicioPayload, inicioPayload + FIRMA_PHOTOSHOP.length));
+      if (firma === FIRMA_PHOTOSHOP) {
+        palabras.push(...leerPalabrasClaveDePhotoshop(bytes, view, inicioPayload + FIRMA_PHOTOSHOP.length + 1, finPayload));
+      }
+    } else if (marker === 0xe1 && inicioPayload + FIRMA_XMP.length <= bytes.length) {
+      const firma = new TextDecoder("ascii").decode(bytes.subarray(inicioPayload, inicioPayload + FIRMA_XMP.length));
+      if (firma === FIRMA_XMP) {
+        const texto = new TextDecoder("utf-8").decode(bytes.subarray(inicioPayload + FIRMA_XMP.length + 1, finPayload));
+        palabras.push(...extraerPalabrasClaveDeXmp(texto));
+      }
+    }
+    if (marker === 0xda) break; // Start of Scan: ya no hay mas segmentos de metadata.
+    pos = finPayload;
+  }
+  return [...new Set(palabras)];
+}
+
+/**
+ * TIFF: IPTC y XMP viven como tags estandar de IFD0 (33723 y 700
+ * respectivamente), en vez de un segmento aparte. `tiffStart` es 0 para un
+ * archivo TIFF real, pero puede ser otro valor cuando esta misma estructura
+ * TIFF esta embebida dentro de otro contenedor (por ejemplo, el item "Exif"
+ * de un HEIC), igual que ya hace `extraerDeTiff` con el resto de los tags.
+ */
+function leerPalabrasClaveDeTiffEmbebido(bytes: Uint8Array, view: DataView, tiffStart: number): string[] {
+  const littleEndian = view.getUint16(tiffStart, false) === 0x4949;
+  const ifd0 = leerIfd(view, tiffStart + view.getUint32(tiffStart + 4, littleEndian), littleEndian);
+  const palabras: string[] = [];
+
+  const iptcEntry = ifd0.get(33723);
+  if (iptcEntry) {
+    const tamano = (TAMANO_TIPO[iptcEntry.tipo] ?? 1) * iptcEntry.cantidad;
+    const offset = tamano <= 4 ? iptcEntry.valorOffset : tiffStart + view.getUint32(iptcEntry.valorOffset, littleEndian);
+    palabras.push(...extraerPalabrasClaveDeIptc(bytes, view, offset, offset + tamano));
+  }
+  const xmpEntry = ifd0.get(700);
+  if (xmpEntry) {
+    const tamano = (TAMANO_TIPO[xmpEntry.tipo] ?? 1) * xmpEntry.cantidad;
+    const offset = tamano <= 4 ? xmpEntry.valorOffset : tiffStart + view.getUint32(xmpEntry.valorOffset, littleEndian);
+    const texto = new TextDecoder("utf-8").decode(bytes.subarray(offset, offset + tamano));
+    palabras.push(...extraerPalabrasClaveDeXmp(texto));
+  }
+  return [...new Set(palabras)];
+}
+
+function leerPalabrasClaveDeTiff(bytes: Uint8Array, view: DataView): string[] {
+  return leerPalabrasClaveDeTiffEmbebido(bytes, view, 0);
 }
 
 interface CajaIso {
@@ -231,6 +358,9 @@ function esArchivoHeic(bytes: Uint8Array, cajasRaiz: CajaIso[]): boolean {
  * por "iinf" segun su item_type "Exif", ubicado en el archivo segun "iloc"),
  * no como un segmento de marcador como en JPEG. El payload de ese item empieza
  * con un offset de 4 bytes hacia la cabecera TIFF real (spec ISO/IEC 23008-12).
+ * Las palabras clave pueden venir de dos lugares: tags IPTC/XMP dentro de ese
+ * mismo item Exif (igual que en un TIFF), o de un item separado de tipo
+ * "mime" con content_type "application/rdf+xml" (un paquete XMP aparte).
  */
 function leerExifDeHeic(bytes: Uint8Array, view: DataView): ArchivoMetadata | null {
   const cajasRaiz = leerCajasIso(bytes, view, 0, bytes.length);
@@ -243,7 +373,7 @@ function leerExifDeHeic(bytes: Uint8Array, view: DataView): ArchivoMetadata | nu
   const iloc = hijosMeta.find((c) => c.tipo === "iloc");
   if (!iinf || !iloc) return null;
 
-  // --- iinf: buscar el item_ID cuyo item_type sea "Exif" ---
+  // --- iinf: buscar el item Exif y, si existe, un item XMP aparte ---
   let pos = iinf.inicio + iinf.cabecera;
   const versionIinf = view.getUint8(pos);
   pos += 4;
@@ -251,6 +381,7 @@ function leerExifDeHeic(bytes: Uint8Array, view: DataView): ArchivoMetadata | nu
   pos += versionIinf === 0 ? 2 : 4;
 
   let exifItemId: number | null = null;
+  let xmpItemId: number | null = null;
   for (let i = 0; i < entryCount && pos + 8 <= iinf.fin; i++) {
     let tamInfe = view.getUint32(pos, false);
     const tipoInfe = String.fromCharCode(bytes[pos + 4], bytes[pos + 5], bytes[pos + 6], bytes[pos + 7]);
@@ -268,17 +399,26 @@ function leerExifDeHeic(bytes: Uint8Array, view: DataView): ArchivoMetadata | nu
         p += versionInfe === 2 ? 2 : 4;
         p += 2; // item_protection_index
         const itemType = String.fromCharCode(bytes[p], bytes[p + 1], bytes[p + 2], bytes[p + 3]);
+        p += 4;
         if (itemType === "Exif") {
           exifItemId = itemId;
-          break;
+        } else if (itemType === "mime") {
+          const finInfe = pos + tamInfe;
+          let q = p;
+          while (q < finInfe && bytes[q] !== 0) q++; // fin del item_name
+          q += 1; // saltar el \0 del item_name para llegar al content_type
+          let finContentType = q;
+          while (finContentType < finInfe && bytes[finContentType] !== 0) finContentType++;
+          const contentType = new TextDecoder("ascii").decode(bytes.subarray(q, finContentType));
+          if (contentType === "application/rdf+xml") xmpItemId = itemId;
         }
       }
     }
     pos += tamInfe;
   }
-  if (exifItemId === null) return null;
+  if (exifItemId === null && xmpItemId === null) return null;
 
-  // --- iloc: ubicar el offset/largo en el archivo de ese item ---
+  // --- iloc: ubicar el offset/largo en el archivo de cada item que interese ---
   pos = iloc.inicio + iloc.cabecera;
   const versionIloc = view.getUint8(pos);
   pos += 4;
@@ -292,6 +432,9 @@ function leerExifDeHeic(bytes: Uint8Array, view: DataView): ArchivoMetadata | nu
   const indexSize = versionIloc === 1 || versionIloc === 2 ? bytePar2 & 0xf : 0;
   const itemCount = versionIloc < 2 ? view.getUint16(pos, false) : view.getUint32(pos, false);
   pos += versionIloc < 2 ? 2 : 4;
+
+  let exifExtent: { offset: number; length: number } | null = null;
+  let xmpExtent: { offset: number; length: number } | null = null;
 
   for (let i = 0; i < itemCount && pos < iloc.fin; i++) {
     const itemId = versionIloc < 2 ? view.getUint16(pos, false) : view.getUint32(pos, false);
@@ -316,28 +459,49 @@ function leerExifDeHeic(bytes: Uint8Array, view: DataView): ArchivoMetadata | nu
         primerExtentLength = extentLength;
       }
     }
+    if (primerExtentOffset === null) continue;
+    if (itemId === exifItemId) exifExtent = { offset: primerExtentOffset, length: primerExtentLength };
+    if (itemId === xmpItemId) xmpExtent = { offset: primerExtentOffset, length: primerExtentLength };
+  }
 
-    if (itemId === exifItemId && primerExtentOffset !== null && primerExtentLength >= 8) {
-      const offsetInterno = view.getUint32(primerExtentOffset, false);
-      const tiffStart = primerExtentOffset + 4 + offsetInterno;
-      if (tiffStart + 8 > bytes.length) return null;
-      return extraerDeTiff(view, tiffStart);
+  let exif: ArchivoMetadata | null = null;
+  const palabrasClave: string[] = [];
+
+  if (exifExtent && exifExtent.length >= 8) {
+    const offsetInterno = view.getUint32(exifExtent.offset, false);
+    const tiffStart = exifExtent.offset + 4 + offsetInterno;
+    if (tiffStart + 8 <= bytes.length) {
+      exif = extraerDeTiff(view, tiffStart);
+      palabrasClave.push(...leerPalabrasClaveDeTiffEmbebido(bytes, view, tiffStart));
     }
   }
-  return null;
+  if (xmpExtent && xmpExtent.length > 0 && xmpExtent.offset + xmpExtent.length <= bytes.length) {
+    const texto = new TextDecoder("utf-8").decode(bytes.subarray(xmpExtent.offset, xmpExtent.offset + xmpExtent.length));
+    palabrasClave.push(...extraerPalabrasClaveDeXmp(texto));
+  }
+
+  if (!exif && palabrasClave.length === 0) return null;
+  return { ...(exif ?? VACIO), palabrasClave: [...new Set(palabrasClave)] };
 }
 
 /**
- * Lee los metadatos EXIF disponibles de una imagen (camara, fecha de
- * captura, software, ISO, velocidad, diafragma, distancia focal), sin
- * depender de ninguna libreria externa. Soporta JPEG, TIFF y HEIC/HEIF. Si
- * el archivo no es de un formato reconocido o no trae datos Exif, devuelve
- * todos los campos en null sin lanzar error.
+ * Lee los metadatos disponibles de una imagen (camara, fecha de captura,
+ * software, ISO, velocidad, diafragma, distancia focal, palabras clave),
+ * sin depender de ninguna libreria externa. Soporta JPEG, TIFF y HEIC/HEIF
+ * (las palabras clave, por IPTC/XMP, solo en JPEG y TIFF). Si el archivo no
+ * es de un formato reconocido o no trae esos datos, devuelve todos los
+ * campos en null (o la lista de palabras clave vacia) sin lanzar error.
  */
 export function readImageMetadata(bytes: Uint8Array): ArchivoMetadata {
   try {
     const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-    return leerExifDeJpeg(bytes, view) ?? leerExifDeTiff(bytes, view) ?? leerExifDeHeic(bytes, view) ?? VACIO;
+    if (bytes.length >= 2 && bytes[0] === 0xff && bytes[1] === 0xd8) {
+      const exif = leerExifDeJpeg(bytes, view);
+      return { ...(exif ?? VACIO), palabrasClave: leerPalabrasClaveDeJpeg(bytes, view) };
+    }
+    const tiff = leerExifDeTiff(bytes, view);
+    if (tiff) return { ...tiff, palabrasClave: leerPalabrasClaveDeTiff(bytes, view) };
+    return leerExifDeHeic(bytes, view) ?? VACIO;
   } catch {
     return VACIO;
   }

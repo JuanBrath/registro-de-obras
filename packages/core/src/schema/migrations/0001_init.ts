@@ -57,6 +57,10 @@ import { migration0057VentaDestinoConfidencialidad } from "./0057_venta_destino_
 import { migration0058ObraFotografiaDatosCaptura } from "./0058_obra_fotografia_datos_captura.js";
 import { migration0059VentaAsesor } from "./0059_venta_asesor.js";
 import { migration0060ReservaResultado } from "./0060_reserva_resultado.js";
+import { migration0061AyudaUbicacionArchivoMetadatos } from "./0061_ayuda_ubicacion_archivo_metadatos.js";
+import { migration0062AyudaImagenObra } from "./0062_ayuda_imagen_obra.js";
+import { migration0063LocalidadAutorGaleria } from "./0063_localidad_autor_galeria.js";
+import { migration0064ObraFotografiaAnioEdicion } from "./0064_obra_fotografia_anio_edicion.js";
 
 export interface Migration {
   name: string;
@@ -245,4 +249,8 @@ export const ALL_MIGRATIONS: Migration[] = [
   migration0058ObraFotografiaDatosCaptura,
   migration0059VentaAsesor,
   migration0060ReservaResultado,
+  migration0061AyudaUbicacionArchivoMetadatos,
+  migration0062AyudaImagenObra,
+  migration0063LocalidadAutorGaleria,
+  migration0064ObraFotografiaAnioEdicion,
 ];

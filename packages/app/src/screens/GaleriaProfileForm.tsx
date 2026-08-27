@@ -14,6 +14,7 @@ import { drawPdfHeader, writeWrappedText } from "../utils/pdfBranding.js";
 interface GaleriaPerfilRow {
   nombre: string;
   direccion: string | null;
+  localidad: string | null;
   telefono: string | null;
   email: string | null;
   web: string | null;
@@ -34,6 +35,7 @@ export function GaleriaProfileForm({ onBack }: { onBack: () => void }) {
   const [loading, setLoading] = useState(true);
   const [nombre, setNombre] = useState("");
   const [direccion, setDireccion] = useState("");
+  const [localidad, setLocalidad] = useState("");
   const [telefono, setTelefono] = useState("");
   const [email, setEmail] = useState("");
   const [web, setWeb] = useState("");
@@ -63,6 +65,7 @@ export function GaleriaProfileForm({ onBack }: { onBack: () => void }) {
   const isDirty =
     nombre !== (existing?.nombre ?? "") ||
     direccion !== (existing?.direccion ?? "") ||
+    localidad !== (existing?.localidad ?? "") ||
     telefono !== (existing?.telefono ?? "") ||
     email !== (existing?.email ?? "") ||
     web !== (existing?.web ?? "") ||
@@ -79,13 +82,14 @@ export function GaleriaProfileForm({ onBack }: { onBack: () => void }) {
     setLoading(true);
     context.db
       .query<GaleriaPerfilRow>(
-        `SELECT nombre, direccion, telefono, email, web, instagram, facebook, x, notas, logo_path, firma_path, cuit FROM galeria_perfil WHERE id = 1`,
+        `SELECT nombre, direccion, localidad, telefono, email, web, instagram, facebook, x, notas, logo_path, firma_path, cuit FROM galeria_perfil WHERE id = 1`,
       )
       .then((rows) => {
         const row = rows[0] ?? null;
         setExisting(row);
         setNombre(row?.nombre ?? "");
         setDireccion(row?.direccion ?? "");
+        setLocalidad(row?.localidad ?? "");
         setTelefono(row?.telefono ?? "");
         setEmail(row?.email ?? "");
         setWeb(row?.web ?? "");
@@ -156,10 +160,11 @@ export function GaleriaProfileForm({ onBack }: { onBack: () => void }) {
     setSalirBloqueadoMensaje(null);
     try {
       await context!.db.execute(
-        `UPDATE galeria_perfil SET nombre = ?, direccion = ?, telefono = ?, email = ?, web = ?, instagram = ?, facebook = ?, x = ?, notas = ?, cuit = ? WHERE id = 1`,
+        `UPDATE galeria_perfil SET nombre = ?, direccion = ?, localidad = ?, telefono = ?, email = ?, web = ?, instagram = ?, facebook = ?, x = ?, notas = ?, cuit = ? WHERE id = 1`,
         [
           nombre,
           direccion || null,
+          localidad || null,
           telefono || null,
           email || null,
           web || null,
@@ -192,6 +197,7 @@ export function GaleriaProfileForm({ onBack }: { onBack: () => void }) {
       setExisting({
         nombre,
         direccion,
+        localidad,
         telefono,
         email,
         web,
@@ -309,6 +315,10 @@ export function GaleriaProfileForm({ onBack }: { onBack: () => void }) {
         <label>
           {t("artistas.direccion")}
           <input type="text" value={direccion} onChange={(e) => setDireccion(e.target.value)} />
+        </label>
+        <label>
+          {t("artistas.localidad")} <HelpIcon fieldKey="localidad" />
+          <input type="text" value={localidad} onChange={(e) => setLocalidad(e.target.value)} />
         </label>
         <label>
           {t("common.cuit")}

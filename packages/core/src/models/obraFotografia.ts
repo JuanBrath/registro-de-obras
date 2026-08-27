@@ -19,7 +19,8 @@ export interface ObraFotografia {
   subtipoFotografia: SubtipoFotografia;
   fechaCaptura: string | null;
   anioToma: number | null;
-  fechaEdicion: string | null;
+  /** Solo el ano, no la fecha completa: la edicion (post-produccion) no requiere tanta precision. */
+  anioEdicion: string | null;
   softwareEdicion: string | null;
   /** Solo se completa cuando subtipoFotografia = 'DigitalFineArt'. */
   datosExif: DatosExif | null;
@@ -73,7 +74,7 @@ export interface NuevaObraFotografia {
   subtipoFotografia: SubtipoFotografia;
   fechaCaptura?: string | null;
   anioToma?: number | null;
-  fechaEdicion?: string | null;
+  anioEdicion?: string | null;
   softwareEdicion?: string | null;
   datosExif?: DatosExif | null;
   camara?: string | null;

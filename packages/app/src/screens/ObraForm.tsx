@@ -111,6 +111,9 @@ export function ObraForm({
       diafragma: metadata.diafragma ?? prev.diafragma,
       distanciaFocal: metadata.distanciaFocal ?? prev.distanciaFocal,
     }));
+    if (metadata.palabrasClave.length > 0) {
+      setTags((prev) => [...prev, ...metadata.palabrasClave.filter((p) => !prev.includes(p))]);
+    }
   }
 
   function handleImageChange(file: File | null) {
@@ -262,7 +265,7 @@ export function ObraForm({
         if (categoria === "Fotografia") {
           await tx.execute(
             `INSERT INTO obra_fotografia (
-               obra_id, subtipo_fotografia, fecha_captura, anio_toma, fecha_edicion, software_edicion, dimensiones,
+               obra_id, subtipo_fotografia, fecha_captura, anio_toma, anio_edicion, software_edicion, dimensiones,
                tecnica, escala_por_tamanos, serie_proyecto, clasificacion_positivado, proceso_quimico_analogica,
                viraje_conservacion, formato_negativo, estado_negativo, formato_archivo_maestro, espacio_color,
                condiciones_custodia_archivo, proceso_quimico_historicos, preparacion_soporte, metales_sales,
@@ -277,7 +280,7 @@ export function ObraForm({
               fotografia.subtipoFotografia,
               fotografia.fechaCaptura || null,
               derivarAnioDesdeFecha(fotografia.fechaCaptura),
-              fotografia.fechaEdicion || null,
+              fotografia.anioEdicion || null,
               fotografia.softwareEdicion || null,
               fotografia.dimensiones || null,
               fotografia.tecnica || null,
@@ -398,20 +401,21 @@ export function ObraForm({
           const detalle = detallesEdiciones[ejemplar.tipo]?.[ejemplar.indice - 1];
           await tx.execute(
             `INSERT INTO ejemplar (
-               obra_id, tipo, indice, total_ediciones, numero, fecha_impresion, tipo_impresion, soporte_impresion,
-               tipo_tintas, taller_impresion, ubicacion_actual, dimensiones, tipo_enmarcado, tamano_final_enmarcado,
-               ubicacion_firma, sello_seco_holograma, notas, coa_numero, coa_emisor, coa_fecha, valor_seguro,
-               moneda_seguro, vidrio_proteccion_frontal, sistema_cuelgue, coa_sistema_seguridad,
-               informe_conservacion, dimensiones_soporte_completo, peso, tipo_firma, clasificacion_prueba_especial,
-               instrucciones_manipulacion, adhesivos_montaje, inscripciones_anotaciones
+               obra_id, tipo, indice, total_ediciones, numero, estado, fecha_impresion, tipo_impresion,
+               soporte_impresion, tipo_tintas, taller_impresion, ubicacion_actual, dimensiones, tipo_enmarcado,
+               tamano_final_enmarcado, ubicacion_firma, sello_seco_holograma, notas, coa_numero, coa_emisor,
+               coa_fecha, valor_seguro, moneda_seguro, vidrio_proteccion_frontal, sistema_cuelgue,
+               coa_sistema_seguridad, informe_conservacion, dimensiones_soporte_completo, peso, tipo_firma,
+               clasificacion_prueba_especial, instrucciones_manipulacion, adhesivos_montaje, inscripciones_anotaciones
              )
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               id,
               ejemplar.tipo,
               ejemplar.indice,
               ejemplar.totalEdiciones,
               ejemplar.numero,
+              detalle?.estado || "disponible",
               detalle?.fechaImpresion || null,
               detalle?.tipoImpresion || null,
               detalle?.soporteImpresion || null,
@@ -531,7 +535,7 @@ export function ObraForm({
       )}
 
       <label>
-        {t("obraForm.imagenLabel")}
+        {t("obraForm.imagenLabel")} <HelpIcon fieldKey="imagen_obra" />
         {imagePreviewUrl && <img src={imagePreviewUrl} alt="" className="obra-edit-imagen-actual" />}
         <ImageFileField value={imageFile} onChange={handleImageChange} />
       </label>
