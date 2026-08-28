@@ -237,6 +237,7 @@ export function FotografiaFields({
         {t("fields.fotografia.dimensiones")} <HelpIcon fieldKey="dimensiones_fotografia" />
         <input
           type="text"
+          required={value.escalaPorTamanos === "No"}
           value={value.dimensiones}
           onChange={(e) => onChange({ ...value, dimensiones: e.target.value })}
         />

@@ -5,6 +5,7 @@ import { HelpIcon } from "./HelpIcon.js";
 import { CampoFecha, BotonCalendario, type CampoFechaHandle } from "./CampoFecha.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
+import { focusNextOnEnter } from "../utils/focusNextOnEnter.js";
 
 const MONEDAS: Moneda[] = ["ARS", "USD", "EUR"];
 
@@ -587,7 +588,7 @@ export function VentaForm({
   }
 
   return (
-    <form className="venta-form" onSubmit={handleSubmit}>
+    <form className="venta-form" onSubmit={handleSubmit} onKeyDown={focusNextOnEnter}>
       <h3>
         {existingVenta
           ? esVenta

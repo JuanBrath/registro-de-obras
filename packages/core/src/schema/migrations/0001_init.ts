@@ -61,6 +61,7 @@ import { migration0061AyudaUbicacionArchivoMetadatos } from "./0061_ayuda_ubicac
 import { migration0062AyudaImagenObra } from "./0062_ayuda_imagen_obra.js";
 import { migration0063LocalidadAutorGaleria } from "./0063_localidad_autor_galeria.js";
 import { migration0064ObraFotografiaAnioEdicion } from "./0064_obra_fotografia_anio_edicion.js";
+import { migration0065AyudaBusquedaGeneral } from "./0065_ayuda_busqueda_general.js";
 
 export interface Migration {
   name: string;
@@ -253,4 +254,5 @@ export const ALL_MIGRATIONS: Migration[] = [
   migration0062AyudaImagenObra,
   migration0063LocalidadAutorGaleria,
   migration0064ObraFotografiaAnioEdicion,
+  migration0065AyudaBusquedaGeneral,
 ];

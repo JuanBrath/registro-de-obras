@@ -27,18 +27,19 @@ const TIPO_CLIENTE_LABEL_KEYS: Record<string, TranslationKey> = {
   DecoradorArquitecto: "clientes.tipoDecoradorArquitecto",
 };
 
-/** Informe 1: ficha del cliente con los datos ya cargados. */
-export async function buildClienteConDatosPdfBytes(
+/** Dibuja la ficha de un cliente (datos + intereses + notas + firma) en un doc ya abierto, desde startY. Devuelve el Y final. */
+async function dibujarFichaCliente(
+  doc: jsPDF,
   cliente: ClienteReporteDatos,
   opts: InformeBrandingOpts,
-): Promise<Uint8Array> {
-  const titulo = cliente.nombre || tInforme(opts.idioma, "clientes.tituloFichaBlanco");
-  const { doc, marginLeft, startY } = await nuevoDocConMembrete(titulo, opts);
+  marginLeft: number,
+  startY: number,
+): Promise<number> {
   const pageWidth = doc.internal.pageSize.getWidth();
   const textWidth = pageWidth - marginLeft * 2;
 
   const campo = (key: TranslationKey, valor: string) => `${tInforme(opts.idioma, key)}: ${valor || "—"}`;
-  const tipoClienteLabel = cliente.tipoCliente ? tInforme(opts.idioma, TIPO_CLIENTE_LABEL_KEYS[cliente.tipoCliente]) : "";
+  const tipoClienteLabel = cliente.tipoCliente ? tInforme("es", TIPO_CLIENTE_LABEL_KEYS[cliente.tipoCliente]) : "";
   const lineas = [
     campo("clientes.nombreLabel", cliente.nombre),
     campo("clientes.tipoClienteLabel", tipoClienteLabel),
@@ -68,7 +69,47 @@ export async function buildClienteConDatosPdfBytes(
     y = writeWrappedText(doc, cliente.notas, marginLeft, y, textWidth);
   }
 
-  y = await drawSignatureBlock(doc, y + 10, { idioma: opts.idioma, firma: opts.firma, firmaBytes: opts.firmaBytes, marginLeft });
+  return drawSignatureBlock(doc, y + 10, { idioma: opts.idioma, firma: opts.firma, firmaBytes: opts.firmaBytes, marginLeft });
+}
+
+/** Informe 1: ficha del cliente con los datos ya cargados. */
+export async function buildClienteConDatosPdfBytes(
+  cliente: ClienteReporteDatos,
+  opts: InformeBrandingOpts,
+): Promise<Uint8Array> {
+  const titulo = cliente.nombre || tInforme(opts.idioma, "clientes.tituloFichaBlanco");
+  const { doc, marginLeft, startY } = await nuevoDocConMembrete(titulo, opts);
+  await dibujarFichaCliente(doc, cliente, opts, marginLeft, startY);
+  return new Uint8Array(doc.output("arraybuffer"));
+}
+
+/**
+ * Ficha de cliente para un listado de resultados de busqueda (uno o mas
+ * clientes que coinciden): una pagina por cliente, misma ficha que
+ * `buildClienteConDatosPdfBytes` pero en un unico archivo.
+ */
+export async function buildClientesFichaPdfBytes(
+  clientes: ClienteReporteDatos[],
+  opts: InformeBrandingOpts,
+): Promise<Uint8Array> {
+  const { default: jsPDF } = await import("jspdf");
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const marginLeft = 14;
+
+  for (let i = 0; i < clientes.length; i++) {
+    if (i > 0) doc.addPage();
+    const cliente = clientes[i];
+    const titulo = cliente.nombre || tInforme(opts.idioma, "clientes.tituloFichaBlanco");
+    const startY = await drawPdfHeader(doc, titulo, {
+      marginLeft,
+      logoBytes: opts.logoBytes,
+      incluirLogo: opts.incluirLogo,
+      localidad: opts.localidad,
+      incluirFecha: opts.incluirFecha,
+    });
+    await dibujarFichaCliente(doc, cliente, opts, marginLeft, startY);
+  }
+
   return new Uint8Array(doc.output("arraybuffer"));
 }
 
@@ -208,8 +249,8 @@ export async function buildClienteHistorialPdfBytes(
       [v.soporte_impresion, v.dimensiones].filter(Boolean).join(" — ") || "—",
       `${v.moneda} ${v.valor_venta.toFixed(2)}`,
       v.numero_certificado != null
-        ? tInforme(opts.idioma, "clientes.certificadoEmitido", { numero: v.numero_certificado })
-        : tInforme(opts.idioma, "clientes.certificadoPendiente"),
+        ? tInforme("es", "clientes.certificadoEmitido", { numero: v.numero_certificado })
+        : tInforme("es", "clientes.certificadoPendiente"),
     ]),
   });
 

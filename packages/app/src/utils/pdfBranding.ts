@@ -61,6 +61,18 @@ export async function registerBrandFonts(doc: jsPDF): Promise<void> {
   doc.addFont("Inter-Medium.ttf", "Inter", "medium");
 }
 
+/** Dibuja el logo propio (si es una imagen valida) o, en su defecto, el monograma GS, en el tamaño y posicion dados. */
+export async function dibujarLogo(doc: jsPDF, customLogoBytes: Uint8Array | null | undefined, x: number, y: number, size: number): Promise<void> {
+  const customFormato = customLogoBytes ? detectImageFormat(customLogoBytes) : null;
+  if (customLogoBytes && customFormato) {
+    const { width, height } = await fittedImageSize(customLogoBytes, size);
+    doc.addImage(customLogoBytes, customFormato, x, y, width, height);
+  } else {
+    const { logoBytes: gsLogoBytes } = await loadBrandAssets();
+    doc.addImage(gsLogoBytes, "PNG", x, y, size, size);
+  }
+}
+
 export async function fittedImageSize(bytes: Uint8Array, maxSize: number): Promise<{ width: number; height: number }> {
   const blob = new Blob([bytes as BlobPart]);
   const bitmap = await createImageBitmap(blob);
@@ -115,14 +127,7 @@ export async function drawPdfHeader(
   const pageWidth = doc.internal.pageSize.getWidth();
 
   if (incluirLogo) {
-    const { logoBytes: gsLogoBytes } = await loadBrandAssets();
-    const customFormato = customLogoBytes ? detectImageFormat(customLogoBytes) : null;
-    if (customLogoBytes && customFormato) {
-      const { width, height } = await fittedImageSize(customLogoBytes, logoSize);
-      doc.addImage(customLogoBytes, customFormato, marginLeft, logoY, width, height);
-    } else {
-      doc.addImage(gsLogoBytes, "PNG", marginLeft, logoY, logoSize, logoSize);
-    }
+    await dibujarLogo(doc, customLogoBytes, marginLeft, logoY, logoSize);
   }
 
   // Arriba de la linea del membrete solo va el logo (izquierda) y la

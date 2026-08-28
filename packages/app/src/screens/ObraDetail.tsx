@@ -54,6 +54,7 @@ import {
   buildContratoPdfBytes,
   buildPresupuestoPdfBytes,
   buildRemitoPdfBytes,
+  type CoaCertificadoDatos,
 } from "../reports/ventaReports.js";
 
 interface ObraRow {
@@ -307,30 +308,35 @@ function buildObraDescripcionLineas(
     incluirTags = true,
   } = {},
 ): string[] {
+  // Los valores cargados en el sistema (categoria, subtipo, tecnica, estado,
+  // etc.) siempre se muestran en español, sea cual sea el idioma elegido
+  // para el informe: el idioma del informe solo cambia los titulos/etiquetas
+  // del template (ver tInforme(idioma, ...) via el parametro `t`).
+  const tEs = (key: TranslationKey, vars?: Record<string, string | number>) => tInforme("es", key, vars);
   const lineas: string[] = [];
   if (obra.subtitulo) lineas.push(t("obraForm.subtituloLabel") + ": " + obra.subtitulo);
   if (obra.codigo_inventario) lineas.push(t("obraForm.codigoInventarioLabel") + ": " + obra.codigo_inventario);
   lineas.push(t("obraDetail.artista", { nombre: obra.nombre_completo }));
-  lineas.push(t("obraDetail.categoria", { categoria: t(`categoria.${obra.categoria_obra}` as TranslationKey) }));
+  lineas.push(t("obraDetail.categoria", { categoria: tEs(`categoria.${obra.categoria_obra}` as TranslationKey) }));
   if (ext?.subtipo_fotografia) {
     lineas.push(
       t("obraDetail.subtipo", {
-        subtipo: t(`fields.fotografia.subtipo${ext.subtipo_fotografia}` as TranslationKey),
+        subtipo: tEs(`fields.fotografia.subtipo${ext.subtipo_fotografia}` as TranslationKey),
       }),
     );
   }
   if (ext?.subtipo && obra.categoria_obra !== "Fotografia") {
     const labelKey = subtipoLabelKey(obra.categoria_obra as CategoriaObraDetalle, ext.subtipo);
     if (labelKey) {
-      lineas.push(t("obraDetail.subtipoNoEditable", { subtipo: t(labelKey) }));
+      lineas.push(t("obraDetail.subtipoNoEditable", { subtipo: tEs(labelKey) }));
     }
   }
-  lineas.push(Number(obra.es_seriada) === 1 ? t("obraDetail.obraSeriada") : t("obraDetail.obraUnica"));
+  lineas.push(Number(obra.es_seriada) === 1 ? tEs("obraDetail.obraSeriada") : tEs("obraDetail.obraUnica"));
   if (ext?.tecnica_material) {
-    lineas.push(t("obraDetail.tecnica", { valor: t(`fields.pintura.tecnicaMaterial${ext.tecnica_material}` as TranslationKey) }));
+    lineas.push(t("obraDetail.tecnica", { valor: tEs(`fields.pintura.tecnicaMaterial${ext.tecnica_material}` as TranslationKey) }));
   }
   if (ext?.soporte) {
-    lineas.push(t("obraDetail.soporte", { valor: t(`fields.pintura.soporte${ext.soporte}` as TranslationKey) }));
+    lineas.push(t("obraDetail.soporte", { valor: tEs(`fields.pintura.soporte${ext.soporte}` as TranslationKey) }));
   }
   if (ext?.tecnica) lineas.push(t("obraDetail.tecnica", { valor: ext.tecnica }));
   if (ext?.dimensiones) lineas.push(t("obraDetail.dimensiones", { valor: ext.dimensiones }));
@@ -376,12 +382,12 @@ function buildObraDescripcionLineas(
   if (obra.categoria_obra === "ObraGrafica") {
     if (ext?.matriz_material) {
       lineas.push(
-        `${t("fields.obraGrafica.matrizMaterialLabel")}: ${t(`fields.obraGrafica.matrizMaterial${ext.matriz_material}` as TranslationKey)}`,
+        `${t("fields.obraGrafica.matrizMaterialLabel")}: ${tEs(`fields.obraGrafica.matrizMaterial${ext.matriz_material}` as TranslationKey)}`,
       );
     }
     if (ext?.matriz_estado) {
       lineas.push(
-        `${t("fields.obraGrafica.matrizEstadoLabel")}: ${t(`fields.obraGrafica.matrizEstado${ext.matriz_estado}` as TranslationKey)}`,
+        `${t("fields.obraGrafica.matrizEstadoLabel")}: ${tEs(`fields.obraGrafica.matrizEstado${ext.matriz_estado}` as TranslationKey)}`,
       );
     }
     if (ext?.papel_marca) lineas.push(`${t("fields.obraGrafica.papelMarcaLabel")}: ${ext.papel_marca}`);
@@ -403,7 +409,7 @@ function buildObraDescripcionLineas(
     }
     if (ext?.apta_exterior) {
       lineas.push(
-        `${t("fields.escultura.aptaExteriorLabel")}: ${t(`fields.escultura.aptaExterior${ext.apta_exterior}` as TranslationKey)}`,
+        `${t("fields.escultura.aptaExteriorLabel")}: ${tEs(`fields.escultura.aptaExterior${ext.apta_exterior}` as TranslationKey)}`,
       );
     }
     if (ext?.requisitos_instalacion) {
@@ -508,13 +514,13 @@ function buildObraDescripcionLineas(
     if (ext?.serie_proyecto) lineas.push(`${t("fields.fotografia.serieProyectoLabel")}: ${ext.serie_proyecto}`);
     if (ext?.escala_por_tamanos) {
       lineas.push(
-        `${t("fields.fotografia.escalaPorTamanosLabel")}: ${ext.escala_por_tamanos === "Si" ? t("common.yes") : t("common.no")}`,
+        `${t("fields.fotografia.escalaPorTamanosLabel")}: ${ext.escala_por_tamanos === "Si" ? tEs("common.yes") : tEs("common.no")}`,
       );
     }
     if (ext?.subtipo_fotografia === "AnalogicaClasica") {
       if (ext?.clasificacion_positivado) {
         lineas.push(
-          `${t("fields.fotografia.clasificacionPositivadoLabel")}: ${t(`fields.fotografia.clasificacionPositivado${ext.clasificacion_positivado}` as TranslationKey)}`,
+          `${t("fields.fotografia.clasificacionPositivadoLabel")}: ${tEs(`fields.fotografia.clasificacionPositivado${ext.clasificacion_positivado}` as TranslationKey)}`,
         );
       }
       if (ext?.proceso_quimico_analogica) {
@@ -551,7 +557,7 @@ function buildObraDescripcionLineas(
       if (ext?.metales_sales) lineas.push(`${t("fields.fotografia.metalesSalesLabel")}: ${ext.metales_sales}`);
       if (ext?.pieza_unica_o_matriz) {
         lineas.push(
-          `${t("fields.fotografia.piezaUnicaOMatrizLabel")}: ${t(`fields.fotografia.piezaUnicaOMatriz${ext.pieza_unica_o_matriz}` as TranslationKey)}`,
+          `${t("fields.fotografia.piezaUnicaOMatrizLabel")}: ${tEs(`fields.fotografia.piezaUnicaOMatriz${ext.pieza_unica_o_matriz}` as TranslationKey)}`,
         );
       }
     }
@@ -580,7 +586,7 @@ function buildObraDescripcionLineas(
       }
       if (ext?.flujo_generativo) {
         lineas.push(
-          `${t("fields.fotografia.flujoGenerativoLabel")}: ${t(`fields.fotografia.flujoGenerativo${ext.flujo_generativo}` as TranslationKey)}`,
+          `${t("fields.fotografia.flujoGenerativoLabel")}: ${tEs(`fields.fotografia.flujoGenerativo${ext.flujo_generativo}` as TranslationKey)}`,
         );
       }
       if (ext?.intervencion_postproduccion) {
@@ -590,7 +596,7 @@ function buildObraDescripcionLineas(
       }
       if (ext?.soporte_salida) {
         lineas.push(
-          `${t("fields.fotografia.soporteSalidaLabel")}: ${t(`fields.fotografia.soporteSalida${ext.soporte_salida}` as TranslationKey)}`,
+          `${t("fields.fotografia.soporteSalidaLabel")}: ${tEs(`fields.fotografia.soporteSalida${ext.soporte_salida}` as TranslationKey)}`,
         );
       }
       if (ext?.declaracion_derechos_ia) {
@@ -600,7 +606,7 @@ function buildObraDescripcionLineas(
   }
   if (incluirInfoComercial && !esRegistroPersonal && obra.regimen_ingreso) {
     lineas.push(
-      `${t("obraForm.regimenIngresoLabel")}: ${t(`obraForm.regimenIngreso${obra.regimen_ingreso}` as TranslationKey)}`,
+      `${t("obraForm.regimenIngresoLabel")}: ${tEs(`obraForm.regimenIngreso${obra.regimen_ingreso}` as TranslationKey)}`,
     );
   }
   if (incluirInfoComercial && !esRegistroPersonal && obra.historial_procedencia_exhibiciones) {
@@ -827,7 +833,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
     const venta = ej.venta_id ? ventas[ej.venta_id] : undefined;
     if (!venta) return null;
     return `${tInforme(
-      informeIdioma,
+      "es",
       venta.tipo === "venta" ? "common.vendida" : venta.tipo === "donacion" ? "common.donada" : "common.reservada",
     )} — ${venta.comprador_nombre} (${formatFechaDDMMYYYY(venta.fecha_venta)})`;
   }
@@ -1020,13 +1026,13 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
           const venta = ej.venta_id ? ventas[ej.venta_id] : undefined;
           const ventaTexto = venta
             ? `${tInforme(
-                informeIdioma,
+                "es",
                 venta.tipo === "venta" ? "common.vendida" : venta.tipo === "donacion" ? "common.donada" : "common.reservada",
               )} — ${venta.comprador_nombre} (${formatFechaDDMMYYYY(venta.fecha_venta)})`
             : "—";
           return [
             ej.numero,
-            tInforme(informeIdioma, `estado.${ej.estado}` as TranslationKey),
+            tInforme("es", `estado.${ej.estado}` as TranslationKey),
             ej.fecha_impresion ? formatFechaDDMMYYYY(ej.fecha_impresion) : "—",
             ej.soporte_impresion ?? "—",
             ej.dimensiones ?? "—",
@@ -1099,6 +1105,28 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       };
       const base = `${obra.titulo.replace(/[^a-zA-Z0-9]+/g, "_")}_${ejemplar.numero.replace(/[^a-zA-Z0-9]+/g, "_")}`;
 
+      let certificado: CoaCertificadoDatos | undefined;
+      if (ventaInformeSeleccionId === "coa") {
+        let imgBytes: Uint8Array | null = null;
+        const imagenPath = obra.imagen_alta_resolucion_path || obra.miniatura_path;
+        if (imagenPath) {
+          try {
+            imgBytes = await context.fs.readFile(imagenPath);
+          } catch {
+            imgBytes = null;
+          }
+        }
+        certificado = {
+          imgBytes,
+          fechaToma: ext?.fecha_captura ? ext.fecha_captura.slice(0, 4) : "",
+          editadaPorAutor: ext?.anio_edicion ?? "",
+          detalleTecnico1: ext?.subtipo_fotografia
+            ? tInforme("es", `fields.fotografia.subtipo${ext.subtipo_fotografia}` as TranslationKey)
+            : "",
+          detalleTecnico2: [ejemplar.tipo_impresion, ejemplar.soporte_impresion].filter(Boolean).join(" — "),
+        };
+      }
+
       const obraDatos = {
         titulo: obra.titulo,
         autor: obra.nombre_completo,
@@ -1121,6 +1149,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
           tamanoFinalEnmarcado: ejemplar.tamano_final_enmarcado ?? "",
           notas: ejemplar.notas ?? "",
         },
+        certificado,
       };
 
       let bytes: Uint8Array;
@@ -1190,7 +1219,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
           bytes = await buildComprobanteVentaPdfBytes(obraDatos, ventaDatos, compradorDatos, brandOpts);
           nombreArchivo = `comprobante_${base}.pdf`;
         } else if (ventaInformeSeleccionId === "coa") {
-          bytes = await buildCoaPdfBytes(obraDatos, ventaDatos, compradorDatos, brandOpts);
+          bytes = await buildCoaPdfBytes(obraDatos, ventaDatos, brandOpts);
           nombreArchivo = `coa_${base}.pdf`;
         } else if (ventaInformeSeleccionId === "remito") {
           bytes = await buildRemitoPdfBytes(obraDatos, ventaDatos, compradorDatos, brandOpts);

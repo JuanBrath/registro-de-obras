@@ -187,6 +187,7 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
       "0062_ayuda_imagen_obra",
       "0063_localidad_autor_galeria",
       "0064_obra_fotografia_anio_edicion",
+      "0065_ayuda_busqueda_general",
     ]);
   });
 

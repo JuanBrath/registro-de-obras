@@ -64,7 +64,7 @@ function escribirEjemplarDetallado(
   doc.setFontSize(10);
 
   const lineas: string[] = [];
-  lineas.push(campo("obraDetail.estadoLabel", tInforme(idioma, `estado.${ej.estado}` as TranslationKey)));
+  lineas.push(campo("obraDetail.estadoLabel", tInforme("es", `estado.${ej.estado}` as TranslationKey)));
   if (ej.ventaTexto) lineas.push(campo("obraDetail.ventaReserva", ej.ventaTexto));
   if (ej.fecha_impresion) lineas.push(campo("obraDetail.fechaImpresion", formatFechaDDMMYYYY(ej.fecha_impresion)));
   if (ej.tipo_impresion) lineas.push(campo("obraDetail.tipoImpresionLabel", ej.tipo_impresion));

@@ -5,6 +5,14 @@ import { bytesToObjectUrl } from "../utils/imageObjectUrl.js";
 import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
 import { subtipoTranslationKey } from "./fields/ObraDetalleFields.js";
+import { InformesModal } from "../components/InformesModal.js";
+import { HelpIcon } from "../components/HelpIcon.js";
+import { detectImageFormat } from "../utils/detectImageFormat.js";
+import { fittedImageSize, type FirmaEleccion } from "../utils/pdfBranding.js";
+import { tInforme, type InformeIdioma } from "../reports/informeIdioma.js";
+import { resolveMembreteLogoBytes, resolveFirmaBytes, resolveLocalidad } from "../reports/reportBranding.js";
+import { buildObrasListadoPdfBytes, type ObraListadoItem } from "../reports/obrasListadoReports.js";
+import { savePdfWithDialog } from "../utils/savePdfDialog.js";
 
 export interface ObrasListFiltros {
   selectedTag: string | null;
@@ -68,8 +76,8 @@ export function ObrasList({
   onNuevaObra: () => void;
   onVerGaleria: (filtros: ObrasListFiltros) => void;
 }) {
-  const { context } = useWorkspace();
-  const { t } = useLanguage();
+  const { context, personalArtista, galeriaPerfil } = useWorkspace();
+  const { t, idioma } = useLanguage();
   const [obras, setObras] = useState<ObraRow[]>([]);
   const [thumbnails, setThumbnails] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(true);
@@ -82,6 +90,17 @@ export function ObrasList({
   const [busqueda, setBusqueda] = useState("");
   const [soloMarcadas, setSoloMarcadas] = useState(false);
   const objectUrlsRef = useRef<string[]>([]);
+
+  const [informesMenuAbierto, setInformesMenuAbierto] = useState(false);
+  const [informeSeleccionId, setInformeSeleccionId] = useState("resumido");
+  const [informeIdioma, setInformeIdioma] = useState<InformeIdioma>("es");
+  const [informeIncluirLogo, setInformeIncluirLogo] = useState(true);
+  const [informeIncluirFecha, setInformeIncluirFecha] = useState(true);
+  const [informeFirma, setInformeFirma] = useState<FirmaEleccion>("ninguna");
+  const [firmaBytesDisponibles, setFirmaBytesDisponibles] = useState<Uint8Array | null>(null);
+  const [generandoInforme, setGenerandoInforme] = useState(false);
+  const [informeMensaje, setInformeMensaje] = useState<string | null>(null);
+  useEscapeToDismiss(informeMensaje, setInformeMensaje);
 
   useEffect(() => {
     if (!context) return;
@@ -250,6 +269,109 @@ export function ObrasList({
     setSelectedSubtipo(null);
   }
 
+  async function handleAbrirInformesMenu() {
+    if (!context) return;
+    setInformeSeleccionId("resumido");
+    setInformeIdioma(idioma);
+    setInformeIncluirLogo(true);
+    setInformeIncluirFecha(true);
+    setInformeFirma("ninguna");
+    setInformeMensaje(null);
+    setFirmaBytesDisponibles(await resolveFirmaBytes(context, personalArtista, galeriaPerfil));
+    setInformesMenuAbierto(true);
+  }
+
+  // Para cada obra, la serie disponible con el indice mas bajo (la "primera").
+  async function cargarPrimeraSerieLibre(obraIds: number[]): Promise<Record<number, string>> {
+    if (!context || obraIds.length === 0) return {};
+    const placeholders = obraIds.map(() => "?").join(", ");
+    const rows = await context.db.query<{ obra_id: number; numero: string }>(
+      `SELECT e.obra_id, e.numero
+       FROM ejemplar e
+       WHERE e.tipo = 'edicion' AND e.estado = 'disponible' AND e.obra_id IN (${placeholders})
+         AND e.indice = (
+           SELECT MIN(e2.indice) FROM ejemplar e2
+           WHERE e2.obra_id = e.obra_id AND e2.tipo = 'edicion' AND e2.estado = 'disponible'
+         )`,
+      obraIds,
+    );
+    return Object.fromEntries(rows.map((r) => [r.obra_id, r.numero]));
+  }
+
+  async function handleGenerarInformeListado(conImagen: boolean) {
+    if (!context) return;
+    setGenerandoInforme(true);
+    setError(null);
+    setInformeMensaje(null);
+    try {
+      const tr = (key: TranslationKey, vars?: Record<string, string | number>) => tInforme(informeIdioma, key, vars);
+      const obraIds = filteredObras.map((o) => o.id);
+      const primeraSerieLibre = await cargarPrimeraSerieLibre(obraIds);
+
+      const items: ObraListadoItem[] = [];
+      for (const o of filteredObras) {
+        const subtipoValor = o.categoria_obra === "Fotografia" ? o.subtipo_fotografia : o.subtipo;
+        const celdas = [
+          o.titulo,
+          o.nombre_completo,
+          tInforme("es", `categoria.${o.categoria_obra}` as TranslationKey),
+          subtipoValor ? tInforme("es", subtipoTranslationKey(o.categoria_obra, subtipoValor)) : "—",
+          String(o.ejemplares_disponible),
+          primeraSerieLibre[o.id] ?? "—",
+        ];
+
+        let imagen: ObraListadoItem["imagen"] = null;
+        if (conImagen && o.miniatura_path) {
+          try {
+            const bytes = await context.fs.readFile(o.miniatura_path);
+            const formato = detectImageFormat(bytes);
+            if (formato) {
+              const { width, height } = await fittedImageSize(bytes, 16);
+              imagen = { bytes, formato, width, height };
+            }
+          } catch {
+            // Miniatura ausente o ilegible: se omite sin romper el informe.
+          }
+        }
+
+        items.push({ celdas, imagen });
+      }
+
+      const headers = [
+        tr("informesObras.colNombre"),
+        tr("informesObras.colAutor"),
+        tr("informesObras.colCategoria"),
+        tr("informesObras.colSubcategoria"),
+        tr("informesObras.colSeriesLibres"),
+        tr("informesObras.colPrimeraSerieLibre"),
+      ];
+
+      const logoBytes = await resolveMembreteLogoBytes(context, personalArtista, galeriaPerfil);
+      const bytes = await buildObrasListadoPdfBytes(t("obrasList.title"), headers, items, conImagen, {
+        idioma: informeIdioma,
+        logoBytes,
+        incluirLogo: informeIncluirLogo,
+        incluirFecha: informeIncluirFecha,
+        firma: informeFirma,
+        firmaBytes: firmaBytesDisponibles,
+        localidad: resolveLocalidad(context, personalArtista, galeriaPerfil),
+      });
+
+      const sufijo = conImagen ? "_con_imagen" : "";
+      const guardado = await savePdfWithDialog(bytes, `listado_obras${sufijo}.pdf`);
+      if (guardado) setInformeMensaje(t("informesObras.informeGenerado"));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setGenerandoInforme(false);
+    }
+  }
+
+  async function handleConfirmarInformeObras() {
+    setInformesMenuAbierto(false);
+    await handleGenerarInformeListado(informeSeleccionId === "resumido_con_imagen");
+  }
+
   if (!context) return null;
 
   return (
@@ -287,13 +409,10 @@ export function ObrasList({
       {!loading && obras.length === 0 && <p>{t("obrasList.sinObras")}</p>}
 
       {obras.length > 0 && (
-        <input
-          type="search"
-          className="obras-list-buscador"
-          placeholder={t(esRegistroPersonal ? "obrasList.buscarPlaceholderPersonal" : "obrasList.buscarPlaceholder")}
-          value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
-        />
+        <div className="buscador-con-ayuda">
+          <input type="search" className="obras-list-buscador" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
+          <HelpIcon fieldKey="busqueda_general" />
+        </div>
       )}
 
       {(esGaleria ? allArtistas.length > 0 : false) ||
@@ -372,6 +491,14 @@ export function ObrasList({
         </div>
       ) : null}
 
+      {obras.length > 0 && (
+        <div className="header-actions obras-list-options">
+          <button type="button" onClick={handleAbrirInformesMenu} disabled={filteredObras.length === 0}>
+            {t("informesObras.generarInforme")}
+          </button>
+        </div>
+      )}
+
       {!loading && obras.length > 0 && filteredObras.length === 0 && <p>{t("obrasList.sinResultados")}</p>}
 
       <div className="obras-grid">
@@ -440,6 +567,31 @@ export function ObrasList({
           </div>
         ))}
       </div>
+
+      {informesMenuAbierto && (
+        <InformesModal
+          titulo={t("informesObras.generarInforme")}
+          opciones={[
+            { id: "resumido", label: t("informesObras.opcionResumido") },
+            { id: "resumido_con_imagen", label: t("informesObras.opcionResumidoConImagen") },
+          ]}
+          selectedId={informeSeleccionId}
+          onSelectId={setInformeSeleccionId}
+          idioma={informeIdioma}
+          onIdiomaChange={setInformeIdioma}
+          incluirLogo={informeIncluirLogo}
+          onIncluirLogoChange={setInformeIncluirLogo}
+          incluirFecha={informeIncluirFecha}
+          onIncluirFechaChange={setInformeIncluirFecha}
+          firma={informeFirma}
+          onFirmaChange={setInformeFirma}
+          firmaDigitalDisponible={firmaBytesDisponibles !== null}
+          onGenerar={handleConfirmarInformeObras}
+          generando={generandoInforme}
+          mensaje={informeMensaje}
+          onClose={() => setInformesMenuAbierto(false)}
+        />
+      )}
     </div>
   );
 }

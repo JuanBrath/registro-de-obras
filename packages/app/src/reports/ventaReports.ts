@@ -2,7 +2,7 @@ import type { TranslationKey } from "../i18n/LanguageContext.js";
 import { tInforme, type InformeIdioma } from "./informeIdioma.js";
 import { detectImageFormat } from "../utils/detectImageFormat.js";
 import { formatFechaDDMMYYYY } from "../utils/formatFecha.js";
-import { drawSignatureBlock, fittedImageSize, writeWrappedText } from "../utils/pdfBranding.js";
+import { dibujarLogo, drawSignatureBlock, fittedImageSize, registerBrandFonts, writeWrappedText } from "../utils/pdfBranding.js";
 import { nuevoDocConMembrete, type InformeBrandingOpts } from "./reportPdfBase.js";
 
 /** Detalle propio de la serie/ejemplar vendido (distinto del detalle general de la obra). */
@@ -20,6 +20,19 @@ export interface VentaReporteSerieDatos {
   notas: string;
 }
 
+/** Datos que solo usa el certificado de autenticidad (ver buildCoaPdfBytes), ademas de obra/venta. */
+export interface CoaCertificadoDatos {
+  imgBytes: Uint8Array | null;
+  /** Año en que se tomo la fotografia (fecha_captura), o "" si no aplica/no esta cargado. */
+  fechaToma: string;
+  /** Año de edicion de la copia, o "" si no aplica/no esta cargado. */
+  editadaPorAutor: string;
+  /** Primera linea de "Detalles tecnicos" (ej. subtipo de fotografia: "Captura Digital"). */
+  detalleTecnico1: string;
+  /** Segunda linea de "Detalles tecnicos" (ej. tipo de impresion + soporte). */
+  detalleTecnico2: string;
+}
+
 /** Datos de la obra/ejemplar comunes a todos los documentos de venta. `descripcionLineas` ya viene armada por el llamador (misma logica que usa la ficha/presupuesto para no duplicar el detalle por categoria). */
 export interface VentaReporteObraDatos {
   titulo: string;
@@ -28,6 +41,8 @@ export interface VentaReporteObraDatos {
   informeConservacion: string;
   descripcionLineas: string[];
   serie: VentaReporteSerieDatos;
+  /** Solo se usa por el certificado de autenticidad (`buildCoaPdfBytes`). */
+  certificado?: CoaCertificadoDatos;
 }
 
 export interface VentaReporteVentaDatos {
@@ -201,7 +216,7 @@ export async function buildComprobanteVentaPdfBytes(
   if (venta.costoTransporte != null) lineas.push(campo(opts.idioma, "ventaForm.costoTransporteLabel", formatMoneda(venta.moneda, venta.costoTransporte)));
   if (venta.costoSeguro != null) lineas.push(campo(opts.idioma, "ventaForm.costoSeguroLabel", formatMoneda(venta.moneda, venta.costoSeguro)));
   if (venta.estadoPago) {
-    lineas.push(campo(opts.idioma, "ventaForm.estadoPagoLabel", tInforme(opts.idioma, estadoPagoKey(venta.estadoPago))));
+    lineas.push(campo(opts.idioma, "ventaForm.estadoPagoLabel", tInforme("es", estadoPagoKey(venta.estadoPago))));
   }
   if (venta.metodoPago) lineas.push(campo(opts.idioma, "ventaForm.metodoPagoLabel", venta.metodoPago));
   if (venta.fechaCobro) lineas.push(campo(opts.idioma, "ventaForm.fechaCobroLabel", formatFechaDDMMYYYY(venta.fechaCobro)));
@@ -222,45 +237,180 @@ export async function buildComprobanteVentaPdfBytes(
   return new Uint8Array(doc.output("arraybuffer"));
 }
 
-/** Certificado de autenticidad (COA): identidad de la obra + comprador + Nº de certificado + firma. */
+/** "23 de octubre de 2026", para el pie del certificado. */
+function formatFechaLargaEs(fechaISO: string): string {
+  const meses = [
+    "enero", "febrero", "marzo", "abril", "mayo", "junio",
+    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
+  ];
+  const [anio, mes, dia] = fechaISO.split("-").map(Number);
+  if (!anio || !mes || !dia) return fechaISO;
+  return `${dia} de ${meses[mes - 1]} de ${anio}`;
+}
+
+/**
+ * Certificado de autenticidad (COA), en una sola hoja, con formato de
+ * "certificado de galeria" clasico: marco de doble linea, banner con el
+ * titulo, la foto de la obra en el cuerpo, campos con linea debajo, lugar y
+ * fecha en italica y pie de derechos reservados. No lleva membrete de marca
+ * de la app ni datos del comprador: es un documento pensado para
+ * acompañar/enmarcar junto a la obra.
+ */
 export async function buildCoaPdfBytes(
   obra: VentaReporteObraDatos,
   venta: VentaReporteVentaDatos,
-  comprador: VentaReporteCompradorDatos,
   opts: InformeBrandingOpts,
 ): Promise<Uint8Array> {
-  const titulo = tInforme(opts.idioma, "ventaReport.coaTitulo");
-  const { doc, marginLeft, startY } = await nuevoDocConMembrete(titulo, opts);
+  const { default: jsPDF } = await import("jspdf");
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  await registerBrandFonts(doc);
   const pageWidth = doc.internal.pageSize.getWidth();
-  const width = pageWidth - marginLeft * 2;
-  let y = startY;
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const cert = obra.certificado;
 
-  const lineas: string[] = [
-    `${tInforme(opts.idioma, "obraForm.tituloLabel")}: ${obra.titulo}`,
-    ...obra.descripcionLineas,
-    ...buildSerieLineas(obra.serie, opts.idioma),
-  ];
-  if (venta.numeroCertificado != null) lineas.push(tInforme(opts.idioma, "common.certificadoNum", { numero: venta.numeroCertificado }));
-  lineas.push(campo(opts.idioma, "ventaReport.compradorLabel", comprador.nombre));
-  lineas.push(campo(opts.idioma, "ventaForm.fechaVenta", formatFechaDDMMYYYY(venta.fechaVenta)));
+  // Marco enmarcado (doble linea).
+  const outerMargin = 12;
+  const innerGap = 1.6;
+  doc.setDrawColor(40, 40, 40);
+  doc.setLineWidth(0.5);
+  doc.rect(outerMargin, outerMargin, pageWidth - outerMargin * 2, pageHeight - outerMargin * 2);
+  doc.setLineWidth(0.2);
+  doc.rect(
+    outerMargin + innerGap,
+    outerMargin + innerGap,
+    pageWidth - (outerMargin + innerGap) * 2,
+    pageHeight - (outerMargin + innerGap) * 2,
+  );
 
-  for (const linea of lineas) y = writeWrappedText(doc, linea, marginLeft, y, width, { lineHeight: 6 });
+  const contentX = outerMargin + 10;
+  const contentWidth = pageWidth - contentX * 2;
 
-  if (venta.clausulaReventa) {
+  const bannerY = outerMargin + 6;
+  const bannerHeight = 16;
+  doc.setFillColor(224, 224, 224);
+  doc.rect(contentX, bannerY, contentWidth, bannerHeight, "F");
+  doc.setFont("times", "bolditalic");
+  doc.setFontSize(18);
+  doc.setTextColor(20, 20, 20);
+  doc.text(tInforme(opts.idioma, "ventaReport.coaTituloDobleHoja"), pageWidth / 2, bannerY + bannerHeight / 2 + 3, { align: "center" });
+
+  let y = bannerY + bannerHeight + 10;
+
+  // La foto de la obra va en el cuerpo del certificado, debajo del banner.
+  if (cert?.imgBytes) {
+    const formatoImg = detectImageFormat(cert.imgBytes);
+    if (formatoImg) {
+      const maxW = contentWidth;
+      const maxH = 85;
+      const blob = new Blob([cert.imgBytes as BlobPart]);
+      const bitmap = await createImageBitmap(blob);
+      let w = maxW;
+      let h = maxW / (bitmap.width / bitmap.height);
+      if (h > maxH) {
+        h = maxH;
+        w = maxH * (bitmap.width / bitmap.height);
+      }
+      bitmap.close();
+      doc.addImage(cert.imgBytes, formatoImg, contentX + (contentWidth - w) / 2, y, w, h);
+      y += h + 10;
+    }
+  } else {
     y += 4;
-    doc.setFontSize(9);
-    y = writeWrappedText(
-      doc,
-      tInforme(opts.idioma, "ventaReport.notaRofrCoa", { inventario: obra.codigoInventario || "—" }),
-      marginLeft,
-      y,
-      width,
-      { lineHeight: 5 },
-    );
-    doc.setFontSize(10);
   }
 
-  await drawSignatureBlock(doc, y + 10, { idioma: opts.idioma, firma: opts.firma, firmaBytes: opts.firmaBytes, marginLeft });
+  function fila(label: string, valor: string) {
+    doc.setFont("times", "italic");
+    doc.setFontSize(10);
+    doc.setTextColor(90, 90, 90);
+    doc.text(label, contentX, y);
+    doc.setFont("times", "bold");
+    doc.setFontSize(15);
+    doc.setTextColor(20, 20, 20);
+    const valorLineas = doc.splitTextToSize(valor || "—", contentWidth) as string[];
+    doc.text(valorLineas, pageWidth / 2, y, { align: "center" });
+    y += 5 + (valorLineas.length - 1) * 6;
+    doc.setDrawColor(150, 150, 150);
+    doc.setLineWidth(0.15);
+    doc.line(contentX, y, contentX + contentWidth, y);
+    y += 10;
+  }
+
+  function filaColumnas(columnas: { label: string; valor: string }[]) {
+    const colWidth = contentWidth / columnas.length;
+    columnas.forEach((col, i) => {
+      const colCenter = contentX + colWidth * i + colWidth / 2;
+      doc.setFont("times", "italic");
+      doc.setFontSize(9.5);
+      doc.setTextColor(90, 90, 90);
+      doc.text(col.label, colCenter, y, { align: "center" });
+      doc.setFont("times", "bold");
+      doc.setFontSize(12);
+      doc.setTextColor(20, 20, 20);
+      doc.text(col.valor || "—", colCenter, y + 7, { align: "center" });
+      doc.setDrawColor(150, 150, 150);
+      doc.setLineWidth(0.15);
+      doc.line(contentX + colWidth * i + 6, y + 10, contentX + colWidth * (i + 1) - 6, y + 10);
+    });
+    y += 20;
+  }
+
+  fila(tInforme(opts.idioma, "ventaReport.coaArtistaLabel"), obra.autor);
+  fila(tInforme(opts.idioma, "obraForm.tituloLabel"), `"${obra.titulo}"`);
+
+  filaColumnas([
+    { label: tInforme(opts.idioma, "ventaReport.coaCopiaLabel"), valor: obra.serie.numero },
+    { label: tInforme(opts.idioma, "ventaReport.coaMedidasImagenLabel"), valor: obra.serie.dimensiones },
+    { label: tInforme(opts.idioma, "ventaReport.coaFechaTomaLabel"), valor: cert?.fechaToma ?? "" },
+  ]);
+
+  const detalles = [cert?.detalleTecnico1, cert?.detalleTecnico2].filter(Boolean).join("\n");
+  if (detalles) fila(tInforme(opts.idioma, "ventaReport.coaDetallesTecnicosLabel"), detalles);
+
+  // Fila final: año de edicion + firma del autor (con la imagen de firma digital si esta configurada).
+  const colWidth2 = contentWidth / 2;
+  const col1Center = contentX + colWidth2 / 2;
+  const col2Center = contentX + colWidth2 + colWidth2 / 2;
+  doc.setFont("times", "italic");
+  doc.setFontSize(9.5);
+  doc.setTextColor(90, 90, 90);
+  doc.text(tInforme(opts.idioma, "ventaReport.coaEditadaPorAutorLabel"), col1Center, y, { align: "center" });
+  doc.text(tInforme(opts.idioma, "ventaReport.coaFirmaAutorLabel"), col2Center, y, { align: "center" });
+  doc.setFont("times", "bold");
+  doc.setFontSize(12);
+  doc.setTextColor(20, 20, 20);
+  doc.text(cert?.editadaPorAutor || "—", col1Center, y + 7, { align: "center" });
+  if (opts.firma === "digital" && opts.firmaBytes) {
+    const formatoFirma = detectImageFormat(opts.firmaBytes);
+    if (formatoFirma) {
+      const { width, height } = await fittedImageSize(opts.firmaBytes, 16);
+      doc.addImage(opts.firmaBytes, formatoFirma, col2Center - width / 2, y - 1, width, height);
+    }
+  }
+  doc.setDrawColor(150, 150, 150);
+  doc.setLineWidth(0.15);
+  doc.line(contentX + 6, y + 10, contentX + colWidth2 - 6, y + 10);
+  doc.line(contentX + colWidth2 + 6, y + 10, contentX + contentWidth - 6, y + 10);
+  y += 24;
+
+  doc.setFont("times", "italic");
+  doc.setFontSize(11);
+  doc.setTextColor(20, 20, 20);
+  doc.text(`${venta.lugarVenta || "—"}, ${formatFechaLargaEs(venta.fechaVenta)}`, pageWidth / 2, y, { align: "center" });
+
+  if (opts.incluirLogo) {
+    await dibujarLogo(doc, opts.logoBytes, pageWidth - outerMargin - 22, pageHeight - outerMargin - 20, 14);
+  }
+
+  doc.setFont("Inter", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(120, 120, 120);
+  doc.text(
+    `© ${obra.autor} - ${tInforme(opts.idioma, "ventaReport.coaDerechosReservados")}`,
+    pageWidth / 2,
+    pageHeight - outerMargin - 8,
+    { align: "center" },
+  );
+
   return new Uint8Array(doc.output("arraybuffer"));
 }
 

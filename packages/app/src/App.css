@@ -227,6 +227,22 @@ input[type="date"] {
   line-height: 1;
 }
 
+/* Input type="date" real, siempre montado pero invisible: solo se usa para
+   abrir el selector nativo (ver CampoFecha.tsx). Se lo saca del flujo con
+   position:absolute para que nunca ocupe espacio ni empuje al input de
+   texto visible, sea cual sea el layout del formulario que lo contenga. */
+.campo-fecha-nativo-oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  border: 0;
+}
+
 .image-file-field {
   display: flex;
   gap: 0.75rem;
@@ -681,6 +697,19 @@ input[type="date"] {
   width: 100%;
   max-width: 420px;
   margin-top: 1rem;
+}
+
+.buscador-con-ayuda {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  max-width: 420px;
+}
+
+.buscador-con-ayuda .obras-list-buscador {
+  margin-top: 1rem;
+  max-width: none;
+  flex: 1;
 }
 
 .galeria-filtros {

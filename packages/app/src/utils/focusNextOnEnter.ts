@@ -21,10 +21,19 @@ export function focusNextOnEnter(e: KeyboardEvent<HTMLElement>): void {
       !el.hasAttribute("disabled") &&
       el.offsetParent !== null &&
       !el.classList.contains("help-icon") &&
-      !el.classList.contains("link-icon-button"),
+      !el.classList.contains("link-icon-button") &&
+      // El input type="date" oculto de CampoFecha (ver CampoFecha.tsx) solo
+      // se usa para abrir el calendario nativo por codigo: no es un campo
+      // real por el que haya que pasar al avanzar con Enter.
+      !el.classList.contains("campo-fecha-nativo-oculto"),
   );
 
-  const currentIndex = focusables.indexOf(target);
+  // Si Enter se disparo en el input oculto de CampoFecha (recien se eligio
+  // una fecha con el calendario), avanzar desde el input de texto visible
+  // que esta justo antes en el DOM, no desde el propio input oculto (que no
+  // forma parte de `focusables`).
+  const origen = target.classList.contains("campo-fecha-nativo-oculto") ? target.previousElementSibling : target;
+  const currentIndex = focusables.indexOf(origen as HTMLElement);
   if (currentIndex === -1) return;
   focusables[currentIndex + 1]?.focus();
 }

@@ -12,14 +12,17 @@ import { formatFechaDDMMYYYY } from "../utils/formatFecha.js";
 import { todayISO } from "../utils/today.js";
 import { savePdfWithDialog } from "../utils/savePdfDialog.js";
 import type { FirmaEleccion } from "../utils/pdfBranding.js";
-import type { InformeIdioma } from "../reports/informeIdioma.js";
-import { resolveFirmaBytes, resolveMembreteLogoBytes } from "../reports/reportBranding.js";
+import { tInforme, type InformeIdioma } from "../reports/informeIdioma.js";
+import { resolveFirmaBytes, resolveMembreteLogoBytes, resolveLocalidad } from "../reports/reportBranding.js";
 import {
   buildClienteConDatosPdfBytes,
   buildClienteEnBlancoPdfBytes,
   buildClienteHistorialPdfBytes,
+  buildClientesFichaPdfBytes,
   type ClienteHistorialVentaRow,
+  type ClienteReporteDatos,
 } from "../reports/clienteReports.js";
+import { buildObrasListadoPdfBytes } from "../reports/obrasListadoReports.js";
 
 function primerDiaMesActual(): string {
   const hoy = new Date();
@@ -86,46 +89,105 @@ export function ClientesScreen({ onBack }: { onBack: () => void }) {
   const [fichaId, setFichaId] = useState<number | null>(null);
   const [fichaModo, setFichaModo] = useState<"consultar" | "editar">("consultar");
 
-  const [fichaBlancoAbierta, setFichaBlancoAbierta] = useState(false);
-  const [fichaBlancoIdioma, setFichaBlancoIdioma] = useState<InformeIdioma>("es");
-  const [fichaBlancoIncluirLogo, setFichaBlancoIncluirLogo] = useState(true);
-  const [fichaBlancoFirma, setFichaBlancoFirma] = useState<FirmaEleccion>("ninguna");
-  const [fichaBlancoFirmaBytes, setFichaBlancoFirmaBytes] = useState<Uint8Array | null>(null);
-  const [fichaBlancoGenerando, setFichaBlancoGenerando] = useState(false);
-  const [fichaBlancoMensaje, setFichaBlancoMensaje] = useState<string | null>(null);
-  useEscapeToDismiss(fichaBlancoMensaje, setFichaBlancoMensaje);
+  const [informesListaAbierta, setInformesListaAbierta] = useState(false);
+  const [informeListaSeleccionId, setInformeListaSeleccionId] = useState("blanco");
+  const [informeListaIdioma, setInformeListaIdioma] = useState<InformeIdioma>("es");
+  const [informeListaIncluirLogo, setInformeListaIncluirLogo] = useState(true);
+  const [informeListaIncluirFecha, setInformeListaIncluirFecha] = useState(true);
+  const [informeListaFirma, setInformeListaFirma] = useState<FirmaEleccion>("ninguna");
+  const [informeListaFirmaBytes, setInformeListaFirmaBytes] = useState<Uint8Array | null>(null);
+  const [informeListaGenerando, setInformeListaGenerando] = useState(false);
+  const [informeListaMensaje, setInformeListaMensaje] = useState<string | null>(null);
+  useEscapeToDismiss(informeListaMensaje, setInformeListaMensaje);
 
-  async function handleAbrirFichaBlanco() {
-    setFichaBlancoIdioma(idioma);
-    setFichaBlancoIncluirLogo(true);
-    setFichaBlancoFirma("ninguna");
-    setFichaBlancoMensaje(null);
-    setFichaBlancoFirmaBytes(context ? await resolveFirmaBytes(context, personalArtista, galeriaPerfil) : null);
-    setFichaBlancoAbierta(true);
+  async function handleAbrirInformesLista() {
+    setInformeListaSeleccionId("blanco");
+    setInformeListaIdioma(idioma);
+    setInformeListaIncluirLogo(true);
+    setInformeListaIncluirFecha(true);
+    setInformeListaFirma("ninguna");
+    setInformeListaMensaje(null);
+    setInformeListaFirmaBytes(context ? await resolveFirmaBytes(context, personalArtista, galeriaPerfil) : null);
+    setInformesListaAbierta(true);
   }
 
-  async function handleGenerarFichaBlanco() {
+  function clienteRowAReporteDatos(c: ClienteRow): ClienteReporteDatos {
+    return {
+      nombre: c.nombre,
+      tipoCliente: c.tipo_cliente ?? "",
+      domicilio: c.domicilio ?? "",
+      ciudad: c.ciudad ?? "",
+      pais: c.pais ?? "",
+      email: c.email ?? "",
+      telefono: c.telefono ?? "",
+      cuit: c.cuit ?? "",
+      perfilIntereses: c.perfil_intereses ?? "",
+      notas: c.notas ?? "",
+    };
+  }
+
+  async function handleGenerarInformeLista() {
     if (!context) return;
-    setFichaBlancoGenerando(true);
+    setInformeListaGenerando(true);
     setError(null);
     try {
       const logoBytes = await resolveMembreteLogoBytes(context, personalArtista, galeriaPerfil);
-      const bytes = await buildClienteEnBlancoPdfBytes("", false, {
-        idioma: fichaBlancoIdioma,
+      const localidad = resolveLocalidad(context, personalArtista, galeriaPerfil);
+      const opts = {
+        idioma: informeListaIdioma,
         logoBytes,
-        incluirLogo: fichaBlancoIncluirLogo,
-        firma: fichaBlancoFirma,
-        firmaBytes: fichaBlancoFirmaBytes,
-      });
-      const guardado = await savePdfWithDialog(bytes, "ficha_cliente_en_blanco.pdf");
+        incluirLogo: informeListaIncluirLogo,
+        incluirFecha: informeListaIncluirFecha,
+        firma: informeListaFirma,
+        firmaBytes: informeListaFirmaBytes,
+        localidad,
+      };
+
+      let bytes: Uint8Array;
+      let nombreArchivo: string;
+
+      if (informeListaSeleccionId === "listado") {
+        const tr = (key: TranslationKey, vars?: Record<string, string | number>) => tInforme(informeListaIdioma, key, vars);
+        const headers = [
+          tr("clientes.colNombre"),
+          tr("clientes.colTipoCliente"),
+          tr("clientes.colTelefono"),
+          tr("clientes.colEmail"),
+          tr("clientes.colCiudad"),
+          tr("clientes.colPais"),
+        ];
+        const items = filteredClientes.map((c) => {
+          const tipoKey = TIPOS_CLIENTE.find((tc) => tc.value === c.tipo_cliente)?.labelKey;
+          return {
+            celdas: [
+              c.nombre,
+              tipoKey ? tInforme("es", tipoKey) : "—",
+              c.telefono ?? "—",
+              c.email ?? "—",
+              c.ciudad ?? "—",
+              c.pais ?? "—",
+            ],
+          };
+        });
+        bytes = await buildObrasListadoPdfBytes(t("clientes.title"), headers, items, false, opts);
+        nombreArchivo = "listado_clientes.pdf";
+      } else if (informeListaSeleccionId === "ficha_busqueda") {
+        bytes = await buildClientesFichaPdfBytes(filteredClientes.map(clienteRowAReporteDatos), opts);
+        nombreArchivo = "ficha_clientes.pdf";
+      } else {
+        bytes = await buildClienteEnBlancoPdfBytes("", false, opts);
+        nombreArchivo = "ficha_cliente_en_blanco.pdf";
+      }
+
+      const guardado = await savePdfWithDialog(bytes, nombreArchivo);
       if (guardado) {
-        setFichaBlancoAbierta(false);
-        setFichaBlancoMensaje(t("clientes.informeGenerado"));
+        setInformesListaAbierta(false);
+        setInformeListaMensaje(t("clientes.informeGenerado"));
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
-      setFichaBlancoGenerando(false);
+      setInformeListaGenerando(false);
     }
   }
 
@@ -242,7 +304,11 @@ export function ClientesScreen({ onBack }: { onBack: () => void }) {
   const filteredClientes = useMemo(() => {
     const busquedaNorm = busqueda.trim().toLowerCase();
     if (!busquedaNorm) return clientes;
-    return clientes.filter((c) => c.nombre.toLowerCase().includes(busquedaNorm));
+    return clientes.filter((c) =>
+      [c.nombre, c.email, c.telefono, c.domicilio, c.ciudad, c.pais, c.cuit, c.perfil_intereses, c.notas].some((campo) =>
+        (campo ?? "").toLowerCase().includes(busquedaNorm),
+      ),
+    );
   }, [clientes, busqueda]);
 
   if (!context) return null;
@@ -257,8 +323,8 @@ export function ClientesScreen({ onBack }: { onBack: () => void }) {
               <button type="button" onClick={() => setMostrandoAlta(true)}>
                 {t("clientes.nuevoCliente")}
               </button>
-              <button type="button" onClick={handleAbrirFichaBlanco}>
-                {t("clientes.generarFichaBlanco")}
+              <button type="button" onClick={handleAbrirInformesLista}>
+                {t("clientes.generarInformes")}
               </button>
             </>
           )}
@@ -268,28 +334,46 @@ export function ClientesScreen({ onBack }: { onBack: () => void }) {
         </div>
       </div>
 
-      {fichaBlancoMensaje && fichaId === null && !mostrandoAlta && (
+      {informeListaMensaje && fichaId === null && !mostrandoAlta && (
         <p className="success" role="status">
-          ✅ {fichaBlancoMensaje}
+          ✅ {informeListaMensaje}
         </p>
       )}
 
-      {fichaBlancoAbierta && (
+      {informesListaAbierta && (
         <InformesModal
-          titulo={t("clientes.generarFichaBlanco")}
-          opciones={[{ id: "blanco", label: t("clientes.informeOpcionBlancoCliente") }]}
-          selectedId="blanco"
-          onSelectId={() => {}}
-          idioma={fichaBlancoIdioma}
-          onIdiomaChange={setFichaBlancoIdioma}
-          incluirLogo={fichaBlancoIncluirLogo}
-          onIncluirLogoChange={setFichaBlancoIncluirLogo}
-          firma={fichaBlancoFirma}
-          onFirmaChange={setFichaBlancoFirma}
-          firmaDigitalDisponible={fichaBlancoFirmaBytes !== null}
-          onGenerar={handleGenerarFichaBlanco}
-          generando={fichaBlancoGenerando}
-          onClose={() => setFichaBlancoAbierta(false)}
+          titulo={t("clientes.generarInformes")}
+          opciones={[
+            { id: "blanco", label: t("clientes.informeOpcionBlancoCliente") },
+            { id: "listado", label: t("clientes.informeOpcionListado") },
+            {
+              id: "ficha_busqueda",
+              label: t("clientes.informeOpcionFichaBusqueda"),
+              extra:
+                filteredClientes.length === 0 ? (
+                  <p className="field-note">{t("clientes.fichaBusquedaSinResultados")}</p>
+                ) : (
+                  <p className="field-note">
+                    {t("clientes.fichaBusquedaCantidad", { cantidad: filteredClientes.length })}
+                  </p>
+                ),
+            },
+          ]}
+          selectedId={informeListaSeleccionId}
+          onSelectId={setInformeListaSeleccionId}
+          idioma={informeListaIdioma}
+          onIdiomaChange={setInformeListaIdioma}
+          incluirLogo={informeListaIncluirLogo}
+          onIncluirLogoChange={setInformeListaIncluirLogo}
+          incluirFecha={informeListaIncluirFecha}
+          onIncluirFechaChange={setInformeListaIncluirFecha}
+          firma={informeListaFirma}
+          onFirmaChange={setInformeListaFirma}
+          firmaDigitalDisponible={informeListaFirmaBytes !== null}
+          onGenerar={handleGenerarInformeLista}
+          generando={informeListaGenerando}
+          disabled={informeListaSeleccionId === "ficha_busqueda" && filteredClientes.length === 0}
+          onClose={() => setInformesListaAbierta(false)}
         />
       )}
 
@@ -389,13 +473,10 @@ export function ClientesScreen({ onBack }: { onBack: () => void }) {
           {!loading && clientes.length === 0 && <p>{t("clientes.sinClientes")}</p>}
 
           {clientes.length > 0 && fichaId === null && (
-            <input
-              type="search"
-              className="obras-list-buscador"
-              placeholder={t("clientes.buscarPlaceholder")}
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-            />
+            <div className="buscador-con-ayuda">
+              <input type="search" className="obras-list-buscador" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
+              <HelpIcon fieldKey="busqueda_general" />
+            </div>
           )}
 
           {!loading && clientes.length > 0 && filteredClientes.length === 0 && <p>{t("artistas.sinResultados")}</p>}

@@ -17,7 +17,7 @@ function enmascararFecha(bruto: string): string {
 }
 
 export interface CampoFechaHandle {
-  /** Muestra momentaneamente el selector de fecha nativo para elegirla con el calendario, en vez de escribirla. */
+  /** Abre el selector de fecha nativo para elegirla con el calendario, en vez de escribirla. */
   abrirCalendario: () => void;
 }
 
@@ -43,25 +43,29 @@ export function BotonCalendario({ onClick, disabled }: { onClick: () => void; di
 }
 
 /**
- * Input de fecha en formato DD/MM/AAAA (el que usa el resto de la app),
- * en vez de un input type="date" nativo: en Safari/WKWebView (la app de
- * escritorio en Mac) un input type="date" vacio muestra la fecha de hoy
- * en gris como si fuera un valor real, lo cual confunde. Con un input de
- * texto simple, vacio se ve realmente vacio (solo el formato de ejemplo).
+ * Input de fecha en formato DD/MM/AAAA (el que usa el resto de la app), en
+ * vez de un input type="date" nativo: en Safari/WKWebView (la app de
+ * escritorio en Mac) un input type="date" vacio muestra la fecha de hoy en
+ * gris como si fuera un valor real, lo cual confunde. Con un input de texto
+ * simple, vacio se ve realmente vacio (solo el formato de ejemplo).
  *
- * El boton de calendario que abre `abrirCalendario` (expuesto por ref, para
- * que el llamador lo ubique junto al titulo del campo en vez de junto al
- * input) resuelve el problema inverso: para elegir una fecha sin tener que
- * escribirla, se muestra momentaneamente un input type="date" nativo (con
- * su selector visual), que se vuelve a ocultar en cuanto se elige una fecha
- * o se pierde el foco.
+ * Para elegir la fecha con el calendario (boton expuesto via `abrirCalendario`
+ * por ref) se mantiene, SIEMPRE MONTADO pero visualmente oculto, un segundo
+ * input type="date" real: `abrirCalendario` le hace foco y llama a
+ * `showPicker()` de forma sincronica, dentro del click del boton, sin pasar
+ * por un cambio de estado ni un useEffect posterior. Esto importa: en la app
+ * de escritorio, invocar showPicker() fuera del gesto directo del usuario
+ * (por ejemplo, un useEffect que corre despues de un setState) puede fallar
+ * de forma rara y terminaba, en la practica, sacando al usuario de la
+ * pantalla en la que estaba trabajando. El mismo criterio (input siempre
+ * presente + accion directa en el click) ya se usa en ImageFileField para
+ * el input type="file".
  */
 export const CampoFecha = forwardRef<
   CampoFechaHandle,
   { valorIso: string; onChangeIso: (iso: string) => void; disabled?: boolean; required?: boolean }
 >(function CampoFecha({ valorIso, onChangeIso, disabled, required }, ref) {
   const [texto, setTexto] = useState(() => fechaIsoATexto(valorIso));
-  const [mostrarCalendario, setMostrarCalendario] = useState(false);
   const nativoRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -69,54 +73,46 @@ export const CampoFecha = forwardRef<
   }, [valorIso]);
 
   useImperativeHandle(ref, () => ({
-    abrirCalendario: () => setMostrarCalendario(true),
+    abrirCalendario: () => {
+      const input = nativoRef.current;
+      if (!input) return;
+      input.focus();
+      if (typeof input.showPicker === "function") {
+        try {
+          input.showPicker();
+        } catch {
+          // Algunos navegadores exigen un click directo sobre el input; ya
+          // quedo enfocado para poder abrirlo asi si showPicker() no alcanza.
+        }
+      }
+    },
   }));
 
-  useEffect(() => {
-    if (!mostrarCalendario) return;
-    const input = nativoRef.current;
-    if (!input) return;
-    input.focus();
-    if (typeof input.showPicker === "function") {
-      try {
-        input.showPicker();
-      } catch {
-        // Algunos navegadores exigen que el gesto del usuario sea mas directo;
-        // el input ya queda enfocado y visible para abrirlo con un click.
-      }
-    }
-  }, [mostrarCalendario]);
-
-  if (mostrarCalendario) {
-    return (
+  return (
+    <>
       <input
-        ref={nativoRef}
-        type="date"
-        value={valorIso}
+        type="text"
+        inputMode="numeric"
+        placeholder="DD/MM/AAAA"
+        value={texto}
         disabled={disabled}
         required={required}
         onChange={(e) => {
-          onChangeIso(e.target.value);
-          setMostrarCalendario(false);
+          const enmascarado = enmascararFecha(e.target.value);
+          setTexto(enmascarado);
+          onChangeIso(textoAFechaIso(enmascarado));
         }}
-        onBlur={() => setMostrarCalendario(false)}
       />
-    );
-  }
-
-  return (
-    <input
-      type="text"
-      inputMode="numeric"
-      placeholder="DD/MM/AAAA"
-      value={texto}
-      disabled={disabled}
-      required={required}
-      onChange={(e) => {
-        const enmascarado = enmascararFecha(e.target.value);
-        setTexto(enmascarado);
-        onChangeIso(textoAFechaIso(enmascarado));
-      }}
-    />
+      <input
+        ref={nativoRef}
+        type="date"
+        className="campo-fecha-nativo-oculto"
+        tabIndex={-1}
+        aria-hidden="true"
+        value={valorIso}
+        disabled={disabled}
+        onChange={(e) => onChangeIso(e.target.value)}
+      />
+    </>
   );
 });

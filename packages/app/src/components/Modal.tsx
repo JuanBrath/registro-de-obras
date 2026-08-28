@@ -15,7 +15,7 @@ export function Modal({
   const { t } = useLanguage();
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div
         className={`modal-content${wide ? " modal-content-wide" : ""}${className ? ` ${className}` : ""}`}
         onClick={(e) => e.stopPropagation()}
