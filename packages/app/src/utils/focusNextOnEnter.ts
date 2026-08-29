@@ -29,11 +29,20 @@ export function focusNextOnEnter(e: KeyboardEvent<HTMLElement>): void {
   );
 
   // Si Enter se disparo en el input oculto de CampoFecha (recien se eligio
-  // una fecha con el calendario), avanzar desde el input de texto visible
-  // que esta justo antes en el DOM, no desde el propio input oculto (que no
-  // forma parte de `focusables`).
-  const origen = target.classList.contains("campo-fecha-nativo-oculto") ? target.previousElementSibling : target;
-  const currentIndex = focusables.indexOf(origen as HTMLElement);
-  if (currentIndex === -1) return;
-  focusables[currentIndex + 1]?.focus();
+  // una fecha con el calendario), hay que saltear todo el campo (el icono Y
+  // el input de texto visible, ambos dentro del mismo <label>), no solo el
+  // input oculto: si no, el primer Enter cae en el input de texto visible
+  // del mismo campo en vez de pasar al campo realmente siguiente.
+  const esCalendarioOculto = target.classList.contains("campo-fecha-nativo-oculto");
+  const labelDelCampo = esCalendarioOculto ? target.closest("label") : null;
+
+  // Se busca el primer focusable que este DESPUES de `target` en el
+  // documento (en vez de su indice exacto dentro de la lista) para que
+  // funcione incluso si Enter se dispara en un elemento que no forma parte
+  // de `focusables`, como el propio input oculto.
+  const siguiente = focusables.find((el) => {
+    if (labelDelCampo?.contains(el)) return false;
+    return target.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING;
+  });
+  siguiente?.focus();
 }

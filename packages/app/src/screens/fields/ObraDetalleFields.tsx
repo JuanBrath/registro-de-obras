@@ -1,7 +1,6 @@
-import { useRef } from "react";
 import { derivarEsSeriadaObraGrafica, type CategoriaObra, type SubtipoObraGrafica } from "@registro/core";
 import { HelpIcon } from "../../components/HelpIcon.js";
-import { CampoFecha, BotonCalendario, type CampoFechaHandle } from "../../components/CampoFecha.js";
+import { CampoFecha, BotonCalendario } from "../../components/CampoFecha.js";
 import { useLanguage, type TranslationKey } from "../../i18n/LanguageContext.js";
 
 export type CategoriaObraDetalle = Exclude<CategoriaObra, "Fotografia">;
@@ -221,7 +220,6 @@ export function ObraDetalleFields({
   mostrarEsSeriada?: boolean;
 }) {
   const { t } = useLanguage();
-  const fechaCreacionRef = useRef<CampoFechaHandle>(null);
   const config = CATEGORIA_CONFIG[categoria];
   const esTecnicasTradicionales = categoria === "Pintura" && value.subtipo === "TecnicasTradicionales";
 
@@ -295,9 +293,12 @@ export function ObraDetalleFields({
       </label>
 
       <label>
-        {t("field.fechaCreacion")} <BotonCalendario onClick={() => fechaCreacionRef.current?.abrirCalendario()} />
+        {t("field.fechaCreacion")}{" "}
+        <BotonCalendario
+          valorIso={value.fechaCreacion}
+          onChangeIso={(iso) => onChange({ ...value, fechaCreacion: iso })}
+        />
         <CampoFecha
-          ref={fechaCreacionRef}
           valorIso={value.fechaCreacion}
           onChangeIso={(iso) => onChange({ ...value, fechaCreacion: iso })}
         />

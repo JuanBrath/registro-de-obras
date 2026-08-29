@@ -4,7 +4,8 @@ import { useWorkspace } from "../state/WorkspaceContext.js";
 import { bytesToObjectUrl } from "../utils/imageObjectUrl.js";
 import { ImageFileField } from "../components/ImageFileField.js";
 import { HelpIcon } from "../components/HelpIcon.js";
-import { CampoFecha, BotonCalendario, type CampoFechaHandle } from "../components/CampoFecha.js";
+import { CampoFecha, BotonCalendario } from "../components/CampoFecha.js";
+import { focusNextOnEnter } from "../utils/focusNextOnEnter.js";
 import { LinkField } from "../components/LinkField.js";
 import { Modal } from "../components/Modal.js";
 import { InformesModal } from "../components/InformesModal.js";
@@ -23,7 +24,6 @@ export function PersonalProfileForm({ onExit }: { onExit: () => void }) {
 
   const [nombreCompleto, setNombreCompleto] = useState(existing?.nombreCompleto ?? "");
   const [fechaNacimiento, setFechaNacimiento] = useState(existing?.fechaNacimiento ?? "");
-  const fechaNacimientoRef = useRef<CampoFechaHandle>(null);
   const [bio, setBio] = useState(existing?.bio ?? "");
   const [bioEn, setBioEn] = useState(existing?.bioEn ?? "");
   const [email, setEmail] = useState(existing?.email ?? "");
@@ -341,7 +341,7 @@ export function PersonalProfileForm({ onExit }: { onExit: () => void }) {
   }
 
   return (
-    <form className="obra-form profile-form" onSubmit={handleSubmit}>
+    <form className="obra-form profile-form" onSubmit={handleSubmit} onKeyDown={focusNextOnEnter}>
       <h2>
         {t("profile.tituloMisDatos")} <HelpIcon fieldKey="perfil_personal_nota" />
       </h2>
@@ -401,8 +401,8 @@ export function PersonalProfileForm({ onExit }: { onExit: () => void }) {
       </label>
 
       <label>
-        {t("artistas.fechaNacimiento")} <BotonCalendario onClick={() => fechaNacimientoRef.current?.abrirCalendario()} />
-        <CampoFecha ref={fechaNacimientoRef} valorIso={fechaNacimiento} onChangeIso={setFechaNacimiento} />
+        {t("artistas.fechaNacimiento")} <BotonCalendario valorIso={fechaNacimiento} onChangeIso={setFechaNacimiento} />
+        <CampoFecha valorIso={fechaNacimiento} onChangeIso={setFechaNacimiento} />
       </label>
 
       <label>

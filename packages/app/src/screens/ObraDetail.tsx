@@ -35,7 +35,7 @@ import { TagPicker } from "../components/TagPicker.js";
 import { ArtistaSelector } from "../components/ArtistaSelector.js";
 import { ImageFileField } from "../components/ImageFileField.js";
 import { HelpIcon } from "../components/HelpIcon.js";
-import { CampoFecha, BotonCalendario, type CampoFechaHandle } from "../components/CampoFecha.js";
+import { CampoFecha, BotonCalendario } from "../components/CampoFecha.js";
 import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
 import { savePdfWithDialog } from "../utils/savePdfDialog.js";
@@ -2715,9 +2715,6 @@ function EjemplarRowView({
   onAbrirInformes: () => void;
 }) {
   const { t } = useLanguage();
-  const fechaLimiteRef = useRef<CampoFechaHandle>(null);
-  const fechaImpresionRef = useRef<CampoFechaHandle>(null);
-  const coaFechaRef = useRef<CampoFechaHandle>(null);
   const [estado, setEstado] = useState(ejemplar.estado);
   const [estadoTrasAnular, setEstadoTrasAnular] = useState("en_stock");
   const [fechaImpresion, setFechaImpresion] = useState(ejemplar.fecha_impresion ?? "");
@@ -2818,16 +2815,16 @@ function EjemplarRowView({
           <label>
             <span className="field-label">
               {t("obraDetail.fechaLimiteLabel")} <HelpIcon fieldKey="fecha_limite_ejemplar" />{" "}
-              <BotonCalendario onClick={() => fechaLimiteRef.current?.abrirCalendario()} />
+              <BotonCalendario valorIso={fechaLimite} onChangeIso={setFechaLimite} />
             </span>
-            <CampoFecha ref={fechaLimiteRef} valorIso={fechaLimite} onChangeIso={setFechaLimite} />
+            <CampoFecha valorIso={fechaLimite} onChangeIso={setFechaLimite} />
           </label>
         )}
         <label>
           <span className="field-label">
-            {t("obraDetail.fechaImpresion")} <BotonCalendario onClick={() => fechaImpresionRef.current?.abrirCalendario()} />
+            {t("obraDetail.fechaImpresion")} <BotonCalendario valorIso={fechaImpresion} onChangeIso={setFechaImpresion} />
           </span>
-          <CampoFecha ref={fechaImpresionRef} valorIso={fechaImpresion} onChangeIso={setFechaImpresion} />
+          <CampoFecha valorIso={fechaImpresion} onChangeIso={setFechaImpresion} />
         </label>
         {(esFotografiaDigital || esObraGrafica) && (
           <label>
@@ -3035,9 +3032,9 @@ function EjemplarRowView({
             <label>
               <span className="field-label">
                 {t("obraDetail.coaFechaLabel")} <HelpIcon fieldKey="coa_fecha" />{" "}
-                <BotonCalendario onClick={() => coaFechaRef.current?.abrirCalendario()} />
+                <BotonCalendario valorIso={coaFecha} onChangeIso={setCoaFecha} />
               </span>
-              <CampoFecha ref={coaFechaRef} valorIso={coaFecha} onChangeIso={setCoaFecha} />
+              <CampoFecha valorIso={coaFecha} onChangeIso={setCoaFecha} />
             </label>
             <label>
               <span className="field-label">
@@ -3320,7 +3317,7 @@ function EjemplarRowView({
           </p>
           <p>{t("obraDetail.estadoTrasAnularPregunta")}</p>
           <div className="obra-form-saved-actions">
-            {(["en_stock", "exhibicion", "consignacion"] as const).map((opcion) => (
+            {(["disponible", "en_stock", "exhibicion", "consignacion"] as const).map((opcion) => (
               <label key={opcion} className="estado-tras-anular-opcion">
                 <input
                   type="radio"

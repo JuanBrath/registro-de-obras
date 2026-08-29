@@ -1,6 +1,5 @@
-import { useRef } from "react";
 import { HelpIcon } from "../../components/HelpIcon.js";
-import { CampoFecha, BotonCalendario, type CampoFechaHandle } from "../../components/CampoFecha.js";
+import { CampoFecha, BotonCalendario } from "../../components/CampoFecha.js";
 import { useLanguage, type TranslationKey } from "../../i18n/LanguageContext.js";
 
 export interface EdicionDetalleState {
@@ -112,8 +111,6 @@ export function EdicionDetalleRow({
   esTextilCeramica: boolean;
 }) {
   const { t } = useLanguage();
-  const fechaImpresionRef = useRef<CampoFechaHandle>(null);
-  const coaFechaRef = useRef<CampoFechaHandle>(null);
 
   if (editing) {
     return (
@@ -158,9 +155,12 @@ export function EdicionDetalleRow({
         )}
 
         <label>
-          {t("obraDetail.fechaImpresion")} <BotonCalendario onClick={() => fechaImpresionRef.current?.abrirCalendario()} />
+          {t("obraDetail.fechaImpresion")}{" "}
+          <BotonCalendario
+            valorIso={value.fechaImpresion}
+            onChangeIso={(iso) => onChange({ ...value, fechaImpresion: iso })}
+          />
           <CampoFecha
-            ref={fechaImpresionRef}
             valorIso={value.fechaImpresion}
             onChangeIso={(iso) => onChange({ ...value, fechaImpresion: iso })}
           />
@@ -346,9 +346,11 @@ export function EdicionDetalleRow({
             </label>
             <label>
               {t("obraDetail.coaFechaLabel")} <HelpIcon fieldKey="coa_fecha" />{" "}
-              <BotonCalendario onClick={() => coaFechaRef.current?.abrirCalendario()} />
+              <BotonCalendario
+                valorIso={value.coaFecha}
+                onChangeIso={(iso) => onChange({ ...value, coaFecha: iso })}
+              />
               <CampoFecha
-                ref={coaFechaRef}
                 valorIso={value.coaFecha}
                 onChangeIso={(iso) => onChange({ ...value, coaFecha: iso })}
               />

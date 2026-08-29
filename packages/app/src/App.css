@@ -219,7 +219,18 @@ input[type="date"] {
   flex: 1;
 }
 
+/* Envuelve el icono de calendario y su input type="date" oculto (ver
+   BotonCalendario en CampoFecha.tsx). Se mantiene el mismo nombre de clase
+   que antes tenia el <button> para no tener que tocar las listas de
+   exclusion ".obra-form/.venta-form/.ejemplar-row-editing label > *" que ya
+   lo excluyen del ancho completo (asi sigue quedando en la misma linea que
+   el texto del label, no en su propia fila). */
 .campo-fecha-calendario {
+  position: relative;
+  display: inline-flex;
+}
+
+.campo-fecha-calendario button {
   border: none;
   background: none;
   cursor: pointer;
@@ -227,20 +238,18 @@ input[type="date"] {
   line-height: 1;
 }
 
-/* Input type="date" real, siempre montado pero invisible: solo se usa para
-   abrir el selector nativo (ver CampoFecha.tsx). Se lo saca del flujo con
-   position:absolute para que nunca ocupe espacio ni empuje al input de
-   texto visible, sea cual sea el layout del formulario que lo contenga. */
+/* Input type="date" real, siempre montado pero invisible, superpuesto
+   exactamente sobre el icono: solo se usa para abrir el selector nativo por
+   codigo (ver CampoFecha.tsx). Al anclarse ahi en vez de al campo de texto
+   (que puede ocupar toda la fila del formulario), el calendario nativo se
+   despliega junto al icono en vez de lejos, del otro lado del campo. */
 .campo-fecha-nativo-oculto {
   position: absolute;
-  width: 1px;
-  height: 1px;
+  inset: 0;
   padding: 0;
-  margin: -1px;
-  overflow: hidden;
+  border: 0;
   opacity: 0;
   pointer-events: none;
-  border: 0;
 }
 
 .image-file-field {

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { calcularPorcentajeComision, type EstadoLiquidacion, type EstadoPago, type Moneda, type TipoVenta } from "@registro/core";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { HelpIcon } from "./HelpIcon.js";
-import { CampoFecha, BotonCalendario, type CampoFechaHandle } from "./CampoFecha.js";
+import { CampoFecha, BotonCalendario } from "./CampoFecha.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
 import { focusNextOnEnter } from "../utils/focusNextOnEnter.js";
@@ -109,7 +109,6 @@ export function VentaForm({
   const [compradorEmail, setCompradorEmail] = useState(existingVenta?.compradorEmail ?? "");
   const [compradorTelefono, setCompradorTelefono] = useState(existingVenta?.compradorTelefono ?? "");
   const [fechaVenta, setFechaVenta] = useState(existingVenta?.fechaVenta ?? "");
-  const fechaVentaRef = useRef<CampoFechaHandle>(null);
   const [lugarVenta, setLugarVenta] = useState(existingVenta?.lugarVenta ?? "");
   const [moneda, setMoneda] = useState<Moneda>(existingVenta?.moneda ?? "ARS");
   const [valorVenta, setValorVenta] = useState(existingVenta ? String(existingVenta.valorVenta) : "");
@@ -151,7 +150,6 @@ export function VentaForm({
   const [estadoPago, setEstadoPago] = useState<EstadoPago | "">(existingVenta?.estadoPago ?? "");
   const [metodoPago, setMetodoPago] = useState(existingVenta?.metodoPago ?? "");
   const [fechaCobro, setFechaCobro] = useState(existingVenta?.fechaCobro ?? "");
-  const fechaCobroRef = useRef<CampoFechaHandle>(null);
   const [estadoLiquidacion, setEstadoLiquidacion] = useState<EstadoLiquidacion | "">(
     existingVenta?.estadoLiquidacion ?? "",
   );
@@ -724,8 +722,8 @@ export function VentaForm({
 
       <label>
         {esVenta ? t("ventaForm.fechaVenta") : esDonacion ? t("ventaForm.fechaDonacion") : t("ventaForm.fechaReserva")}{" "}
-        <BotonCalendario onClick={() => fechaVentaRef.current?.abrirCalendario()} />
-        <CampoFecha ref={fechaVentaRef} valorIso={fechaVenta} onChangeIso={setFechaVenta} required />
+        <BotonCalendario valorIso={fechaVenta} onChangeIso={setFechaVenta} />
+        <CampoFecha valorIso={fechaVenta} onChangeIso={setFechaVenta} required />
       </label>
 
       <label>
@@ -835,8 +833,8 @@ export function VentaForm({
               </label>
               {estadoPago !== "pendiente" && (
                 <label>
-                  {t("ventaForm.fechaCobroLabel")} <BotonCalendario onClick={() => fechaCobroRef.current?.abrirCalendario()} />
-                  <CampoFecha ref={fechaCobroRef} valorIso={fechaCobro} onChangeIso={setFechaCobro} />
+                  {t("ventaForm.fechaCobroLabel")} <BotonCalendario valorIso={fechaCobro} onChangeIso={setFechaCobro} />
+                  <CampoFecha valorIso={fechaCobro} onChangeIso={setFechaCobro} />
                 </label>
               )}
             </div>

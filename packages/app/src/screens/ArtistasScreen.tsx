@@ -6,7 +6,7 @@ import { bytesToObjectUrl } from "../utils/imageObjectUrl.js";
 import { ImageFileField } from "../components/ImageFileField.js";
 import { LinkField } from "../components/LinkField.js";
 import { HelpIcon } from "../components/HelpIcon.js";
-import { CampoFecha, BotonCalendario, type CampoFechaHandle } from "../components/CampoFecha.js";
+import { CampoFecha, BotonCalendario } from "../components/CampoFecha.js";
 import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
 import { savePdfWithDialog } from "../utils/savePdfDialog.js";
@@ -254,7 +254,6 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
 
   const [nombreCompleto, setNombreCompleto] = useState("");
   const [fechaNacimiento, setFechaNacimiento] = useState("");
-  const fechaNacimientoRef = useRef<CampoFechaHandle>(null);
   const [bio, setBio] = useState("");
   const [bioEn, setBioEn] = useState("");
   const [telefono, setTelefono] = useState("");
@@ -271,7 +270,6 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
   const [lugarNacimiento, setLugarNacimiento] = useState("");
   const [lugarFallecimiento, setLugarFallecimiento] = useState("");
   const [fechaFallecimiento, setFechaFallecimiento] = useState("");
-  const fechaFallecimientoRef = useRef<CampoFechaHandle>(null);
   const [lugarResidenciaTrabajo, setLugarResidenciaTrabajo] = useState("");
   const [declaracionArtista, setDeclaracionArtista] = useState("");
   const [formacionAcademica, setFormacionAcademica] = useState("");
@@ -705,17 +703,17 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
             <label>
               <span className="field-label">
                 {t("artistas.fechaNacimiento")}{" "}
-                <BotonCalendario onClick={() => fechaNacimientoRef.current?.abrirCalendario()} />
+                <BotonCalendario valorIso={fechaNacimiento} onChangeIso={setFechaNacimiento} />
               </span>
-              <CampoFecha ref={fechaNacimientoRef} valorIso={fechaNacimiento} onChangeIso={setFechaNacimiento} />
+              <CampoFecha valorIso={fechaNacimiento} onChangeIso={setFechaNacimiento} />
             </label>
 
             <label>
               <span className="field-label">
                 {t("artistas.fechaFallecimientoLabel")}{" "}
-                <BotonCalendario onClick={() => fechaFallecimientoRef.current?.abrirCalendario()} />
+                <BotonCalendario valorIso={fechaFallecimiento} onChangeIso={setFechaFallecimiento} />
               </span>
-              <CampoFecha ref={fechaFallecimientoRef} valorIso={fechaFallecimiento} onChangeIso={setFechaFallecimiento} />
+              <CampoFecha valorIso={fechaFallecimiento} onChangeIso={setFechaFallecimiento} />
             </label>
           </div>
 
@@ -1041,7 +1039,6 @@ function ArtistaRowView({
 
   const [nombreCompleto, setNombreCompleto] = useState(artista.nombre_completo);
   const [fechaNacimiento, setFechaNacimiento] = useState(artista.fecha_nacimiento ?? "");
-  const fechaNacimientoRef = useRef<CampoFechaHandle>(null);
   const [bio, setBio] = useState(artista.bio ?? "");
   const [bioEn, setBioEn] = useState(artista.bio_en ?? "");
   const [telefono, setTelefono] = useState(artista.telefono ?? "");
@@ -1058,7 +1055,6 @@ function ArtistaRowView({
   const [lugarNacimiento, setLugarNacimiento] = useState(artista.lugar_nacimiento ?? "");
   const [lugarFallecimiento, setLugarFallecimiento] = useState(artista.lugar_fallecimiento ?? "");
   const [fechaFallecimiento, setFechaFallecimiento] = useState(artista.fecha_fallecimiento ?? "");
-  const fechaFallecimientoRef = useRef<CampoFechaHandle>(null);
   const [lugarResidenciaTrabajo, setLugarResidenciaTrabajo] = useState(
     artista.lugar_residencia_trabajo ?? "",
   );
@@ -1281,10 +1277,9 @@ function ArtistaRowView({
             <label>
               <span className="field-label">
                 {t("artistas.fechaNacimiento")}{" "}
-                <BotonCalendario onClick={() => fechaNacimientoRef.current?.abrirCalendario()} disabled={soloLectura} />
+                <BotonCalendario valorIso={fechaNacimiento} onChangeIso={setFechaNacimiento} disabled={soloLectura} />
               </span>
               <CampoFecha
-                ref={fechaNacimientoRef}
                 valorIso={fechaNacimiento}
                 onChangeIso={setFechaNacimiento}
                 disabled={soloLectura}
@@ -1294,12 +1289,12 @@ function ArtistaRowView({
               <span className="field-label">
                 {t("artistas.fechaFallecimientoLabel")}{" "}
                 <BotonCalendario
-                  onClick={() => fechaFallecimientoRef.current?.abrirCalendario()}
+                  valorIso={fechaFallecimiento}
+                  onChangeIso={setFechaFallecimiento}
                   disabled={soloLectura}
                 />
               </span>
               <CampoFecha
-                ref={fechaFallecimientoRef}
                 valorIso={fechaFallecimiento}
                 onChangeIso={setFechaFallecimiento}
                 disabled={soloLectura}

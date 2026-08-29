@@ -1,4 +1,3 @@
-import { useRef } from "react";
 import type {
   SubtipoFotografia,
   ClasificacionPositivado,
@@ -8,7 +7,7 @@ import type {
 } from "@registro/core";
 import { HelpIcon } from "../../components/HelpIcon.js";
 import { FilePathField } from "../../components/FilePathField.js";
-import { CampoFecha, BotonCalendario, type CampoFechaHandle } from "../../components/CampoFecha.js";
+import { CampoFecha, BotonCalendario } from "../../components/CampoFecha.js";
 import { useLanguage } from "../../i18n/LanguageContext.js";
 import type { ArchivoMetadata } from "../../utils/readImageMetadata.js";
 
@@ -123,7 +122,6 @@ export function FotografiaFields({
   mostrarUbicacion?: boolean;
 }) {
   const { t } = useLanguage();
-  const fechaCapturaRef = useRef<CampoFechaHandle>(null);
 
   return (
     <fieldset>
@@ -171,9 +169,8 @@ export function FotografiaFields({
 
       <label>
         {value.subtipoFotografia === "Sintografia" ? t("field.fechaCreacion") : t("fields.fotografia.fechaCaptura")}{" "}
-        <BotonCalendario onClick={() => fechaCapturaRef.current?.abrirCalendario()} />
+        <BotonCalendario valorIso={value.fechaCaptura} onChangeIso={(iso) => onChange({ ...value, fechaCaptura: iso })} />
         <CampoFecha
-          ref={fechaCapturaRef}
           valorIso={value.fechaCaptura}
           onChangeIso={(iso) => onChange({ ...value, fechaCaptura: iso })}
         />
