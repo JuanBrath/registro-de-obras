@@ -191,6 +191,7 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
       "0066_venta_reserva_sena",
       "0067_ayuda_etiquetas",
       "0068_ayuda_ubicacion_etiquetas",
+      "0069_obra_notas",
     ]);
   });
 

@@ -5,7 +5,6 @@ import {
   formatearNumeroPruebaArtista,
   generarEjemplarUnico,
   generarEjemplares,
-  puedeConvertirASeriada,
   puedeDeshacerSerie,
 } from "../ejemplares.js";
 
@@ -89,21 +88,5 @@ describe("puedeDeshacerSerie", () => {
 
   it("una serie sin ejemplares (lista vacia) se puede deshacer", () => {
     expect(puedeDeshacerSerie([])).toBe(true);
-  });
-});
-
-describe("puedeConvertirASeriada", () => {
-  it("permite convertir a seriada aunque el ejemplar unico este en coleccion del autor, exhibicion, consignacion, descartado o destruido", () => {
-    expect(puedeConvertirASeriada(["coleccion_autor"])).toBe(true);
-    expect(puedeConvertirASeriada(["exhibicion"])).toBe(true);
-    expect(puedeConvertirASeriada(["consignacion"])).toBe(true);
-    expect(puedeConvertirASeriada(["descartada"])).toBe(true);
-    expect(puedeConvertirASeriada(["destruida"])).toBe(true);
-    expect(puedeConvertirASeriada(["disponible"])).toBe(true);
-  });
-
-  it("bloquea convertir a seriada si el ejemplar unico ya tiene una venta o reserva real", () => {
-    expect(puedeConvertirASeriada(["vendida"])).toBe(false);
-    expect(puedeConvertirASeriada(["reservada"])).toBe(false);
   });
 });

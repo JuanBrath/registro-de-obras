@@ -32,18 +32,6 @@ export function puedeDeshacerSerie(estadosEjemplares: string[]): boolean {
   return estadosEjemplares.every((estado) => ESTADOS_NO_COMPROMETIDOS.has(estado));
 }
 
-// Convertir una obra unica en seriada borra su unico ejemplar y genera los N
-// nuevos desde cero (ver handleSaveObra), asi que el unico dato que se
-// perderia de verdad es una venta real ya registrada sobre ese ejemplar (el
-// vinculo venta.ejemplar_id queda en null). Estados administrativos o de
-// exhibicion/consignacion/coleccion del autor no tienen una venta detras, asi
-// que no bloquean esta direccion.
-const ESTADOS_CON_VENTA = new Set(["vendida", "reservada"]);
-
-export function puedeConvertirASeriada(estadosEjemplares: string[]): boolean {
-  return estadosEjemplares.every((estado) => !ESTADOS_CON_VENTA.has(estado));
-}
-
 // Una obra "unica" es, por dentro, una serie de un solo ejemplar 1/1 — sin
 // pruebas de artista (a diferencia de generarEjemplares(1), que si generaria
 // una PA 1/1 ademas de la edicion 1/1, porque para una edicion real de 1

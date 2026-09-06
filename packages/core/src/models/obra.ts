@@ -35,6 +35,7 @@ export interface Obra {
   anioPeriodo: string | null;
   regimenIngreso: RegimenIngreso | null;
   historialProcedenciaExhibiciones: string | null;
+  notas: string | null;
   fechaAltaSistema: string;
 }
 

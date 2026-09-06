@@ -210,6 +210,7 @@ export const en: Record<keyof typeof es, string> = {
   "obraForm.regimenIngresoDepositoColeccionPrivada": "Deposit from a private collection",
   "obraForm.regimenIngresoCompraFirmeGaleria": "Outright purchase by the gallery",
   "obraForm.historialProcedenciaExhibicionesLabel": "Provenance and exhibition history",
+  "obraForm.notasLabel": "Notes",
   "obraForm.artistaLabel": "Artist",
   "obraForm.ubicacionArchivoLabel": "Original file location",
   "obraForm.ubicacionNegativoLabel": "Negative location",
@@ -736,6 +737,7 @@ export const en: Record<keyof typeof es, string> = {
   "obraDetail.dimensiones": "Dimensions: {{valor}}",
   "obraDetail.escalaPorTamanos": "Scales by size",
   "obraDetail.peso": "Weight: {{valor}}",
+  "obraDetail.notas": "Notes: {{valor}}",
   "obraDetail.editarObra": "Edit artwork",
   "obraDetail.generarFichaPdf": "Generate PDF sheet",
   "obraDetail.fichaPdfGenerada": "PDF sheet generated successfully.",
@@ -817,10 +819,12 @@ export const en: Record<keyof typeof es, string> = {
   "obraDetail.faltaSoporteImpresion": "the print medium",
   "obraDetail.noSePuedeDeshacerSerie":
     "Can't convert to a unique piece: some copies are already sold, reserved, on display, on consignment, in the artist's own collection, discarded, or destroyed.",
-  "obraDetail.errorObraYaVendida": "Can't convert to an edition: the artwork was already sold or reserved.",
   "obraDetail.avisoPierdeDatosEjemplares":
     "This artwork's copies already have data loaded (print date, measurements, certificate, notes, etc.). If you save this change, all those copies get deleted and recreated blank.",
   "obraDetail.confirmarPerdidaDatosEjemplaresPregunta": "Save anyway and lose that data? This cannot be undone.",
   "obraDetail.confirmarPerdidaDatosEjemplaresBoton": "Yes, save and lose that data",
+  "obraDetail.confirmarSalirPregunta": "You made changes that aren't saved. Leave anyway and discard them?",
+  "obraDetail.confirmarSalirBoton": "Yes, leave without saving",
+  "obraDetail.seguirEditando": "Keep editing",
   "obraDetail.estadoTrasAnularPregunta": "What state should the copy go back to?",
 };

@@ -8,7 +8,6 @@ import {
   obraMiniaturaPath,
   obraOriginalPath,
   parseTags,
-  puedeConvertirASeriada,
   puedeDeshacerSerie,
   type CategoriaObra,
   type EstadoLiquidacion,
@@ -76,6 +75,7 @@ interface ObraRow {
   anio_periodo: string | null;
   regimen_ingreso: string | null;
   historial_procedencia_exhibiciones: string | null;
+  notas: string | null;
 }
 
 interface ObraExtRow {
@@ -620,6 +620,9 @@ function buildObraDescripcionLineas(
       `${t("obraForm.historialProcedenciaExhibicionesLabel")}: ${obra.historial_procedencia_exhibiciones}`,
     );
   }
+  if (incluirInfoComercial && obra.notas) {
+    lineas.push(`${t("obraForm.notasLabel")}: ${obra.notas}`);
+  }
   if (incluirTags) {
     const tags = parseTags(obra.tags);
     if (tags.length > 0) lineas.push(`${t("obraForm.etiquetasLabel")}: ${tags.join(", ")}`);
@@ -687,7 +690,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
         `SELECT obra.id, obra.titulo, obra.categoria_obra, obra.estado, obra.es_seriada,
                 obra.ubicacion_fisica_actual, obra.miniatura_path, obra.imagen_alta_resolucion_path, obra.tags,
                 obra.artista_id, artista.nombre_completo, obra.subtitulo, obra.codigo_inventario,
-                obra.anio_periodo, obra.regimen_ingreso, obra.historial_procedencia_exhibiciones
+                obra.anio_periodo, obra.regimen_ingreso, obra.historial_procedencia_exhibiciones, obra.notas
          FROM obra JOIN artista ON artista.id = obra.artista_id
          WHERE obra.id = ?`,
         [obraId],
@@ -1373,6 +1376,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
     anioPeriodo: string;
     regimenIngreso: string;
     historialProcedenciaExhibiciones: string;
+    notas: string;
     ubicacion: string;
     tags: string[];
     categoria: CategoriaObra;
@@ -1388,12 +1392,8 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
     const cambiaSeriada = eraSeriada !== fields.esSeriada;
     const cambiaCategoria = obra.categoria_obra !== fields.categoria;
 
-    if (cambiaSeriada) {
-      const estados = ejemplares.map((ej) => ej.estado);
-      const permitido = fields.esSeriada ? puedeConvertirASeriada(estados) : puedeDeshacerSerie(estados);
-      if (!permitido) {
-        throw new Error(fields.esSeriada ? t("obraDetail.errorObraYaVendida") : t("obraDetail.noSePuedeDeshacerSerie"));
-      }
+    if (cambiaSeriada && !fields.esSeriada && !puedeDeshacerSerie(ejemplares.map((ej) => ej.estado))) {
+      throw new Error(t("obraDetail.noSePuedeDeshacerSerie"));
     }
 
     await context.db.transaction(async (tx) => {
@@ -1401,7 +1401,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
         `UPDATE obra SET
            titulo = ?, categoria_obra = ?, ubicacion_fisica_actual = ?, tags = ?, es_seriada = ?, artista_id = ?,
            subtitulo = ?, codigo_inventario = ?, anio_periodo = ?, regimen_ingreso = ?,
-           historial_procedencia_exhibiciones = ?
+           historial_procedencia_exhibiciones = ?, notas = ?
          WHERE id = ?`,
         [
           fields.titulo,
@@ -1415,6 +1415,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
           fields.anioPeriodo || null,
           fields.regimenIngreso || null,
           fields.historialProcedenciaExhibiciones || null,
+          fields.notas || null,
           obraId,
         ],
       );
@@ -1424,14 +1425,31 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       }
 
       if (cambiaSeriada) {
-        await tx.execute(`DELETE FROM ejemplar WHERE obra_id = ?`, [obraId]);
-        const nuevosEjemplares = fields.esSeriada
-          ? generarEjemplares(fields.cantidadTotalEdiciones)
-          : [generarEjemplarUnico()];
-        for (const ejemplar of nuevosEjemplares) {
+        if (fields.esSeriada) {
+          // El ejemplar unico que ya existia pasa a ser la edicion 1/N de la
+          // serie sin tocar su estado ni los datos que ya tenia cargados
+          // (notas, fecha de impresion, venta asociada, etc.) — solo se
+          // agregan de cero los ejemplares nuevos que hacen falta.
+          const [primero, ...resto] = generarEjemplares(fields.cantidadTotalEdiciones);
+          await tx.execute(`UPDATE ejemplar SET tipo = ?, indice = ?, total_ediciones = ?, numero = ? WHERE id = ?`, [
+            primero.tipo,
+            primero.indice,
+            primero.totalEdiciones,
+            primero.numero,
+            ejemplares[0].id,
+          ]);
+          for (const ejemplar of resto) {
+            await tx.execute(
+              `INSERT INTO ejemplar (obra_id, tipo, indice, total_ediciones, numero) VALUES (?, ?, ?, ?, ?)`,
+              [obraId, ejemplar.tipo, ejemplar.indice, ejemplar.totalEdiciones, ejemplar.numero],
+            );
+          }
+        } else {
+          await tx.execute(`DELETE FROM ejemplar WHERE obra_id = ?`, [obraId]);
+          const unico = generarEjemplarUnico();
           await tx.execute(
             `INSERT INTO ejemplar (obra_id, tipo, indice, total_ediciones, numero) VALUES (?, ?, ?, ?, ?)`,
-            [obraId, ejemplar.tipo, ejemplar.indice, ejemplar.totalEdiciones, ejemplar.numero],
+            [obraId, unico.tipo, unico.indice, unico.totalEdiciones, unico.numero],
           );
         }
         await tx.execute(`INSERT INTO historial_evento (obra_id, tipo, descripcion) VALUES (?, 'edicion', ?)`, [
@@ -1879,6 +1897,9 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
             {ext?.tecnica && <p>{t("obraDetail.tecnica", { valor: ext.tecnica })}</p>}
             {ext?.dimensiones && <p>{t("obraDetail.dimensiones", { valor: ext.dimensiones })}</p>}
             {ext?.peso && <p>{t("obraDetail.peso", { valor: ext.peso })}</p>}
+            {obra.notas && (
+              <p style={{ whiteSpace: "pre-wrap" }}>{t("obraDetail.notas", { valor: obra.notas })}</p>
+            )}
             <div className="obra-form-saved-actions">
               <button type="button" onClick={() => setEditingObra(true)}>
                 {t("obraDetail.editarObra")}
@@ -2166,6 +2187,7 @@ function ObraEditForm({
     anioPeriodo: string;
     regimenIngreso: string;
     historialProcedenciaExhibiciones: string;
+    notas: string;
     ubicacion: string;
     tags: string[];
     categoria: CategoriaObra;
@@ -2187,6 +2209,7 @@ function ObraEditForm({
   const [historialProcedenciaExhibiciones, setHistorialProcedenciaExhibiciones] = useState(
     obra.historial_procedencia_exhibiciones ?? "",
   );
+  const [notas, setNotas] = useState(obra.notas ?? "");
   const [artistaId, setArtistaId] = useState<number | null>(obra.artista_id);
   const tituloInputRef = useRef<HTMLInputElement>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -2300,21 +2323,90 @@ function ObraEditForm({
   useEscapeToDismiss(error, setError);
   const [confirmandoPerdidaDatosEjemplares, setConfirmandoPerdidaDatosEjemplares] = useState(false);
   useEscapeToDismiss(confirmandoPerdidaDatosEjemplares, () => setConfirmandoPerdidaDatosEjemplares(false));
+  const [confirmandoSalir, setConfirmandoSalir] = useState(false);
+
+  // Snapshot de los valores con los que arranco el formulario, para poder
+  // avisar antes de descartar cambios sin guardar al cancelar o cerrar con
+  // Escape (mismo patron que VentaForm).
+  const valoresInicialesRef = useRef(
+    JSON.stringify({
+      titulo,
+      subtitulo,
+      codigoInventario,
+      anioPeriodo,
+      regimenIngreso,
+      historialProcedenciaExhibiciones,
+      notas,
+      artistaId,
+      ubicacion,
+      tags,
+      categoriaObra,
+      esSeriada,
+      cantidadTotalEdiciones,
+      fotografia,
+      obraDetalle,
+    }),
+  ).current;
+  const isDirty =
+    imageFile !== null ||
+    removerImagen ||
+    JSON.stringify({
+      titulo,
+      subtitulo,
+      codigoInventario,
+      anioPeriodo,
+      regimenIngreso,
+      historialProcedenciaExhibiciones,
+      notas,
+      artistaId,
+      ubicacion,
+      tags,
+      categoriaObra,
+      esSeriada,
+      cantidadTotalEdiciones,
+      fotografia,
+      obraDetalle,
+    }) !== valoresInicialesRef;
+
+  function handleCancelClick() {
+    if (isDirty) {
+      setConfirmandoSalir(true);
+      return;
+    }
+    onCancel();
+  }
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key !== "Escape") return;
+      // Los carteles de error/perdida de datos ya se cierran solos con su
+      // propio listener (useEscapeToDismiss); si estan abiertos, dejarlos a
+      // ellos en vez de tambien intentar cerrar el formulario entero.
+      if (error || confirmandoPerdidaDatosEjemplares) return;
+      if (confirmandoSalir) {
+        setConfirmandoSalir(false);
+        return;
+      }
+      handleCancelClick();
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [error, confirmandoPerdidaDatosEjemplares, confirmandoSalir, isDirty, onCancel]);
 
   const permiteCambiarSeriada = categoriaObra !== "ObraGrafica";
   const puedeDesconvertir = puedeDeshacerSerie(ejemplares.map((ej) => ej.estado));
-  const puedeConvertir = puedeConvertirASeriada(ejemplares.map((ej) => ej.estado));
   const esSeriadaCalculada =
     categoriaObra === "ObraGrafica"
       ? obraDetalle.subtipo
         ? derivarEsSeriadaObraGrafica(obraDetalle.subtipo as SubtipoObraGrafica)
         : false
       : esSeriada;
-  const cambiaSeriada = eraSeriada !== esSeriadaCalculada;
-  // Si cambia entre unica/seriada, todos los ejemplares actuales se borran y
-  // se generan de nuevo en blanco (ver handleSaveObra en el componente
-  // padre): si alguno ya tenia datos cargados a mano, hay que avisar antes de
-  // perderlos en vez de borrarlos en silencio.
+  // Al deshacer una serie (volver a unica) todos los ejemplares actuales se
+  // borran y se genera uno nuevo en blanco (ver handleSaveObra en el
+  // componente padre): si alguno ya tenia datos cargados a mano, hay que
+  // avisar antes de perderlos en vez de borrarlos en silencio. Convertir a
+  // seriada, en cambio, preserva el ejemplar unico existente como la edicion
+  // 1/N, asi que esa direccion no pierde nada.
   const hayDatosCargadosEnEjemplares = ejemplares.some((ej) =>
     ([
       "fecha_impresion",
@@ -2393,7 +2485,7 @@ function ObraEditForm({
       setError(t("obraForm.errorTituloRequerido"));
       return;
     }
-    if (cambiaSeriada && hayDatosCargadosEnEjemplares && !confirmandoPerdidaDatosEjemplares) {
+    if (eraSeriada && !esSeriadaCalculada && hayDatosCargadosEnEjemplares && !confirmandoPerdidaDatosEjemplares) {
       setConfirmandoPerdidaDatosEjemplares(true);
       return;
     }
@@ -2408,6 +2500,7 @@ function ObraEditForm({
         anioPeriodo,
         regimenIngreso,
         historialProcedenciaExhibiciones,
+        notas,
         ubicacion,
         tags,
         categoria: categoriaObra,
@@ -2568,6 +2661,11 @@ function ObraEditForm({
       )}
 
       <label>
+        {t("obraForm.notasLabel")} <HelpIcon fieldKey="notas_obra" />
+        <textarea rows={3} value={notas} onChange={(e) => setNotas(e.target.value)} />
+      </label>
+
+      <label>
         {t("obraForm.imagenLabel")} <HelpIcon fieldKey="imagen_obra" />
         {imagePreviewUrl ? (
           <img src={imagePreviewUrl} alt="" className="obra-edit-imagen-actual" />
@@ -2586,7 +2684,7 @@ function ObraEditForm({
         )}
         {removerImagen && <p className="field-note">{t("obraDetail.imagenSeEliminara")}</p>}
         <div className="image-file-field-row">
-          <ImageFileField value={imageFile} onChange={handleImageChange} />
+          <ImageFileField value={imageFile} onChange={handleImageChange} hasImage={!removerImagen && !!thumbnailUrl} />
           {(imageFile || thumbnailUrl) &&
             (!removerImagen ? (
               <button type="button" onClick={handleQuitarImagen}>
@@ -2640,9 +2738,6 @@ function ObraEditForm({
           {eraSeriada && !esSeriadaCalculada && !puedeDesconvertir && (
             <p className="field-note">{t("obraDetail.noSePuedeDeshacerSerie")}</p>
           )}
-          {!eraSeriada && esSeriadaCalculada && !puedeConvertir && (
-            <p className="field-note">{t("obraDetail.errorObraYaVendida")}</p>
-          )}
           {!eraSeriada && esSeriadaCalculada && (
             <label>
               {t("obraForm.cantidadEdicionesLabel")} <HelpIcon fieldKey="pruebas_artista" />
@@ -2669,7 +2764,7 @@ function ObraEditForm({
             <input
               type="checkbox"
               checked={esSeriada}
-              disabled={(eraSeriada && !puedeDesconvertir) || (!eraSeriada && !puedeConvertir)}
+              disabled={eraSeriada && !puedeDesconvertir}
               onChange={(e) => {
                 setEsSeriada(e.target.checked);
                 setConfirmandoPerdidaDatosEjemplares(false);
@@ -2680,10 +2775,7 @@ function ObraEditForm({
           {eraSeriada && !puedeDesconvertir && (
             <p className="field-note">{t("obraDetail.noSePuedeDeshacerSerie")}</p>
           )}
-          {!eraSeriada && !puedeConvertir && (
-            <p className="field-note">{t("obraDetail.errorObraYaVendida")}</p>
-          )}
-          {cambiaSeriada && hayDatosCargadosEnEjemplares && (
+          {eraSeriada && !esSeriadaCalculada && hayDatosCargadosEnEjemplares && (
             <p className="error" role="alert">
               ⚠️ {t("obraDetail.avisoPierdeDatosEjemplares")}
             </p>
@@ -2708,7 +2800,21 @@ function ObraEditForm({
       </div>
 
 
-      {confirmandoPerdidaDatosEjemplares ? (
+      {confirmandoSalir ? (
+        <>
+          <p className="error" role="alert">
+            ⚠️ {t("obraDetail.confirmarSalirPregunta")}
+          </p>
+          <div className="obra-form-saved-actions">
+            <button type="button" onClick={onCancel}>
+              {t("obraDetail.confirmarSalirBoton")}
+            </button>
+            <button type="button" onClick={() => setConfirmandoSalir(false)}>
+              {t("obraDetail.seguirEditando")}
+            </button>
+          </div>
+        </>
+      ) : confirmandoPerdidaDatosEjemplares ? (
         <>
           <p className="error" role="alert">
             ⚠️ {t("obraDetail.confirmarPerdidaDatosEjemplaresPregunta")}
@@ -2731,7 +2837,7 @@ function ObraEditForm({
           <button type="button" onClick={handleSubmit} disabled={submitting}>
             {submitting ? t("common.saving") : t("obraDetail.guardarCambios")}
           </button>
-          <button type="button" onClick={onCancel} disabled={submitting}>
+          <button type="button" onClick={handleCancelClick} disabled={submitting}>
             {t("common.cancel")}
           </button>
         </div>

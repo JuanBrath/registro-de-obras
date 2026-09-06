@@ -208,6 +208,7 @@ export const es = {
   "obraForm.regimenIngresoDepositoColeccionPrivada": "Depósito de colección privada",
   "obraForm.regimenIngresoCompraFirmeGaleria": "Compra en firme de la galería",
   "obraForm.historialProcedenciaExhibicionesLabel": "Historial de procedencia y exhibiciones",
+  "obraForm.notasLabel": "Notas",
   "obraForm.artistaLabel": "Artista",
   "obraForm.ubicacionArchivoLabel": "Ubicación del archivo original",
   "obraForm.ubicacionNegativoLabel": "Ubicación del negativo",
@@ -734,6 +735,7 @@ export const es = {
   "obraDetail.dimensiones": "Dimensiones: {{valor}}",
   "obraDetail.escalaPorTamanos": "Escala por tamaños",
   "obraDetail.peso": "Peso: {{valor}}",
+  "obraDetail.notas": "Notas: {{valor}}",
   "obraDetail.editarObra": "Editar obra",
   "obraDetail.generarFichaPdf": "Generar ficha PDF",
   "obraDetail.fichaPdfGenerada": "Ficha PDF generada correctamente.",
@@ -815,10 +817,12 @@ export const es = {
   "obraDetail.faltaSoporteImpresion": "el soporte de impresión",
   "obraDetail.noSePuedeDeshacerSerie":
     "No se puede convertir en obra única: ya hay ejemplares vendidos, reservados, en exhibición, en consignación, en la colección del autor, descartados o destruidos.",
-  "obraDetail.errorObraYaVendida": "No se puede convertir en obra seriada: la obra ya fue vendida o reservada.",
   "obraDetail.avisoPierdeDatosEjemplares":
     "Ya hay datos cargados en los ejemplares de esta obra (fecha de impresión, medidas, certificado, notas, etc.). Si guardás este cambio, todos esos ejemplares se borran y se crean de nuevo en blanco.",
   "obraDetail.confirmarPerdidaDatosEjemplaresPregunta": "¿Guardar igual y perder esos datos? Esta acción no se puede deshacer.",
   "obraDetail.confirmarPerdidaDatosEjemplaresBoton": "Sí, guardar y perder esos datos",
+  "obraDetail.confirmarSalirPregunta": "Hiciste cambios sin guardar. ¿Salir igual y abandonarlos?",
+  "obraDetail.confirmarSalirBoton": "Sí, salir sin guardar",
+  "obraDetail.seguirEditando": "Seguir editando",
   "obraDetail.estadoTrasAnularPregunta": "¿En qué estado queda la copia?",
 } as const;
