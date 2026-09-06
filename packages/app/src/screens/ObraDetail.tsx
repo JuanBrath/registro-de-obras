@@ -8,6 +8,7 @@ import {
   obraMiniaturaPath,
   obraOriginalPath,
   parseTags,
+  puedeConvertirASeriada,
   puedeDeshacerSerie,
   type CategoriaObra,
   type EstadoLiquidacion,
@@ -1387,8 +1388,12 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
     const cambiaSeriada = eraSeriada !== fields.esSeriada;
     const cambiaCategoria = obra.categoria_obra !== fields.categoria;
 
-    if (cambiaSeriada && !puedeDeshacerSerie(ejemplares.map((ej) => ej.estado))) {
-      throw new Error(fields.esSeriada ? t("obraDetail.errorObraYaVendida") : t("obraDetail.noSePuedeDeshacerSerie"));
+    if (cambiaSeriada) {
+      const estados = ejemplares.map((ej) => ej.estado);
+      const permitido = fields.esSeriada ? puedeConvertirASeriada(estados) : puedeDeshacerSerie(estados);
+      if (!permitido) {
+        throw new Error(fields.esSeriada ? t("obraDetail.errorObraYaVendida") : t("obraDetail.noSePuedeDeshacerSerie"));
+      }
     }
 
     await context.db.transaction(async (tx) => {
@@ -2298,6 +2303,7 @@ function ObraEditForm({
 
   const permiteCambiarSeriada = categoriaObra !== "ObraGrafica";
   const puedeDesconvertir = puedeDeshacerSerie(ejemplares.map((ej) => ej.estado));
+  const puedeConvertir = puedeConvertirASeriada(ejemplares.map((ej) => ej.estado));
   const esSeriadaCalculada =
     categoriaObra === "ObraGrafica"
       ? obraDetalle.subtipo
@@ -2634,6 +2640,9 @@ function ObraEditForm({
           {eraSeriada && !esSeriadaCalculada && !puedeDesconvertir && (
             <p className="field-note">{t("obraDetail.noSePuedeDeshacerSerie")}</p>
           )}
+          {!eraSeriada && esSeriadaCalculada && !puedeConvertir && (
+            <p className="field-note">{t("obraDetail.errorObraYaVendida")}</p>
+          )}
           {!eraSeriada && esSeriadaCalculada && (
             <label>
               {t("obraForm.cantidadEdicionesLabel")} <HelpIcon fieldKey="pruebas_artista" />
@@ -2660,7 +2669,7 @@ function ObraEditForm({
             <input
               type="checkbox"
               checked={esSeriada}
-              disabled={eraSeriada && !puedeDesconvertir}
+              disabled={(eraSeriada && !puedeDesconvertir) || (!eraSeriada && !puedeConvertir)}
               onChange={(e) => {
                 setEsSeriada(e.target.checked);
                 setConfirmandoPerdidaDatosEjemplares(false);
@@ -2670,6 +2679,9 @@ function ObraEditForm({
           </label>
           {eraSeriada && !puedeDesconvertir && (
             <p className="field-note">{t("obraDetail.noSePuedeDeshacerSerie")}</p>
+          )}
+          {!eraSeriada && !puedeConvertir && (
+            <p className="field-note">{t("obraDetail.errorObraYaVendida")}</p>
           )}
           {cambiaSeriada && hayDatosCargadosEnEjemplares && (
             <p className="error" role="alert">
