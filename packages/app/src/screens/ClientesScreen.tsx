@@ -275,6 +275,12 @@ export function ClientesScreen({ onBack }: { onBack: () => void }) {
 
   async function handleDeleteCliente(id: number) {
     if (!context) return;
+    const count = await context.db.query<{ n: number }>("SELECT COUNT(*) as n FROM venta WHERE cliente_id = ?", [
+      id,
+    ]);
+    if (count[0].n > 0) {
+      throw new Error(t("clientes.errorTieneVentas", { n: count[0].n }));
+    }
     await context.db.execute("DELETE FROM cliente WHERE id = ?", [id]);
     await reload();
   }

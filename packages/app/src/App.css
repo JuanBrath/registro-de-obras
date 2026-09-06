@@ -417,7 +417,7 @@ input[type="date"] {
 .obras-list,
 .obra-detail {
   max-width: 900px;
-  margin: 2rem auto;
+  margin: 0.5rem auto 2rem;
   text-align: left;
 }
 

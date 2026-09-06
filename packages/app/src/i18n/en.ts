@@ -464,6 +464,7 @@ export const en: Record<keyof typeof es, string> = {
   "clientes.clientesRegistrados": "Registered clients",
   "clientes.sinClientes": "No clients registered yet.",
   "clientes.confirmarEliminar": "Delete this client? This cannot be undone.",
+  "clientes.errorTieneVentas": "This client has {{n}} registered sale(s) — it can't be deleted.",
   "clientes.informeOpcionConDatos": "Sheet with current data",
   "clientes.informeOpcionBlancoInterno": "Blank sheet to complete (internal use)",
   "clientes.informeOpcionBlancoCliente": "Blank sheet for the client to complete",
@@ -568,6 +569,9 @@ export const en: Record<keyof typeof es, string> = {
   "obrasList.sinObras": "You haven't added any artworks yet.",
   "obrasList.todas": "All",
   "obrasList.sinResultados": "No artworks matched those filters.",
+  "obrasList.ordenarPorLabel": "Sort by",
+  "obrasList.ordenarPorTitulo": "Name",
+  "obrasList.ordenarPorCodigoInventario": "Inventory number",
 
   // Obras report list
   "informesObras.generarInforme": "Generate report",
@@ -738,6 +742,7 @@ export const en: Record<keyof typeof es, string> = {
   "obraDetail.escalaPorTamanos": "Scales by size",
   "obraDetail.peso": "Weight: {{valor}}",
   "obraDetail.notas": "Notes: {{valor}}",
+  "obraDetail.codigoInventario": "Inventory code / SKU: {{valor}}",
   "obraDetail.editarObra": "Edit artwork",
   "obraDetail.generarFichaPdf": "Generate PDF sheet",
   "obraDetail.fichaPdfGenerada": "PDF sheet generated successfully.",

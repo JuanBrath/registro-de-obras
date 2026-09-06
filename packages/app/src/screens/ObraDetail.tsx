@@ -1873,6 +1873,9 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
           )}
           <div>
             <p>{t("obraDetail.artista", { nombre: obra.nombre_completo })}</p>
+            {obra.codigo_inventario && (
+              <p>{t("obraDetail.codigoInventario", { valor: obra.codigo_inventario })}</p>
+            )}
             <p>{t("obraDetail.categoria", { categoria: t(`categoria.${obra.categoria_obra}` as TranslationKey) })}</p>
             {ext?.subtipo_fotografia && (
               <p>
@@ -1897,9 +1900,16 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
             {ext?.tecnica && <p>{t("obraDetail.tecnica", { valor: ext.tecnica })}</p>}
             {ext?.dimensiones && <p>{t("obraDetail.dimensiones", { valor: ext.dimensiones })}</p>}
             {ext?.peso && <p>{t("obraDetail.peso", { valor: ext.peso })}</p>}
-            {obra.notas && (
-              <p style={{ whiteSpace: "pre-wrap" }}>{t("obraDetail.notas", { valor: obra.notas })}</p>
-            )}
+            {obra.notas &&
+              (() => {
+                const primeraLinea = obra.notas.split("\n")[0];
+                const hayMasContenido = obra.notas.length > primeraLinea.length;
+                return (
+                  <p>
+                    {t("obraDetail.notas", { valor: hayMasContenido ? `${primeraLinea}…` : primeraLinea })}
+                  </p>
+                );
+              })()}
             <div className="obra-form-saved-actions">
               <button type="button" onClick={() => setEditingObra(true)}>
                 {t("obraDetail.editarObra")}

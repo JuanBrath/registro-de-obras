@@ -462,6 +462,7 @@ export const es = {
   "clientes.clientesRegistrados": "Clientes registrados",
   "clientes.sinClientes": "Todavía no hay clientes registrados.",
   "clientes.confirmarEliminar": "¿Eliminar este cliente? No se puede deshacer.",
+  "clientes.errorTieneVentas": "Este cliente tiene {{n}} venta(s) registradas — no se puede eliminar.",
   "clientes.informeOpcionConDatos": "Ficha con los datos actuales",
   "clientes.informeOpcionBlancoInterno": "Ficha en blanco para completar (uso interno)",
   "clientes.informeOpcionBlancoCliente": "Ficha en blanco para que la complete el cliente",
@@ -566,6 +567,9 @@ export const es = {
   "obrasList.sinObras": "Todavía no cargaste ninguna obra.",
   "obrasList.todas": "Todas",
   "obrasList.sinResultados": "No se encontraron obras con esos filtros.",
+  "obrasList.ordenarPorLabel": "Ordenar por",
+  "obrasList.ordenarPorTitulo": "Nombre",
+  "obrasList.ordenarPorCodigoInventario": "Número de inventario",
 
   // Informes de Obras (listado)
   "informesObras.generarInforme": "Generar informe",
@@ -736,6 +740,7 @@ export const es = {
   "obraDetail.escalaPorTamanos": "Escala por tamaños",
   "obraDetail.peso": "Peso: {{valor}}",
   "obraDetail.notas": "Notas: {{valor}}",
+  "obraDetail.codigoInventario": "Código de inventario / SKU: {{valor}}",
   "obraDetail.editarObra": "Editar obra",
   "obraDetail.generarFichaPdf": "Generar ficha PDF",
   "obraDetail.fichaPdfGenerada": "Ficha PDF generada correctamente.",

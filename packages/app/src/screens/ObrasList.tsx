@@ -89,6 +89,7 @@ export function ObrasList({
   const [selectedSubtipo, setSelectedSubtipo] = useState<string | null>(null);
   const [busqueda, setBusqueda] = useState("");
   const [soloMarcadas, setSoloMarcadas] = useState(false);
+  const [ordenPor, setOrdenPor] = useState<"titulo" | "codigo_inventario">("titulo");
   const objectUrlsRef = useRef<string[]>([]);
 
   const [informesMenuAbierto, setInformesMenuAbierto] = useState(false);
@@ -207,7 +208,7 @@ export function ObrasList({
 
   const filteredObras = useMemo(() => {
     const busquedaNorm = busqueda.trim().toLowerCase();
-    return obras.filter((o) => {
+    const filtradas = obras.filter((o) => {
       if (soloMarcadas && o.marcada === 0) return false;
       if (selectedTag && !parseTags(o.tags).includes(selectedTag)) return false;
       if (esGaleria && selectedArtistaId !== null && o.artista_id !== selectedArtistaId) return false;
@@ -227,6 +228,16 @@ export function ObrasList({
       const enEtiquetas = !esRegistroPersonal && parseTags(o.tags).some((tag) => tag.toLowerCase().includes(busquedaNorm));
       return enTitulo || enArtista || enNumero || enCodigoInventario || enEtiquetas;
     });
+
+    if (ordenPor === "codigo_inventario") {
+      return [...filtradas].sort((a, b) => {
+        if (!a.codigo_inventario && !b.codigo_inventario) return 0;
+        if (!a.codigo_inventario) return 1;
+        if (!b.codigo_inventario) return -1;
+        return a.codigo_inventario.localeCompare(b.codigo_inventario, undefined, { sensitivity: "base", numeric: true });
+      });
+    }
+    return [...filtradas].sort((a, b) => a.titulo.localeCompare(b.titulo, undefined, { sensitivity: "base" }));
   }, [
     obras,
     selectedTag,
@@ -237,6 +248,7 @@ export function ObrasList({
     soloMarcadas,
     esRegistroPersonal,
     esGaleria,
+    ordenPor,
   ]);
 
   const hayMarcadas = useMemo(() => obras.some((o) => o.marcada !== 0), [obras]);
@@ -397,6 +409,11 @@ export function ObrasList({
         >
           {t("workspaceHome.galeriaFotos")}
         </button>
+        {obras.length > 0 && (
+          <button type="button" onClick={handleAbrirInformesMenu} disabled={filteredObras.length === 0}>
+            {t("informesObras.generarInforme")}
+          </button>
+        )}
       </div>
 
       {loading && <p>{t("common.loading")}</p>}
@@ -415,12 +432,16 @@ export function ObrasList({
         </div>
       )}
 
-      {(esGaleria ? allArtistas.length > 0 : false) ||
-      allCategorias.length > 0 ||
-      allSubtipos.length > 0 ||
-      allTags.length > 0 ||
-      hayMarcadas ? (
+      {obras.length > 0 ? (
         <div className="galeria-filtros-selects">
+          <label className="galeria-filtro-artista">
+            {t("obrasList.ordenarPorLabel")}
+            <select value={ordenPor} onChange={(e) => setOrdenPor(e.target.value as "titulo" | "codigo_inventario")}>
+              <option value="titulo">{t("obrasList.ordenarPorTitulo")}</option>
+              <option value="codigo_inventario">{t("obrasList.ordenarPorCodigoInventario")}</option>
+            </select>
+          </label>
+
           {esGaleria && allArtistas.length > 0 && (
             <label className="galeria-filtro-artista">
               {t("obraForm.artistaLabel")}
@@ -490,14 +511,6 @@ export function ObrasList({
           )}
         </div>
       ) : null}
-
-      {obras.length > 0 && (
-        <div className="header-actions obras-list-options">
-          <button type="button" onClick={handleAbrirInformesMenu} disabled={filteredObras.length === 0}>
-            {t("informesObras.generarInforme")}
-          </button>
-        </div>
-      )}
 
       {!loading && obras.length > 0 && filteredObras.length === 0 && <p>{t("obrasList.sinResultados")}</p>}
 
