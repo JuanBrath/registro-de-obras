@@ -123,6 +123,7 @@ export const es = {
   "ventasReport.title": "Ventas",
   "ventasReport.desde": "Desde",
   "ventasReport.hasta": "Hasta",
+  "ventasReport.errorRangoFechasInvalido": "La fecha \"Hasta\" no puede ser anterior a la fecha \"Desde\".",
   "ventasReport.cliente": "Cliente",
   "ventasReport.todosLosClientes": "Todos",
   "ventasReport.artista": "Artista",
@@ -175,6 +176,18 @@ export const es = {
   "settings.letraChica": "Chica",
   "settings.letraMediana": "Mediana",
   "settings.letraGrande": "Grande",
+  "settings.carpetaDatos": "Carpeta de datos",
+  "settings.cambiarCarpetaNota":
+    "Le indica a Galeris una carpeta distinta para leer y guardar los datos de este registro. Si la carpeta que elijas ya tiene datos de Galeris (por ejemplo, porque moviste la carpeta original a un disco externo), se van a usar esos. Si elegís una carpeta vacía, se va a empezar de cero. Después de cambiarla, volvés a la pantalla de inicio para reabrir el registro.",
+  "settings.cambiarCarpetaBoton": "Cambiar carpeta…",
+  "settings.moverCarpetaNota":
+    "Si preferís que Galeris mueva todo por vos: copia automáticamente la base de datos, las fotos y los certificados a una carpeta nueva que elijas, y actualiza Galeris para que use esa carpeta de ahí en más. La carpeta anterior nunca se borra sola — vos decidís si borrarla, y recién se pregunta una vez confirmado que todo quedó funcionando bien en la nueva.",
+  "settings.moverCarpetaBoton": "Mover carpeta automáticamente…",
+  "settings.moverCarpetaProgreso": "Copiando archivo {{copiados}} de {{total}}…",
+  "settings.moverCarpetaExito": "Todo se copió y quedó funcionando correctamente en la nueva carpeta: {{nueva}}",
+  "settings.moverCarpetaCarpetaVieja": "La carpeta anterior sigue intacta en: {{vieja}}",
+  "settings.moverCarpetaBorrarAhora": "Borrar la carpeta anterior ahora",
+  "settings.moverCarpetaDejarla": "Dejarla, la borro yo después",
   "settings.numeradoresAutomaticos": "Numeradores automáticos",
   "settings.resetearNumeradoresBoton": "Resetear numeradores automáticos",
   "settings.resetearNumeradoresAdvertencia": "Todos los numeradores automáticos (número de artista y número de certificado de venta) volverán a empezar desde el principio. Esto puede generar duplicidad con la numeración interna ya asignada a artistas o certificados existentes. Esta acción no se puede deshacer. ¿Confirmás?",
@@ -200,7 +213,7 @@ export const es = {
   "obraForm.ubicacionNegativoLabel": "Ubicación del negativo",
   "obraForm.categoriaLabel": "Categoría",
   "obraForm.cantidadEdicionesLabel": "Cantidad total de ediciones",
-  "obraForm.etiquetasLabel": "Palabras Claves",
+  "obraForm.etiquetasLabel": "Etiquetas",
   "obraForm.imagenLabel": "Imagen de la obra",
   "obraDetail.quitarImagen": "Quitar imagen",
   "obraDetail.deshacerQuitarImagen": "Deshacer",
@@ -208,6 +221,7 @@ export const es = {
   "obraForm.guardarObra": "Guardar obra",
   "obraForm.errorNoSePudoGuardar": "No se pudo guardar: {{error}}",
   "obraForm.errorElegirArtista": "Elegí un artista de la lista antes de guardar.",
+  "obraForm.errorTituloRequerido": "El título no puede quedar vacío.",
   "obraForm.elegirCategoria": "Elegir categoría…",
   "obraForm.elegirSubtipo": "Elegir subtipo…",
   "obraForm.errorElegirCategoria": "Elegí una categoría antes de guardar.",
@@ -581,7 +595,7 @@ export const es = {
   // GaleriaFotos
   "galeria.title": "Galería de obras",
   "galeria.sinFotos": "Todavía no hay fotos cargadas.",
-  "galeria.ningunaConEtiqueta": "Ninguna foto tiene esa palabra clave.",
+  "galeria.ningunaConEtiqueta": "Ninguna foto tiene esa etiqueta.",
   "galeria.anterior": "Anterior",
   "galeria.siguiente": "Siguiente",
   "galeria.verInfo": "Ver información de la obra",
@@ -596,8 +610,8 @@ export const es = {
   "galeria.desmarcarTodas": "Deseleccionar todas",
 
   // TagPicker
-  "tagPicker.placeholder": "Elegir o escribir una palabra clave…",
-  "tagPicker.quitarEtiqueta": "Quitar palabra clave {{tag}}",
+  "tagPicker.placeholder": "Elegir o escribir una etiqueta…",
+  "tagPicker.quitarEtiqueta": "Quitar etiqueta {{tag}}",
 
   // FilePathField
   "filePathField.elegirArchivo": "Elegir archivo…",
@@ -618,12 +632,13 @@ export const es = {
   "ventaForm.tituloNuevo": "Venta / Reserva / Donación",
   "ventaForm.tipoLegend": "Tipo",
   "ventaForm.numeroCertificado": "Número de certificado",
-  "ventaForm.clienteRegistrado": "Cliente registrado",
-  "ventaForm.seleccionarCliente": "Seleccionar cliente…",
+  "ventaForm.clienteRegistrado": "Vincular a un cliente ya registrado (opcional)",
+  "ventaForm.seleccionarCliente": "— (comprador nuevo, se carga abajo)",
   "ventaForm.confirmarSalirSinGuardar": "Hay cambios sin guardar. Si salís ahora, se van a perder.",
   "ventaForm.salirSinGuardar": "Salir sin guardar",
   "ventaForm.seguirEditando": "Seguir editando",
-  "ventaForm.compradorSinVincular": "Comprador cargado sin vincular a un cliente registrado: {{nombre}}",
+  "ventaForm.compradorNombreLabel": "Nombre del comprador",
+  "ventaForm.compradorNombreNota": "Si no elegís un cliente ya registrado, se crea uno nuevo automáticamente con estos datos al guardar (para que quede en las estadísticas e informes de clientes).",
   "ventaForm.fechaVenta": "Fecha de venta",
   "ventaForm.fechaReserva": "Fecha de reserva",
   "ventaForm.fechaDonacion": "Fecha de donación",
@@ -633,6 +648,8 @@ export const es = {
   "ventaForm.lugarDonacion": "Lugar de donación",
   "ventaForm.valorVenta": "Valor de venta",
   "ventaForm.valorReserva": "Valor de reserva",
+  "ventaForm.senaMontoLabel": "Monto de la seña",
+  "ventaForm.senaMoneda": "Moneda de la seña",
   "ventaForm.moneda": "Moneda",
   "ventaForm.aplicaComision": "Aplica comisión de galería",
   "ventaForm.porcentajeComision": "Porcentaje de comisión",
@@ -743,6 +760,10 @@ export const es = {
   "obraDetail.estadoLabel": "Estado",
   "obraDetail.estadoBloqueadoPorVenta":
     "El estado no se puede cambiar acá porque este ejemplar tiene una venta, reserva o donación registrada. Para cambiarlo, modificá o anulá esa venta/reserva/donación.",
+  "obraDetail.estadoVendidaReservadaRequiereVenta":
+    "\"Vendida\" y \"Reservada\" no se pueden elegir acá: usá el botón \"Venta / Reserva\" para cargar los datos del comprador y que quede todo registrado correctamente.",
+  "obraDetail.coleccionAutorNoDisponibleVenta":
+    "Esta pieza forma parte de la colección del autor: no está disponible para la venta ni para reserva.",
   "obraDetail.guardarCambios": "Guardar cambios",
   "obraDetail.serieNumeroLabel": "Número de serie",
   "obraDetail.fechaImpresion": "Fecha de impresión",
@@ -793,7 +814,11 @@ export const es = {
   "obraDetail.faltaFechaImpresion": "la fecha de impresión",
   "obraDetail.faltaSoporteImpresion": "el soporte de impresión",
   "obraDetail.noSePuedeDeshacerSerie":
-    "No se puede convertir en obra única: ya hay ejemplares vendidos, reservados o en exhibición.",
+    "No se puede convertir en obra única: ya hay ejemplares vendidos, reservados, en exhibición, en consignación, en la colección del autor, descartados o destruidos.",
   "obraDetail.errorObraYaVendida": "No se puede convertir en obra seriada: la obra ya fue vendida o reservada.",
+  "obraDetail.avisoPierdeDatosEjemplares":
+    "Ya hay datos cargados en los ejemplares de esta obra (fecha de impresión, medidas, certificado, notas, etc.). Si guardás este cambio, todos esos ejemplares se borran y se crean de nuevo en blanco.",
+  "obraDetail.confirmarPerdidaDatosEjemplaresPregunta": "¿Guardar igual y perder esos datos? Esta acción no se puede deshacer.",
+  "obraDetail.confirmarPerdidaDatosEjemplaresBoton": "Sí, guardar y perder esos datos",
   "obraDetail.estadoTrasAnularPregunta": "¿En qué estado queda la copia?",
 } as const;

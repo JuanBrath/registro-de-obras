@@ -22,6 +22,8 @@ pub fn run() {
       fs_commands::fs_resolve_absolute,
       fs_commands::fs_write_absolute,
       fs_commands::fs_read_absolute,
+      fs_commands::fs_copiar_carpeta,
+      fs_commands::fs_remove_workspace_root,
       db_commands::db_begin,
       db_commands::db_tx_execute,
       db_commands::db_tx_query,

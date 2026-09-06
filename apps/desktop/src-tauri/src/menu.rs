@@ -57,7 +57,12 @@ impl Default for MenuState {
 // once real subscription validation exists, this submenu goes away (or
 // becomes read-only) and getEdicion() on the JS side starts asking the real
 // backend instead of the local store — this file doesn't need to change.
-pub fn build_menu<R: Runtime>(app: &AppHandle<R>, lang: &str, edicion: &str, tema: &str) -> tauri::Result<Menu<R>> {
+// El submenu "Edicion (prueba)" se saco de la barra de menu durante la Fase 1
+// (Studio local) para no tentar a probar Space/Suite antes de tiempo. El
+// parametro se deja sin usar (no se borra el resto de la maquinaria de
+// MenuState/set_app_menu_edicion) para poder reponer el submenu mas facil
+// cuando llegue la Fase 4.
+pub fn build_menu<R: Runtime>(app: &AppHandle<R>, lang: &str, _edicion: &str, tema: &str) -> tauri::Result<Menu<R>> {
     let es = lang != "en";
 
     let app_menu = SubmenuBuilder::new(app, app.package_info().name.clone())
@@ -123,27 +128,6 @@ pub fn build_menu<R: Runtime>(app: &AppHandle<R>, lang: &str, edicion: &str, tem
         )
         .build()?;
 
-    let edicion_menu = SubmenuBuilder::new(app, if es { "Edición (prueba)" } else { "Edition (preview)" })
-        .item(
-            &CheckMenuItemBuilder::with_id(EDICION_PERSONAL_ID, "Personal")
-                .checked(edicion == "personal")
-                .build(app)?,
-        )
-        .item(
-            &CheckMenuItemBuilder::with_id(EDICION_GALERIA_ID, if es { "Galería" } else { "Gallery" })
-                .checked(edicion == "galeria")
-                .build(app)?,
-        )
-        .item(
-            &CheckMenuItemBuilder::with_id(
-                EDICION_PERSONAL_GALERIA_ID,
-                if es { "Personal + Galería" } else { "Personal + Gallery" },
-            )
-            .checked(edicion == "personal_galeria")
-            .build(app)?,
-        )
-        .build()?;
-
     let tema_menu = SubmenuBuilder::new(app, if es { "Apariencia" } else { "Appearance" })
         .item(
             &CheckMenuItemBuilder::with_id(TEMA_CLARO_ID, if es { "Claro" } else { "Light" })
@@ -195,7 +179,7 @@ pub fn build_menu<R: Runtime>(app: &AppHandle<R>, lang: &str, edicion: &str, tem
         .build()?;
 
     MenuBuilder::new(app)
-        .items(&[&app_menu, &edit_menu, &lang_menu, &edicion_menu, &tema_menu, &window_menu])
+        .items(&[&app_menu, &edit_menu, &lang_menu, &tema_menu, &window_menu])
         .build()
 }
 

@@ -375,12 +375,12 @@ export function ObrasList({
   if (!context) return null;
 
   return (
-    <div className="obras-list">
+    <div className="obras-list obras-list-grid-ancho">
       <div className="obras-list-header">
         <h1>{t("obrasList.title")}</h1>
         <div className="header-actions">
-          <button type="button" onClick={onBack}>
-            {t("common.back")}
+          <button type="button" className="header-close-button" onClick={onBack} aria-label={t("common.back")} title={t("common.back")}>
+            ✕
           </button>
         </div>
       </div>
@@ -566,6 +566,12 @@ export function ObrasList({
             </button>
           </div>
         ))}
+      </div>
+
+      <div className="screen-footer-back">
+        <button type="button" onClick={onBack}>
+          {t("common.back")}
+        </button>
       </div>
 
       {informesMenuAbierto && (

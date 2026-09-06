@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { calcularPorcentajeComision, type EstadoLiquidacion, type EstadoPago, type Moneda, type TipoVenta } from "@registro/core";
+import {
+  calcularPorcentajeComision,
+  type DatabaseAdapter,
+  type EstadoLiquidacion,
+  type EstadoPago,
+  type Moneda,
+  type TipoVenta,
+} from "@registro/core";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { HelpIcon } from "./HelpIcon.js";
 import { CampoFecha, BotonCalendario } from "./CampoFecha.js";
@@ -49,6 +56,8 @@ export interface VentaExistente {
   confidencial: boolean;
   clausulaReventa: string | null;
   asesorVenta: string | null;
+  senaMonto: number | null;
+  senaMoneda: Moneda | null;
 }
 
 interface ClienteOption {
@@ -98,13 +107,6 @@ export function VentaForm({
 
   const [clientes, setClientes] = useState<ClienteOption[]>([]);
   const [clienteId, setClienteId] = useState<number | null>(existingVenta?.clienteId ?? null);
-  const [addingCliente, setAddingCliente] = useState(false);
-  const [nuevoClienteNombre, setNuevoClienteNombre] = useState("");
-  const [nuevoClienteEmail, setNuevoClienteEmail] = useState("");
-  const [nuevoClienteTelefono, setNuevoClienteTelefono] = useState("");
-  const [creandoCliente, setCreandoCliente] = useState(false);
-  const [errorCliente, setErrorCliente] = useState<string | null>(null);
-  useEscapeToDismiss(errorCliente, setErrorCliente);
   const [compradorNombre, setCompradorNombre] = useState(existingVenta?.compradorNombre ?? "");
   const [compradorEmail, setCompradorEmail] = useState(existingVenta?.compradorEmail ?? "");
   const [compradorTelefono, setCompradorTelefono] = useState(existingVenta?.compradorTelefono ?? "");
@@ -112,6 +114,8 @@ export function VentaForm({
   const [lugarVenta, setLugarVenta] = useState(existingVenta?.lugarVenta ?? "");
   const [moneda, setMoneda] = useState<Moneda>(existingVenta?.moneda ?? "ARS");
   const [valorVenta, setValorVenta] = useState(existingVenta ? String(existingVenta.valorVenta) : "");
+  const [senaMonto, setSenaMonto] = useState(existingVenta?.senaMonto != null ? String(existingVenta.senaMonto) : "");
+  const [senaMoneda, setSenaMoneda] = useState<Moneda>(existingVenta?.senaMoneda ?? "ARS");
   const [aplicaComision, setAplicaComision] = useState(existingVenta?.aplicaComision ?? false);
   const [porcentajeComision, setPorcentajeComision] = useState(
     existingVenta?.porcentajeComision != null ? String(existingVenta.porcentajeComision) : "",
@@ -187,6 +191,8 @@ export function VentaForm({
       lugarVenta: existingVenta?.lugarVenta ?? "",
       moneda: existingVenta?.moneda ?? "ARS",
       valorVenta: existingVenta ? String(existingVenta.valorVenta) : "",
+      senaMonto: existingVenta?.senaMonto != null ? String(existingVenta.senaMonto) : "",
+      senaMoneda: existingVenta?.senaMoneda ?? "ARS",
       aplicaComision: existingVenta?.aplicaComision ?? false,
       porcentajeComision: existingVenta?.porcentajeComision != null ? String(existingVenta.porcentajeComision) : "",
       montoComision: existingVenta?.montoComision != null ? String(existingVenta.montoComision) : "",
@@ -229,6 +235,8 @@ export function VentaForm({
       lugarVenta,
       moneda,
       valorVenta,
+      senaMonto,
+      senaMoneda,
       aplicaComision,
       porcentajeComision,
       montoComision,
@@ -296,44 +304,21 @@ export function VentaForm({
     }
   }
 
-  async function handleCrearCliente() {
-    if (!context || !nuevoClienteNombre.trim()) return;
-    setCreandoCliente(true);
-    setErrorCliente(null);
-    try {
-      const nombre = nuevoClienteNombre.trim();
-      const email = nuevoClienteEmail.trim() || null;
-      const telefono = nuevoClienteTelefono.trim() || null;
-      const result = await context.db.execute(`INSERT INTO cliente (nombre, email, telefono) VALUES (?, ?, ?)`, [
-        nombre,
-        email,
-        telefono,
-      ]);
-      const nuevoId = result.lastInsertId;
-      if (!nuevoId) throw new Error(t("clientes.title"));
-      const nuevoCliente: ClienteOption = {
-        id: nuevoId,
-        nombre,
-        email,
-        telefono,
-        domicilio: null,
-        ciudad: null,
-        pais: null,
-      };
-      setClientes((prev) => [...prev, nuevoCliente].sort((a, b) => a.nombre.localeCompare(b.nombre)));
-      setClienteId(nuevoId);
-      setCompradorNombre(nuevoCliente.nombre);
-      setCompradorEmail(nuevoCliente.email ?? "");
-      setCompradorTelefono(nuevoCliente.telefono ?? "");
-      setAddingCliente(false);
-      setNuevoClienteNombre("");
-      setNuevoClienteEmail("");
-      setNuevoClienteTelefono("");
-    } catch (err) {
-      setErrorCliente(err instanceof Error ? err.message : String(err));
-    } finally {
-      setCreandoCliente(false);
-    }
+  // El comprador se puede anotar como nombre suelto, sin elegir un cliente
+  // existente: si no hay uno vinculado, se crea un cliente nuevo a partir de
+  // esos datos al guardar (para que futuras estadisticas/informes de
+  // clientes lo tengan en cuenta), en vez de exigir pasar por el alta de
+  // cliente antes de poder cargar la venta.
+  async function resolverClienteId(tx: DatabaseAdapter): Promise<number | null> {
+    if (clienteId) return clienteId;
+    const nombre = compradorNombre.trim();
+    if (!nombre) return null;
+    const result = await tx.execute(`INSERT INTO cliente (nombre, email, telefono) VALUES (?, ?, ?)`, [
+      nombre,
+      compradorEmail.trim() || null,
+      compradorTelefono.trim() || null,
+    ]);
+    return result.lastInsertId ?? null;
   }
 
   function handlePorcentajeChange(nuevoPorcentaje: string) {
@@ -391,6 +376,8 @@ export function VentaForm({
     try {
       const { db } = context!;
       const valorVentaNum = esDonacion ? 0 : parseFloat(valorVenta) || 0;
+      const senaMontoNum = esReserva && senaMonto !== "" ? parseFloat(senaMonto) || 0 : null;
+      const senaMonedaVal = senaMontoNum != null ? senaMoneda : null;
       const aplica = !esDonacion && esGaleria && aplicaComision;
       const porcentaje = aplica ? parseFloat(porcentajeComision) || 0 : null;
       const montoComisionNum = aplica ? parseFloat(montoComision) || 0 : 0;
@@ -425,6 +412,7 @@ export function VentaForm({
 
       if (existingVenta) {
         await db.transaction(async (tx) => {
+          const finalClienteId = await resolverClienteId(tx);
           await tx.execute(
             `UPDATE venta SET
                cliente_id = ?, comprador_nombre = ?, comprador_email = ?, comprador_telefono = ?, fecha_venta = ?,
@@ -435,10 +423,10 @@ export function VentaForm({
                estado_pago = ?, metodo_pago = ?, fecha_cobro = ?, estado_liquidacion = ?,
                droit_suite_aplica = ?, droit_suite_porcentaje = ?, droit_suite_monto = ?,
                direccion_entrega = ?, ciudad_entrega = ?, pais_entrega = ?, confidencial = ?, clausula_reventa = ?,
-               asesor_venta = ?
+               asesor_venta = ?, sena_monto = ?, sena_moneda = ?
              WHERE id = ?`,
             [
-              clienteId,
+              finalClienteId,
               compradorNombre,
               compradorEmail || null,
               compradorTelefono || null,
@@ -475,6 +463,8 @@ export function VentaForm({
               confidencial ? 1 : 0,
               clausulaReventaVal,
               asesorVentaVal,
+              senaMontoNum,
+              senaMonedaVal,
               existingVenta.id,
             ],
           );
@@ -485,6 +475,7 @@ export function VentaForm({
         });
       } else {
         await db.transaction(async (tx) => {
+          const finalClienteId = await resolverClienteId(tx);
           let numeroCertificado: number | null = null;
           if (esVenta) {
             const counter = await tx.query<{ siguiente_numero: number }>(
@@ -503,14 +494,15 @@ export function VentaForm({
                costo_enmarcado, costo_peana, costo_embalaje, costo_transporte, costo_seguro,
                estado_pago, metodo_pago, fecha_cobro, estado_liquidacion,
                droit_suite_aplica, droit_suite_porcentaje, droit_suite_monto,
-               direccion_entrega, ciudad_entrega, pais_entrega, confidencial, clausula_reventa, asesor_venta
+               direccion_entrega, ciudad_entrega, pais_entrega, confidencial, clausula_reventa, asesor_venta,
+               sena_monto, sena_moneda
              )
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               obraId,
               ejemplarId,
               tipo,
-              clienteId,
+              finalClienteId,
               compradorNombre,
               compradorEmail || null,
               compradorTelefono || null,
@@ -548,6 +540,8 @@ export function VentaForm({
               confidencial ? 1 : 0,
               clausulaReventaVal,
               asesorVentaVal,
+              senaMontoNum,
+              senaMonedaVal,
             ],
           );
           const ventaId = insertVenta.lastInsertId;
@@ -587,15 +581,27 @@ export function VentaForm({
 
   return (
     <form className="venta-form" onSubmit={handleSubmit} onKeyDown={focusNextOnEnter}>
-      <h3>
-        {existingVenta
-          ? esVenta
-            ? t("common.editarVenta")
-            : esDonacion
-              ? t("common.editarDonacion")
-              : t("common.editarReserva")
-          : t("ventaForm.tituloNuevo")}
-      </h3>
+      <div className="obra-form-header">
+        <h3>
+          {existingVenta
+            ? esVenta
+              ? t("common.editarVenta")
+              : esDonacion
+                ? t("common.editarDonacion")
+                : t("common.editarReserva")
+            : t("ventaForm.tituloNuevo")}
+        </h3>
+        <button
+          type="button"
+          className="header-close-button"
+          onClick={handleVolverClick}
+          disabled={submitting}
+          aria-label={t("common.back")}
+          title={t("common.back")}
+        >
+          ✕
+        </button>
+      </div>
 
       {!existingVenta && (
         <fieldset>
@@ -623,71 +629,39 @@ export function VentaForm({
       )}
 
       <div>
-        <label>
-          {t("ventaForm.clienteRegistrado")}
-          <div className="artista-selector-row">
-            <select required value={clienteId ?? ""} onChange={(e) => handleClienteChange(e.target.value)}>
-              <option value="" disabled>
-                {t("ventaForm.seleccionarCliente")}
-              </option>
+        {clientes.length > 0 && (
+          <label>
+            {t("ventaForm.clienteRegistrado")}
+            <select value={clienteId ?? ""} onChange={(e) => handleClienteChange(e.target.value)}>
+              <option value="">{t("ventaForm.seleccionarCliente")}</option>
               {clientes.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.nombre}
                 </option>
               ))}
             </select>
-            {!addingCliente && (
-              <button type="button" onClick={() => setAddingCliente(true)}>
-                {t("clientes.nuevoCliente")}
-              </button>
-            )}
-          </div>
+          </label>
+        )}
+        <p className="field-note">{t("ventaForm.compradorNombreNota")}</p>
+        <div className="venta-form-row-2">
+          <label>
+            {t("ventaForm.compradorNombreLabel")}
+            <input
+              type="text"
+              required
+              value={compradorNombre}
+              onChange={(e) => setCompradorNombre(e.target.value)}
+            />
+          </label>
+          <label>
+            {t("profile.mail")}
+            <input type="email" value={compradorEmail} onChange={(e) => setCompradorEmail(e.target.value)} />
+          </label>
+        </div>
+        <label>
+          {t("artistas.telefono")}
+          <input type="tel" value={compradorTelefono} onChange={(e) => setCompradorTelefono(e.target.value)} />
         </label>
-        {!clienteId && compradorNombre && (
-          <p className="field-note">{t("ventaForm.compradorSinVincular", { nombre: compradorNombre })}</p>
-        )}
-
-        {addingCliente && (
-          <div className="artista-selector-new">
-            <label>
-              {t("clientes.nombreLabel")}
-              <input
-                type="text"
-                value={nuevoClienteNombre}
-                onChange={(e) => setNuevoClienteNombre(e.target.value)}
-              />
-            </label>
-            <label>
-              {t("profile.mail")}
-              <input type="email" value={nuevoClienteEmail} onChange={(e) => setNuevoClienteEmail(e.target.value)} />
-            </label>
-            <label>
-              {t("artistas.telefono")}
-              <input
-                type="tel"
-                value={nuevoClienteTelefono}
-                onChange={(e) => setNuevoClienteTelefono(e.target.value)}
-              />
-            </label>
-            <div className="obra-form-saved-actions">
-              <button
-                type="button"
-                onClick={handleCrearCliente}
-                disabled={!nuevoClienteNombre.trim() || creandoCliente}
-              >
-                {creandoCliente ? t("common.adding") : t("common.add")}
-              </button>
-              <button type="button" onClick={() => setAddingCliente(false)} disabled={creandoCliente}>
-                {t("common.cancel")}
-              </button>
-            </div>
-            {errorCliente && (
-              <p className="error" role="alert">
-                ⚠️ {errorCliente}
-              </p>
-            )}
-          </div>
-        )}
       </div>
 
       <fieldset>
@@ -757,6 +731,26 @@ export function VentaForm({
           <label>
             {esVenta ? t("ventaForm.valorVenta") : t("ventaForm.valorReserva")}
             <input type="number" min={0} step="0.01" required value={valorVenta} onChange={(e) => setValorVenta(e.target.value)} />
+          </label>
+        </div>
+      )}
+
+      {esReserva && (
+        <div className="venta-form-valor-row">
+          <label>
+            {t("ventaForm.senaMoneda")}
+            <select value={senaMoneda} onChange={(e) => setSenaMoneda(e.target.value as Moneda)}>
+              {MONEDAS.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label>
+            {t("ventaForm.senaMontoLabel")} <HelpIcon fieldKey="sena_monto" />
+            <input type="number" min={0} step="0.01" value={senaMonto} onChange={(e) => setSenaMonto(e.target.value)} />
           </label>
         </div>
       )}

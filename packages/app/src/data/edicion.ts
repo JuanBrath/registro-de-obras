@@ -2,8 +2,11 @@ import type { EdicionId } from "@registro/core";
 import { isTauri } from "../adapters/detectPlatform.js";
 
 const EDICION_STORE_FILE = "licencia.json";
-const EDICIONES_VALIDAS: EdicionId[] = ["personal", "galeria", "personal_galeria"];
-const EDICION_POR_DEFECTO: EdicionId = "personal_galeria";
+// Durante la Fase 1 (cerrar Galeris Studio en modo local) el valor por
+// defecto queda fijo en "personal": el menu nativo para previsualizar
+// Space/Suite ya se saco (ver menu.rs), asi que no habria forma de volver a
+// "personal_galeria" desde la UI si ese fuera el default.
+const EDICION_POR_DEFECTO: EdicionId = "personal";
 
 /**
  * Edición/licencia de esta instalación. Por ahora es un valor local
@@ -17,13 +20,12 @@ export async function getEdicion(): Promise<EdicionId> {
     return EDICION_POR_DEFECTO;
   }
 
+  // Sin el menu nativo para elegir Space/Suite (sacado durante la Fase 1),
+  // se fuerza "personal" sin importar lo que haya quedado guardado de
+  // pruebas anteriores con ese menu — no hay forma de volver a cambiarlo
+  // desde la UI, asi que dejar un valor viejo ahi solo confundiria.
   const { Store } = await import("@tauri-apps/plugin-store");
   const store = await Store.load(EDICION_STORE_FILE);
-  const existing = await store.get<string>("edicion");
-  if (existing && (EDICIONES_VALIDAS as string[]).includes(existing)) {
-    return existing as EdicionId;
-  }
-
   await store.set("edicion", EDICION_POR_DEFECTO);
   await store.save();
   return EDICION_POR_DEFECTO;

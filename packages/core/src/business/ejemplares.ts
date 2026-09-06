@@ -20,11 +20,16 @@ export function formatearNumeroPruebaArtista(indice: number, totalPA: number): s
 }
 
 // Una serie solo puede deshacerse (volver a ser obra unica) si ningun
-// ejemplar salio todavia de "disponible" — vendido, reservado o en
-// exhibicion implica un historial atado a ESE numero puntual que se
-// perderia al colapsar la obra en una sola pieza.
+// ejemplar tiene todavia un historial atado a ESE numero puntual (vendido,
+// reservado, en exhibicion, en consignacion, en la coleccion del autor,
+// descartado o destruido) que se perderia al colapsar la obra en una sola
+// pieza. "Disponible" y "en_stock"/"en_produccion" son estados puramente
+// administrativos (la pieza fue impresa pero todavia no salio ni se
+// comprometio con nadie), asi que no bloquean deshacer la serie.
+const ESTADOS_NO_COMPROMETIDOS = new Set(["disponible", "en_stock", "en_produccion"]);
+
 export function puedeDeshacerSerie(estadosEjemplares: string[]): boolean {
-  return estadosEjemplares.every((estado) => estado === "disponible");
+  return estadosEjemplares.every((estado) => ESTADOS_NO_COMPROMETIDOS.has(estado));
 }
 
 // Una obra "unica" es, por dentro, una serie de un solo ejemplar 1/1 — sin

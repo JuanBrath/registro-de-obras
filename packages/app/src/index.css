@@ -79,8 +79,19 @@ optgroup {
 }
 
 /* Elegido explicitamente desde Configuracion / menu Apariencia — tiene
-   prioridad por sobre la preferencia del sistema operativo. */
+   prioridad por sobre la preferencia del sistema operativo.
+   color-scheme fijo (en vez del "light dark" de :root de mas arriba) es
+   necesario ademas de las variables propias: sin esto, los controles
+   nativos sin estilo propio (button, select, checkbox, etc.) seguian
+   pintandose con el modo Oscuro/Claro del sistema operativo en vez del
+   tema elegido aca — por ejemplo, boton con fondo negro en tema Claro con
+   la Mac en modo Oscuro. */
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
 :root[data-theme="dark"] {
+  color-scheme: dark;
   --text: #9ca3af;
   --text-h: #c3c6cf;
   --bg: #16171d;

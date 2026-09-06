@@ -6,6 +6,7 @@ import { ThemeProvider } from "./state/ThemeContext.js";
 import { FontSizeProvider } from "./state/FontSizeContext.js";
 import { LanguageProvider, useLanguage } from "./i18n/LanguageContext.js";
 import { useForceReflowOnResize } from "./utils/useForceReflowOnResize.js";
+import { useAutoScrollToAlerts } from "./utils/useAutoScrollToAlerts.js";
 import { BrandHeader } from "./components/BrandHeader.js";
 import { WorkspacePicker } from "./screens/WorkspacePicker.js";
 import { WorkspaceHome } from "./screens/WorkspaceHome.js";
@@ -115,6 +116,7 @@ function AppShell() {
   const { t } = useLanguage();
   const [showSettings, setShowSettings] = useState(false);
   useForceReflowOnResize();
+  useAutoScrollToAlerts();
 
   // El menú "Edición (prueba)" es solo para previsualizar que mostraría cada
   // nivel de suscripción — cambiarlo mientras hay un workspace abierto tiene

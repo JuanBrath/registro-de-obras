@@ -328,8 +328,8 @@ export function ClientesScreen({ onBack }: { onBack: () => void }) {
               </button>
             </>
           )}
-          <button type="button" onClick={handleVolver}>
-            {t("common.back")}
+          <button type="button" className="header-close-button" onClick={handleVolver} aria-label={t("common.back")} title={t("common.back")}>
+            ✕
           </button>
         </div>
       </div>
@@ -502,6 +502,12 @@ export function ClientesScreen({ onBack }: { onBack: () => void }) {
                   onSave={(fields) => handleUpdateCliente(c.id, fields)}
                 />
               ))}
+          </div>
+
+          <div className="screen-footer-back">
+            <button type="button" onClick={handleVolver}>
+              {t("common.back")}
+            </button>
           </div>
         </div>
       )}

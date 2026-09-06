@@ -7,6 +7,8 @@ import { formatFechaDDMMYYYY } from "../utils/formatFecha.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
 import { todayISO } from "../utils/today.js";
 import { HelpIcon } from "../components/HelpIcon.js";
+import { CampoFecha, BotonCalendario } from "../components/CampoFecha.js";
+import { focusNextOnEnter } from "../utils/focusNextOnEnter.js";
 import { drawPdfHeader } from "../utils/pdfBranding.js";
 
 interface VentaReportRow {
@@ -142,6 +144,10 @@ export function VentasReport({ onBack }: { onBack: () => void }) {
 
   async function cargar() {
     if (!context || !fechaDesde || !fechaHasta) return;
+    if (fechaHasta < fechaDesde) {
+      setError(t("ventasReport.errorRangoFechasInvalido"));
+      return;
+    }
     setLoading(true);
     setError(null);
     setPdfMensaje(null);
@@ -453,8 +459,8 @@ export function VentasReport({ onBack }: { onBack: () => void }) {
     <div className="obras-list">
       <div className="obras-list-header">
         <h1>{t("ventasReport.title")}</h1>
-        <button type="button" onClick={onBack}>
-          {t("common.back")}
+        <button type="button" className="header-close-button" onClick={onBack} aria-label={t("common.back")} title={t("common.back")}>
+          ✕
         </button>
       </div>
 
@@ -464,29 +470,46 @@ export function VentasReport({ onBack }: { onBack: () => void }) {
           e.preventDefault();
           cargar();
         }}
+        onKeyDown={focusNextOnEnter}
       >
         <label>
-          {t("ventasReport.desde")} <HelpIcon fieldKey="ventas_fechas" />
-          <input
-            type="date"
+          <span>
+            {t("ventasReport.desde")} <HelpIcon fieldKey="ventas_fechas" />{" "}
+            <BotonCalendario
+              valorIso={fechaDesde}
+              onChangeIso={(iso) => {
+                setFechaDesde(iso);
+                setFechaDesdeTocada(true);
+              }}
+            />
+          </span>
+          <CampoFecha
             required
             className={fechaDesdeTocada ? undefined : "ventas-fecha-default"}
-            value={fechaDesde}
-            onChange={(e) => {
-              setFechaDesde(e.target.value);
+            valorIso={fechaDesde}
+            onChangeIso={(iso) => {
+              setFechaDesde(iso);
               setFechaDesdeTocada(true);
             }}
           />
         </label>
         <label>
-          {t("ventasReport.hasta")}
-          <input
-            type="date"
+          <span>
+            {t("ventasReport.hasta")}{" "}
+            <BotonCalendario
+              valorIso={fechaHasta}
+              onChangeIso={(iso) => {
+                setFechaHasta(iso);
+                setFechaHastaTocada(true);
+              }}
+            />
+          </span>
+          <CampoFecha
             required
             className={fechaHastaTocada ? undefined : "ventas-fecha-default"}
-            value={fechaHasta}
-            onChange={(e) => {
-              setFechaHasta(e.target.value);
+            valorIso={fechaHasta}
+            onChangeIso={(iso) => {
+              setFechaHasta(iso);
               setFechaHastaTocada(true);
             }}
           />
@@ -696,6 +719,12 @@ export function VentasReport({ onBack }: { onBack: () => void }) {
           )}
         </>
       )}
+
+      <div className="screen-footer-back">
+        <button type="button" onClick={onBack}>
+          {t("common.back")}
+        </button>
+      </div>
     </div>
   );
 }

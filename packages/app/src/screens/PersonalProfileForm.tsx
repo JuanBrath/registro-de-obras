@@ -342,9 +342,21 @@ export function PersonalProfileForm({ onExit }: { onExit: () => void }) {
 
   return (
     <form className="obra-form profile-form" onSubmit={handleSubmit} onKeyDown={focusNextOnEnter}>
-      <h2>
-        {t("profile.tituloMisDatos")} <HelpIcon fieldKey="perfil_personal_nota" />
-      </h2>
+      <div className="obra-form-header">
+        <h2>
+          {t("profile.tituloMisDatos")} <HelpIcon fieldKey="perfil_personal_nota" />
+        </h2>
+        <button
+          type="button"
+          className="header-close-button"
+          onClick={handleSalir}
+          disabled={submitting}
+          aria-label={t("common.back")}
+          title={t("common.back")}
+        >
+          ✕
+        </button>
+      </div>
 
       <div className="imagen-campo">
         <span className="field-label">{t("artistas.foto")}</span>
@@ -365,34 +377,36 @@ export function PersonalProfileForm({ onExit }: { onExit: () => void }) {
         />
       </div>
 
-      <div className="imagen-campo">
-        <span className="field-label">{t("profile.logo")}</span>
-        {logoPreviewUrl && (
-          <button
-            type="button"
-            className="imagen-preview-button"
-            onClick={() => setImagenAmpliada({ url: logoPreviewUrl, alt: t("profile.logoAlt") })}
-          >
-            <img src={logoPreviewUrl} alt={t("profile.logoAlt")} className="perfil-imagen-preview" />
-          </button>
-        )}
-        <ImageFileField value={logoFile} onChange={handleLogoChange} hasImage={Boolean(existing?.logoPath)} />
-      </div>
+      <div className="form-row-2">
+        <div className="imagen-campo">
+          <span className="field-label">{t("profile.logo")}</span>
+          {logoPreviewUrl && (
+            <button
+              type="button"
+              className="imagen-preview-button"
+              onClick={() => setImagenAmpliada({ url: logoPreviewUrl, alt: t("profile.logoAlt") })}
+            >
+              <img src={logoPreviewUrl} alt={t("profile.logoAlt")} className="perfil-imagen-preview" />
+            </button>
+          )}
+          <ImageFileField value={logoFile} onChange={handleLogoChange} hasImage={Boolean(existing?.logoPath)} />
+        </div>
 
-      <div className="imagen-campo">
-        <span className="field-label">
-          {t("profile.firmaDigital")} <HelpIcon fieldKey="firma_digital" />
-        </span>
-        {firmaPreviewUrl && (
-          <button
-            type="button"
-            className="imagen-preview-button"
-            onClick={() => setImagenAmpliada({ url: firmaPreviewUrl, alt: t("profile.firmaAlt") })}
-          >
-            <img src={firmaPreviewUrl} alt={t("profile.firmaAlt")} className="perfil-imagen-preview" />
-          </button>
-        )}
-        <ImageFileField value={firmaFile} onChange={handleFirmaChange} hasImage={Boolean(existing?.firmaPath)} />
+        <div className="imagen-campo">
+          <span className="field-label">
+            {t("profile.firmaDigital")} <HelpIcon fieldKey="firma_digital" />
+          </span>
+          {firmaPreviewUrl && (
+            <button
+              type="button"
+              className="imagen-preview-button"
+              onClick={() => setImagenAmpliada({ url: firmaPreviewUrl, alt: t("profile.firmaAlt") })}
+            >
+              <img src={firmaPreviewUrl} alt={t("profile.firmaAlt")} className="perfil-imagen-preview" />
+            </button>
+          )}
+          <ImageFileField value={firmaFile} onChange={handleFirmaChange} hasImage={Boolean(existing?.firmaPath)} />
+        </div>
       </div>
 
       <label>

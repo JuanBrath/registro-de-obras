@@ -32,3 +32,4 @@ tokio = { version = "1.53.1", features = ["sync"] }
 
 [dev-dependencies]
 tokio = { version = "1.53.1", features = ["macros", "rt"] }
+tauri = { version = "2.11.3", features = ["test"] }

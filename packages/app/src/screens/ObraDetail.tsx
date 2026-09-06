@@ -42,6 +42,7 @@ import { savePdfWithDialog } from "../utils/savePdfDialog.js";
 import { formatFechaDDMMYYYY } from "../utils/formatFecha.js";
 import { detectImageFormat } from "../utils/detectImageFormat.js";
 import { focusNextOnEnter } from "../utils/focusNextOnEnter.js";
+import { generarMiniatura } from "../utils/generarMiniatura.js";
 import type { ArchivoMetadata } from "../utils/readImageMetadata.js";
 import { drawPdfHeader, drawSignatureBlock, writeWrappedText, type FirmaEleccion } from "../utils/pdfBranding.js";
 import { InformesModal } from "../components/InformesModal.js";
@@ -245,6 +246,8 @@ interface VentaRow {
   confidencial: number;
   clausula_reventa: string | null;
   asesor_venta: string | null;
+  sena_monto: number | null;
+  sena_moneda: Moneda | null;
 }
 
 function toVentaExistente(v: VentaRow): VentaExistente {
@@ -288,6 +291,8 @@ function toVentaExistente(v: VentaRow): VentaExistente {
     confidencial: Number(v.confidencial) === 1,
     clausulaReventa: v.clausula_reventa,
     asesorVenta: v.asesor_venta,
+    senaMonto: v.sena_monto,
+    senaMoneda: v.sena_moneda,
   };
 }
 
@@ -760,7 +765,8 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
                 costo_enmarcado, costo_peana, costo_embalaje, costo_transporte, costo_seguro,
                 estado_pago, metodo_pago, fecha_cobro, estado_liquidacion,
                 droit_suite_aplica, droit_suite_porcentaje, droit_suite_monto,
-                direccion_entrega, ciudad_entrega, pais_entrega, confidencial, clausula_reventa, asesor_venta
+                direccion_entrega, ciudad_entrega, pais_entrega, confidencial, clausula_reventa, asesor_venta,
+                sena_monto, sena_moneda
          FROM venta WHERE obra_id = ?`,
         [obraId],
       );
@@ -1061,7 +1067,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
   }
 
   function presupuestoBloqueadoPara(estado: string): boolean {
-    return ["vendida", "descartada", "coleccion_autor", "destruida"].includes(estado);
+    return ["vendida", "reservada", "descartada", "coleccion_autor", "destruida"].includes(estado);
   }
 
   async function handleAbrirInformesVenta(ejemplar: EjemplarRow) {
@@ -1408,6 +1414,10 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
         ],
       );
 
+      for (const tag of fields.tags) {
+        await tx.execute("INSERT OR IGNORE INTO etiqueta (nombre) VALUES (?)", [tag]);
+      }
+
       if (cambiaSeriada) {
         await tx.execute(`DELETE FROM ejemplar WHERE obra_id = ?`, [obraId]);
         const nuevosEjemplares = fields.esSeriada
@@ -1673,9 +1683,10 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
         const bytes = new Uint8Array(await fields.imageFile.arrayBuffer());
         const originalPath = obraOriginalPath(obraId, fileExt);
         const miniaturaPath = obraMiniaturaPath(obraId);
+        const miniaturaBytes = await generarMiniatura(fields.imageFile, bytes);
 
         await context.fs.writeFile(originalPath, bytes);
-        await context.fs.writeFile(miniaturaPath, bytes);
+        await context.fs.writeFile(miniaturaPath, miniaturaBytes);
 
         await tx.execute(`UPDATE obra SET imagen_alta_resolucion_path = ?, miniatura_path = ? WHERE id = ?`, [
           originalPath,
@@ -1812,8 +1823,14 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
     <div className="obra-detail">
       <div className="obras-list-header">
         <h1>{obra?.titulo ?? t("obraDetail.fallbackTitulo")}</h1>
-        <button type="button" onClick={onBack}>
-          {t("obraDetail.volverAObras")}
+        <button
+          type="button"
+          className="header-close-button"
+          onClick={onBack}
+          aria-label={t("obraDetail.volverAObras")}
+          title={t("obraDetail.volverAObras")}
+        >
+          ✕
         </button>
       </div>
 
@@ -1933,6 +1950,12 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
           ))}
         </div>
       )}
+
+      <div className="screen-footer-back">
+        <button type="button" onClick={onBack}>
+          {t("obraDetail.volverAObras")}
+        </button>
+      </div>
 
       {informesMenuAbierto && obra && (
         <InformesModal
@@ -2270,6 +2293,8 @@ function ObraEditForm({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   useEscapeToDismiss(error, setError);
+  const [confirmandoPerdidaDatosEjemplares, setConfirmandoPerdidaDatosEjemplares] = useState(false);
+  useEscapeToDismiss(confirmandoPerdidaDatosEjemplares, () => setConfirmandoPerdidaDatosEjemplares(false));
 
   const permiteCambiarSeriada = categoriaObra !== "ObraGrafica";
   const puedeDesconvertir = puedeDeshacerSerie(ejemplares.map((ej) => ej.estado));
@@ -2279,6 +2304,32 @@ function ObraEditForm({
         ? derivarEsSeriadaObraGrafica(obraDetalle.subtipo as SubtipoObraGrafica)
         : false
       : esSeriada;
+  const cambiaSeriada = eraSeriada !== esSeriadaCalculada;
+  // Si cambia entre unica/seriada, todos los ejemplares actuales se borran y
+  // se generan de nuevo en blanco (ver handleSaveObra en el componente
+  // padre): si alguno ya tenia datos cargados a mano, hay que avisar antes de
+  // perderlos en vez de borrarlos en silencio.
+  const hayDatosCargadosEnEjemplares = ejemplares.some((ej) =>
+    ([
+      "fecha_impresion",
+      "tipo_impresion",
+      "soporte_impresion",
+      "tipo_tintas",
+      "taller_impresion",
+      "ubicacion_actual",
+      "dimensiones",
+      "tipo_enmarcado",
+      "tamano_final_enmarcado",
+      "ubicacion_firma",
+      "sello_seco_holograma",
+      "notas",
+      "coa_numero",
+      "coa_emisor",
+      "coa_fecha",
+      "valor_seguro",
+      "informe_conservacion",
+    ] as const).some((campo) => ej[campo] != null && ej[campo] !== ""),
+  );
 
   useEffect(() => {
     return () => {
@@ -2332,6 +2383,15 @@ function ObraEditForm({
   }
 
   async function handleSubmit() {
+    if (!titulo.trim()) {
+      setError(t("obraForm.errorTituloRequerido"));
+      return;
+    }
+    if (cambiaSeriada && hayDatosCargadosEnEjemplares && !confirmandoPerdidaDatosEjemplares) {
+      setConfirmandoPerdidaDatosEjemplares(true);
+      return;
+    }
+    setConfirmandoPerdidaDatosEjemplares(false);
     setSubmitting(true);
     setError(null);
     try {
@@ -2601,12 +2661,20 @@ function ObraEditForm({
               type="checkbox"
               checked={esSeriada}
               disabled={eraSeriada && !puedeDesconvertir}
-              onChange={(e) => setEsSeriada(e.target.checked)}
+              onChange={(e) => {
+                setEsSeriada(e.target.checked);
+                setConfirmandoPerdidaDatosEjemplares(false);
+              }}
             />
             {t("field.esSeriada")} <HelpIcon fieldKey="es_seriada" />
           </label>
           {eraSeriada && !puedeDesconvertir && (
             <p className="field-note">{t("obraDetail.noSePuedeDeshacerSerie")}</p>
+          )}
+          {cambiaSeriada && hayDatosCargadosEnEjemplares && (
+            <p className="error" role="alert">
+              ⚠️ {t("obraDetail.avisoPierdeDatosEjemplares")}
+            </p>
           )}
           {!eraSeriada && esSeriada && (
             <label>
@@ -2622,20 +2690,40 @@ function ObraEditForm({
         </>
       )}
 
-      <label>
-        {t("obraForm.etiquetasLabel")}
+      <div className="campo-con-ayuda">
+        {t("obraForm.etiquetasLabel")} <HelpIcon fieldKey="etiquetas_obra" />
         <TagPicker value={tags} onChange={setTags} />
-      </label>
-
-
-      <div className="obra-form-saved-actions">
-        <button type="button" onClick={handleSubmit} disabled={submitting}>
-          {submitting ? t("common.saving") : t("obraDetail.guardarCambios")}
-        </button>
-        <button type="button" onClick={onCancel} disabled={submitting}>
-          {t("common.cancel")}
-        </button>
       </div>
+
+
+      {confirmandoPerdidaDatosEjemplares ? (
+        <>
+          <p className="error" role="alert">
+            ⚠️ {t("obraDetail.confirmarPerdidaDatosEjemplaresPregunta")}
+          </p>
+          <div className="obra-form-saved-actions">
+            <button type="button" onClick={handleSubmit} disabled={submitting}>
+              {submitting ? t("common.saving") : t("obraDetail.confirmarPerdidaDatosEjemplaresBoton")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmandoPerdidaDatosEjemplares(false)}
+              disabled={submitting}
+            >
+              {t("common.cancel")}
+            </button>
+          </div>
+        </>
+      ) : (
+        <div className="obra-form-saved-actions">
+          <button type="button" onClick={handleSubmit} disabled={submitting}>
+            {submitting ? t("common.saving") : t("obraDetail.guardarCambios")}
+          </button>
+          <button type="button" onClick={onCancel} disabled={submitting}>
+            {t("common.cancel")}
+          </button>
+        </div>
+      )}
 
       {error && (
         <p className="error" role="alert">
@@ -2800,9 +2888,13 @@ function EjemplarRowView({
           <select value={estado} onChange={(e) => setEstado(e.target.value)} disabled={!!venta}>
             <option value="disponible">{t("estado.disponible")}</option>
             <option value="en_stock">{t("estado.en_stock")}</option>
-            <option value="reservada">{t("estado.reservada")}</option>
+            <option value="reservada" disabled={!venta}>
+              {t("estado.reservada")}
+            </option>
             <option value="exhibicion">{t("estado.exhibicion")}</option>
-            <option value="vendida">{t("estado.vendida")}</option>
+            <option value="vendida" disabled={!venta}>
+              {t("estado.vendida")}
+            </option>
             <option value="consignacion">{t("estado.consignacion")}</option>
             <option value="en_produccion">{t("estado.en_produccion")}</option>
             <option value="coleccion_autor">{t("estado.coleccion_autor")}</option>
@@ -2811,6 +2903,7 @@ function EjemplarRowView({
           </select>
         </label>
         {venta && <p className="field-note">{t("obraDetail.estadoBloqueadoPorVenta")}</p>}
+        {!venta && <p className="field-note">{t("obraDetail.estadoVendidaReservadaRequiereVenta")}</p>}
         {(estado === "exhibicion" || estado === "consignacion") && (
           <label>
             <span className="field-label">
@@ -3252,7 +3345,17 @@ function EjemplarRowView({
               <a href={`tel:${venta.comprador_telefono}`}>{venta.comprador_telefono}</a>
             </>
           )}
+          {venta.tipo === "reserva" && venta.sena_monto != null && (
+            <>
+              {" — "}
+              {t("ventaForm.senaMontoLabel")}: {venta.sena_moneda} {venta.sena_monto}
+            </>
+          )}
         </span>
+      )}
+
+      {!venta && ejemplar.estado === "coleccion_autor" && (
+        <p className="field-note">{t("obraDetail.coleccionAutorNoDisponibleVenta")}</p>
       )}
 
       <div className="obra-form-saved-actions">
@@ -3265,11 +3368,14 @@ function EjemplarRowView({
         >
           {t("common.edit")}
         </button>
-        {!venta && ejemplar.estado !== "descartada" && ejemplar.estado !== "destruida" && (
-          <button type="button" onClick={handleVenderClick}>
-            {t(ejemplar.tipo === "prueba_artista" ? "obraDetail.ventaReservaDonacion" : "obraDetail.ventaReserva")}
-          </button>
-        )}
+        {!venta &&
+          ejemplar.estado !== "descartada" &&
+          ejemplar.estado !== "destruida" &&
+          ejemplar.estado !== "coleccion_autor" && (
+            <button type="button" onClick={handleVenderClick}>
+              {t(ejemplar.tipo === "prueba_artista" ? "obraDetail.ventaReservaDonacion" : "obraDetail.ventaReserva")}
+            </button>
+          )}
         {venta && (
           <button type="button" onClick={() => onEditarVenta(venta)}>
             {t(

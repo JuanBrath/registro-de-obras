@@ -3,6 +3,7 @@ import { parseTags, type CategoriaObra } from "@registro/core";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { bytesToObjectUrl } from "../utils/imageObjectUrl.js";
 import { Modal } from "../components/Modal.js";
+import { VentaForm } from "../components/VentaForm.js";
 import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
 import { formatFechaDDMMYYYY } from "../utils/formatFecha.js";
@@ -10,6 +11,7 @@ import type { ObrasListFiltros } from "./ObrasList.js";
 import { subtipoTranslationKey } from "./fields/ObraDetalleFields.js";
 
 interface PrimeraSerieDisponible {
+  id: number;
   numero: string;
   fecha_impresion: string | null;
   soporte_impresion: string | null;
@@ -48,6 +50,32 @@ interface FotoRow {
   ejemplares_descartada: number;
   ejemplares_destruida: number;
 }
+
+// Compartido entre la carga inicial (todas las obras) y el refresco puntual
+// de una sola tarjeta despues de registrar una venta/reserva desde el modal
+// de informacion, para no duplicar esta consulta larga en dos lugares.
+const FOTOS_QUERY_SELECT = `
+  SELECT obra.id, obra.titulo, obra.miniatura_path, obra.imagen_alta_resolucion_path, obra.tags, obra.artista_id,
+         obra.categoria_obra, obra.marcada, obra.estado, obra.es_seriada, artista.nombre_completo,
+         obra_fotografia.subtipo_fotografia, obra_detalle.subtipo,
+         obra_fotografia.dimensiones, obra_fotografia.escala_por_tamanos,
+         COUNT(CASE WHEN ejemplar.tipo = 'edicion' THEN ejemplar.id END) as total_ejemplares,
+         SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'disponible' THEN 1 ELSE 0 END) as ejemplares_disponible,
+         SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'en_stock' THEN 1 ELSE 0 END) as ejemplares_en_stock,
+         SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'exhibicion' THEN 1 ELSE 0 END) as ejemplares_exhibicion,
+         SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'reservada' THEN 1 ELSE 0 END) as ejemplares_reservada,
+         SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'vendida' THEN 1 ELSE 0 END) as ejemplares_vendida,
+         SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'consignacion' THEN 1 ELSE 0 END) as ejemplares_consignacion,
+         SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'en_produccion' THEN 1 ELSE 0 END) as ejemplares_en_produccion,
+         SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'coleccion_autor' THEN 1 ELSE 0 END) as ejemplares_coleccion_autor,
+         SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'descartada' THEN 1 ELSE 0 END) as ejemplares_descartada,
+         SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'destruida' THEN 1 ELSE 0 END) as ejemplares_destruida
+  FROM obra
+  LEFT JOIN artista ON artista.id = obra.artista_id
+  LEFT JOIN obra_fotografia ON obra_fotografia.obra_id = obra.id
+  LEFT JOIN obra_detalle ON obra_detalle.obra_id = obra.id
+  LEFT JOIN ejemplar ON ejemplar.obra_id = obra.id
+`;
 
 // Mismo criterio que ObrasList: "disponible" ya lo cubre la fraccion
 // "X/Y disponibles", asi que no se repite como fragmento aparte.
@@ -89,6 +117,9 @@ export function GaleriaFotos({
   const [infoAbierta, setInfoAbierta] = useState(false);
   const [primeraSerieDisponible, setPrimeraSerieDisponible] = useState<PrimeraSerieDisponible | null>(null);
   const [cargandoSerieDisponible, setCargandoSerieDisponible] = useState(false);
+  const [ventaTarget, setVentaTarget] = useState<{ obraId: number; ejemplarId: number; esSeriada: boolean } | null>(
+    null,
+  );
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [loadingLightbox, setLoadingLightbox] = useState(false);
   const objectUrlsRef = useRef<string[]>([]);
@@ -103,26 +134,7 @@ export function GaleriaFotos({
       setError(null);
       try {
         const rows = await context!.db.query<FotoRow>(
-          `SELECT obra.id, obra.titulo, obra.miniatura_path, obra.imagen_alta_resolucion_path, obra.tags, obra.artista_id,
-                  obra.categoria_obra, obra.marcada, obra.estado, obra.es_seriada, artista.nombre_completo,
-                  obra_fotografia.subtipo_fotografia, obra_detalle.subtipo,
-                  obra_fotografia.dimensiones, obra_fotografia.escala_por_tamanos,
-                  COUNT(CASE WHEN ejemplar.tipo = 'edicion' THEN ejemplar.id END) as total_ejemplares,
-                  SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'disponible' THEN 1 ELSE 0 END) as ejemplares_disponible,
-                  SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'en_stock' THEN 1 ELSE 0 END) as ejemplares_en_stock,
-                  SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'exhibicion' THEN 1 ELSE 0 END) as ejemplares_exhibicion,
-                  SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'reservada' THEN 1 ELSE 0 END) as ejemplares_reservada,
-                  SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'vendida' THEN 1 ELSE 0 END) as ejemplares_vendida,
-                  SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'consignacion' THEN 1 ELSE 0 END) as ejemplares_consignacion,
-                  SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'en_produccion' THEN 1 ELSE 0 END) as ejemplares_en_produccion,
-                  SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'coleccion_autor' THEN 1 ELSE 0 END) as ejemplares_coleccion_autor,
-                  SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'descartada' THEN 1 ELSE 0 END) as ejemplares_descartada,
-                  SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'destruida' THEN 1 ELSE 0 END) as ejemplares_destruida
-           FROM obra
-           LEFT JOIN artista ON artista.id = obra.artista_id
-           LEFT JOIN obra_fotografia ON obra_fotografia.obra_id = obra.id
-           LEFT JOIN obra_detalle ON obra_detalle.obra_id = obra.id
-           LEFT JOIN ejemplar ON ejemplar.obra_id = obra.id
+          `${FOTOS_QUERY_SELECT}
            WHERE obra.miniatura_path IS NOT NULL
            GROUP BY obra.id
            ORDER BY obra.titulo COLLATE NOCASE ASC`,
@@ -308,7 +320,7 @@ export function GaleriaFotos({
     setCargandoSerieDisponible(true);
     try {
       const rows = await context.db.query<PrimeraSerieDisponible>(
-        `SELECT numero, fecha_impresion, soporte_impresion, dimensiones, ubicacion_actual, precio_venta, moneda_venta, notas
+        `SELECT id, numero, fecha_impresion, soporte_impresion, dimensiones, ubicacion_actual, precio_venta, moneda_venta, notas
          FROM ejemplar
          WHERE obra_id = ? AND tipo = 'edicion' AND estado = 'disponible'
          ORDER BY indice ASC
@@ -321,15 +333,31 @@ export function GaleriaFotos({
     }
   }
 
+  // Despues de registrar la venta/reserva, se actualiza solo la tarjeta de
+  // esa obra (recalcula sus contadores de estado) y se vuelve a consultar
+  // "primera serie disponible" (que ahora puede ser otra copia, o ninguna),
+  // en vez de recargar toda la galeria y sus miniaturas de nuevo.
+  async function handleVentaDone(obraId: number) {
+    setVentaTarget(null);
+    if (context) {
+      const rows = await context.db.query<FotoRow>(
+        `${FOTOS_QUERY_SELECT} WHERE obra.id = ? GROUP BY obra.id`,
+        [obraId],
+      );
+      if (rows[0]) setFotos((prev) => prev.map((f) => (f.id === obraId ? rows[0] : f)));
+    }
+    await abrirInfo(obraId);
+  }
+
   if (!context) return null;
 
   return (
-    <div className="obras-list">
+    <div className="obras-list obras-list-grid-ancho">
       <div className="obras-list-header">
         <h1>{t("galeria.title")}</h1>
         <div className="header-actions">
-          <button type="button" onClick={onBack}>
-            {t("common.back")}
+          <button type="button" className="header-close-button" onClick={onBack} aria-label={t("common.back")} title={t("common.back")}>
+            ✕
           </button>
         </div>
       </div>
@@ -444,6 +472,12 @@ export function GaleriaFotos({
         )}
       </div>
       {!loading && fotos.length > 0 && filteredFotos.length === 0 && <p>{t("galeria.ningunaConEtiqueta")}</p>}
+
+      <div className="screen-footer-back">
+        <button type="button" onClick={onBack}>
+          {t("common.back")}
+        </button>
+      </div>
 
       {lightboxIndex !== null && (
         <Modal onClose={closeLightbox} wide className="modal-content-image">
@@ -595,8 +629,36 @@ export function GaleriaFotos({
                   )}
                 </dl>
               )}
+              {!cargandoSerieDisponible && primeraSerieDisponible && (
+                <div className="obra-form-saved-actions">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setVentaTarget({
+                        obraId: filteredFotos[lightboxIndex].id,
+                        ejemplarId: primeraSerieDisponible.id,
+                        esSeriada: true,
+                      })
+                    }
+                  >
+                    {t("obraDetail.ventaReserva")}
+                  </button>
+                </div>
+              )}
             </div>
           )}
+        </Modal>
+      )}
+
+      {ventaTarget && (
+        <Modal onClose={() => setVentaTarget(null)} className="modal-content-drawer">
+          <VentaForm
+            obraId={ventaTarget.obraId}
+            ejemplarId={ventaTarget.ejemplarId}
+            esSeriada={ventaTarget.esSeriada}
+            onDone={() => handleVentaDone(ventaTarget.obraId)}
+            onCancel={() => setVentaTarget(null)}
+          />
         </Modal>
       )}
     </div>

@@ -32,14 +32,21 @@ export function HelpIcon({ fieldKey }: { fieldKey: string }) {
 
   return (
     <span className="help-icon-wrapper" ref={wrapperRef}>
-      <button
-        type="button"
+      <span
+        role="button"
+        tabIndex={0}
         className="help-icon"
         aria-label={t("helpIcon.ayuda")}
         onClick={() => setOpen((v) => !v)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setOpen((v) => !v);
+          }
+        }}
       >
         ⓘ
-      </button>
+      </span>
       {open && (
         <span className={`help-icon-tooltip${esMultilinea ? " help-icon-tooltip-wide" : ""}`}>
           {esMultilinea

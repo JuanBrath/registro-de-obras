@@ -125,6 +125,7 @@ export const en: Record<keyof typeof es, string> = {
   "ventasReport.title": "Sales",
   "ventasReport.desde": "From",
   "ventasReport.hasta": "To",
+  "ventasReport.errorRangoFechasInvalido": "The \"To\" date can't be earlier than the \"From\" date.",
   "ventasReport.cliente": "Client",
   "ventasReport.todosLosClientes": "All",
   "ventasReport.artista": "Artist",
@@ -177,6 +178,18 @@ export const en: Record<keyof typeof es, string> = {
   "settings.letraChica": "Small",
   "settings.letraMediana": "Medium",
   "settings.letraGrande": "Large",
+  "settings.carpetaDatos": "Data folder",
+  "settings.cambiarCarpetaNota":
+    "Tells Galeris to use a different folder to read and save this registry's data. If the folder you pick already has Galeris data (for example, because you moved the original folder to an external drive), that data will be used. If you pick an empty folder, it will start fresh. After changing it, you'll go back to the home screen to reopen the registry.",
+  "settings.cambiarCarpetaBoton": "Change folder…",
+  "settings.moverCarpetaNota":
+    "If you'd rather have Galeris move everything for you: it automatically copies the database, photos, and certificates to a new folder you pick, and updates Galeris to use that folder from then on. The old folder is never deleted on its own — you decide whether to delete it, and that's only asked once it's confirmed the new one is working correctly.",
+  "settings.moverCarpetaBoton": "Move folder automatically…",
+  "settings.moverCarpetaProgreso": "Copying file {{copiados}} of {{total}}…",
+  "settings.moverCarpetaExito": "Everything copied and is working correctly in the new folder: {{nueva}}",
+  "settings.moverCarpetaCarpetaVieja": "The previous folder is still intact at: {{vieja}}",
+  "settings.moverCarpetaBorrarAhora": "Delete the previous folder now",
+  "settings.moverCarpetaDejarla": "Leave it, I'll delete it later",
   "settings.numeradoresAutomaticos": "Automatic numbering",
   "settings.resetearNumeradoresBoton": "Reset automatic numbering",
   "settings.resetearNumeradoresAdvertencia": "All automatic numbering counters (artist number and sale certificate number) will start over from the beginning. This can cause duplicate internal numbering with artists or certificates that already exist. This action cannot be undone. Confirm?",
@@ -202,7 +215,7 @@ export const en: Record<keyof typeof es, string> = {
   "obraForm.ubicacionNegativoLabel": "Negative location",
   "obraForm.categoriaLabel": "Category",
   "obraForm.cantidadEdicionesLabel": "Total edition size",
-  "obraForm.etiquetasLabel": "Keywords",
+  "obraForm.etiquetasLabel": "Tags",
   "obraForm.imagenLabel": "Artwork image",
   "obraDetail.quitarImagen": "Remove image",
   "obraDetail.deshacerQuitarImagen": "Undo",
@@ -210,6 +223,7 @@ export const en: Record<keyof typeof es, string> = {
   "obraForm.guardarObra": "Save artwork",
   "obraForm.errorNoSePudoGuardar": "Could not save: {{error}}",
   "obraForm.errorElegirArtista": "Choose an artist from the list before saving.",
+  "obraForm.errorTituloRequerido": "The title cannot be empty.",
   "obraForm.elegirCategoria": "Choose category…",
   "obraForm.elegirSubtipo": "Choose subtype…",
   "obraForm.errorElegirCategoria": "Choose a category before saving.",
@@ -583,7 +597,7 @@ export const en: Record<keyof typeof es, string> = {
   // GaleriaFotos
   "galeria.title": "Artwork gallery",
   "galeria.sinFotos": "No photos added yet.",
-  "galeria.ningunaConEtiqueta": "No photo has that keyword.",
+  "galeria.ningunaConEtiqueta": "No photo has that tag.",
   "galeria.anterior": "Previous",
   "galeria.siguiente": "Next",
   "galeria.verInfo": "View artwork info",
@@ -598,8 +612,8 @@ export const en: Record<keyof typeof es, string> = {
   "galeria.desmarcarTodas": "Deselect all",
 
   // TagPicker
-  "tagPicker.placeholder": "Choose or type a keyword…",
-  "tagPicker.quitarEtiqueta": "Remove keyword {{tag}}",
+  "tagPicker.placeholder": "Choose or type a tag…",
+  "tagPicker.quitarEtiqueta": "Remove tag {{tag}}",
 
   // FilePathField
   "filePathField.elegirArchivo": "Choose file…",
@@ -620,12 +634,13 @@ export const en: Record<keyof typeof es, string> = {
   "ventaForm.tituloNuevo": "Sale / Reservation / Donation",
   "ventaForm.tipoLegend": "Type",
   "ventaForm.numeroCertificado": "Certificate number",
-  "ventaForm.clienteRegistrado": "Registered client",
-  "ventaForm.seleccionarCliente": "Select a client…",
+  "ventaForm.clienteRegistrado": "Link to an already registered client (optional)",
+  "ventaForm.seleccionarCliente": "— (new buyer, filled in below)",
   "ventaForm.confirmarSalirSinGuardar": "You have unsaved changes. If you leave now, they'll be lost.",
   "ventaForm.salirSinGuardar": "Leave without saving",
   "ventaForm.seguirEditando": "Keep editing",
-  "ventaForm.compradorSinVincular": "Buyer on file without a linked registered client: {{nombre}}",
+  "ventaForm.compradorNombreLabel": "Buyer's name",
+  "ventaForm.compradorNombreNota": "If you don't pick an already registered client, a new one is created automatically from this data when you save (so it shows up in client stats and reports).",
   "ventaForm.fechaVenta": "Sale date",
   "ventaForm.fechaReserva": "Reservation date",
   "ventaForm.fechaDonacion": "Donation date",
@@ -635,6 +650,8 @@ export const en: Record<keyof typeof es, string> = {
   "ventaForm.lugarDonacion": "Donation location",
   "ventaForm.valorVenta": "Sale amount",
   "ventaForm.valorReserva": "Reservation amount",
+  "ventaForm.senaMontoLabel": "Deposit amount",
+  "ventaForm.senaMoneda": "Deposit currency",
   "ventaForm.moneda": "Currency",
   "ventaForm.aplicaComision": "Gallery commission applies",
   "ventaForm.porcentajeComision": "Commission percentage",
@@ -745,6 +762,10 @@ export const en: Record<keyof typeof es, string> = {
   "obraDetail.estadoLabel": "Status",
   "obraDetail.estadoBloqueadoPorVenta":
     "The status can't be changed here because this copy has a sale, reservation, or donation registered. To change it, edit or cancel that sale/reservation/donation.",
+  "obraDetail.estadoVendidaReservadaRequiereVenta":
+    "\"Sold\" and \"Reserved\" can't be chosen here: use the \"Sale / Reservation\" button so the buyer's details get recorded correctly.",
+  "obraDetail.coleccionAutorNoDisponibleVenta":
+    "This piece is part of the artist's own collection: it isn't available for sale or reservation.",
   "obraDetail.guardarCambios": "Save changes",
   "obraDetail.serieNumeroLabel": "Copy number",
   "obraDetail.fechaImpresion": "Print date",
@@ -795,7 +816,11 @@ export const en: Record<keyof typeof es, string> = {
   "obraDetail.faltaFechaImpresion": "the print date",
   "obraDetail.faltaSoporteImpresion": "the print medium",
   "obraDetail.noSePuedeDeshacerSerie":
-    "Can't convert to a unique piece: some copies are already sold, reserved, or on display.",
+    "Can't convert to a unique piece: some copies are already sold, reserved, on display, on consignment, in the artist's own collection, discarded, or destroyed.",
   "obraDetail.errorObraYaVendida": "Can't convert to an edition: the artwork was already sold or reserved.",
+  "obraDetail.avisoPierdeDatosEjemplares":
+    "This artwork's copies already have data loaded (print date, measurements, certificate, notes, etc.). If you save this change, all those copies get deleted and recreated blank.",
+  "obraDetail.confirmarPerdidaDatosEjemplaresPregunta": "Save anyway and lose that data? This cannot be undone.",
+  "obraDetail.confirmarPerdidaDatosEjemplaresBoton": "Yes, save and lose that data",
   "obraDetail.estadoTrasAnularPregunta": "What state should the copy go back to?",
 };

@@ -1,5 +1,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
+use serde::Serialize;
+use tauri::{AppHandle, Emitter};
 
 /// Lexically resolves ".."/"." segments without touching the filesystem, so a
 /// traversal attempt can be rejected before any directory gets created.
@@ -95,6 +97,92 @@ pub fn fs_read_absolute(path: String) -> Result<Vec<u8>, String> {
     fs::read(path).map_err(|e| e.to_string())
 }
 
+#[derive(Clone, Serialize)]
+struct ProgresoCopiaCarpeta {
+    copiados: usize,
+    total: usize,
+}
+
+fn contar_archivos(dir: &Path) -> std::io::Result<usize> {
+    let mut total = 0;
+    for entry in fs::read_dir(dir)? {
+        let path = entry?.path();
+        if path.is_dir() {
+            total += contar_archivos(&path)?;
+        } else {
+            total += 1;
+        }
+    }
+    Ok(total)
+}
+
+/// Logica pura de la copia recursiva, sin depender de Tauri: recibe un
+/// callback de progreso generico en vez de un AppHandle, para poder probarla
+/// con un closure comun en los tests de abajo.
+fn copiar_recursivo(
+    origen: &Path,
+    destino: &Path,
+    copiados: &mut usize,
+    total: usize,
+    on_progreso: &mut dyn FnMut(usize, usize),
+) -> std::io::Result<()> {
+    fs::create_dir_all(destino)?;
+    for entry in fs::read_dir(origen)? {
+        let path = entry?.path();
+        let Some(nombre) = path.file_name() else { continue };
+        let dest_path = destino.join(nombre);
+        if path.is_dir() {
+            copiar_recursivo(&path, &dest_path, copiados, total, on_progreso)?;
+        } else {
+            fs::copy(&path, &dest_path)?;
+            *copiados += 1;
+            on_progreso(*copiados, total);
+        }
+    }
+    Ok(())
+}
+
+/// Copia recursivamente toda una carpeta de workspace (base de datos, obras,
+/// certificados) de un lugar a otro — usado por "Mover carpeta" en Ajustes,
+/// para que el usuario no tenga que arrastrar archivos a mano en el Finder.
+/// Emite progreso via el evento "carpeta-copiando-progreso" a medida que
+/// copia cada archivo. La carpeta de origen nunca se toca ni se borra aca:
+/// eso es una decision aparte, explicita, del usuario (ver
+/// fs_remove_workspace_root).
+#[tauri::command]
+pub fn fs_copiar_carpeta<R: tauri::Runtime>(app: AppHandle<R>, origen: String, destino: String) -> Result<(), String> {
+    let origen_path = fs::canonicalize(&origen).map_err(|e| e.to_string())?;
+    let destino_path = PathBuf::from(&destino);
+    if let Ok(destino_canonico) = fs::canonicalize(&destino_path) {
+        if destino_canonico == origen_path {
+            return Err("La carpeta de destino es la misma que la de origen".into());
+        }
+    }
+
+    let total = contar_archivos(&origen_path).map_err(|e| e.to_string())?;
+    let mut copiados = 0;
+    copiar_recursivo(&origen_path, &destino_path, &mut copiados, total, &mut |copiados, total| {
+        let _ = app.emit("carpeta-copiando-progreso", ProgresoCopiaCarpeta { copiados, total });
+    })
+    .map_err(|e| e.to_string())
+}
+
+/// Borra una carpeta de workspace vieja despues de una mudanza confirmada
+/// (ver fs_copiar_carpeta). Solo borra si la carpeta todavia tiene un
+/// registro.db adentro — evita borrar por error una carpeta que en realidad
+/// no es (o ya dejo de ser) una carpeta de datos de Galeris.
+#[tauri::command]
+pub fn fs_remove_workspace_root(path: String) -> Result<(), String> {
+    let root = PathBuf::from(&path);
+    if !root.join("registro.db").exists() {
+        return Err(
+            "La carpeta no parece ser una carpeta de datos de Galeris (no tiene registro.db) — no se borra por seguridad."
+                .into(),
+        );
+    }
+    fs::remove_dir_all(root).map_err(|e| e.to_string())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -171,5 +259,81 @@ mod tests {
         let bytes = fs_read_absolute(target.to_string_lossy().to_string()).unwrap();
 
         assert_eq!(bytes, vec![4, 5, 6]);
+    }
+
+    #[test]
+    fn copiar_recursivo_copia_archivos_y_subcarpetas_y_reporta_progreso() {
+        let origen = temp_root("copiar_origen");
+        fs::write(origen.join("registro.db"), vec![1]).unwrap();
+        fs::create_dir_all(origen.join("obras/1")).unwrap();
+        fs::write(origen.join("obras/1/original.jpg"), vec![2, 3]).unwrap();
+        fs::create_dir_all(origen.join("certificados")).unwrap();
+
+        let destino = std::env::temp_dir().join("registro_fs_test_copiar_destino");
+        let _ = fs::remove_dir_all(&destino);
+
+        let total = contar_archivos(&origen).unwrap();
+        assert_eq!(total, 2);
+
+        let mut copiados = 0;
+        let mut llamadas = Vec::new();
+        copiar_recursivo(&origen, &destino, &mut copiados, total, &mut |c, t| llamadas.push((c, t))).unwrap();
+
+        assert_eq!(copiados, 2);
+        assert_eq!(llamadas.len(), 2);
+        assert!(llamadas.iter().all(|&(_, t)| t == 2));
+        assert_eq!(fs::read(destino.join("registro.db")).unwrap(), vec![1]);
+        assert_eq!(fs::read(destino.join("obras/1/original.jpg")).unwrap(), vec![2, 3]);
+        assert!(destino.join("certificados").is_dir());
+
+        let _ = fs::remove_dir_all(&destino);
+    }
+
+    #[test]
+    fn fs_copiar_carpeta_rechaza_copiar_una_carpeta_sobre_si_misma() {
+        let root = temp_root("copiar_mismo");
+        let root_str = root.to_string_lossy().to_string();
+        let app = tauri::test::mock_app();
+
+        let result = fs_copiar_carpeta(app.handle().clone(), root_str.clone(), root_str);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn fs_copiar_carpeta_copia_todo_el_contenido_a_una_carpeta_nueva() {
+        let origen = temp_root("copiar_carpeta_origen");
+        fs::write(origen.join("registro.db"), vec![7]).unwrap();
+        let destino = std::env::temp_dir().join("registro_fs_test_copiar_carpeta_destino");
+        let _ = fs::remove_dir_all(&destino);
+        let app = tauri::test::mock_app();
+
+        fs_copiar_carpeta(app.handle().clone(), origen.to_string_lossy().to_string(), destino.to_string_lossy().to_string())
+            .unwrap();
+
+        assert_eq!(fs::read(destino.join("registro.db")).unwrap(), vec![7]);
+        let _ = fs::remove_dir_all(&destino);
+    }
+
+    #[test]
+    fn remove_workspace_root_se_niega_sin_registro_db() {
+        let root = temp_root("remove_root_sin_db");
+        let root_str = root.to_string_lossy().to_string();
+
+        let result = fs_remove_workspace_root(root_str);
+
+        assert!(result.is_err());
+        assert!(root.exists());
+    }
+
+    #[test]
+    fn remove_workspace_root_borra_si_tiene_registro_db() {
+        let root = temp_root("remove_root_con_db");
+        fs::write(root.join("registro.db"), vec![1]).unwrap();
+        let root_str = root.to_string_lossy().to_string();
+
+        fs_remove_workspace_root(root_str).unwrap();
+
+        assert!(!root.exists());
     }
 }

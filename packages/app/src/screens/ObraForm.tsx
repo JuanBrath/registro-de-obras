@@ -31,6 +31,7 @@ import { ImageFileField } from "../components/ImageFileField.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
 import { focusNextOnEnter } from "../utils/focusNextOnEnter.js";
+import { generarMiniatura } from "../utils/generarMiniatura.js";
 import type { ArchivoMetadata } from "../utils/readImageMetadata.js";
 
 export function ObraForm({
@@ -262,6 +263,10 @@ export function ObraForm({
         const id = insertObra.lastInsertId;
         if (!id) throw new Error("No se pudo crear la obra");
 
+        for (const tag of tags) {
+          await tx.execute("INSERT OR IGNORE INTO etiqueta (nombre) VALUES (?)", [tag]);
+        }
+
         if (categoria === "Fotografia") {
           await tx.execute(
             `INSERT INTO obra_fotografia (
@@ -458,9 +463,10 @@ export function ObraForm({
           const bytes = new Uint8Array(await imageFile.arrayBuffer());
           const originalPath = obraOriginalPath(id, ext);
           const miniaturaPath = obraMiniaturaPath(id);
+          const miniaturaBytes = await generarMiniatura(imageFile, bytes);
 
           await fs.writeFile(originalPath, bytes);
-          await fs.writeFile(miniaturaPath, bytes);
+          await fs.writeFile(miniaturaPath, miniaturaBytes);
 
           await tx.execute(`UPDATE obra SET imagen_alta_resolucion_path = ?, miniatura_path = ? WHERE id = ?`, [
             originalPath,
@@ -511,8 +517,14 @@ export function ObraForm({
     <form className="obra-form" onSubmit={handleSubmit} onKeyDown={focusNextOnEnter}>
       <div className="obra-form-header">
         <h2>{t("obraForm.tituloNueva")}</h2>
-        <button type="button" onClick={onCancel}>
-          {t("obraForm.cancelarVolver")}
+        <button
+          type="button"
+          className="header-close-button"
+          onClick={onCancel}
+          aria-label={t("obraForm.cancelarVolver")}
+          title={t("obraForm.cancelarVolver")}
+        >
+          ✕
         </button>
       </div>
 
@@ -631,10 +643,10 @@ export function ObraForm({
             <ObraDetalleFields categoria={categoria} value={obraDetalle} onChange={setObraDetalle} mostrarEsSeriada={false} />
           )}
 
-          <label>
-            {t("obraForm.etiquetasLabel")}
+          <div className="campo-con-ayuda">
+            {t("obraForm.etiquetasLabel")} <HelpIcon fieldKey="etiquetas_obra" />
             <TagPicker value={tags} onChange={setTags} />
-          </label>
+          </div>
 
           {categoria === "ObraGrafica" && obraDetalle.subtipo && (
             <p className="field-note">
@@ -668,6 +680,18 @@ export function ObraForm({
                 </label>
               </div>
             </fieldset>
+          )}
+
+          {esSeriada === true && (
+            <label>
+              {t("obraForm.cantidadEdicionesLabel")}
+              <input
+                type="number"
+                min={1}
+                value={cantidadTotalEdiciones}
+                onChange={(e) => setCantidadTotalEdiciones(e.target.value)}
+              />
+            </label>
           )}
 
           {esSeriada !== null && (
@@ -704,18 +728,6 @@ export function ObraForm({
             <p className="error" role="alert">
               ⚠️ {t("obraForm.advertenciaPruebaAutor")}
             </p>
-          )}
-
-          {esSeriada === true && (
-            <label>
-              {t("obraForm.cantidadEdicionesLabel")}
-              <input
-                type="number"
-                min={1}
-                value={cantidadTotalEdiciones}
-                onChange={(e) => setCantidadTotalEdiciones(e.target.value)}
-              />
-            </label>
           )}
 
           {esSeriada !== null &&
@@ -785,9 +797,14 @@ export function ObraForm({
         </>
       )}
 
-      <button type="submit" disabled={submitting}>
-        {submitting ? t("common.saving") : t("obraForm.guardarObra")}
-      </button>
+      <div className="obra-form-saved-actions">
+        <button type="submit" disabled={submitting}>
+          {submitting ? t("common.saving") : t("obraForm.guardarObra")}
+        </button>
+        <button type="button" onClick={onCancel} disabled={submitting}>
+          {t("obraForm.cancelarVolver")}
+        </button>
+      </div>
 
       {error && (
         <p className="error" role="alert">

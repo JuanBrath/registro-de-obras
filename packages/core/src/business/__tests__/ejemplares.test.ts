@@ -72,10 +72,18 @@ describe("puedeDeshacerSerie", () => {
     expect(puedeDeshacerSerie(["disponible", "disponible", "disponible"])).toBe(true);
   });
 
-  it("bloquea si algun ejemplar ya se vendio, reservo o esta en exhibicion", () => {
+  it("permite deshacer la serie si los ejemplares estan en stock o en produccion (no comprometidos)", () => {
+    expect(puedeDeshacerSerie(["disponible", "en_stock", "en_produccion"])).toBe(true);
+  });
+
+  it("bloquea si algun ejemplar ya se vendio, reservo, esta en exhibicion, consignacion, coleccion del autor, descartado o destruido", () => {
     expect(puedeDeshacerSerie(["disponible", "vendida"])).toBe(false);
     expect(puedeDeshacerSerie(["disponible", "reservada"])).toBe(false);
     expect(puedeDeshacerSerie(["disponible", "exhibicion"])).toBe(false);
+    expect(puedeDeshacerSerie(["disponible", "consignacion"])).toBe(false);
+    expect(puedeDeshacerSerie(["disponible", "coleccion_autor"])).toBe(false);
+    expect(puedeDeshacerSerie(["disponible", "descartada"])).toBe(false);
+    expect(puedeDeshacerSerie(["disponible", "destruida"])).toBe(false);
   });
 
   it("una serie sin ejemplares (lista vacia) se puede deshacer", () => {

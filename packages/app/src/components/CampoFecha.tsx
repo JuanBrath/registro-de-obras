@@ -99,11 +99,13 @@ export function CampoFecha({
   onChangeIso,
   disabled,
   required,
+  className,
 }: {
   valorIso: string;
   onChangeIso: (iso: string) => void;
   disabled?: boolean;
   required?: boolean;
+  className?: string;
 }) {
   const [texto, setTexto] = useState(() => fechaIsoATexto(valorIso));
 
@@ -119,6 +121,7 @@ export function CampoFecha({
       value={texto}
       disabled={disabled}
       required={required}
+      className={className}
       onChange={(e) => {
         const enmascarado = enmascararFecha(e.target.value);
         setTexto(enmascarado);

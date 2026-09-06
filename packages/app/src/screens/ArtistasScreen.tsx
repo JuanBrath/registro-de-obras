@@ -650,8 +650,8 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
               {t("artistas.nuevoArtista")}
             </button>
           )}
-          <button type="button" onClick={handleVolver}>
-            {t("common.back")}
+          <button type="button" className="header-close-button" onClick={handleVolver} aria-label={t("common.back")} title={t("common.back")}>
+            ✕
           </button>
         </div>
       </div>
@@ -1003,6 +1003,12 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
                 onSave={(fields, newFoto) => handleUpdateArtista(a.id, fields, newFoto)}
               />
             ))}
+        </div>
+
+        <div className="screen-footer-back">
+          <button type="button" onClick={handleVolver}>
+            {t("common.back")}
+          </button>
         </div>
       </div>
       )}
