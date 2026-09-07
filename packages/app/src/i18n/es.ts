@@ -23,6 +23,7 @@ export const es = {
   "common.edit": "Editar",
   "common.consultar": "Consultar",
   "common.close": "Cerrar",
+  "common.verCompleto": "Ver completo",
   "common.remove": "Quitar",
   "common.abrirEnlace": "Abrir enlace",
   "common.settings": "Configuración",
@@ -570,6 +571,7 @@ export const es = {
   "obrasList.ordenarPorLabel": "Ordenar por",
   "obrasList.ordenarPorTitulo": "Nombre",
   "obrasList.ordenarPorCodigoInventario": "Número de inventario",
+  "obrasList.skuPrefix": "SKU:",
 
   // Informes de Obras (listado)
   "informesObras.generarInforme": "Generar informe",

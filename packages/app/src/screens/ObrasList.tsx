@@ -537,7 +537,11 @@ export function ObrasList({
             )}
             <div className="obra-card-info">
               <strong>{obra.titulo}</strong>
-              {obra.codigo_inventario && <span className="obra-card-sku">{obra.codigo_inventario}</span>}
+              {obra.codigo_inventario && (
+                <span className="obra-card-sku">
+                  {t("obrasList.skuPrefix")} {obra.codigo_inventario}
+                </span>
+              )}
               <span>
                 {t(`categoria.${obra.categoria_obra}` as TranslationKey)}
                 {" — "}

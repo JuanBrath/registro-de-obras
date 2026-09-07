@@ -299,10 +299,11 @@ input[type="date"] {
   margin-left: 0.5rem;
 }
 
-.notas-label-clickable {
+.notas-expandir-boton {
+  font-size: 0.8rem;
+  padding: 0.1rem 0.5rem;
+  margin-left: 0.5rem;
   cursor: pointer;
-  text-decoration: underline dotted;
-  text-underline-offset: 2px;
 }
 
 .notas-ampliadas-texto {
@@ -895,8 +896,8 @@ input[type="date"] {
 }
 
 .obra-card-sku {
-  font-size: 0.8rem;
-  opacity: 0.7;
+  font-size: 0.85rem;
+  opacity: 0.9;
 }
 
 .obra-card-estado {
@@ -996,6 +997,14 @@ input[type="date"] {
   gap: 1.5rem;
   align-items: flex-start;
   margin-top: 1rem;
+}
+
+.obra-detail-info p {
+  margin-bottom: 0.5em;
+}
+
+.obra-detail-info p:last-child {
+  margin-bottom: 0;
 }
 
 .obra-detail-thumbnail {

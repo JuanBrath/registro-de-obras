@@ -25,6 +25,7 @@ export const en: Record<keyof typeof es, string> = {
   "common.edit": "Edit",
   "common.consultar": "View",
   "common.close": "Close",
+  "common.verCompleto": "View full",
   "common.remove": "Remove",
   "common.abrirEnlace": "Open link",
   "common.settings": "Settings",
@@ -572,6 +573,7 @@ export const en: Record<keyof typeof es, string> = {
   "obrasList.ordenarPorLabel": "Sort by",
   "obrasList.ordenarPorTitulo": "Name",
   "obrasList.ordenarPorCodigoInventario": "Inventory number",
+  "obrasList.skuPrefix": "SKU:",
 
   // Obras report list
   "informesObras.generarInforme": "Generate report",

@@ -1872,7 +1872,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
               <img src={thumbnailUrl} alt={obra.titulo} className="obra-detail-thumbnail" />
             </button>
           )}
-          <div>
+          <div className="obra-detail-info">
             {obra.codigo_inventario && (
               <p>{t("obraDetail.codigoInventario", { valor: obra.codigo_inventario })}</p>
             )}
@@ -2629,6 +2629,44 @@ function ObraEditForm({
   return (
     <div className="obra-form" onKeyDown={focusNextOnEnter}>
       <label>
+        {t("obraForm.imagenLabel")} <HelpIcon fieldKey="imagen_obra" />
+        {imagePreviewUrl ? (
+          <img src={imagePreviewUrl} alt="" className="obra-edit-imagen-actual" />
+        ) : (
+          !removerImagen &&
+          thumbnailUrl && (
+            <button
+              type="button"
+              className="obra-detail-thumbnail-button"
+              onClick={onShowFullImage}
+              disabled={loadingFullImage}
+            >
+              <img src={thumbnailUrl} alt={obra.titulo} className="obra-edit-imagen-actual" />
+            </button>
+          )
+        )}
+        {removerImagen && <p className="field-note">{t("obraDetail.imagenSeEliminara")}</p>}
+        <div className="image-file-field-row">
+          <ImageFileField value={imageFile} onChange={handleImageChange} hasImage={!removerImagen && !!thumbnailUrl} />
+          {(imageFile || thumbnailUrl) &&
+            (!removerImagen ? (
+              <button type="button" onClick={handleQuitarImagen}>
+                {t("obraDetail.quitarImagen")}
+              </button>
+            ) : (
+              <button type="button" onClick={() => setRemoverImagen(false)}>
+                {t("obraDetail.deshacerQuitarImagen")}
+              </button>
+            ))}
+        </div>
+      </label>
+
+      <label>
+        {t("obraForm.codigoInventarioLabel")} <HelpIcon fieldKey="codigo_inventario" />
+        <input type="text" value={codigoInventario} onChange={(e) => setCodigoInventario(e.target.value)} />
+      </label>
+
+      <label>
         {t("obraForm.tituloLabel")}
         <input ref={tituloInputRef} type="text" value={titulo} onChange={(e) => setTitulo(e.target.value)} />
       </label>
@@ -2636,11 +2674,6 @@ function ObraEditForm({
       <label>
         {t("obraForm.subtituloLabel")} <HelpIcon fieldKey="subtitulo" />
         <input type="text" value={subtitulo} onChange={(e) => setSubtitulo(e.target.value)} />
-      </label>
-
-      <label>
-        {t("obraForm.codigoInventarioLabel")} <HelpIcon fieldKey="codigo_inventario" />
-        <input type="text" value={codigoInventario} onChange={(e) => setCodigoInventario(e.target.value)} />
       </label>
 
       <label>
@@ -2677,39 +2710,6 @@ function ObraEditForm({
       <label>
         <NotasLabel texto={notas}>{t("obraForm.notasLabel")}</NotasLabel> <HelpIcon fieldKey="notas_obra" />
         <textarea rows={3} value={notas} onChange={(e) => setNotas(e.target.value)} />
-      </label>
-
-      <label>
-        {t("obraForm.imagenLabel")} <HelpIcon fieldKey="imagen_obra" />
-        {imagePreviewUrl ? (
-          <img src={imagePreviewUrl} alt="" className="obra-edit-imagen-actual" />
-        ) : (
-          !removerImagen &&
-          thumbnailUrl && (
-            <button
-              type="button"
-              className="obra-detail-thumbnail-button"
-              onClick={onShowFullImage}
-              disabled={loadingFullImage}
-            >
-              <img src={thumbnailUrl} alt={obra.titulo} className="obra-edit-imagen-actual" />
-            </button>
-          )
-        )}
-        {removerImagen && <p className="field-note">{t("obraDetail.imagenSeEliminara")}</p>}
-        <div className="image-file-field-row">
-          <ImageFileField value={imageFile} onChange={handleImageChange} hasImage={!removerImagen && !!thumbnailUrl} />
-          {(imageFile || thumbnailUrl) &&
-            (!removerImagen ? (
-              <button type="button" onClick={handleQuitarImagen}>
-                {t("obraDetail.quitarImagen")}
-              </button>
-            ) : (
-              <button type="button" onClick={() => setRemoverImagen(false)}>
-                {t("obraDetail.deshacerQuitarImagen")}
-              </button>
-            ))}
-        </div>
       </label>
 
       {!esRegistroPersonal && (
