@@ -822,11 +822,7 @@ export const es = {
   "obraDetail.faltaFechaImpresion": "la fecha de impresión",
   "obraDetail.faltaSoporteImpresion": "el soporte de impresión",
   "obraDetail.noSePuedeDeshacerSerie":
-    "No se puede convertir en obra única: ya hay ejemplares vendidos, reservados, en exhibición, en consignación, en la colección del autor, descartados o destruidos.",
-  "obraDetail.avisoPierdeDatosEjemplares":
-    "Ya hay datos cargados en los ejemplares de esta obra (fecha de impresión, medidas, certificado, notas, etc.). Si guardás este cambio, todos esos ejemplares se borran y se crean de nuevo en blanco.",
-  "obraDetail.confirmarPerdidaDatosEjemplaresPregunta": "¿Guardar igual y perder esos datos? Esta acción no se puede deshacer.",
-  "obraDetail.confirmarPerdidaDatosEjemplaresBoton": "Sí, guardar y perder esos datos",
+    "No se puede convertir en obra única: hay más de un ejemplar vendido, reservado, en exhibición, en consignación, en la colección del autor, descartado, o con datos propios ya cargados (fecha de impresión, notas, etc.).",
   "obraDetail.confirmarSalirPregunta": "Hiciste cambios sin guardar. ¿Salir igual y abandonarlos?",
   "obraDetail.confirmarSalirBoton": "Sí, salir sin guardar",
   "obraDetail.seguirEditando": "Seguir editando",

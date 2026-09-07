@@ -824,11 +824,7 @@ export const en: Record<keyof typeof es, string> = {
   "obraDetail.faltaFechaImpresion": "the print date",
   "obraDetail.faltaSoporteImpresion": "the print medium",
   "obraDetail.noSePuedeDeshacerSerie":
-    "Can't convert to a unique piece: some copies are already sold, reserved, on display, on consignment, in the artist's own collection, discarded, or destroyed.",
-  "obraDetail.avisoPierdeDatosEjemplares":
-    "This artwork's copies already have data loaded (print date, measurements, certificate, notes, etc.). If you save this change, all those copies get deleted and recreated blank.",
-  "obraDetail.confirmarPerdidaDatosEjemplaresPregunta": "Save anyway and lose that data? This cannot be undone.",
-  "obraDetail.confirmarPerdidaDatosEjemplaresBoton": "Yes, save and lose that data",
+    "Can't convert to a unique piece: more than one copy is sold, reserved, on display, on consignment, in the artist's own collection, discarded, or already has its own data loaded (print date, notes, etc.).",
   "obraDetail.confirmarSalirPregunta": "You made changes that aren't saved. Leave anyway and discard them?",
   "obraDetail.confirmarSalirBoton": "Yes, leave without saving",
   "obraDetail.seguirEditando": "Keep editing",

@@ -1,12 +1,17 @@
 import { describe, expect, it } from "vitest";
 import {
   calcularCantidadPruebasArtista,
+  evaluarDeshacerSerie,
   formatearNumeroEjemplar,
   formatearNumeroPruebaArtista,
   generarEjemplarUnico,
   generarEjemplares,
-  puedeDeshacerSerie,
+  type InfoEjemplarParaDeshacer,
 } from "../ejemplares.js";
+
+function ej(estado: string, tieneDatosCargados = false): InfoEjemplarParaDeshacer {
+  return { estado, tieneDatosCargados };
+}
 
 describe("calcularCantidadPruebasArtista", () => {
   it("redondea siempre hacia arriba", () => {
@@ -67,26 +72,62 @@ describe("generarEjemplarUnico", () => {
   });
 });
 
-describe("puedeDeshacerSerie", () => {
-  it("permite deshacer la serie si todos los ejemplares estan disponibles", () => {
-    expect(puedeDeshacerSerie(["disponible", "disponible", "disponible"])).toBe(true);
+describe("evaluarDeshacerSerie", () => {
+  it("permite deshacer sin nada que conservar si todos estan disponibles/en_stock/en_produccion y sin datos cargados", () => {
+    expect(evaluarDeshacerSerie([ej("disponible"), ej("disponible"), ej("disponible")])).toEqual({
+      permitido: true,
+      indiceAConservar: null,
+    });
+    expect(evaluarDeshacerSerie([ej("disponible"), ej("en_stock"), ej("en_produccion")])).toEqual({
+      permitido: true,
+      indiceAConservar: null,
+    });
   });
 
-  it("permite deshacer la serie si los ejemplares estan en stock o en produccion (no comprometidos)", () => {
-    expect(puedeDeshacerSerie(["disponible", "en_stock", "en_produccion"])).toBe(true);
+  it("una serie sin ejemplares (lista vacia) se puede deshacer sin nada que conservar", () => {
+    expect(evaluarDeshacerSerie([])).toEqual({ permitido: true, indiceAConservar: null });
   });
 
-  it("bloquea si algun ejemplar ya se vendio, reservo, esta en exhibicion, consignacion, coleccion del autor, descartado o destruido", () => {
-    expect(puedeDeshacerSerie(["disponible", "vendida"])).toBe(false);
-    expect(puedeDeshacerSerie(["disponible", "reservada"])).toBe(false);
-    expect(puedeDeshacerSerie(["disponible", "exhibicion"])).toBe(false);
-    expect(puedeDeshacerSerie(["disponible", "consignacion"])).toBe(false);
-    expect(puedeDeshacerSerie(["disponible", "coleccion_autor"])).toBe(false);
-    expect(puedeDeshacerSerie(["disponible", "descartada"])).toBe(false);
-    expect(puedeDeshacerSerie(["disponible", "destruida"])).toBe(false);
+  it("si exactamente una copia esta en un estado comprometido, permite deshacer conservando esa copia", () => {
+    expect(evaluarDeshacerSerie([ej("disponible"), ej("vendida")])).toEqual({
+      permitido: true,
+      indiceAConservar: 1,
+    });
+    expect(evaluarDeshacerSerie([ej("reservada"), ej("disponible")])).toEqual({
+      permitido: true,
+      indiceAConservar: 0,
+    });
+    expect(evaluarDeshacerSerie([ej("disponible"), ej("exhibicion")]).permitido).toBe(true);
+    expect(evaluarDeshacerSerie([ej("disponible"), ej("consignacion")]).permitido).toBe(true);
+    expect(evaluarDeshacerSerie([ej("disponible"), ej("coleccion_autor")]).permitido).toBe(true);
+    expect(evaluarDeshacerSerie([ej("disponible"), ej("descartada")]).permitido).toBe(true);
   });
 
-  it("una serie sin ejemplares (lista vacia) se puede deshacer", () => {
-    expect(puedeDeshacerSerie([])).toBe(true);
+  it("si exactamente una copia tiene datos cargados (aunque este disponible), permite deshacer conservando esa copia", () => {
+    expect(evaluarDeshacerSerie([ej("disponible"), ej("disponible", true)])).toEqual({
+      permitido: true,
+      indiceAConservar: 1,
+    });
+  });
+
+  it("bloquea si hay dos o mas copias bloqueantes (estado comprometido o con datos cargados)", () => {
+    expect(evaluarDeshacerSerie([ej("vendida"), ej("reservada")]).permitido).toBe(false);
+    expect(evaluarDeshacerSerie([ej("vendida"), ej("disponible", true)]).permitido).toBe(false);
+    expect(evaluarDeshacerSerie([ej("disponible", true), ej("disponible", true)]).permitido).toBe(false);
+  });
+
+  it("destruida nunca cuenta como bloqueante, ni sola ni combinada con otra bloqueante real", () => {
+    expect(evaluarDeshacerSerie([ej("disponible"), ej("destruida")])).toEqual({
+      permitido: true,
+      indiceAConservar: null,
+    });
+    expect(evaluarDeshacerSerie([ej("destruida"), ej("destruida"), ej("destruida")])).toEqual({
+      permitido: true,
+      indiceAConservar: null,
+    });
+    expect(evaluarDeshacerSerie([ej("destruida"), ej("vendida")])).toEqual({
+      permitido: true,
+      indiceAConservar: 1,
+    });
   });
 });

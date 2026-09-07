@@ -19,17 +19,44 @@ export function formatearNumeroPruebaArtista(indice: number, totalPA: number): s
   return `PA ${indice}/${totalPA}`;
 }
 
-// Una serie solo puede deshacerse (volver a ser obra unica) si ningun
-// ejemplar tiene todavia un historial atado a ESE numero puntual (vendido,
-// reservado, en exhibicion, en consignacion, en la coleccion del autor,
-// descartado o destruido) que se perderia al colapsar la obra en una sola
-// pieza. "Disponible" y "en_stock"/"en_produccion" son estados puramente
-// administrativos (la pieza fue impresa pero todavia no salio ni se
-// comprometio con nadie), asi que no bloquean deshacer la serie.
-const ESTADOS_NO_COMPROMETIDOS = new Set(["disponible", "en_stock", "en_produccion"]);
+export interface InfoEjemplarParaDeshacer {
+  estado: string;
+  /** Si esta copia ya tiene datos cargados a mano (fecha de impresion, notas, COA, etc.). */
+  tieneDatosCargados: boolean;
+}
 
-export function puedeDeshacerSerie(estadosEjemplares: string[]): boolean {
-  return estadosEjemplares.every((estado) => ESTADOS_NO_COMPROMETIDOS.has(estado));
+export type ResultadoDeshacerSerie =
+  | { permitido: true; indiceAConservar: number | null }
+  | { permitido: false };
+
+const ESTADOS_SIN_COMPROMISO_PROPIO = new Set(["disponible", "en_stock", "en_produccion"]);
+
+// Al deshacer una serie (volver a obra unica) hay que colapsar N copias en
+// una sola, eligiendo cual conservar. Una copia cuenta como "bloqueante" —
+// algo que no se puede descartar en silencio — si esta en un estado
+// realmente comprometido (vendida, reservada, en exhibicion, en
+// consignacion, en la coleccion del autor, descartada) o si ya tiene datos
+// cargados a mano que se perderian. "Destruida" es la unica excepcion: una
+// copia destruida no cuenta nunca como bloqueante, porque no hay nada que
+// preservar de una pieza que ya no existe.
+//
+// - Si no hay ninguna bloqueante, se puede deshacer sin mas: se genera una
+//   copia unica en blanco (indiceAConservar: null).
+// - Si hay exactamente una, se puede deshacer conservando esa copia tal cual
+//   (su estado, sus datos, su venta asociada) como la nueva pieza unica.
+// - Si hay dos o mas, no hay forma de elegir cual conservar sin perder
+//   informacion real de las otras, asi que queda bloqueado.
+export function evaluarDeshacerSerie(ejemplares: InfoEjemplarParaDeshacer[]): ResultadoDeshacerSerie {
+  const indicesBloqueantes = ejemplares.reduce<number[]>((acc, ej, indice) => {
+    const esBloqueante =
+      ej.estado !== "destruida" &&
+      (!ESTADOS_SIN_COMPROMISO_PROPIO.has(ej.estado) || ej.tieneDatosCargados);
+    if (esBloqueante) acc.push(indice);
+    return acc;
+  }, []);
+
+  if (indicesBloqueantes.length >= 2) return { permitido: false };
+  return { permitido: true, indiceAConservar: indicesBloqueantes[0] ?? null };
 }
 
 // Una obra "unica" es, por dentro, una serie de un solo ejemplar 1/1 — sin

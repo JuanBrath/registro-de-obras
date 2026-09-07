@@ -6,9 +6,9 @@ import {
   generarEjemplarUnico,
   generarEjemplares,
   obraMiniaturaPath,
+  evaluarDeshacerSerie,
   obraOriginalPath,
   parseTags,
-  puedeDeshacerSerie,
   type CategoriaObra,
   type EstadoLiquidacion,
   type EstadoPago,
@@ -206,6 +206,31 @@ interface EjemplarRow {
   instrucciones_manipulacion: string | null;
   adhesivos_montaje: string | null;
   inscripciones_anotaciones: string | null;
+}
+
+const CAMPOS_DATOS_CARGADOS_EJEMPLAR = [
+  "fecha_impresion",
+  "tipo_impresion",
+  "soporte_impresion",
+  "tipo_tintas",
+  "taller_impresion",
+  "ubicacion_actual",
+  "dimensiones",
+  "tipo_enmarcado",
+  "tamano_final_enmarcado",
+  "ubicacion_firma",
+  "sello_seco_holograma",
+  "notas",
+  "coa_numero",
+  "coa_emisor",
+  "coa_fecha",
+  "valor_seguro",
+  "informe_conservacion",
+] as const;
+
+/** Si esta copia ya tiene datos cargados a mano (fecha de impresion, notas, COA, etc.). */
+function tieneDatosCargados(ej: EjemplarRow): boolean {
+  return CAMPOS_DATOS_CARGADOS_EJEMPLAR.some((campo) => ej[campo] != null && ej[campo] !== "");
 }
 
 interface VentaRow {
@@ -1393,7 +1418,10 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
     const cambiaSeriada = eraSeriada !== fields.esSeriada;
     const cambiaCategoria = obra.categoria_obra !== fields.categoria;
 
-    if (cambiaSeriada && !fields.esSeriada && !puedeDeshacerSerie(ejemplares.map((ej) => ej.estado))) {
+    const resultadoDeshacer = evaluarDeshacerSerie(
+      ejemplares.map((ej) => ({ estado: ej.estado, tieneDatosCargados: tieneDatosCargados(ej) })),
+    );
+    if (cambiaSeriada && !fields.esSeriada && !resultadoDeshacer.permitido) {
       throw new Error(t("obraDetail.noSePuedeDeshacerSerie"));
     }
 
@@ -1446,12 +1474,27 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
             );
           }
         } else {
-          await tx.execute(`DELETE FROM ejemplar WHERE obra_id = ?`, [obraId]);
           const unico = generarEjemplarUnico();
-          await tx.execute(
-            `INSERT INTO ejemplar (obra_id, tipo, indice, total_ediciones, numero) VALUES (?, ?, ?, ?, ?)`,
-            [obraId, unico.tipo, unico.indice, unico.totalEdiciones, unico.numero],
-          );
+          const idAConservar =
+            resultadoDeshacer.permitido && resultadoDeshacer.indiceAConservar !== null
+              ? ejemplares[resultadoDeshacer.indiceAConservar].id
+              : null;
+          if (idAConservar !== null) {
+            // Se conserva tal cual la unica copia con historial propio
+            // (estado, notas, venta asociada, etc.) — solo se le borran las
+            // demas copias en blanco y se la renombra a pieza unica 1/1.
+            await tx.execute(`DELETE FROM ejemplar WHERE obra_id = ? AND id != ?`, [obraId, idAConservar]);
+            await tx.execute(
+              `UPDATE ejemplar SET tipo = ?, indice = ?, total_ediciones = ?, numero = ? WHERE id = ?`,
+              [unico.tipo, unico.indice, unico.totalEdiciones, unico.numero, idAConservar],
+            );
+          } else {
+            await tx.execute(`DELETE FROM ejemplar WHERE obra_id = ?`, [obraId]);
+            await tx.execute(
+              `INSERT INTO ejemplar (obra_id, tipo, indice, total_ediciones, numero) VALUES (?, ?, ?, ?, ?)`,
+              [obraId, unico.tipo, unico.indice, unico.totalEdiciones, unico.numero],
+            );
+          }
         }
         await tx.execute(`INSERT INTO historial_evento (obra_id, tipo, descripcion) VALUES (?, 'edicion', ?)`, [
           obraId,
@@ -2335,8 +2378,6 @@ function ObraEditForm({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   useEscapeToDismiss(error, setError);
-  const [confirmandoPerdidaDatosEjemplares, setConfirmandoPerdidaDatosEjemplares] = useState(false);
-  useEscapeToDismiss(confirmandoPerdidaDatosEjemplares, () => setConfirmandoPerdidaDatosEjemplares(false));
   const [confirmandoSalir, setConfirmandoSalir] = useState(false);
 
   // Snapshot de los valores con los que arranco el formulario, para poder
@@ -2393,10 +2434,10 @@ function ObraEditForm({
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key !== "Escape") return;
-      // Los carteles de error/perdida de datos ya se cierran solos con su
-      // propio listener (useEscapeToDismiss); si estan abiertos, dejarlos a
-      // ellos en vez de tambien intentar cerrar el formulario entero.
-      if (error || confirmandoPerdidaDatosEjemplares) return;
+      // El cartel de error ya se cierra solo con su propio listener
+      // (useEscapeToDismiss); si esta abierto, dejarlo a el en vez de
+      // tambien intentar cerrar el formulario entero.
+      if (error) return;
       if (confirmandoSalir) {
         setConfirmandoSalir(false);
         return;
@@ -2405,43 +2446,19 @@ function ObraEditForm({
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [error, confirmandoPerdidaDatosEjemplares, confirmandoSalir, isDirty, onCancel]);
+  }, [error, confirmandoSalir, isDirty, onCancel]);
 
   const permiteCambiarSeriada = categoriaObra !== "ObraGrafica";
-  const puedeDesconvertir = puedeDeshacerSerie(ejemplares.map((ej) => ej.estado));
+  const resultadoDeshacer = evaluarDeshacerSerie(
+    ejemplares.map((ej) => ({ estado: ej.estado, tieneDatosCargados: tieneDatosCargados(ej) })),
+  );
+  const puedeDesconvertir = resultadoDeshacer.permitido;
   const esSeriadaCalculada =
     categoriaObra === "ObraGrafica"
       ? obraDetalle.subtipo
         ? derivarEsSeriadaObraGrafica(obraDetalle.subtipo as SubtipoObraGrafica)
         : false
       : esSeriada;
-  // Al deshacer una serie (volver a unica) todos los ejemplares actuales se
-  // borran y se genera uno nuevo en blanco (ver handleSaveObra en el
-  // componente padre): si alguno ya tenia datos cargados a mano, hay que
-  // avisar antes de perderlos en vez de borrarlos en silencio. Convertir a
-  // seriada, en cambio, preserva el ejemplar unico existente como la edicion
-  // 1/N, asi que esa direccion no pierde nada.
-  const hayDatosCargadosEnEjemplares = ejemplares.some((ej) =>
-    ([
-      "fecha_impresion",
-      "tipo_impresion",
-      "soporte_impresion",
-      "tipo_tintas",
-      "taller_impresion",
-      "ubicacion_actual",
-      "dimensiones",
-      "tipo_enmarcado",
-      "tamano_final_enmarcado",
-      "ubicacion_firma",
-      "sello_seco_holograma",
-      "notas",
-      "coa_numero",
-      "coa_emisor",
-      "coa_fecha",
-      "valor_seguro",
-      "informe_conservacion",
-    ] as const).some((campo) => ej[campo] != null && ej[campo] !== ""),
-  );
 
   useEffect(() => {
     return () => {
@@ -2499,11 +2516,6 @@ function ObraEditForm({
       setError(t("obraForm.errorTituloRequerido"));
       return;
     }
-    if (eraSeriada && !esSeriadaCalculada && hayDatosCargadosEnEjemplares && !confirmandoPerdidaDatosEjemplares) {
-      setConfirmandoPerdidaDatosEjemplares(true);
-      return;
-    }
-    setConfirmandoPerdidaDatosEjemplares(false);
     setSubmitting(true);
     setError(null);
     try {
@@ -2779,20 +2791,12 @@ function ObraEditForm({
               type="checkbox"
               checked={esSeriada}
               disabled={eraSeriada && !puedeDesconvertir}
-              onChange={(e) => {
-                setEsSeriada(e.target.checked);
-                setConfirmandoPerdidaDatosEjemplares(false);
-              }}
+              onChange={(e) => setEsSeriada(e.target.checked)}
             />
             {t("field.esSeriada")} <HelpIcon fieldKey="es_seriada" />
           </label>
           {eraSeriada && !puedeDesconvertir && (
             <p className="field-note">{t("obraDetail.noSePuedeDeshacerSerie")}</p>
-          )}
-          {eraSeriada && !esSeriadaCalculada && hayDatosCargadosEnEjemplares && (
-            <p className="error" role="alert">
-              ⚠️ {t("obraDetail.avisoPierdeDatosEjemplares")}
-            </p>
           )}
           {!eraSeriada && esSeriada && (
             <label>
@@ -2825,24 +2829,6 @@ function ObraEditForm({
             </button>
             <button type="button" onClick={() => setConfirmandoSalir(false)}>
               {t("obraDetail.seguirEditando")}
-            </button>
-          </div>
-        </>
-      ) : confirmandoPerdidaDatosEjemplares ? (
-        <>
-          <p className="error" role="alert">
-            ⚠️ {t("obraDetail.confirmarPerdidaDatosEjemplaresPregunta")}
-          </p>
-          <div className="obra-form-saved-actions">
-            <button type="button" onClick={handleSubmit} disabled={submitting}>
-              {submitting ? t("common.saving") : t("obraDetail.confirmarPerdidaDatosEjemplaresBoton")}
-            </button>
-            <button
-              type="button"
-              onClick={() => setConfirmandoPerdidaDatosEjemplares(false)}
-              disabled={submitting}
-            >
-              {t("common.cancel")}
             </button>
           </div>
         </>
