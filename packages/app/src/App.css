@@ -295,6 +295,22 @@ input[type="date"] {
   display: inline-block;
 }
 
+.cantidad-ediciones-ayuda {
+  margin-left: 0.5rem;
+}
+
+.notas-label-clickable {
+  cursor: pointer;
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+}
+
+.notas-ampliadas-texto {
+  white-space: pre-wrap;
+  max-width: 480px;
+  line-height: 1.5;
+}
+
 .help-icon {
   border: none;
   background: none;
@@ -876,6 +892,11 @@ input[type="date"] {
   flex-direction: column;
   gap: 0.25rem;
   padding: 0 0.75rem 0.75rem;
+}
+
+.obra-card-sku {
+  font-size: 0.8rem;
+  opacity: 0.7;
 }
 
 .obra-card-estado {

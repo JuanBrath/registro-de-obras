@@ -739,7 +739,6 @@ export const es = {
   "obraDetail.dimensiones": "Dimensiones: {{valor}}",
   "obraDetail.escalaPorTamanos": "Escala por tamaños",
   "obraDetail.peso": "Peso: {{valor}}",
-  "obraDetail.notas": "Notas: {{valor}}",
   "obraDetail.codigoInventario": "Código de inventario / SKU: {{valor}}",
   "obraDetail.editarObra": "Editar obra",
   "obraDetail.generarFichaPdf": "Generar ficha PDF",

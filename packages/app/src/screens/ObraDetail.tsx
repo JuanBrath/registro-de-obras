@@ -35,6 +35,7 @@ import { TagPicker } from "../components/TagPicker.js";
 import { ArtistaSelector } from "../components/ArtistaSelector.js";
 import { ImageFileField } from "../components/ImageFileField.js";
 import { HelpIcon } from "../components/HelpIcon.js";
+import { NotasLabel } from "../components/NotasLabel.js";
 import { CampoFecha, BotonCalendario } from "../components/CampoFecha.js";
 import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
@@ -1872,10 +1873,10 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
             </button>
           )}
           <div>
-            <p>{t("obraDetail.artista", { nombre: obra.nombre_completo })}</p>
             {obra.codigo_inventario && (
               <p>{t("obraDetail.codigoInventario", { valor: obra.codigo_inventario })}</p>
             )}
+            <p>{t("obraDetail.artista", { nombre: obra.nombre_completo })}</p>
             <p>{t("obraDetail.categoria", { categoria: t(`categoria.${obra.categoria_obra}` as TranslationKey) })}</p>
             {ext?.subtipo_fotografia && (
               <p>
@@ -1902,11 +1903,14 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
             {ext?.peso && <p>{t("obraDetail.peso", { valor: ext.peso })}</p>}
             {obra.notas &&
               (() => {
-                const primeraLinea = obra.notas.split("\n")[0];
-                const hayMasContenido = obra.notas.length > primeraLinea.length;
+                const notas = obra.notas!;
+                const primeraLinea = notas.split("\n")[0];
+                const hayMasContenido = notas.length > primeraLinea.length;
                 return (
                   <p>
-                    {t("obraDetail.notas", { valor: hayMasContenido ? `${primeraLinea}…` : primeraLinea })}
+                    <NotasLabel texto={notas}>{t("obraForm.notasLabel")}</NotasLabel>
+                    {": "}
+                    {hayMasContenido ? `${primeraLinea}…` : primeraLinea}
                   </p>
                 );
               })()}
@@ -2671,7 +2675,7 @@ function ObraEditForm({
       )}
 
       <label>
-        {t("obraForm.notasLabel")} <HelpIcon fieldKey="notas_obra" />
+        <NotasLabel texto={notas}>{t("obraForm.notasLabel")}</NotasLabel> <HelpIcon fieldKey="notas_obra" />
         <textarea rows={3} value={notas} onChange={(e) => setNotas(e.target.value)} />
       </label>
 
@@ -2750,7 +2754,7 @@ function ObraEditForm({
           )}
           {!eraSeriada && esSeriadaCalculada && (
             <label>
-              {t("obraForm.cantidadEdicionesLabel")} <HelpIcon fieldKey="pruebas_artista" />
+              {t("obraForm.cantidadEdicionesLabel")} <span className="cantidad-ediciones-ayuda"><HelpIcon fieldKey="pruebas_artista" /></span>
               <input
                 type="number"
                 min={1}
@@ -2792,7 +2796,7 @@ function ObraEditForm({
           )}
           {!eraSeriada && esSeriada && (
             <label>
-              {t("obraForm.cantidadEdicionesLabel")} <HelpIcon fieldKey="pruebas_artista" />
+              {t("obraForm.cantidadEdicionesLabel")} <span className="cantidad-ediciones-ayuda"><HelpIcon fieldKey="pruebas_artista" /></span>
               <input
                 type="number"
                 min={1}
@@ -3299,7 +3303,9 @@ function EjemplarRowView({
           </>
         )}
         <label>
-          <span className="field-label">{t("obraDetail.notasEjemplarLabel")}</span>
+          <span className="field-label">
+            <NotasLabel texto={notas}>{t("obraDetail.notasEjemplarLabel")}</NotasLabel>
+          </span>
           <textarea rows={2} value={notas} onChange={(e) => setNotas(e.target.value)} />
         </label>
         <div className="obra-form-saved-actions">

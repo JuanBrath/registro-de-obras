@@ -741,7 +741,6 @@ export const en: Record<keyof typeof es, string> = {
   "obraDetail.dimensiones": "Dimensions: {{valor}}",
   "obraDetail.escalaPorTamanos": "Scales by size",
   "obraDetail.peso": "Weight: {{valor}}",
-  "obraDetail.notas": "Notes: {{valor}}",
   "obraDetail.codigoInventario": "Inventory code / SKU: {{valor}}",
   "obraDetail.editarObra": "Edit artwork",
   "obraDetail.generarFichaPdf": "Generate PDF sheet",
