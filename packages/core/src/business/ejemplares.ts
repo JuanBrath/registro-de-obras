@@ -27,9 +27,9 @@ export interface InfoEjemplarParaDeshacer {
 
 export type ResultadoDeshacerSerie =
   | { permitido: true; indiceAConservar: number | null }
-  | { permitido: false };
+  | { permitido: false; indicesBloqueantes: number[] };
 
-const ESTADOS_SIN_COMPROMISO_PROPIO = new Set(["disponible", "en_stock", "en_produccion"]);
+export const ESTADOS_SIN_COMPROMISO_PROPIO = new Set(["disponible", "en_stock", "en_produccion"]);
 
 // Al deshacer una serie (volver a obra unica) hay que colapsar N copias en
 // una sola, eligiendo cual conservar. Una copia cuenta como "bloqueante" —
@@ -55,7 +55,7 @@ export function evaluarDeshacerSerie(ejemplares: InfoEjemplarParaDeshacer[]): Re
     return acc;
   }, []);
 
-  if (indicesBloqueantes.length >= 2) return { permitido: false };
+  if (indicesBloqueantes.length >= 2) return { permitido: false, indicesBloqueantes };
   return { permitido: true, indiceAConservar: indicesBloqueantes[0] ?? null };
 }
 

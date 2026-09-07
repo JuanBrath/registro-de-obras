@@ -823,8 +823,10 @@ export const en: Record<keyof typeof es, string> = {
     "You can't register a sale or reservation for {{numero}}: missing {{faltantes}}. Use \"Edit\" to fill it in.",
   "obraDetail.faltaFechaImpresion": "the print date",
   "obraDetail.faltaSoporteImpresion": "the print medium",
-  "obraDetail.noSePuedeDeshacerSerie":
-    "Can't convert to a unique piece: more than one copy is sold, reserved, on display, on consignment, in the artist's own collection, discarded, or already has its own data loaded (print date, notes, etc.).",
+  "obraDetail.motivoDatosCargados": "with data loaded",
+  "obraDetail.motivoCopia": "copy {{numero}} ({{motivo}})",
+  "obraDetail.noSePuedeDeshacerSerieDetalle":
+    "Can't convert to a unique piece: {{detalle}} already have their own history (status or loaded data) that would be lost by collapsing them into one piece.",
   "obraDetail.confirmarSalirPregunta": "You made changes that aren't saved. Leave anyway and discard them?",
   "obraDetail.confirmarSalirBoton": "Yes, leave without saving",
   "obraDetail.seguirEditando": "Keep editing",

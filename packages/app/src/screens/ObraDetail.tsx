@@ -6,6 +6,7 @@ import {
   generarEjemplarUnico,
   generarEjemplares,
   obraMiniaturaPath,
+  ESTADOS_SIN_COMPROMISO_PROPIO,
   evaluarDeshacerSerie,
   obraOriginalPath,
   parseTags,
@@ -231,6 +232,27 @@ const CAMPOS_DATOS_CARGADOS_EJEMPLAR = [
 /** Si esta copia ya tiene datos cargados a mano (fecha de impresion, notas, COA, etc.). */
 function tieneDatosCargados(ej: EjemplarRow): boolean {
   return CAMPOS_DATOS_CARGADOS_EJEMPLAR.some((campo) => ej[campo] != null && ej[campo] !== "");
+}
+
+/** Arma el cartel especifico ("copia 3/10 (vendida), copia PA 1/1 (con datos cargados)...")
+ * que explica por que no se puede deshacer una serie con este resultado. */
+function describirNoSePuedeDeshacerSerie(
+  ejemplares: EjemplarRow[],
+  indicesBloqueantes: number[],
+  t: (key: TranslationKey, vars?: Record<string, string | number>) => string,
+  idioma: string,
+): string {
+  const detalles = indicesBloqueantes.map((indice) => {
+    const ej = ejemplares[indice];
+    const motivo = ESTADOS_SIN_COMPROMISO_PROPIO.has(ej.estado)
+      ? t("obraDetail.motivoDatosCargados")
+      : t(`estado.${ej.estado}` as TranslationKey);
+    return t("obraDetail.motivoCopia", { numero: ej.numero, motivo });
+  });
+  const conjuncion = idioma === "en" ? "and" : "y";
+  const detalle =
+    detalles.length <= 1 ? (detalles[0] ?? "") : `${detalles.slice(0, -1).join(", ")} ${conjuncion} ${detalles.at(-1)}`;
+  return t("obraDetail.noSePuedeDeshacerSerieDetalle", { detalle });
 }
 
 interface VentaRow {
@@ -1422,7 +1444,9 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       ejemplares.map((ej) => ({ estado: ej.estado, tieneDatosCargados: tieneDatosCargados(ej) })),
     );
     if (cambiaSeriada && !fields.esSeriada && !resultadoDeshacer.permitido) {
-      throw new Error(t("obraDetail.noSePuedeDeshacerSerie"));
+      throw new Error(
+        describirNoSePuedeDeshacerSerie(ejemplares, resultadoDeshacer.indicesBloqueantes, t, idioma),
+      );
     }
 
     await context.db.transaction(async (tx) => {
@@ -2257,7 +2281,7 @@ function ObraEditForm({
   }) => Promise<void>;
   onCancel: () => void;
 }) {
-  const { t } = useLanguage();
+  const { t, idioma } = useLanguage();
   const [titulo, setTitulo] = useState(obra.titulo);
   const [subtitulo, setSubtitulo] = useState(obra.subtitulo ?? "");
   const [codigoInventario, setCodigoInventario] = useState(obra.codigo_inventario ?? "");
@@ -2453,6 +2477,9 @@ function ObraEditForm({
     ejemplares.map((ej) => ({ estado: ej.estado, tieneDatosCargados: tieneDatosCargados(ej) })),
   );
   const puedeDesconvertir = resultadoDeshacer.permitido;
+  const mensajeNoSePuedeDeshacer = resultadoDeshacer.permitido
+    ? null
+    : describirNoSePuedeDeshacerSerie(ejemplares, resultadoDeshacer.indicesBloqueantes, t, idioma);
   const esSeriadaCalculada =
     categoriaObra === "ObraGrafica"
       ? obraDetalle.subtipo
@@ -2762,7 +2789,7 @@ function ObraEditForm({
       {categoriaObra === "ObraGrafica" && (
         <>
           {eraSeriada && !esSeriadaCalculada && !puedeDesconvertir && (
-            <p className="field-note">{t("obraDetail.noSePuedeDeshacerSerie")}</p>
+            <p className="field-note">{mensajeNoSePuedeDeshacer}</p>
           )}
           {!eraSeriada && esSeriadaCalculada && (
             <label>
@@ -2796,7 +2823,7 @@ function ObraEditForm({
             {t("field.esSeriada")} <HelpIcon fieldKey="es_seriada" />
           </label>
           {eraSeriada && !puedeDesconvertir && (
-            <p className="field-note">{t("obraDetail.noSePuedeDeshacerSerie")}</p>
+            <p className="field-note">{mensajeNoSePuedeDeshacer}</p>
           )}
           {!eraSeriada && esSeriada && (
             <label>

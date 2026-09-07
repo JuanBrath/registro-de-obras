@@ -821,8 +821,10 @@ export const es = {
     "No se puede registrar venta ni reserva de {{numero}}: falta cargar {{faltantes}}. Usá \"Editar\" para completarlo.",
   "obraDetail.faltaFechaImpresion": "la fecha de impresión",
   "obraDetail.faltaSoporteImpresion": "el soporte de impresión",
-  "obraDetail.noSePuedeDeshacerSerie":
-    "No se puede convertir en obra única: hay más de un ejemplar vendido, reservado, en exhibición, en consignación, en la colección del autor, descartado, o con datos propios ya cargados (fecha de impresión, notas, etc.).",
+  "obraDetail.motivoDatosCargados": "con datos cargados",
+  "obraDetail.motivoCopia": "la copia {{numero}} ({{motivo}})",
+  "obraDetail.noSePuedeDeshacerSerieDetalle":
+    "No se puede convertir en obra única: {{detalle}} ya tienen historial propio (estado o datos cargados) que se perdería si se colapsan en una sola pieza.",
   "obraDetail.confirmarSalirPregunta": "Hiciste cambios sin guardar. ¿Salir igual y abandonarlos?",
   "obraDetail.confirmarSalirBoton": "Sí, salir sin guardar",
   "obraDetail.seguirEditando": "Seguir editando",

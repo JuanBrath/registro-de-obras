@@ -110,10 +110,19 @@ describe("evaluarDeshacerSerie", () => {
     });
   });
 
-  it("bloquea si hay dos o mas copias bloqueantes (estado comprometido o con datos cargados)", () => {
-    expect(evaluarDeshacerSerie([ej("vendida"), ej("reservada")]).permitido).toBe(false);
-    expect(evaluarDeshacerSerie([ej("vendida"), ej("disponible", true)]).permitido).toBe(false);
-    expect(evaluarDeshacerSerie([ej("disponible", true), ej("disponible", true)]).permitido).toBe(false);
+  it("bloquea si hay dos o mas copias bloqueantes (estado comprometido o con datos cargados), e informa cuales", () => {
+    expect(evaluarDeshacerSerie([ej("vendida"), ej("reservada")])).toEqual({
+      permitido: false,
+      indicesBloqueantes: [0, 1],
+    });
+    expect(evaluarDeshacerSerie([ej("vendida"), ej("disponible", true)])).toEqual({
+      permitido: false,
+      indicesBloqueantes: [0, 1],
+    });
+    expect(evaluarDeshacerSerie([ej("disponible", true), ej("disponible", true)])).toEqual({
+      permitido: false,
+      indicesBloqueantes: [0, 1],
+    });
   });
 
   it("destruida nunca cuenta como bloqueante, ni sola ni combinada con otra bloqueante real", () => {
