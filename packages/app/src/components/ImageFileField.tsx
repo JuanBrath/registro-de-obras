@@ -2,6 +2,21 @@ import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { useLanguage } from "../i18n/LanguageContext.js";
 import { limitImageResolution } from "../utils/limitImageResolution.js";
 
+// El atributo accept="image/*" del input solo filtra la lista del selector
+// de archivos, pero no impide elegir "Todos los archivos" y confirmar algo
+// que no es una imagen (o un archivo renombrado con extension .jpg). Probar
+// que el navegador pueda decodificarlo es la unica forma confiable de
+// detectar eso antes de guardarlo.
+async function esArchivoDeImagenValido(file: File): Promise<boolean> {
+  try {
+    const bitmap = await createImageBitmap(file);
+    bitmap.close();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // <input type="file"> renders a native OS/browser button ("Choose File" /
 // "Elegir archivo") whose text follows the system locale, not the language
 // picked in Configuracion. This hides that native control and drives it
@@ -24,6 +39,7 @@ export function ImageFileField({
   const { t } = useLanguage();
   const inputRef = useRef<HTMLInputElement>(null);
   const [procesando, setProcesando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (value === null && inputRef.current) inputRef.current.value = "";
@@ -31,12 +47,18 @@ export function ImageFileField({
 
   async function handleChange(e: ChangeEvent<HTMLInputElement>) {
     const raw = e.target.files?.[0] ?? null;
+    setError(null);
     if (!raw) {
       onChange(null);
       return;
     }
     setProcesando(true);
     try {
+      if (!(await esArchivoDeImagenValido(raw))) {
+        setError(t("imageFileField.errorFormatoNoCompatible"));
+        if (inputRef.current) inputRef.current.value = "";
+        return;
+      }
       onChange(await limitImageResolution(raw));
     } finally {
       setProcesando(false);
@@ -44,28 +66,35 @@ export function ImageFileField({
   }
 
   return (
-    <div className="image-file-field">
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*"
-        className="image-file-field-input"
-        onChange={handleChange}
-      />
-      <span className="image-file-field-name">
-        {procesando
-          ? t("common.loading")
-          : !showFileName
-            ? ""
-            : value
-              ? value.name
-              : hasImage
-                ? ""
-                : t("imageFileField.ningunoSeleccionado")}
-      </span>
-      <button type="button" onClick={() => inputRef.current?.click()} disabled={procesando || disabled}>
-        {value || hasImage ? t("imageFileField.cambiarImagen") : t("imageFileField.elegirImagen")}
-      </button>
-    </div>
+    <>
+      <div className="image-file-field">
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          className="image-file-field-input"
+          onChange={handleChange}
+        />
+        <span className="image-file-field-name">
+          {procesando
+            ? t("common.loading")
+            : !showFileName
+              ? ""
+              : value
+                ? value.name
+                : hasImage
+                  ? ""
+                  : t("imageFileField.ningunoSeleccionado")}
+        </span>
+        <button type="button" onClick={() => inputRef.current?.click()} disabled={procesando || disabled}>
+          {value || hasImage ? t("imageFileField.cambiarImagen") : t("imageFileField.elegirImagen")}
+        </button>
+      </div>
+      {error && (
+        <p className="error image-file-field-error" role="alert">
+          ⚠️ {error}
+        </p>
+      )}
+    </>
   );
 }

@@ -631,6 +631,8 @@ export const es = {
   "imageFileField.elegirImagen": "Elegir imagen…",
   "imageFileField.cambiarImagen": "Cambiar imagen…",
   "imageFileField.ningunoSeleccionado": "Ninguna imagen seleccionada",
+  "imageFileField.errorFormatoNoCompatible":
+    "Ese archivo no es una imagen compatible. Elegí un archivo JPG, PNG, GIF o WEBP.",
 
   // HelpIcon
   "helpIcon.ayuda": "Ayuda",

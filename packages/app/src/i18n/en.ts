@@ -633,6 +633,8 @@ export const en: Record<keyof typeof es, string> = {
   "imageFileField.elegirImagen": "Choose image…",
   "imageFileField.cambiarImagen": "Change image…",
   "imageFileField.ningunoSeleccionado": "No image selected",
+  "imageFileField.errorFormatoNoCompatible":
+    "That file isn't a compatible image. Choose a JPG, PNG, GIF, or WEBP file.",
 
   // HelpIcon
   "helpIcon.ayuda": "Help",

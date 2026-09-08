@@ -277,6 +277,14 @@ input[type="date"] {
   overflow-wrap: anywhere;
 }
 
+/* El mensaje de error de ImageFileField puede terminar como hermano directo
+   de otros elementos dentro de un flex-row (.image-file-field-row) o de un
+   <label> del formulario: fuerza que siempre arranque en su propio renglon,
+   sea cual sea el contenedor donde se use el campo. */
+.image-file-field-error {
+  flex-basis: 100%;
+}
+
 .obra-form-saved {
   max-width: 640px;
   margin: 2rem auto;
@@ -1042,6 +1050,16 @@ input[type="date"] {
   cursor: pointer;
   border-radius: 8px;
   line-height: 0;
+}
+
+/* En el formulario de edicion, este boton (envuelve la miniatura ya
+   guardada) tambien es hijo directo de <label> y la misma regla general lo
+   estira a flex-basis:100%: el fondo gris quedaba ocupando todo el ancho
+   del formulario con la imagen pegada a la izquierda. El !important pisa
+   esa regla (mismo patron que arriba) para que el fondo se ajuste al
+   tamano de la imagen en vez de sobrar a la derecha. */
+.obra-form label > .obra-detail-thumbnail-button {
+  flex: 0 0 auto !important;
 }
 
 .obra-full-image {
