@@ -53,8 +53,14 @@ export async function pickTauriFilePath(): Promise<string | null> {
   return typeof selected === "string" ? selected : null;
 }
 
-/** Reads the bytes of an absolute path the user already picked explicitly (e.g. via pickTauriFilePath), to read its metadata. */
-export async function readAbsoluteFileBytes(path: string): Promise<Uint8Array> {
-  const bytes = await invoke<number[]>("fs_read_absolute", { path });
+/**
+ * Reads the bytes of an absolute path the user already picked explicitly
+ * (e.g. via pickTauriFilePath), to read its metadata. `maxBytes`, when
+ * given, caps how much gets read from the start of the file instead of
+ * reading it whole — worth it for formats that can be huge (PSD/PSB, camera
+ * RAW) since the metadata this app looks for always lives near the start.
+ */
+export async function readAbsoluteFileBytes(path: string, maxBytes?: number): Promise<Uint8Array> {
+  const bytes = await invoke<number[]>("fs_read_absolute", { path, maxBytes });
   return new Uint8Array(bytes);
 }

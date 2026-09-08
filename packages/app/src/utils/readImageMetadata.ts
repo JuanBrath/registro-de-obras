@@ -214,10 +214,27 @@ function extraerPalabrasClaveDeXmp(xml: string): string[] {
   return [...bloque[1].matchAll(/<rdf:li[^>]*>([\s\S]*?)<\/rdf:li>/g)].map((m) => m[1].trim()).filter(Boolean);
 }
 
-const FIRMA_PHOTOSHOP = "Photoshop 3.0";
+interface RecursosPhotoshop {
+  exif: ArchivoMetadata | null;
+  palabrasClave: string[];
+}
 
-/** Bloques de recursos "8BIM" dentro del segmento Photoshop; el recurso 0x0404 es el bloque IPTC-NAA. */
-function leerPalabrasClaveDePhotoshop(bytes: Uint8Array, view: DataView, inicio: number, fin: number): string[] {
+// IDs de recurso relevantes dentro de un bloque de recursos "8BIM" (spec
+// "Photoshop File Formats", tabla "Image Resource IDs").
+const RECURSO_IPTC_NAA = 0x0404; // 1028
+const RECURSO_EXIF_1 = 0x0422; // 1058, un TIFF/EXIF completo
+const RECURSO_XMP = 0x0424; // 1060
+
+/**
+ * Recorre bloques de recursos "8BIM" y extrae lo que haya: palabras clave
+ * (recurso IPTC-NAA o XMP) y, si esta, camara/fecha/etc del recurso EXIF.
+ * Esta misma estructura de bloques aparece en dos lugares: el segmento
+ * "Photoshop 3.0" embebido en un JPEG, y la seccion "Image Resources" de un
+ * archivo PSD/PSB (ver leerExifDePsd) — de ahi que se comparta esta funcion.
+ */
+function leerRecursosPhotoshop(bytes: Uint8Array, view: DataView, inicio: number, fin: number): RecursosPhotoshop {
+  let exif: ArchivoMetadata | null = null;
+  const palabrasClave: string[] = [];
   let pos = inicio;
   while (pos + 8 <= fin) {
     if (String.fromCharCode(bytes[pos], bytes[pos + 1], bytes[pos + 2], bytes[pos + 3]) !== "8BIM") break;
@@ -229,10 +246,21 @@ function leerPalabrasClaveDePhotoshop(bytes: Uint8Array, view: DataView, inicio:
     const tamano = view.getUint32(p, false);
     p += 4;
     if (p + tamano > fin) break;
-    if (resourceId === 0x0404) return extraerPalabrasClaveDeIptc(bytes, view, p, p + tamano);
+    if (resourceId === RECURSO_IPTC_NAA) {
+      palabrasClave.push(...extraerPalabrasClaveDeIptc(bytes, view, p, p + tamano));
+    } else if (resourceId === RECURSO_XMP) {
+      const texto = new TextDecoder("utf-8").decode(bytes.subarray(p, p + tamano));
+      palabrasClave.push(...extraerPalabrasClaveDeXmp(texto));
+    } else if (resourceId === RECURSO_EXIF_1 && tamano >= 8) {
+      try {
+        exif = extraerDeTiff(view, p);
+      } catch {
+        // Bloque EXIF corrupto o con offsets fuera de rango: se ignora.
+      }
+    }
     pos = p + tamano + (tamano % 2);
   }
-  return [];
+  return { exif, palabrasClave };
 }
 
 const FIRMA_XMP = "http://ns.adobe.com/xap/1.0/";
@@ -259,7 +287,9 @@ function leerPalabrasClaveDeJpeg(bytes: Uint8Array, view: DataView): string[] {
     if (marker === 0xed && inicioPayload + FIRMA_PHOTOSHOP.length <= bytes.length) {
       const firma = new TextDecoder("ascii").decode(bytes.subarray(inicioPayload, inicioPayload + FIRMA_PHOTOSHOP.length));
       if (firma === FIRMA_PHOTOSHOP) {
-        palabras.push(...leerPalabrasClaveDePhotoshop(bytes, view, inicioPayload + FIRMA_PHOTOSHOP.length + 1, finPayload));
+        palabras.push(
+          ...leerRecursosPhotoshop(bytes, view, inicioPayload + FIRMA_PHOTOSHOP.length + 1, finPayload).palabrasClave,
+        );
       }
     } else if (marker === 0xe1 && inicioPayload + FIRMA_XMP.length <= bytes.length) {
       const firma = new TextDecoder("ascii").decode(bytes.subarray(inicioPayload, inicioPayload + FIRMA_XMP.length));
@@ -484,13 +514,50 @@ function leerExifDeHeic(bytes: Uint8Array, view: DataView): ArchivoMetadata | nu
   return { ...(exif ?? VACIO), palabrasClave: [...new Set(palabrasClave)] };
 }
 
+const FIRMA_PSD = [0x38, 0x42, 0x50, 0x53]; // "8BPS"
+
 /**
- * Lee los metadatos disponibles de una imagen (camara, fecha de captura,
+ * PSD/PSB (Adobe Photoshop): la seccion "Image Resources" usa la misma
+ * estructura de bloques "8BIM" que el segmento "Photoshop 3.0" embebido en
+ * un JPEG (ver leerRecursosPhotoshop) — de ahi que se pueda reutilizar esa
+ * funcion para extraer camara/fecha/palabras clave tambien aca. Los campos
+ * de tamano de la cabecera hasta llegar a esa seccion son iguales en PSD
+ * (version 1) y PSB/"large document format" (version 2): la diferencia
+ * entre ambos formatos aparece recien en la seccion de capas y canales, mas
+ * adelante en el archivo, que no hace falta leer para esto — por eso no se
+ * distingue la version aca mas que para validarla.
+ */
+function leerExifDePsd(bytes: Uint8Array, view: DataView): ArchivoMetadata | null {
+  if (bytes.length < 30) return null;
+  if (!FIRMA_PSD.every((b, i) => bytes[i] === b)) return null;
+  const version = view.getUint16(4, false);
+  if (version !== 1 && version !== 2) return null;
+
+  let pos = 26;
+  const largoColorMode = view.getUint32(pos, false);
+  pos += 4 + largoColorMode;
+  if (pos + 4 > bytes.length) return null;
+
+  const largoRecursos = view.getUint32(pos, false);
+  pos += 4;
+  const finRecursos = Math.min(pos + largoRecursos, bytes.length);
+
+  const { exif, palabrasClave } = leerRecursosPhotoshop(bytes, view, pos, finRecursos);
+  if (!exif && palabrasClave.length === 0) return null;
+  return { ...(exif ?? VACIO), palabrasClave: [...new Set(palabrasClave)] };
+}
+
+/**
+ * Lee los metadatos disponibles de un archivo (camara, fecha de captura,
  * software, ISO, velocidad, diafragma, distancia focal, palabras clave),
- * sin depender de ninguna libreria externa. Soporta JPEG, TIFF y HEIC/HEIF
- * (las palabras clave, por IPTC/XMP, solo en JPEG y TIFF). Si el archivo no
- * es de un formato reconocido o no trae esos datos, devuelve todos los
- * campos en null (o la lista de palabras clave vacia) sin lanzar error.
+ * sin depender de ninguna libreria externa. Soporta JPEG, TIFF, HEIC/HEIF,
+ * PSD/PSB de Photoshop, y RAW de camara basado en TIFF (Canon CR2, Nikon
+ * NEF, Sony ARW, Olympus ORF, Adobe DNG) — estos ultimos son, por dentro,
+ * archivos TIFF validos, asi que los toma el mismo lector de TIFF sin
+ * necesitar codigo aparte. Las palabras clave (IPTC/XMP) se leen en todos
+ * los formatos salvo HEIC (solo Exif). Si el archivo no es de un formato
+ * reconocido o no trae esos datos, devuelve todos los campos en null (o la
+ * lista de palabras clave vacia) sin lanzar error.
  */
 export function readImageMetadata(bytes: Uint8Array): ArchivoMetadata {
   try {
@@ -498,6 +565,9 @@ export function readImageMetadata(bytes: Uint8Array): ArchivoMetadata {
     if (bytes.length >= 2 && bytes[0] === 0xff && bytes[1] === 0xd8) {
       const exif = leerExifDeJpeg(bytes, view);
       return { ...(exif ?? VACIO), palabrasClave: leerPalabrasClaveDeJpeg(bytes, view) };
+    }
+    if (FIRMA_PSD.every((b, i) => bytes[i] === b)) {
+      return leerExifDePsd(bytes, view) ?? VACIO;
     }
     const tiff = leerExifDeTiff(bytes, view);
     if (tiff) return { ...tiff, palabrasClave: leerPalabrasClaveDeTiff(bytes, view) };

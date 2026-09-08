@@ -1,4 +1,5 @@
 use std::fs;
+use std::io::Read;
 use std::path::{Path, PathBuf};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter};
@@ -88,13 +89,27 @@ pub fn fs_write_absolute(path: String, data: Vec<u8>) -> Result<(), String> {
 }
 
 /// Reads an arbitrary absolute path with no root/traversal check — the read
-/// counterpart of fs_write_absolute, used to read metadata (EXIF) from a file
-/// the user already picked explicitly via a native "Open" dialog (e.g. the
-/// photography "ubicacion del archivo" field), which lives outside the
-/// workspace root that fs_read_file is sandboxed to.
+/// counterpart of fs_write_absolute, used to read metadata (EXIF/IPTC/XMP)
+/// from a file the user already picked explicitly via a native "Open" dialog
+/// (e.g. the photography "ubicacion del archivo" field), which lives outside
+/// the workspace root that fs_read_file is sandboxed to.
+///
+/// `max_bytes`, when given, caps how much gets read (and sent over IPC as a
+/// JSON array of numbers, which gets expensive fast for big files): the
+/// metadata this app looks for always lives near the start of the file, so a
+/// several-hundred-MB PSD or camera RAW file doesn't need to travel over IPC
+/// in full just to read a few tags out of it.
 #[tauri::command]
-pub fn fs_read_absolute(path: String) -> Result<Vec<u8>, String> {
-    fs::read(path).map_err(|e| e.to_string())
+pub fn fs_read_absolute(path: String, max_bytes: Option<u64>) -> Result<Vec<u8>, String> {
+    match max_bytes {
+        None => fs::read(path).map_err(|e| e.to_string()),
+        Some(max) => {
+            let file = fs::File::open(path).map_err(|e| e.to_string())?;
+            let mut buffer = Vec::new();
+            file.take(max).read_to_end(&mut buffer).map_err(|e| e.to_string())?;
+            Ok(buffer)
+        }
+    }
 }
 
 #[derive(Clone, Serialize)]
@@ -256,9 +271,31 @@ mod tests {
         let target = root.join("foto.jpg");
         fs::write(&target, vec![4, 5, 6]).unwrap();
 
-        let bytes = fs_read_absolute(target.to_string_lossy().to_string()).unwrap();
+        let bytes = fs_read_absolute(target.to_string_lossy().to_string(), None).unwrap();
 
         assert_eq!(bytes, vec![4, 5, 6]);
+    }
+
+    #[test]
+    fn read_absolute_with_max_bytes_truncates_big_files_instead_of_reading_them_whole() {
+        let root = temp_root("read_absolute_max_bytes");
+        let target = root.join("original.psd");
+        fs::write(&target, vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]).unwrap();
+
+        let bytes = fs_read_absolute(target.to_string_lossy().to_string(), Some(4)).unwrap();
+
+        assert_eq!(bytes, vec![1, 2, 3, 4]);
+    }
+
+    #[test]
+    fn read_absolute_with_max_bytes_larger_than_the_file_reads_it_whole() {
+        let root = temp_root("read_absolute_max_bytes_chico");
+        let target = root.join("original.jpg");
+        fs::write(&target, vec![1, 2, 3]).unwrap();
+
+        let bytes = fs_read_absolute(target.to_string_lossy().to_string(), Some(1000)).unwrap();
+
+        assert_eq!(bytes, vec![1, 2, 3]);
     }
 
     #[test]

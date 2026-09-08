@@ -66,6 +66,7 @@ import { migration0066VentaReservaSena } from "./0066_venta_reserva_sena.js";
 import { migration0067AyudaEtiquetas } from "./0067_ayuda_etiquetas.js";
 import { migration0068AyudaUbicacionEtiquetas } from "./0068_ayuda_ubicacion_etiquetas.js";
 import { migration0069ObraNotas } from "./0069_obra_notas.js";
+import { migration0070AyudaUbicacionArchivoMetadatosRawPsd } from "./0070_ayuda_ubicacion_archivo_metadatos_raw_psd.js";
 
 export interface Migration {
   name: string;
@@ -263,4 +264,5 @@ export const ALL_MIGRATIONS: Migration[] = [
   migration0067AyudaEtiquetas,
   migration0068AyudaUbicacionEtiquetas,
   migration0069ObraNotas,
+  migration0070AyudaUbicacionArchivoMetadatosRawPsd,
 ];
