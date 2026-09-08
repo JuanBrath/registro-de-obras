@@ -37,10 +37,20 @@ export function HelpIcon({ fieldKey }: { fieldKey: string }) {
         tabIndex={0}
         className="help-icon"
         aria-label={t("helpIcon.ayuda")}
-        onClick={() => setOpen((v) => !v)}
+        onClick={(e) => {
+          // Sin esto, un click aca burbujea hasta el <label> que envuelve
+          // este icono (por ejemplo, junto a la miniatura de la obra) y el
+          // navegador lo reenvia al control asociado del label — como este
+          // <span> no es un elemento "labelable" nativo, no cuenta como
+          // ese control y termina activando otro (el boton de ver la
+          // imagen completa) ademas de abrir este tooltip.
+          e.stopPropagation();
+          setOpen((v) => !v);
+        }}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
+            e.stopPropagation();
             setOpen((v) => !v);
           }
         }}

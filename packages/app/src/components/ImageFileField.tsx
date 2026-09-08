@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { useLanguage } from "../i18n/LanguageContext.js";
 import { limitImageResolution } from "../utils/limitImageResolution.js";
+import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
 
 // El atributo accept="image/*" del input solo filtra la lista del selector
 // de archivos, pero no impide elegir "Todos los archivos" y confirmar algo
@@ -40,6 +41,7 @@ export function ImageFileField({
   const inputRef = useRef<HTMLInputElement>(null);
   const [procesando, setProcesando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  useEscapeToDismiss(error, setError);
 
   useEffect(() => {
     if (value === null && inputRef.current) inputRef.current.value = "";

@@ -2789,7 +2789,6 @@ function ObraEditForm({
   return (
     <div className="obra-form" onKeyDown={focusNextOnEnter}>
       <label>
-        {t("obraForm.imagenLabel")} <HelpIcon fieldKey="imagen_obra" />
         {imagePreviewUrl ? (
           <img src={imagePreviewUrl} alt="" className="obra-edit-imagen-actual" />
         ) : (
@@ -2805,6 +2804,9 @@ function ObraEditForm({
             </button>
           )
         )}
+        <span className="field-label">
+          {t("obraForm.imagenLabel")} <HelpIcon fieldKey="imagen_obra" />
+        </span>
         {removerImagen && <p className="field-note">{t("obraDetail.imagenSeEliminara")}</p>}
         <div className="image-file-field-row">
           <ImageFileField value={imageFile} onChange={handleImageChange} hasImage={!removerImagen && !!thumbnailUrl} />
