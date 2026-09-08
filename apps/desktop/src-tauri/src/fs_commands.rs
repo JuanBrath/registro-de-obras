@@ -166,7 +166,14 @@ fn copiar_recursivo(
 /// fs_remove_workspace_root).
 #[tauri::command]
 pub fn fs_copiar_carpeta<R: tauri::Runtime>(app: AppHandle<R>, origen: String, destino: String) -> Result<(), String> {
-    let origen_path = fs::canonicalize(&origen).map_err(|e| e.to_string())?;
+    // El mensaje distingue si el problema fue leer el origen o escribir el
+    // destino: en macOS, un "Permission denied" al leer el origen (que puede
+    // estar en un disco externo, si ahi es donde esta el workspace ahora)
+    // pasa ANTES de siquiera intentar tocar el destino, y sin esta distincion
+    // el usuario no tiene forma de saber cual de las dos carpetas es la que
+    // esta bloqueada.
+    let origen_path = fs::canonicalize(&origen)
+        .map_err(|e| format!("No se pudo acceder a la carpeta de origen ({origen}): {e}"))?;
     let destino_path = PathBuf::from(&destino);
     if let Ok(destino_canonico) = fs::canonicalize(&destino_path) {
         if destino_canonico == origen_path {
@@ -174,12 +181,13 @@ pub fn fs_copiar_carpeta<R: tauri::Runtime>(app: AppHandle<R>, origen: String, d
         }
     }
 
-    let total = contar_archivos(&origen_path).map_err(|e| e.to_string())?;
+    let total = contar_archivos(&origen_path)
+        .map_err(|e| format!("No se pudo leer el contenido de la carpeta de origen ({origen}): {e}"))?;
     let mut copiados = 0;
     copiar_recursivo(&origen_path, &destino_path, &mut copiados, total, &mut |copiados, total| {
         let _ = app.emit("carpeta-copiando-progreso", ProgresoCopiaCarpeta { copiados, total });
     })
-    .map_err(|e| e.to_string())
+    .map_err(|e| format!("No se pudo copiar de \"{origen}\" a \"{destino}\": {e}"))
 }
 
 /// Borra una carpeta de workspace vieja despues de una mudanza confirmada
@@ -335,6 +343,23 @@ mod tests {
         let result = fs_copiar_carpeta(app.handle().clone(), root_str.clone(), root_str);
 
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn fs_copiar_carpeta_informa_si_el_problema_es_el_origen() {
+        let origen_inexistente = std::env::temp_dir().join("registro_fs_test_origen_que_no_existe");
+        let _ = fs::remove_dir_all(&origen_inexistente);
+        let destino = temp_root("copiar_origen_malo_destino");
+        let app = tauri::test::mock_app();
+
+        let result = fs_copiar_carpeta(
+            app.handle().clone(),
+            origen_inexistente.to_string_lossy().to_string(),
+            destino.to_string_lossy().to_string(),
+        );
+
+        let err = result.unwrap_err();
+        assert!(err.contains("origen"), "el mensaje deberia mencionar el origen: {err}");
     }
 
     #[test]
