@@ -2804,11 +2804,11 @@ function ObraEditForm({
             </button>
           )
         )}
-        <span className="field-label">
-          {t("obraForm.imagenLabel")} <HelpIcon fieldKey="imagen_obra" />
-        </span>
         {removerImagen && <p className="field-note">{t("obraDetail.imagenSeEliminara")}</p>}
         <div className="image-file-field-row">
+          <span>
+            {t("obraForm.imagenLabel")} <HelpIcon fieldKey="imagen_obra" />
+          </span>
           <ImageFileField value={imageFile} onChange={handleImageChange} hasImage={!removerImagen && !!thumbnailUrl} />
           {(imageFile || thumbnailUrl) &&
             (!removerImagen ? (

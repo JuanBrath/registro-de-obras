@@ -547,9 +547,13 @@ export function ObraForm({
       )}
 
       <label>
-        {t("obraForm.imagenLabel")} <HelpIcon fieldKey="imagen_obra" />
         {imagePreviewUrl && <img src={imagePreviewUrl} alt="" className="obra-edit-imagen-actual" />}
-        <ImageFileField value={imageFile} onChange={handleImageChange} />
+        <div className="image-file-field-row">
+          <span>
+            {t("obraForm.imagenLabel")} <HelpIcon fieldKey="imagen_obra" />
+          </span>
+          <ImageFileField value={imageFile} onChange={handleImageChange} />
+        </div>
       </label>
 
       <label>
