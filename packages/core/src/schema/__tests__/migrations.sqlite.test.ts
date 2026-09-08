@@ -193,6 +193,7 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
       "0068_ayuda_ubicacion_etiquetas",
       "0069_obra_notas",
       "0070_ayuda_ubicacion_archivo_metadatos_raw_psd",
+      "0071_ayuda_imagen_obra_psd",
     ]);
   });
 

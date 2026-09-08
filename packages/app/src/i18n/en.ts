@@ -637,7 +637,9 @@ export const en: Record<keyof typeof es, string> = {
   "imageFileField.cambiarImagen": "Change image…",
   "imageFileField.ningunoSeleccionado": "No image selected",
   "imageFileField.errorFormatoNoCompatible":
-    "That file isn't a compatible image. Choose a JPG, PNG, GIF, or WEBP file.",
+    "That file isn't a compatible image. Choose a JPG, PNG, GIF, WEBP, PSD, or PSB file.",
+  "imageFileField.errorPsdSinMiniatura":
+    "This PSD doesn't have a preview saved inside it, so it can't be used as an image. Open it in Photoshop, turn on \"Image Previews\" in preferences and save it again, or choose a JPG/PNG instead.",
 
   // HelpIcon
   "helpIcon.ayuda": "Help",

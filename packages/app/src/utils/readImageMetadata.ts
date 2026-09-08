@@ -217,6 +217,8 @@ function extraerPalabrasClaveDeXmp(xml: string): string[] {
 interface RecursosPhotoshop {
   exif: ArchivoMetadata | null;
   palabrasClave: string[];
+  /** Miniatura JPEG embebida (recurso "Thumbnail"), ya lista para usar. */
+  miniaturaJpeg: Uint8Array | null;
 }
 
 // IDs de recurso relevantes dentro de un bloque de recursos "8BIM" (spec
@@ -224,16 +226,21 @@ interface RecursosPhotoshop {
 const RECURSO_IPTC_NAA = 0x0404; // 1028
 const RECURSO_EXIF_1 = 0x0422; // 1058, un TIFF/EXIF completo
 const RECURSO_XMP = 0x0424; // 1060
+const RECURSO_THUMBNAIL = 0x040c; // 1036, "Thumbnail Resource" (formato kJpegRGB) desde Photoshop 5.0
 
 /**
  * Recorre bloques de recursos "8BIM" y extrae lo que haya: palabras clave
- * (recurso IPTC-NAA o XMP) y, si esta, camara/fecha/etc del recurso EXIF.
- * Esta misma estructura de bloques aparece en dos lugares: el segmento
- * "Photoshop 3.0" embebido en un JPEG, y la seccion "Image Resources" de un
- * archivo PSD/PSB (ver leerExifDePsd) — de ahi que se comparta esta funcion.
+ * (recurso IPTC-NAA o XMP), camara/fecha/etc del recurso EXIF, y la
+ * miniatura JPEG que Photoshop guarda por defecto (la que usa, por ejemplo,
+ * el selector de archivos o Adobe Bridge para mostrar una vista previa sin
+ * abrir el documento). Esta misma estructura de bloques aparece en dos
+ * lugares: el segmento "Photoshop 3.0" embebido en un JPEG, y la seccion
+ * "Image Resources" de un archivo PSD/PSB (ver leerExifDePsd) — de ahi que
+ * se comparta esta funcion.
  */
 function leerRecursosPhotoshop(bytes: Uint8Array, view: DataView, inicio: number, fin: number): RecursosPhotoshop {
   let exif: ArchivoMetadata | null = null;
+  let miniaturaJpeg: Uint8Array | null = null;
   const palabrasClave: string[] = [];
   let pos = inicio;
   while (pos + 8 <= fin) {
@@ -257,10 +264,22 @@ function leerRecursosPhotoshop(bytes: Uint8Array, view: DataView, inicio: number
       } catch {
         // Bloque EXIF corrupto o con offsets fuera de rango: se ignora.
       }
+    } else if (resourceId === RECURSO_THUMBNAIL && tamano > 28) {
+      // Estructura fija de 28 bytes (formato, ancho, alto, bytes por fila,
+      // tamano sin comprimir, tamano comprimido, bits/pixel, planos) seguida
+      // de los bytes JPEG. formato=1 es "kJpegRGB", el unico que escribe
+      // Photoshop en la practica.
+      const formato = view.getUint32(p, false);
+      const tamanoComprimido = view.getUint32(p + 20, false);
+      const inicioJpeg = p + 28;
+      const finJpeg = Math.min(inicioJpeg + tamanoComprimido, p + tamano);
+      if (formato === 1 && finJpeg > inicioJpeg) {
+        miniaturaJpeg = bytes.slice(inicioJpeg, finJpeg);
+      }
     }
     pos = p + tamano + (tamano % 2);
   }
-  return { exif, palabrasClave };
+  return { exif, palabrasClave, miniaturaJpeg };
 }
 
 const FIRMA_XMP = "http://ns.adobe.com/xap/1.0/";
@@ -516,20 +535,24 @@ function leerExifDeHeic(bytes: Uint8Array, view: DataView): ArchivoMetadata | nu
 
 const FIRMA_PSD = [0x38, 0x42, 0x50, 0x53]; // "8BPS"
 
+function esPsdOPsb(bytes: Uint8Array): boolean {
+  return FIRMA_PSD.every((b, i) => bytes[i] === b);
+}
+
 /**
- * PSD/PSB (Adobe Photoshop): la seccion "Image Resources" usa la misma
+ * Ubica la seccion "Image Resources" de un PSD/PSB, que usa la misma
  * estructura de bloques "8BIM" que el segmento "Photoshop 3.0" embebido en
  * un JPEG (ver leerRecursosPhotoshop) — de ahi que se pueda reutilizar esa
- * funcion para extraer camara/fecha/palabras clave tambien aca. Los campos
- * de tamano de la cabecera hasta llegar a esa seccion son iguales en PSD
- * (version 1) y PSB/"large document format" (version 2): la diferencia
- * entre ambos formatos aparece recien en la seccion de capas y canales, mas
- * adelante en el archivo, que no hace falta leer para esto — por eso no se
- * distingue la version aca mas que para validarla.
+ * funcion tanto para leer metadatos (leerExifDePsd) como la miniatura
+ * embebida (extraerMiniaturaJpegDePsd). Los campos de tamano de la cabecera
+ * hasta llegar a esa seccion son iguales en PSD (version 1) y PSB/"large
+ * document format" (version 2): la diferencia entre ambos formatos aparece
+ * recien en la seccion de capas y canales, mas adelante en el archivo, que
+ * no hace falta leer para esto — por eso no se distingue la version aca mas
+ * que para validarla.
  */
-function leerExifDePsd(bytes: Uint8Array, view: DataView): ArchivoMetadata | null {
-  if (bytes.length < 30) return null;
-  if (!FIRMA_PSD.every((b, i) => bytes[i] === b)) return null;
+function ubicarSeccionRecursosPsd(bytes: Uint8Array, view: DataView): { inicio: number; fin: number } | null {
+  if (bytes.length < 30 || !esPsdOPsb(bytes)) return null;
   const version = view.getUint16(4, false);
   if (version !== 1 && version !== 2) return null;
 
@@ -540,11 +563,38 @@ function leerExifDePsd(bytes: Uint8Array, view: DataView): ArchivoMetadata | nul
 
   const largoRecursos = view.getUint32(pos, false);
   pos += 4;
-  const finRecursos = Math.min(pos + largoRecursos, bytes.length);
+  return { inicio: pos, fin: Math.min(pos + largoRecursos, bytes.length) };
+}
 
-  const { exif, palabrasClave } = leerRecursosPhotoshop(bytes, view, pos, finRecursos);
+function leerExifDePsd(bytes: Uint8Array, view: DataView): ArchivoMetadata | null {
+  const seccion = ubicarSeccionRecursosPsd(bytes, view);
+  if (!seccion) return null;
+
+  const { exif, palabrasClave } = leerRecursosPhotoshop(bytes, view, seccion.inicio, seccion.fin);
   if (!exif && palabrasClave.length === 0) return null;
   return { ...(exif ?? VACIO), palabrasClave: [...new Set(palabrasClave)] };
+}
+
+/**
+ * Extrae la miniatura JPEG que Photoshop guarda por defecto adentro de un
+ * PSD/PSB (recurso "Thumbnail") — son bytes JPEG ya validos, no hace falta
+ * decodificar ni renderizar el documento. Es de menor resolucion que el
+ * documento real (Photoshop la limita a un tamano chico), pero sirve para
+ * usarla como portada/miniatura de la obra dentro de la app (ver
+ * ImageFileField, que la usa cuando se elige un PSD/PSB como imagen).
+ * Devuelve null si el archivo no es un PSD/PSB valido o no tiene ese
+ * recurso (por ejemplo, si se guardo con "Vistas previas de imagen"
+ * desactivado en las preferencias de Photoshop).
+ */
+export function extraerMiniaturaJpegDePsd(bytes: Uint8Array): Uint8Array | null {
+  try {
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    const seccion = ubicarSeccionRecursosPsd(bytes, view);
+    if (!seccion) return null;
+    return leerRecursosPhotoshop(bytes, view, seccion.inicio, seccion.fin).miniaturaJpeg;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -566,7 +616,7 @@ export function readImageMetadata(bytes: Uint8Array): ArchivoMetadata {
       const exif = leerExifDeJpeg(bytes, view);
       return { ...(exif ?? VACIO), palabrasClave: leerPalabrasClaveDeJpeg(bytes, view) };
     }
-    if (FIRMA_PSD.every((b, i) => bytes[i] === b)) {
+    if (esPsdOPsb(bytes)) {
       return leerExifDePsd(bytes, view) ?? VACIO;
     }
     const tiff = leerExifDeTiff(bytes, view);

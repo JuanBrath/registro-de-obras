@@ -635,7 +635,9 @@ export const es = {
   "imageFileField.cambiarImagen": "Cambiar imagen…",
   "imageFileField.ningunoSeleccionado": "Ninguna imagen seleccionada",
   "imageFileField.errorFormatoNoCompatible":
-    "Ese archivo no es una imagen compatible. Elegí un archivo JPG, PNG, GIF o WEBP.",
+    "Ese archivo no es una imagen compatible. Elegí un archivo JPG, PNG, GIF, WEBP, PSD o PSB.",
+  "imageFileField.errorPsdSinMiniatura":
+    "Este PSD no tiene una vista previa guardada adentro, así que no se puede usar como imagen. Abrilo en Photoshop, activá \"Vistas previas de imagen\" en las preferencias y volvé a guardarlo, o elegí un JPG/PNG en su lugar.",
 
   // HelpIcon
   "helpIcon.ayuda": "Ayuda",
