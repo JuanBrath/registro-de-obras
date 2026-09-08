@@ -42,7 +42,7 @@ async function convertirPsdAJpeg(file: File): Promise<File | null> {
   const miniatura = extraerMiniaturaJpegDePsd(bytes);
   if (!miniatura) return null;
   const nombre = file.name.replace(/\.[^.]+$/, ".jpg");
-  return new File([miniatura], nombre, { type: "image/jpeg", lastModified: file.lastModified });
+  return new File([new Uint8Array(miniatura)], nombre, { type: "image/jpeg", lastModified: file.lastModified });
 }
 
 // <input type="file"> renders a native OS/browser button ("Choose File" /

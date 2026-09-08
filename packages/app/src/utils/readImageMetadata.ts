@@ -214,6 +214,8 @@ function extraerPalabrasClaveDeXmp(xml: string): string[] {
   return [...bloque[1].matchAll(/<rdf:li[^>]*>([\s\S]*?)<\/rdf:li>/g)].map((m) => m[1].trim()).filter(Boolean);
 }
 
+const FIRMA_PHOTOSHOP = "Photoshop 3.0";
+
 interface RecursosPhotoshop {
   exif: ArchivoMetadata | null;
   palabrasClave: string[];
