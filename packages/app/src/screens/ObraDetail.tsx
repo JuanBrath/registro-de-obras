@@ -1456,6 +1456,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
     ext: ObraExtRow;
     esSeriada: boolean;
     cantidadTotalEdiciones: number;
+    cantidadPruebaArtista: number;
     imageFile: File | null;
     removeImage: boolean;
     artistaId: number;
@@ -1526,7 +1527,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
           // serie sin tocar su estado ni los datos que ya tenia cargados
           // (notas, fecha de impresion, venta asociada, etc.) — solo se
           // agregan de cero los ejemplares nuevos que hacen falta.
-          const [primero, ...resto] = generarEjemplares(fields.cantidadTotalEdiciones);
+          const [primero, ...resto] = generarEjemplares(fields.cantidadTotalEdiciones, fields.cantidadPruebaArtista);
           await tx.execute(`UPDATE ejemplar SET tipo = ?, indice = ?, total_ediciones = ?, numero = ? WHERE id = ?`, [
             primero.tipo,
             primero.indice,
@@ -2347,6 +2348,7 @@ function ObraEditForm({
     ext: ObraExtRow;
     esSeriada: boolean;
     cantidadTotalEdiciones: number;
+    cantidadPruebaArtista: number;
     imageFile: File | null;
     removeImage: boolean;
     artistaId: number;
@@ -2473,6 +2475,9 @@ function ObraEditForm({
   const [cantidadTotalEdiciones, setCantidadTotalEdiciones] = useState(() =>
     eraSeriada ? String(ejemplares.filter((ej) => ej.tipo === "edicion").length || 1) : "1",
   );
+  const [hayPruebaAutor, setHayPruebaAutor] = useState(false);
+  const [cantidadPruebaAutor, setCantidadPruebaAutor] = useState("1");
+  const [advertenciaPruebaAutorVista, setAdvertenciaPruebaAutorVista] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   useEscapeToDismiss(error, setError);
@@ -2496,6 +2501,8 @@ function ObraEditForm({
       categoriaObra,
       esSeriada,
       cantidadTotalEdiciones,
+      hayPruebaAutor,
+      cantidadPruebaAutor,
       fotografia,
       obraDetalle,
     }),
@@ -2517,6 +2524,8 @@ function ObraEditForm({
       categoriaObra,
       esSeriada,
       cantidadTotalEdiciones,
+      hayPruebaAutor,
+      cantidadPruebaAutor,
       fotografia,
       obraDetalle,
     }) !== valoresInicialesRef;
@@ -2584,6 +2593,19 @@ function ObraEditForm({
     resultadoReducir && !resultadoReducir.permitido
       ? describirNoSePuedeReducirSerie(ejemplares, resultadoReducir.indicesBloqueantes, t, idioma)
       : null;
+
+  // Cantidad de pruebas de artista que ya tiene la serie (solo informativo
+  // aca: bajarla no esta cubierto por este flujo, igual que subir la
+  // cantidad de ediciones). La pregunta de "¿hay prueba de autor?" solo
+  // aplica al convertir de obra unica a seriada, igual que en el alta.
+  const cantidadPruebasArtistaActual = ejemplares.filter((ej) => ej.tipo === "prueba_artista").length;
+  const cantidadPruebaAutorNum = hayPruebaAutor ? Math.max(0, parseInt(cantidadPruebaAutor, 10) || 0) : 0;
+  const excedePruebaAutor =
+    !eraSeriada &&
+    esSeriadaCalculada &&
+    hayPruebaAutor &&
+    cantidadPruebaAutorNum > nuevaCantidadEdicionesNum * 0.1 &&
+    !advertenciaPruebaAutorVista;
 
   useEffect(() => {
     return () => {
@@ -2657,6 +2679,7 @@ function ObraEditForm({
         categoria: categoriaObra,
         esSeriada: esSeriadaCalculada,
         cantidadTotalEdiciones: Math.max(1, parseInt(cantidadTotalEdiciones, 10) || 1),
+        cantidadPruebaArtista: cantidadPruebaAutorNum,
         ext:
           categoriaObra === "Fotografia"
             ? {
@@ -2890,19 +2913,52 @@ function ObraEditForm({
             <p className="field-note">{mensajeNoSePuedeDeshacer}</p>
           )}
           {!eraSeriada && esSeriadaCalculada && (
-            <label>
-              {t("obraForm.cantidadEdicionesLabel")} <span className="cantidad-ediciones-ayuda"><HelpIcon fieldKey="pruebas_artista" /></span>
-              <input
-                type="number"
-                min={1}
-                value={cantidadTotalEdiciones}
-                onChange={(e) => setCantidadTotalEdiciones(e.target.value)}
-              />
-            </label>
+            <>
+              <label className="cantidad-ediciones-compacta">
+                {t("obraForm.cantidadEdicionesLabel")} <span className="cantidad-ediciones-ayuda"><HelpIcon fieldKey="pruebas_artista" /></span>
+                <input
+                  type="number"
+                  min={1}
+                  value={cantidadTotalEdiciones}
+                  onChange={(e) => setCantidadTotalEdiciones(e.target.value)}
+                />
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={hayPruebaAutor}
+                  onChange={(e) => {
+                    setHayPruebaAutor(e.target.checked);
+                    setAdvertenciaPruebaAutorVista(false);
+                  }}
+                />
+                {t("obraForm.hayPruebaAutorLabel")} <HelpIcon fieldKey="pruebas_artista" />
+              </label>
+              {hayPruebaAutor && (
+                <label className="cantidad-ediciones-compacta">
+                  {t("obraForm.cantidadPruebaAutorLabel")}
+                  <input
+                    type="number"
+                    min={0}
+                    value={cantidadPruebaAutor}
+                    onChange={(e) => {
+                      setCantidadPruebaAutor(e.target.value);
+                      setAdvertenciaPruebaAutorVista(true);
+                    }}
+                    onBlur={() => setAdvertenciaPruebaAutorVista(true)}
+                  />
+                </label>
+              )}
+              {excedePruebaAutor && (
+                <p className="error" role="alert">
+                  ⚠️ {t("obraForm.advertenciaPruebaAutor")}
+                </p>
+              )}
+            </>
           )}
           {eraSeriada && esSeriadaCalculada && (
             <>
-              <label>
+              <label className="cantidad-ediciones-compacta">
                 {t("obraForm.cantidadEdicionesLabel")} <span className="cantidad-ediciones-ayuda"><HelpIcon fieldKey="pruebas_artista" /></span>
                 <input
                   type="number"
@@ -2921,6 +2977,7 @@ function ObraEditForm({
                     })}
                 </p>
               )}
+              <p className="field-note">{t("obraDetail.pruebasAutorActuales", { cantidad: cantidadPruebasArtistaActual })}</p>
             </>
           )}
           {obraDetalle.subtipo && (
@@ -2934,32 +2991,29 @@ function ObraEditForm({
 
       {permiteCambiarSeriada && (
         <>
-          <label>
-            <input
-              type="checkbox"
-              checked={esSeriada}
-              disabled={eraSeriada && !puedeDesconvertir}
-              onChange={(e) => setEsSeriada(e.target.checked)}
-            />
-            {t("field.esSeriada")} <HelpIcon fieldKey="es_seriada" />
-          </label>
-          {eraSeriada && !puedeDesconvertir && (
-            <p className="field-note">{mensajeNoSePuedeDeshacer}</p>
-          )}
-          {!eraSeriada && esSeriada && (
+          <div className="serie-checkbox-cantidad-fila">
             <label>
-              {t("obraForm.cantidadEdicionesLabel")} <span className="cantidad-ediciones-ayuda"><HelpIcon fieldKey="pruebas_artista" /></span>
               <input
-                type="number"
-                min={1}
-                value={cantidadTotalEdiciones}
-                onChange={(e) => setCantidadTotalEdiciones(e.target.value)}
+                type="checkbox"
+                checked={esSeriada}
+                disabled={eraSeriada && !puedeDesconvertir}
+                onChange={(e) => setEsSeriada(e.target.checked)}
               />
+              {t("field.esSeriada")} <HelpIcon fieldKey="es_seriada" />
             </label>
-          )}
-          {eraSeriada && esSeriada && (
-            <>
-              <label>
+            {!eraSeriada && esSeriada && (
+              <label className="cantidad-ediciones-compacta">
+                {t("obraForm.cantidadEdicionesLabel")} <span className="cantidad-ediciones-ayuda"><HelpIcon fieldKey="pruebas_artista" /></span>
+                <input
+                  type="number"
+                  min={1}
+                  value={cantidadTotalEdiciones}
+                  onChange={(e) => setCantidadTotalEdiciones(e.target.value)}
+                />
+              </label>
+            )}
+            {eraSeriada && esSeriada && (
+              <label className="cantidad-ediciones-compacta">
                 {t("obraForm.cantidadEdicionesLabel")} <span className="cantidad-ediciones-ayuda"><HelpIcon fieldKey="pruebas_artista" /></span>
                 <input
                   type="number"
@@ -2969,6 +3023,48 @@ function ObraEditForm({
                   onChange={(e) => setCantidadTotalEdiciones(e.target.value)}
                 />
               </label>
+            )}
+          </div>
+          {eraSeriada && !puedeDesconvertir && (
+            <p className="field-note">{mensajeNoSePuedeDeshacer}</p>
+          )}
+          {!eraSeriada && esSeriada && (
+            <>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={hayPruebaAutor}
+                  onChange={(e) => {
+                    setHayPruebaAutor(e.target.checked);
+                    setAdvertenciaPruebaAutorVista(false);
+                  }}
+                />
+                {t("obraForm.hayPruebaAutorLabel")} <HelpIcon fieldKey="pruebas_artista" />
+              </label>
+              {hayPruebaAutor && (
+                <label className="cantidad-ediciones-compacta">
+                  {t("obraForm.cantidadPruebaAutorLabel")}
+                  <input
+                    type="number"
+                    min={0}
+                    value={cantidadPruebaAutor}
+                    onChange={(e) => {
+                      setCantidadPruebaAutor(e.target.value);
+                      setAdvertenciaPruebaAutorVista(true);
+                    }}
+                    onBlur={() => setAdvertenciaPruebaAutorVista(true)}
+                  />
+                </label>
+              )}
+              {excedePruebaAutor && (
+                <p className="error" role="alert">
+                  ⚠️ {t("obraForm.advertenciaPruebaAutor")}
+                </p>
+              )}
+            </>
+          )}
+          {eraSeriada && esSeriada && (
+            <>
               {reduceEdiciones && (
                 <p className={mensajeNoSePuedeReducir ? "error" : "field-note"} role={mensajeNoSePuedeReducir ? "alert" : undefined}>
                   {mensajeNoSePuedeReducir ??
@@ -2978,6 +3074,7 @@ function ObraEditForm({
                     })}
                 </p>
               )}
+              <p className="field-note">{t("obraDetail.pruebasAutorActuales", { cantidad: cantidadPruebasArtistaActual })}</p>
             </>
           )}
         </>

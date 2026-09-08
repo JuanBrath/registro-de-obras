@@ -830,6 +830,7 @@ export const es = {
     "No se puede bajar la cantidad de ediciones: {{detalle}} ya tienen historial propio (estado o datos cargados) que se perdería si se eliminan.",
   "obraDetail.reducirSerieAviso":
     "Al guardar se van a eliminar las ediciones {{desde}} a {{hasta}} de la serie. Esta acción no se puede deshacer.",
+  "obraDetail.pruebasAutorActuales": "Pruebas de autor: {{cantidad}}",
   "obraDetail.confirmarSalirPregunta": "Hiciste cambios sin guardar. ¿Salir igual y abandonarlos?",
   "obraDetail.confirmarSalirBoton": "Sí, salir sin guardar",
   "obraDetail.seguirEditando": "Seguir editando",

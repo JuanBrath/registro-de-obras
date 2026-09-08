@@ -832,6 +832,7 @@ export const en: Record<keyof typeof es, string> = {
     "Can't lower the edition size: {{detalle}} already have their own history (status or loaded data) that would be lost if removed.",
   "obraDetail.reducirSerieAviso":
     "Saving will remove editions {{desde}} to {{hasta}} of the series. This action can't be undone.",
+  "obraDetail.pruebasAutorActuales": "Artist's proofs: {{cantidad}}",
   "obraDetail.confirmarSalirPregunta": "You made changes that aren't saved. Leave anyway and discard them?",
   "obraDetail.confirmarSalirBoton": "Yes, leave without saving",
   "obraDetail.seguirEditando": "Keep editing",

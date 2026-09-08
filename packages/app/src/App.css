@@ -1017,13 +1017,22 @@ input[type="date"] {
 }
 
 .obra-edit-imagen-actual {
-  width: 120px;
-  height: 120px;
+  width: 170px;
+  height: 170px;
   object-fit: contain;
   border-radius: 8px;
   background: var(--bg-panel);
   display: block;
   margin-bottom: 0.5rem;
+}
+
+/* Cuando se eligio un archivo nuevo, esta imagen es hija directa del
+   <label> (en vez de estar dentro del boton de la miniatura existente) y la
+   regla general ".obra-form label > *" la estira a flex-basis:100%,
+   deformandola. El !important pisa esa regla (mismo patron que .radio-row
+   label mas arriba) para que mantenga su tamano fijo. */
+.obra-form label > .obra-edit-imagen-actual {
+  flex: 0 0 auto !important;
 }
 
 .obra-detail-thumbnail-button {
@@ -1114,6 +1123,26 @@ input[type="date"] {
      el punto se vaya a su propia fila cuando el texto es largo. !important
      asegura que el punto y el texto siempre queden en la misma fila aca. */
   flex-wrap: nowrap !important;
+}
+
+.serie-checkbox-cantidad-fila {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  gap: 0.5rem 1.5rem;
+}
+
+.serie-checkbox-cantidad-fila > label {
+  flex: 0 0 auto;
+}
+
+/* El input de cantidad de ediciones/pruebas de autor no necesita ocupar todo
+   el ancho del formulario como el resto de los campos numericos: el
+   !important pisa la regla general ".obra-form label > *" que fuerza
+   flex-basis 100% (mismo patron que .radio-row label mas arriba). */
+.cantidad-ediciones-compacta input[type="number"] {
+  flex: 0 0 5em !important;
+  width: 5em;
 }
 
 .form-row-2 > label,
