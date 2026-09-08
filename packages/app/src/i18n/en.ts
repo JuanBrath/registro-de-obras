@@ -625,6 +625,8 @@ export const en: Record<keyof typeof es, string> = {
   // FilePathField
   "filePathField.elegirArchivo": "Choose file…",
   "filePathField.ningunoSeleccionado": "No file selected",
+  "filePathField.errorNoSePudoAbrir":
+    "Couldn't open that file. It may have been moved, renamed, or its folder may no longer be available.",
 
   // CampoFecha
   "campoFecha.abrirCalendario": "Pick a date on the calendar",

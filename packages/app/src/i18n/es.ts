@@ -623,6 +623,8 @@ export const es = {
   // FilePathField
   "filePathField.elegirArchivo": "Elegir archivo…",
   "filePathField.ningunoSeleccionado": "Ningún archivo seleccionado",
+  "filePathField.errorNoSePudoAbrir":
+    "No se pudo abrir ese archivo. Puede que se haya movido, renombrado o que la carpeta ya no esté disponible.",
 
   // CampoFecha
   "campoFecha.abrirCalendario": "Elegir fecha en el calendario",

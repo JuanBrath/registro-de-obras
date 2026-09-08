@@ -213,12 +213,19 @@ input[type="date"] {
 
 .file-path-field {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
   align-items: center;
 }
 
 .file-path-field input {
   flex: 1;
+}
+
+/* Mismo criterio que .image-file-field-error: fuerza el cartel de error a su
+   propio renglon en vez de apretarse junto a los botones de la fila. */
+.file-path-field-error {
+  flex-basis: 100%;
 }
 
 /* Envuelve el icono de calendario y su input type="date" oculto (ver

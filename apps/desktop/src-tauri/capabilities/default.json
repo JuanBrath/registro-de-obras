@@ -12,6 +12,7 @@
     "sql:default",
     "sql:allow-execute",
     "opener:default",
-    "opener:allow-reveal-item-in-dir"
+    "opener:allow-reveal-item-in-dir",
+    "opener:allow-open-path"
   ]
 }

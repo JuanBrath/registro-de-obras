@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { isTauri } from "../adapters/detectPlatform.js";
 import { pickTauriFilePath, readAbsoluteFileBytes } from "../adapters/tauri/TauriFileSystemAdapter.js";
 import { openLocalPath } from "../utils/openExternalUrl.js";
 import { readImageMetadata, type ArchivoMetadata } from "../utils/readImageMetadata.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
+import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
 
 // Formatos que readImageMetadata sabe interpretar. Se chequea la extension
 // ANTES de leer el archivo para no cargar en memoria (via IPC) archivos
@@ -26,6 +28,8 @@ export function FilePathField({
   onMetadata?: (metadata: ArchivoMetadata | null) => void;
 }) {
   const { t } = useLanguage();
+  const [error, setError] = useState<string | null>(null);
+  useEscapeToDismiss(error, setError);
 
   if (!isTauri()) {
     // No hay navegación de archivos del sistema fuera de desktop (sandbox de mobile).
@@ -49,6 +53,17 @@ export function FilePathField({
     }
   }
 
+  async function handleAbrir() {
+    setError(null);
+    try {
+      await openLocalPath(value);
+    } catch {
+      // El archivo pudo haberse movido, renombrado o estar en una carpeta
+      // (nube) que ya no esta disponible — avisar en vez de no hacer nada.
+      setError(t("filePathField.errorNoSePudoAbrir"));
+    }
+  }
+
   return (
     <div className="file-path-field">
       <input type="text" value={value} readOnly placeholder={t("filePathField.ningunoSeleccionado")} />
@@ -64,12 +79,17 @@ export function FilePathField({
         <button
           type="button"
           className="link-icon-button"
-          onClick={() => openLocalPath(value)}
+          onClick={handleAbrir}
           aria-label={t("common.abrirEnlace")}
           title={t("common.abrirEnlace")}
         >
           🔗
         </button>
+      )}
+      {error && (
+        <p className="error file-path-field-error" role="alert">
+          ⚠️ {error}
+        </p>
       )}
     </div>
   );
