@@ -191,6 +191,8 @@ export const en: Record<keyof typeof es, string> = {
   "settings.moverCarpetaCarpetaVieja": "The previous folder is still intact at: {{vieja}}",
   "settings.moverCarpetaBorrarAhora": "Delete the previous folder now",
   "settings.moverCarpetaDejarla": "Leave it, I'll delete it later",
+  "settings.moverCarpetaErrorPermisos":
+    "macOS blocked access to that folder — this happens often with external drives, especially while this app isn't yet signed with an Apple Developer account. To fix it: open System Settings → Privacy & Security → Files and Folders, find Galeris, and enable the permission for \"Removable Volumes\" (if that option isn't listed, try granting Full Disk Access instead). If you'd rather not touch those settings, you can also copy the folder to the external drive yourself using Finder, then use \"Change folder\" to point to that copy.",
   "settings.numeradoresAutomaticos": "Automatic numbering",
   "settings.resetearNumeradoresBoton": "Reset automatic numbering",
   "settings.resetearNumeradoresAdvertencia": "All automatic numbering counters (artist number and sale certificate number) will start over from the beginning. This can cause duplicate internal numbering with artists or certificates that already exist. This action cannot be undone. Confirm?",

@@ -189,6 +189,8 @@ export const es = {
   "settings.moverCarpetaCarpetaVieja": "La carpeta anterior sigue intacta en: {{vieja}}",
   "settings.moverCarpetaBorrarAhora": "Borrar la carpeta anterior ahora",
   "settings.moverCarpetaDejarla": "Dejarla, la borro yo después",
+  "settings.moverCarpetaErrorPermisos":
+    "macOS bloqueó el acceso a esa carpeta — pasa seguido con discos externos, sobre todo mientras esta app todavía no está firmada con una cuenta de desarrollador de Apple. Para solucionarlo: abrí Ajustes del Sistema → Privacidad y Seguridad → Archivos y Carpetas, buscá Galeris y activá el permiso para \"Volúmenes extraíbles\" (si no aparece esa opción, probá dándole Acceso total al disco). Si preferís no tocar esos permisos, también podés copiar la carpeta al disco externo vos mismo desde el Finder y después usar \"Cambiar carpeta\" para apuntar a esa copia.",
   "settings.numeradoresAutomaticos": "Numeradores automáticos",
   "settings.resetearNumeradoresBoton": "Resetear numeradores automáticos",
   "settings.resetearNumeradoresAdvertencia": "Todos los numeradores automáticos (número de artista y número de certificado de venta) volverán a empezar desde el principio. Esto puede generar duplicidad con la numeración interna ya asignada a artistas o certificados existentes. Esta acción no se puede deshacer. ¿Confirmás?",

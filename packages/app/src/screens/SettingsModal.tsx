@@ -1,10 +1,26 @@
 import { useState } from "react";
 import { Modal } from "../components/Modal.js";
-import { useLanguage } from "../i18n/LanguageContext.js";
+import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
 import { useTheme } from "../state/ThemeContext.js";
 import { useFontSize } from "../state/FontSizeContext.js";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { isTauri } from "../adapters/detectPlatform.js";
+
+/**
+ * En macOS, copiar a un disco externo (o a otras carpetas protegidas) puede
+ * fallar con un "Permission denied (os error 13)" crudo del sistema
+ * operativo si la app todavia no tiene el permiso de privacidad
+ * correspondiente — algo comun en apps que, como esta, no estan firmadas
+ * con una cuenta de desarrollador de Apple ni notarizadas. Se lo reemplaza
+ * por una explicacion accionable en vez del mensaje tecnico tal cual.
+ */
+function describirErrorMudanza(err: unknown, t: (key: TranslationKey, vars?: Record<string, string | number>) => string): string {
+  const mensaje = err instanceof Error ? err.message : String(err);
+  if (/permission denied|os error 13/i.test(mensaje)) {
+    return t("settings.moverCarpetaErrorPermisos");
+  }
+  return mensaje;
+}
 
 export function SettingsModal({ onClose }: { onClose: () => void }) {
   const { idioma, setIdioma, t } = useLanguage();
@@ -61,7 +77,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
       );
       setResultadoMudanza(resultado);
     } catch (err) {
-      setErrorMudanza(err instanceof Error ? err.message : String(err));
+      setErrorMudanza(describirErrorMudanza(err, t));
     } finally {
       setMoviendoCarpeta(false);
     }
