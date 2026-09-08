@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { isTauri } from "../adapters/detectPlatform.js";
 import { pickTauriFilePath, readAbsoluteFileBytes } from "../adapters/tauri/TauriFileSystemAdapter.js";
-import { openLocalPath } from "../utils/openExternalUrl.js";
+import { revealInFileManager } from "../utils/openExternalUrl.js";
 import { readImageMetadata, type ArchivoMetadata } from "../utils/readImageMetadata.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
@@ -53,10 +53,10 @@ export function FilePathField({
     }
   }
 
-  async function handleAbrir() {
+  async function handleMostrarEnExplorador() {
     setError(null);
     try {
-      await openLocalPath(value);
+      await revealInFileManager(value);
     } catch {
       // El archivo pudo haberse movido, renombrado o estar en una carpeta
       // (nube) que ya no esta disponible — avisar en vez de no hacer nada.
@@ -79,11 +79,11 @@ export function FilePathField({
         <button
           type="button"
           className="link-icon-button"
-          onClick={handleAbrir}
-          aria-label={t("common.abrirEnlace")}
-          title={t("common.abrirEnlace")}
+          onClick={handleMostrarEnExplorador}
+          aria-label={t("filePathField.mostrarEnExplorador")}
+          title={t("filePathField.mostrarEnExplorador")}
         >
-          🔗
+          📁
         </button>
       )}
       {error && (
