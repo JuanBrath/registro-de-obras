@@ -3,11 +3,13 @@ import {
   derivarAnioDesdeFecha,
   derivarEsSeriadaObraGrafica,
   formatTags,
+  formatearNumeroEjemplar,
   generarEjemplarUnico,
   generarEjemplares,
   obraMiniaturaPath,
   ESTADOS_SIN_COMPROMISO_PROPIO,
   evaluarDeshacerSerie,
+  evaluarReducirSerie,
   obraOriginalPath,
   parseTags,
   type CategoriaObra,
@@ -173,6 +175,7 @@ interface ObraExtRow {
 interface EjemplarRow {
   id: number;
   tipo: string;
+  indice: number;
   numero: string;
   estado: string;
   venta_id: number | null;
@@ -234,9 +237,9 @@ function tieneDatosCargados(ej: EjemplarRow): boolean {
   return CAMPOS_DATOS_CARGADOS_EJEMPLAR.some((campo) => ej[campo] != null && ej[campo] !== "");
 }
 
-/** Arma el cartel especifico ("copia 3/10 (vendida), copia PA 1/1 (con datos cargados)...")
- * que explica por que no se puede deshacer una serie con este resultado. */
-function describirNoSePuedeDeshacerSerie(
+/** Arma el detalle ("la copia 3/10 (vendida), la copia PA 1/1 (con datos cargados)...")
+ * que lista por que ciertas copias no se pueden descartar en silencio. */
+function listarMotivosBloqueantes(
   ejemplares: EjemplarRow[],
   indicesBloqueantes: number[],
   t: (key: TranslationKey, vars?: Record<string, string | number>) => string,
@@ -250,9 +253,31 @@ function describirNoSePuedeDeshacerSerie(
     return t("obraDetail.motivoCopia", { numero: ej.numero, motivo });
   });
   const conjuncion = idioma === "en" ? "and" : "y";
-  const detalle =
-    detalles.length <= 1 ? (detalles[0] ?? "") : `${detalles.slice(0, -1).join(", ")} ${conjuncion} ${detalles.at(-1)}`;
-  return t("obraDetail.noSePuedeDeshacerSerieDetalle", { detalle });
+  return detalles.length <= 1 ? (detalles[0] ?? "") : `${detalles.slice(0, -1).join(", ")} ${conjuncion} ${detalles.at(-1)}`;
+}
+
+/** Cartel especifico que explica por que no se puede deshacer una serie con este resultado. */
+function describirNoSePuedeDeshacerSerie(
+  ejemplares: EjemplarRow[],
+  indicesBloqueantes: number[],
+  t: (key: TranslationKey, vars?: Record<string, string | number>) => string,
+  idioma: string,
+): string {
+  return t("obraDetail.noSePuedeDeshacerSerieDetalle", {
+    detalle: listarMotivosBloqueantes(ejemplares, indicesBloqueantes, t, idioma),
+  });
+}
+
+/** Cartel especifico que explica por que no se puede bajar la cantidad de ediciones de una serie. */
+function describirNoSePuedeReducirSerie(
+  ejemplares: EjemplarRow[],
+  indicesBloqueantes: number[],
+  t: (key: TranslationKey, vars?: Record<string, string | number>) => string,
+  idioma: string,
+): string {
+  return t("obraDetail.noSePuedeReducirSerieDetalle", {
+    detalle: listarMotivosBloqueantes(ejemplares, indicesBloqueantes, t, idioma),
+  });
 }
 
 interface VentaRow {
@@ -800,7 +825,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
 
       if (obraRow) {
         const ejemplarRows = await context.db.query<EjemplarRow>(
-          `SELECT id, tipo, numero, estado, venta_id, fecha_impresion, tipo_impresion, soporte_impresion, tipo_tintas, taller_impresion, ubicacion_actual, dimensiones, tipo_enmarcado, tamano_final_enmarcado, ubicacion_firma, sello_seco_holograma, fecha_limite, notas, precio_venta, moneda_venta,
+          `SELECT id, tipo, indice, numero, estado, venta_id, fecha_impresion, tipo_impresion, soporte_impresion, tipo_tintas, taller_impresion, ubicacion_actual, dimensiones, tipo_enmarcado, tamano_final_enmarcado, ubicacion_firma, sello_seco_holograma, fecha_limite, notas, precio_venta, moneda_venta,
                   coa_numero, coa_emisor, coa_fecha, valor_seguro, moneda_seguro, vidrio_proteccion_frontal, sistema_cuelgue,
                   coa_sistema_seguridad, informe_conservacion, dimensiones_soporte_completo, peso,
                   tipo_firma, clasificacion_prueba_especial, instrucciones_manipulacion,
@@ -1449,6 +1474,24 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       );
     }
 
+    const cantidadEdicionesActual = ejemplares.filter((ej) => ej.tipo === "edicion").length;
+    const reduceEdiciones =
+      !cambiaSeriada && eraSeriada && fields.esSeriada && fields.cantidadTotalEdiciones < cantidadEdicionesActual;
+    const resultadoReducir = reduceEdiciones
+      ? evaluarReducirSerie(
+          ejemplares.map((ej) => ({
+            tipo: ej.tipo as "edicion" | "prueba_artista",
+            indice: ej.indice,
+            estado: ej.estado,
+            tieneDatosCargados: tieneDatosCargados(ej),
+          })),
+          fields.cantidadTotalEdiciones,
+        )
+      : null;
+    if (resultadoReducir && !resultadoReducir.permitido) {
+      throw new Error(describirNoSePuedeReducirSerie(ejemplares, resultadoReducir.indicesBloqueantes, t, idioma));
+    }
+
     await context.db.transaction(async (tx) => {
       await tx.execute(
         `UPDATE obra SET
@@ -1525,6 +1568,29 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
           fields.esSeriada
             ? `Obra convertida a seriada (${fields.cantidadTotalEdiciones} ediciones)`
             : "Obra convertida a pieza única",
+        ]);
+      } else if (reduceEdiciones) {
+        // Se borran las ediciones sobrantes (las de mayor indice) y se
+        // renumera el "numero" (i/N) de las que quedan para reflejar el
+        // nuevo total. Las pruebas de artista no se tocan.
+        const nuevaCantidad = fields.cantidadTotalEdiciones;
+        for (const ej of ejemplares) {
+          if (ej.tipo === "edicion" && ej.indice > nuevaCantidad) {
+            await tx.execute(`DELETE FROM ejemplar WHERE id = ?`, [ej.id]);
+          }
+        }
+        await tx.execute(`UPDATE ejemplar SET total_ediciones = ? WHERE obra_id = ?`, [nuevaCantidad, obraId]);
+        for (const ej of ejemplares) {
+          if (ej.tipo === "edicion" && ej.indice <= nuevaCantidad) {
+            await tx.execute(`UPDATE ejemplar SET numero = ? WHERE id = ?`, [
+              formatearNumeroEjemplar(ej.indice, nuevaCantidad),
+              ej.id,
+            ]);
+          }
+        }
+        await tx.execute(`INSERT INTO historial_evento (obra_id, tipo, descripcion) VALUES (?, 'edicion', ?)`, [
+          obraId,
+          `Cantidad de ediciones de la serie reducida de ${cantidadEdicionesActual} a ${nuevaCantidad}`,
         ]);
       }
 
@@ -1958,7 +2024,13 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
                 const labelKey = subtipoLabelKey(obra.categoria_obra as CategoriaObraDetalle, ext.subtipo!);
                 return labelKey ? <p>{t("obraDetail.subtipoNoEditable", { subtipo: t(labelKey) })}</p> : null;
               })()}
-            <p>{Number(obra.es_seriada) === 1 ? t("obraDetail.obraSeriada") : t("obraDetail.obraUnica")}</p>
+            <p>
+              {Number(obra.es_seriada) === 1
+                ? t("obraDetail.obraSeriadaCantidad", {
+                    cantidad: ejemplares.filter((ej) => ej.tipo === "edicion").length,
+                  })
+                : t("obraDetail.obraUnica")}
+            </p>
             {ext?.tecnica_material && (
               <p>{t("obraDetail.tecnica", { valor: t(`fields.pintura.tecnicaMaterial${ext.tecnica_material}` as TranslationKey) })}</p>
             )}
@@ -2398,7 +2470,9 @@ function ObraEditForm({
   });
   const eraSeriada = Number(obra.es_seriada) === 1;
   const [esSeriada, setEsSeriada] = useState(eraSeriada);
-  const [cantidadTotalEdiciones, setCantidadTotalEdiciones] = useState("1");
+  const [cantidadTotalEdiciones, setCantidadTotalEdiciones] = useState(() =>
+    eraSeriada ? String(ejemplares.filter((ej) => ej.tipo === "edicion").length || 1) : "1",
+  );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   useEscapeToDismiss(error, setError);
@@ -2486,6 +2560,30 @@ function ObraEditForm({
         ? derivarEsSeriadaObraGrafica(obraDetalle.subtipo as SubtipoObraGrafica)
         : false
       : esSeriada;
+
+  // Cantidad de ediciones (sin contar pruebas de artista) que tiene hoy la
+  // serie. Solo permitimos bajarla desde aca, no subirla: para agregar mas
+  // ediciones a una serie existente hay otras implicancias (numeracion ya
+  // entregada, etc.) que no se cubren en este flujo.
+  const cantidadEdicionesActual = ejemplares.filter((ej) => ej.tipo === "edicion").length;
+  const nuevaCantidadEdicionesNum = Math.max(1, parseInt(cantidadTotalEdiciones, 10) || 1);
+  const reduceEdiciones =
+    eraSeriada && esSeriadaCalculada && nuevaCantidadEdicionesNum < cantidadEdicionesActual;
+  const resultadoReducir = reduceEdiciones
+    ? evaluarReducirSerie(
+        ejemplares.map((ej) => ({
+          tipo: ej.tipo as "edicion" | "prueba_artista",
+          indice: ej.indice,
+          estado: ej.estado,
+          tieneDatosCargados: tieneDatosCargados(ej),
+        })),
+        nuevaCantidadEdicionesNum,
+      )
+    : null;
+  const mensajeNoSePuedeReducir =
+    resultadoReducir && !resultadoReducir.permitido
+      ? describirNoSePuedeReducirSerie(ejemplares, resultadoReducir.indicesBloqueantes, t, idioma)
+      : null;
 
   useEffect(() => {
     return () => {
@@ -2802,6 +2900,29 @@ function ObraEditForm({
               />
             </label>
           )}
+          {eraSeriada && esSeriadaCalculada && (
+            <>
+              <label>
+                {t("obraForm.cantidadEdicionesLabel")} <span className="cantidad-ediciones-ayuda"><HelpIcon fieldKey="pruebas_artista" /></span>
+                <input
+                  type="number"
+                  min={1}
+                  max={cantidadEdicionesActual}
+                  value={cantidadTotalEdiciones}
+                  onChange={(e) => setCantidadTotalEdiciones(e.target.value)}
+                />
+              </label>
+              {reduceEdiciones && (
+                <p className={mensajeNoSePuedeReducir ? "error" : "field-note"} role={mensajeNoSePuedeReducir ? "alert" : undefined}>
+                  {mensajeNoSePuedeReducir ??
+                    t("obraDetail.reducirSerieAviso", {
+                      desde: nuevaCantidadEdicionesNum + 1,
+                      hasta: cantidadEdicionesActual,
+                    })}
+                </p>
+              )}
+            </>
+          )}
           {obraDetalle.subtipo && (
             <p className="field-note">
               {t("fields.pintura.esSeriadaPrefix")} <strong>{esSeriadaCalculada ? t("common.yes") : t("common.no")}</strong>{" "}
@@ -2835,6 +2956,29 @@ function ObraEditForm({
                 onChange={(e) => setCantidadTotalEdiciones(e.target.value)}
               />
             </label>
+          )}
+          {eraSeriada && esSeriada && (
+            <>
+              <label>
+                {t("obraForm.cantidadEdicionesLabel")} <span className="cantidad-ediciones-ayuda"><HelpIcon fieldKey="pruebas_artista" /></span>
+                <input
+                  type="number"
+                  min={1}
+                  max={cantidadEdicionesActual}
+                  value={cantidadTotalEdiciones}
+                  onChange={(e) => setCantidadTotalEdiciones(e.target.value)}
+                />
+              </label>
+              {reduceEdiciones && (
+                <p className={mensajeNoSePuedeReducir ? "error" : "field-note"} role={mensajeNoSePuedeReducir ? "alert" : undefined}>
+                  {mensajeNoSePuedeReducir ??
+                    t("obraDetail.reducirSerieAviso", {
+                      desde: nuevaCantidadEdicionesNum + 1,
+                      hasta: cantidadEdicionesActual,
+                    })}
+                </p>
+              )}
+            </>
           )}
         </>
       )}

@@ -733,6 +733,7 @@ export const es = {
   "obraDetail.artista": "Artista: {{nombre}}",
   "obraDetail.categoria": "Categoría: {{categoria}}",
   "obraDetail.obraSeriada": "Obra seriada",
+  "obraDetail.obraSeriadaCantidad": "Obra seriada ({{cantidad}} ediciones)",
   "obraDetail.obraUnica": "Obra única",
   "obraDetail.subtipo": "Subtipo: {{subtipo}}",
   "obraDetail.subtipoNoEditable": "Subtipo: {{subtipo}} (no editable)",
@@ -825,6 +826,10 @@ export const es = {
   "obraDetail.motivoCopia": "la copia {{numero}} ({{motivo}})",
   "obraDetail.noSePuedeDeshacerSerieDetalle":
     "No se puede convertir en obra única: {{detalle}} ya tienen historial propio (estado o datos cargados) que se perdería si se colapsan en una sola pieza.",
+  "obraDetail.noSePuedeReducirSerieDetalle":
+    "No se puede bajar la cantidad de ediciones: {{detalle}} ya tienen historial propio (estado o datos cargados) que se perdería si se eliminan.",
+  "obraDetail.reducirSerieAviso":
+    "Al guardar se van a eliminar las ediciones {{desde}} a {{hasta}} de la serie. Esta acción no se puede deshacer.",
   "obraDetail.confirmarSalirPregunta": "Hiciste cambios sin guardar. ¿Salir igual y abandonarlos?",
   "obraDetail.confirmarSalirBoton": "Sí, salir sin guardar",
   "obraDetail.seguirEditando": "Seguir editando",

@@ -2,15 +2,25 @@ import { describe, expect, it } from "vitest";
 import {
   calcularCantidadPruebasArtista,
   evaluarDeshacerSerie,
+  evaluarReducirSerie,
   formatearNumeroEjemplar,
   formatearNumeroPruebaArtista,
   generarEjemplarUnico,
   generarEjemplares,
   type InfoEjemplarParaDeshacer,
+  type InfoEjemplarParaReducirSerie,
 } from "../ejemplares.js";
 
 function ej(estado: string, tieneDatosCargados = false): InfoEjemplarParaDeshacer {
   return { estado, tieneDatosCargados };
+}
+
+function edicion(indice: number, estado: string, tieneDatosCargados = false): InfoEjemplarParaReducirSerie {
+  return { tipo: "edicion", indice, estado, tieneDatosCargados };
+}
+
+function pruebaArtista(indice: number, estado: string, tieneDatosCargados = false): InfoEjemplarParaReducirSerie {
+  return { tipo: "prueba_artista", indice, estado, tieneDatosCargados };
 }
 
 describe("calcularCantidadPruebasArtista", () => {
@@ -138,5 +148,43 @@ describe("evaluarDeshacerSerie", () => {
       permitido: true,
       indiceAConservar: 1,
     });
+  });
+});
+
+describe("evaluarReducirSerie", () => {
+  it("permite reducir si ninguna de las ediciones que se eliminarian esta comprometida ni tiene datos cargados", () => {
+    const ejemplares = [edicion(1, "disponible"), edicion(2, "disponible"), edicion(3, "en_stock")];
+    expect(evaluarReducirSerie(ejemplares, 1)).toEqual({ permitido: true });
+  });
+
+  it("bloquea si alguna edicion a eliminar esta en un estado comprometido", () => {
+    const ejemplares = [edicion(1, "disponible"), edicion(2, "vendida"), edicion(3, "disponible")];
+    expect(evaluarReducirSerie(ejemplares, 1)).toEqual({ permitido: false, indicesBloqueantes: [1] });
+  });
+
+  it("bloquea si alguna edicion a eliminar ya tiene datos cargados, aunque este disponible", () => {
+    const ejemplares = [edicion(1, "disponible"), edicion(2, "disponible", true)];
+    expect(evaluarReducirSerie(ejemplares, 1)).toEqual({ permitido: false, indicesBloqueantes: [1] });
+  });
+
+  it("informa todas las ediciones bloqueantes a la vez, no solo la primera", () => {
+    const ejemplares = [edicion(1, "disponible"), edicion(2, "vendida"), edicion(3, "reservada")];
+    expect(evaluarReducirSerie(ejemplares, 1)).toEqual({ permitido: false, indicesBloqueantes: [1, 2] });
+  });
+
+  it("destruida nunca bloquea, se puede descartar sin mas", () => {
+    const ejemplares = [edicion(1, "disponible"), edicion(2, "destruida"), edicion(3, "destruida")];
+    expect(evaluarReducirSerie(ejemplares, 1)).toEqual({ permitido: true });
+  });
+
+  it("no toca las pruebas de artista: no cuentan como bloqueantes ni se eliminan", () => {
+    const ejemplares = [edicion(1, "disponible"), edicion(2, "disponible"), pruebaArtista(1, "vendida")];
+    expect(evaluarReducirSerie(ejemplares, 1)).toEqual({ permitido: true });
+  });
+
+  it("no elimina nada si la nueva cantidad es igual o mayor a la actual", () => {
+    const ejemplares = [edicion(1, "vendida"), edicion(2, "vendida")];
+    expect(evaluarReducirSerie(ejemplares, 2)).toEqual({ permitido: true });
+    expect(evaluarReducirSerie(ejemplares, 5)).toEqual({ permitido: true });
   });
 });

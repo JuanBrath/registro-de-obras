@@ -735,6 +735,7 @@ export const en: Record<keyof typeof es, string> = {
   "obraDetail.artista": "Artist: {{nombre}}",
   "obraDetail.categoria": "Category: {{categoria}}",
   "obraDetail.obraSeriada": "Edition artwork",
+  "obraDetail.obraSeriadaCantidad": "Edition artwork ({{cantidad}} editions)",
   "obraDetail.obraUnica": "Unique artwork",
   "obraDetail.subtipo": "Subtype: {{subtipo}}",
   "obraDetail.subtipoNoEditable": "Subtype: {{subtipo}} (not editable)",
@@ -827,6 +828,10 @@ export const en: Record<keyof typeof es, string> = {
   "obraDetail.motivoCopia": "copy {{numero}} ({{motivo}})",
   "obraDetail.noSePuedeDeshacerSerieDetalle":
     "Can't convert to a unique piece: {{detalle}} already have their own history (status or loaded data) that would be lost by collapsing them into one piece.",
+  "obraDetail.noSePuedeReducirSerieDetalle":
+    "Can't lower the edition size: {{detalle}} already have their own history (status or loaded data) that would be lost if removed.",
+  "obraDetail.reducirSerieAviso":
+    "Saving will remove editions {{desde}} to {{hasta}} of the series. This action can't be undone.",
   "obraDetail.confirmarSalirPregunta": "You made changes that aren't saved. Leave anyway and discard them?",
   "obraDetail.confirmarSalirBoton": "Yes, leave without saving",
   "obraDetail.seguirEditando": "Keep editing",

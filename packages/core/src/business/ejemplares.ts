@@ -59,6 +59,40 @@ export function evaluarDeshacerSerie(ejemplares: InfoEjemplarParaDeshacer[]): Re
   return { permitido: true, indiceAConservar: indicesBloqueantes[0] ?? null };
 }
 
+export interface InfoEjemplarParaReducirSerie extends InfoEjemplarParaDeshacer {
+  tipo: TipoEjemplar;
+  indice: number;
+}
+
+export type ResultadoReducirSerie =
+  | { permitido: true }
+  | { permitido: false; indicesBloqueantes: number[] };
+
+// Al bajar la cantidad de ediciones de una serie (de N a un M menor) hay que
+// eliminar las ediciones con indice > M — no las pruebas de artista, que
+// quedan tal cual estan. Una edicion a eliminar cuenta como "bloqueante" con
+// el mismo criterio que evaluarDeshacerSerie (estado realmente comprometido
+// o datos cargados a mano; "destruida" nunca bloquea). A diferencia de
+// deshacer serie, aca no hay ninguna copia "para conservar" entre las que se
+// eliminan: si una sola edicion a eliminar es bloqueante, se bloquea toda la
+// operacion completa.
+export function evaluarReducirSerie(
+  ejemplares: InfoEjemplarParaReducirSerie[],
+  nuevaCantidadEdiciones: number,
+): ResultadoReducirSerie {
+  const indicesBloqueantes = ejemplares.reduce<number[]>((acc, ej, indice) => {
+    const seEliminaria = ej.tipo === "edicion" && ej.indice > nuevaCantidadEdiciones;
+    const esBloqueante =
+      seEliminaria &&
+      ej.estado !== "destruida" &&
+      (!ESTADOS_SIN_COMPROMISO_PROPIO.has(ej.estado) || ej.tieneDatosCargados);
+    if (esBloqueante) acc.push(indice);
+    return acc;
+  }, []);
+
+  return indicesBloqueantes.length > 0 ? { permitido: false, indicesBloqueantes } : { permitido: true };
+}
+
 // Una obra "unica" es, por dentro, una serie de un solo ejemplar 1/1 — sin
 // pruebas de artista (a diferencia de generarEjemplares(1), que si generaria
 // una PA 1/1 ademas de la edicion 1/1, porque para una edicion real de 1
