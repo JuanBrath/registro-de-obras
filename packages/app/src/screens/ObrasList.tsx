@@ -432,6 +432,12 @@ export function ObrasList({
       </div>
 
       <div className="header-actions obras-list-options obras-list-fila-principal">
+        {obras.length > 0 && (
+          <div className="buscador-con-ayuda obras-list-buscador-fila-principal">
+            <input type="search" className="obras-list-buscador" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
+            <HelpIcon fieldKey="busqueda_general" />
+          </div>
+        )}
         <button type="button" onClick={onNuevaObra}>
           {t("workspaceHome.nuevaObra")}
         </button>
@@ -447,12 +453,6 @@ export function ObrasList({
           <button type="button" onClick={handleAbrirInformesMenu} disabled={filteredObras.length === 0}>
             {t("informesObras.generarInforme")}
           </button>
-        )}
-        {obras.length > 0 && (
-          <div className="buscador-con-ayuda obras-list-buscador-fila-principal">
-            <input type="search" className="obras-list-buscador" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
-            <HelpIcon fieldKey="busqueda_general" />
-          </div>
         )}
         {obras.length > 0 && (
           <div className="miniaturas-slider-campo">
