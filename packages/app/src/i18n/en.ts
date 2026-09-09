@@ -642,6 +642,8 @@ export const en: Record<keyof typeof es, string> = {
     "That file isn't a compatible image. Choose a JPG, PNG, GIF, WEBP, PSD, or PSB file.",
   "imageFileField.errorPsdSinMiniatura":
     "This PSD doesn't have a preview saved inside it, so it can't be used as an image. Open it in Photoshop, turn on \"Image Previews\" in preferences and save it again, or choose a JPG/PNG instead.",
+  "imageFileField.avisoPsd":
+    "This image was generated automatically from the PSD/PSB (a preview of the file, not the fully processed artwork), so it may look different from the real piece and might not have the ideal resolution for full-screen viewing or the gallery. For best results, we recommend using a JPG file of about 1500 to 2000 pixels on the longest side instead.",
 
   // HelpIcon
   "helpIcon.ayuda": "Help",

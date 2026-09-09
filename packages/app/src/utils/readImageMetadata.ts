@@ -599,6 +599,189 @@ export function extraerMiniaturaJpegDePsd(bytes: Uint8Array): Uint8Array | null 
   }
 }
 
+export interface InfoImageDataPsd {
+  /** Offset absoluto (desde el principio del archivo) donde arranca la seccion "Image Data". */
+  offset: number;
+  version: 1 | 2;
+  channels: number;
+  width: number;
+  height: number;
+  depth: number;
+  colorMode: number;
+}
+
+/**
+ * Ubica el offset donde arranca la seccion "Image Data" de un PSD/PSB — la
+ * vista compuesta aplanada, en la resolucion real del documento (a
+ * diferencia de extraerMiniaturaJpegDePsd, que usa la miniatura chica que
+ * Photoshop guarda aparte). Esa seccion es la ULTIMA del archivo, despues
+ * de "Layer and Mask Information" — una seccion que puede pesar muchisimo
+ * mas que el resto (todos los pixeles de todas las capas) pero que ACA no
+ * hace falta leer, solo conocer su largo declarado para saltearla. Por eso
+ * esta funcion solo necesita un prefijo del archivo (ver ImageFileField,
+ * que hace una segunda lectura recien a partir del offset devuelto).
+ * Devuelve null si el prefijo no alcanza para llegar hasta ese largo
+ * declarado, o si el archivo no es un PSD/PSB valido.
+ */
+export function ubicarImageDataPsd(bytes: Uint8Array): InfoImageDataPsd | null {
+  if (bytes.length < 26 || !esPsdOPsb(bytes)) return null;
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const version = view.getUint16(4, false);
+  if (version !== 1 && version !== 2) return null;
+
+  const channels = view.getUint16(12, false);
+  const height = view.getUint32(14, false);
+  const width = view.getUint32(18, false);
+  const depth = view.getUint16(22, false);
+  const colorMode = view.getUint16(24, false);
+
+  let pos = 26;
+  if (pos + 4 > bytes.length) return null;
+  const largoColorMode = view.getUint32(pos, false);
+  pos += 4 + largoColorMode;
+
+  if (pos + 4 > bytes.length) return null;
+  const largoRecursos = view.getUint32(pos, false);
+  pos += 4 + largoRecursos;
+
+  // "Layer and Mask Information": largo de 4 bytes en PSD, 8 bytes en PSB.
+  if (version === 1) {
+    if (pos + 4 > bytes.length) return null;
+    const largoCapas = view.getUint32(pos, false);
+    pos += 4 + largoCapas;
+  } else {
+    if (pos + 8 > bytes.length) return null;
+    const largoCapas = view.getUint32(pos, false) * 4294967296 + view.getUint32(pos + 4, false);
+    pos += 8 + largoCapas;
+  }
+
+  return { offset: pos, version, channels, width, height, depth, colorMode };
+}
+
+export interface ImagenDecodificada {
+  width: number;
+  height: number;
+  /** RGBA intercalado, 4 bytes por pixel, listo para ImageData. */
+  rgba: Uint8ClampedArray<ArrayBuffer>;
+}
+
+const IMAGE_DATA_PSD_MAX_PIXELS = 100_000_000; // ~100MP, cordura contra archivos corruptos
+
+/** Descomprime una fila PackBits/RLE (spec TIFF 6.0, Apendice B) hasta completar exactamente `salidaEsperada` bytes. null si los datos estan corruptos o no alcanzan. */
+function descomprimirPackBits(bytes: Uint8Array, inicio: number, largo: number, salidaEsperada: number): Uint8Array | null {
+  const salida = new Uint8Array(salidaEsperada);
+  let posEntrada = inicio;
+  const finEntrada = inicio + largo;
+  let posSalida = 0;
+  while (posEntrada < finEntrada && posSalida < salidaEsperada) {
+    const n = bytes[posEntrada++];
+    if (n <= 127) {
+      const cantidad = n + 1;
+      if (posEntrada + cantidad > finEntrada || posSalida + cantidad > salidaEsperada) return null;
+      salida.set(bytes.subarray(posEntrada, posEntrada + cantidad), posSalida);
+      posEntrada += cantidad;
+      posSalida += cantidad;
+    } else if (n !== 128) {
+      const cantidad = 257 - n; // n (129..255) representa un contador negativo de -127 a -1
+      if (posEntrada >= finEntrada || posSalida + cantidad > salidaEsperada) return null;
+      salida.fill(bytes[posEntrada], posSalida, posSalida + cantidad);
+      posEntrada += 1;
+      posSalida += cantidad;
+    }
+    // n === 128: no-op segun la spec, no avanza posSalida.
+  }
+  return posSalida === salidaEsperada ? salida : null;
+}
+
+/**
+ * Decodifica la seccion "Image Data" de un PSD/PSB (ver ubicarImageDataPsd)
+ * a la imagen compuesta real. `bytes` debe empezar exactamente en el offset
+ * que devolvio ubicarImageDataPsd (el byte 0 de `bytes` es el marcador de
+ * compresion). Cubre los casos mas comunes de un archivo de trabajo real:
+ * modo RGB o escala de grises, 8 bits por canal, compresion Raw o RLE
+ * (PackBits). Devuelve null si el archivo usa 16/32 bits por canal,
+ * compresion ZIP, o un modo de color menos comun (CMYK, Lab, Indexado,
+ * Duotono, Bitmap) — casos en los que no se puede reconstruir la imagen con
+ * este codigo (conviene recurrir a extraerMiniaturaJpegDePsd en su lugar).
+ */
+export function decodificarImageDataPsd(bytes: Uint8Array, info: InfoImageDataPsd): ImagenDecodificada | null {
+  try {
+    const { version, channels, width, height, depth, colorMode } = info;
+    if (colorMode !== 1 && colorMode !== 3) return null; // solo escala de grises o RGB
+    if (depth !== 8) return null; // solo 8 bits por canal
+    if (width <= 0 || height <= 0 || width * height > IMAGE_DATA_PSD_MAX_PIXELS) return null;
+    if (channels < (colorMode === 1 ? 1 : 3)) return null;
+    if (bytes.length < 2) return null;
+
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    const compresion = view.getUint16(0, false);
+    if (compresion !== 0 && compresion !== 1) return null; // solo Raw o RLE, no ZIP
+
+    const muestrasPorCanal = width * height;
+    let pos = 2;
+    const canalesDatos: Uint8Array[] = [];
+
+    if (compresion === 0) {
+      for (let c = 0; c < channels; c++) {
+        if (pos + muestrasPorCanal > bytes.length) return null;
+        canalesDatos.push(bytes.subarray(pos, pos + muestrasPorCanal));
+        pos += muestrasPorCanal;
+      }
+    } else {
+      const filasTotal = channels * height;
+      const largoContador = version === 1 ? 2 : 4;
+      if (pos + filasTotal * largoContador > bytes.length) return null;
+      const largosFilas: number[] = [];
+      for (let i = 0; i < filasTotal; i++) {
+        largosFilas.push(largoContador === 2 ? view.getUint16(pos, false) : view.getUint32(pos, false));
+        pos += largoContador;
+      }
+      let indiceFila = 0;
+      for (let c = 0; c < channels; c++) {
+        const canal = new Uint8Array(muestrasPorCanal);
+        let offsetCanal = 0;
+        for (let f = 0; f < height; f++) {
+          const largoFila = largosFilas[indiceFila++];
+          if (pos + largoFila > bytes.length) return null;
+          const filaDecodificada = descomprimirPackBits(bytes, pos, largoFila, width);
+          if (!filaDecodificada) return null;
+          canal.set(filaDecodificada, offsetCanal);
+          offsetCanal += width;
+          pos += largoFila;
+        }
+        canalesDatos.push(canal);
+      }
+    }
+
+    const rgba = new Uint8ClampedArray(muestrasPorCanal * 4);
+    if (colorMode === 1) {
+      const gris = canalesDatos[0];
+      const alfa = canalesDatos[1];
+      for (let i = 0; i < muestrasPorCanal; i++) {
+        rgba[i * 4] = gris[i];
+        rgba[i * 4 + 1] = gris[i];
+        rgba[i * 4 + 2] = gris[i];
+        rgba[i * 4 + 3] = alfa ? alfa[i] : 255;
+      }
+    } else {
+      const r = canalesDatos[0];
+      const g = canalesDatos[1];
+      const b = canalesDatos[2];
+      const alfa = canalesDatos[3];
+      for (let i = 0; i < muestrasPorCanal; i++) {
+        rgba[i * 4] = r[i];
+        rgba[i * 4 + 1] = g[i];
+        rgba[i * 4 + 2] = b[i];
+        rgba[i * 4 + 3] = alfa ? alfa[i] : 255;
+      }
+    }
+
+    return { width, height, rgba };
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Lee los metadatos disponibles de un archivo (camara, fecha de captura,
  * software, ISO, velocidad, diafragma, distancia focal, palabras clave),

@@ -640,6 +640,8 @@ export const es = {
     "Ese archivo no es una imagen compatible. Elegí un archivo JPG, PNG, GIF, WEBP, PSD o PSB.",
   "imageFileField.errorPsdSinMiniatura":
     "Este PSD no tiene una vista previa guardada adentro, así que no se puede usar como imagen. Abrilo en Photoshop, activá \"Vistas previas de imagen\" en las preferencias y volvé a guardarlo, o elegí un JPG/PNG en su lugar.",
+  "imageFileField.avisoPsd":
+    "Esta imagen se generó automáticamente a partir del PSD/PSB (una vista del archivo, no la obra final procesada), así que puede verse distinta a la obra real y no tener la resolución ideal para pantalla completa o la galería. Para mejores resultados, se recomienda usar en su lugar un archivo JPG de unos 1500 a 2000 píxeles en el lado más largo.",
 
   // HelpIcon
   "helpIcon.ayuda": "Ayuda",
