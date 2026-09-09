@@ -55,7 +55,9 @@ export function WorkspacePicker() {
       {miniaturas.length > 0 && (
         <div className="workspace-picker-collage">
           {miniaturas.map((url, i) => (
-            <img key={i} src={url} alt="" className="workspace-picker-collage-img" />
+            <div key={i} className="workspace-picker-collage-thumb">
+              <img src={url} alt="" className="workspace-picker-collage-img" />
+            </div>
           ))}
         </div>
       )}

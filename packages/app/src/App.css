@@ -157,31 +157,40 @@ input[type="date"] {
   margin-bottom: 3.5rem;
 }
 
-.workspace-picker-collage-img {
+/* Cada miniatura vive dentro de un recuadro fijo de 84x84 que es el que
+   ocupa un lugar en la fila (para que el resto del collage nunca se mueva),
+   mientras que la foto de adentro es la que crece al pasar el cursor. */
+.workspace-picker-collage-thumb {
+  position: relative;
   width: 84px;
   height: 84px;
-  object-fit: cover;
-  border-radius: 8px;
-  /* Mismo color que el fondo de la pantalla (no el de "panel"): en reposo
-     nunca se ve nada de este fondo porque object-fit:cover llena todo el
-     recuadro sin dejar huecos, pero al pasar el cursor object-fit pasa a
-     contain (ver mas abajo) y una foto que no sea cuadrada puede dejar
-     franjas vacias a los costados — con este color, esas franjas se
-     confunden con el fondo de la pantalla en vez de notarse como un
-     recuadro aparte. */
-  background: var(--bg);
-  position: relative;
-  cursor: default;
-  transition: transform 0.15s ease-out;
 }
 
-/* Al pasar el cursor, la miniatura recortada (object-fit: cover) pasa a
-   mostrarse completa (contain) y se agranda por encima de sus vecinas, sin
-   mover el resto del collage — transform no afecta el layout, solo lo
-   visual, y crea su propio contexto de apilamiento para el z-index. */
-.workspace-picker-collage-img:hover {
-  object-fit: contain;
-  transform: scale(2.2);
+.workspace-picker-collage-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: default;
+  transition: box-shadow 0.15s ease-out;
+}
+
+/* Al pasar el cursor, la foto deja de recortarse (cover) y pasa a mostrarse
+   completa con su propia forma real (ancho y alto en "auto", limitados a
+   185px de lado maximo): asi no queda ningun hueco de color de fondo que se
+   note al superponerse sobre las miniaturas vecinas. Se centra sobre su
+   propio recuadro y gana z-index para quedar por encima sin mover al resto. */
+.workspace-picker-collage-thumb:hover .workspace-picker-collage-img {
+  inset: auto;
+  top: 50%;
+  left: 50%;
+  width: auto;
+  height: auto;
+  max-width: 185px;
+  max-height: 185px;
+  transform: translate(-50%, -50%);
   z-index: 5;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
