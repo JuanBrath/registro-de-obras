@@ -25,6 +25,7 @@ interface PrimeraSerieDisponible {
 interface FotoRow {
   id: number;
   titulo: string;
+  codigo_inventario: string | null;
   miniatura_path: string | null;
   imagen_alta_resolucion_path: string | null;
   tags: string | null;
@@ -55,7 +56,7 @@ interface FotoRow {
 // de una sola tarjeta despues de registrar una venta/reserva desde el modal
 // de informacion, para no duplicar esta consulta larga en dos lugares.
 const FOTOS_QUERY_SELECT = `
-  SELECT obra.id, obra.titulo, obra.miniatura_path, obra.imagen_alta_resolucion_path, obra.tags, obra.artista_id,
+  SELECT obra.id, obra.titulo, obra.codigo_inventario, obra.miniatura_path, obra.imagen_alta_resolucion_path, obra.tags, obra.artista_id,
          obra.categoria_obra, obra.marcada, obra.estado, obra.es_seriada, artista.nombre_completo,
          obra_fotografia.subtipo_fotografia, obra_detalle.subtipo,
          obra_fotografia.dimensiones, obra_fotografia.escala_por_tamanos,
@@ -113,6 +114,7 @@ export function GaleriaFotos({
   );
   const [selectedSubtipo, setSelectedSubtipo] = useState<string | null>(filtrosIniciales?.selectedSubtipo ?? null);
   const [soloMarcadas, setSoloMarcadas] = useState(filtrosIniciales?.soloMarcadas ?? false);
+  const [ordenPor, setOrdenPor] = useState<"titulo" | "codigo_inventario">("codigo_inventario");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [infoAbierta, setInfoAbierta] = useState(false);
   const [primeraSerieDisponible, setPrimeraSerieDisponible] = useState<PrimeraSerieDisponible | null>(null);
@@ -205,19 +207,28 @@ export function GaleriaFotos({
     return Array.from(map.values()).sort((a, b) => a.subtipo.localeCompare(b.subtipo));
   }, [fotos, selectedCategoria]);
 
-  const filteredFotos = useMemo(
-    () =>
-      fotos.filter((f) => {
-        const tagMatch = selectedTag === null || parseTags(f.tags).includes(selectedTag);
-        const artistaMatch = !esGaleria || selectedArtistaId === null || f.artista_id === selectedArtistaId;
-        const categoriaMatch = selectedCategoria === null || f.categoria_obra === selectedCategoria;
-        const subtipoValor = f.categoria_obra === "Fotografia" ? f.subtipo_fotografia : f.subtipo;
-        const subtipoMatch = selectedSubtipo === null || subtipoValor === selectedSubtipo;
-        const marcadaMatch = !soloMarcadas || f.marcada !== 0;
-        return tagMatch && artistaMatch && categoriaMatch && subtipoMatch && marcadaMatch;
-      }),
-    [fotos, selectedTag, selectedArtistaId, selectedCategoria, selectedSubtipo, soloMarcadas, esGaleria],
-  );
+  const filteredFotos = useMemo(() => {
+    const filtradas = fotos.filter((f) => {
+      const tagMatch = selectedTag === null || parseTags(f.tags).includes(selectedTag);
+      const artistaMatch = !esGaleria || selectedArtistaId === null || f.artista_id === selectedArtistaId;
+      const categoriaMatch = selectedCategoria === null || f.categoria_obra === selectedCategoria;
+      const subtipoValor = f.categoria_obra === "Fotografia" ? f.subtipo_fotografia : f.subtipo;
+      const subtipoMatch = selectedSubtipo === null || subtipoValor === selectedSubtipo;
+      const marcadaMatch = !soloMarcadas || f.marcada !== 0;
+      return tagMatch && artistaMatch && categoriaMatch && subtipoMatch && marcadaMatch;
+    });
+
+    // Mismo criterio que ObrasList: sin codigo de inventario, va al final.
+    if (ordenPor === "codigo_inventario") {
+      return [...filtradas].sort((a, b) => {
+        if (!a.codigo_inventario && !b.codigo_inventario) return 0;
+        if (!a.codigo_inventario) return 1;
+        if (!b.codigo_inventario) return -1;
+        return a.codigo_inventario.localeCompare(b.codigo_inventario, undefined, { sensitivity: "base", numeric: true });
+      });
+    }
+    return [...filtradas].sort((a, b) => a.titulo.localeCompare(b.titulo, undefined, { sensitivity: "base" }));
+  }, [fotos, selectedTag, selectedArtistaId, selectedCategoria, selectedSubtipo, soloMarcadas, esGaleria, ordenPor]);
 
   const hayMarcadas = useMemo(() => fotos.some((f) => f.marcada !== 0), [fotos]);
 
@@ -371,6 +382,14 @@ export function GaleriaFotos({
       {!loading && fotos.length === 0 && <p>{t("galeria.sinFotos")}</p>}
 
       <div className="galeria-filtros-selects">
+        <label className="galeria-filtro-artista">
+          {t("obrasList.ordenarPorLabel")}
+          <select value={ordenPor} onChange={(e) => setOrdenPor(e.target.value as "titulo" | "codigo_inventario")}>
+            <option value="codigo_inventario">{t("obrasList.ordenarPorCodigoInventario")}</option>
+            <option value="titulo">{t("obrasList.ordenarPorTitulo")}</option>
+          </select>
+        </label>
+
         {esGaleria && allArtistas.length > 0 && (
           <label className="galeria-filtro-artista">
             {t("obraForm.artistaLabel")}

@@ -141,6 +141,25 @@ input[type="date"] {
   margin-top: 1.5rem;
 }
 
+/* Collage de fotos al azar de las obras ya cargadas (ver WorkspacePicker.tsx
+   / peekRandomThumbnails) — solo decorativo, no aparece si todavia no hay
+   ninguna obra con imagen. */
+.workspace-picker-collage {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-top: 1.5rem;
+}
+
+.workspace-picker-collage-img {
+  width: 84px;
+  height: 84px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: var(--bg-panel);
+}
+
 .obra-form {
   max-width: 640px;
   margin: 2rem auto;

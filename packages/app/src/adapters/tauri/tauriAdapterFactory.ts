@@ -6,6 +6,7 @@ import type { DatabaseAdapter, PlatformAdapterFactory, WorkspaceId } from "@regi
 import { createTauriDatabaseAdapter } from "./TauriDatabaseAdapter.js";
 import { TauriFileSystemAdapter, pickTauriRootDirectory } from "./TauriFileSystemAdapter.js";
 import { detectarProveedorNubeEnRuta } from "./detectCloudSyncFolder.js";
+import { bytesToObjectUrl } from "../../utils/imageObjectUrl.js";
 
 const STORE_FILE = "workspace-roots.json";
 
@@ -169,6 +170,46 @@ export async function moverTauriWorkspaceRoot(
 /** Borra una carpeta vieja despues de una mudanza confirmada (ver moverTauriWorkspaceRoot). Accion aparte y explicita: nunca automatica. */
 export async function borrarCarpetaViejaTauri(rutaVieja: string): Promise<void> {
   await invoke("fs_remove_workspace_root", { path: rutaVieja });
+}
+
+/**
+ * Trae hasta `cantidad` miniaturas al azar de un workspace YA CONFIGURADO,
+ * para decorar la pantalla de seleccion de modulo con fotos de las obras
+ * cargadas — a diferencia de abrir el workspace de verdad (openWorkspace vía
+ * createDatabaseAdapter/getOrPickRoot), esto NUNCA dispara un dialogo
+ * nativo: si el workspace todavia no tiene carpeta asignada (primer uso de
+ * la app) o esa carpeta no esta disponible ahora mismo (por ejemplo un
+ * disco externo desconectado), devuelve una lista vacia en silencio en vez
+ * de pedirle una carpeta al usuario antes de que elija a que modulo entrar.
+ */
+export async function peekRandomThumbnails(workspace: WorkspaceId, cantidad: number): Promise<string[]> {
+  try {
+    const store = await Store.load(STORE_FILE);
+    const root = await store.get<string>(workspace);
+    if (!root || !(await raizExiste(root))) return [];
+
+    const db = await createTauriDatabaseAdapter(`${root}/registro.db`);
+    try {
+      const rows = await db.query<{ miniatura_path: string }>(
+        "SELECT miniatura_path FROM obra WHERE miniatura_path IS NOT NULL ORDER BY RANDOM() LIMIT ?",
+        [cantidad],
+      );
+      const fs = new TauriFileSystemAdapter(root);
+      const urls: string[] = [];
+      for (const row of rows) {
+        try {
+          urls.push(bytesToObjectUrl(await fs.readFile(row.miniatura_path)));
+        } catch {
+          // Miniatura referenciada en la base pero faltante en disco: se omite sin romper el resto.
+        }
+      }
+      return urls;
+    } finally {
+      await db.close();
+    }
+  } catch {
+    return [];
+  }
 }
 
 export async function createTauriAdapterFactory(): Promise<PlatformAdapterFactory> {
