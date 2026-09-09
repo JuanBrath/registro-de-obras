@@ -431,7 +431,7 @@ export function ObrasList({
         </div>
       </div>
 
-      <div className="header-actions obras-list-options">
+      <div className="header-actions obras-list-options obras-list-fila-principal">
         <button type="button" onClick={onNuevaObra}>
           {t("workspaceHome.nuevaObra")}
         </button>
@@ -448,6 +448,25 @@ export function ObrasList({
             {t("informesObras.generarInforme")}
           </button>
         )}
+        {obras.length > 0 && (
+          <div className="buscador-con-ayuda obras-list-buscador-fila-principal">
+            <input type="search" className="obras-list-buscador" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
+            <HelpIcon fieldKey="busqueda_general" />
+          </div>
+        )}
+        {obras.length > 0 && (
+          <div className="miniaturas-slider-campo">
+            <span className="miniaturas-slider-titulo">{t("obrasList.tamanoMiniaturasLabel")}</span>
+            <input
+              type="range"
+              className="miniaturas-slider"
+              min={MIN_COLUMNAS_OBRAS}
+              max={MAX_COLUMNAS_OBRAS}
+              value={MIN_COLUMNAS_OBRAS + MAX_COLUMNAS_OBRAS - columnasGrid}
+              onChange={(e) => handleTamanoMiniaturasChange(Number(e.target.value))}
+            />
+          </div>
+        )}
       </div>
 
       {loading && <p>{t("common.loading")}</p>}
@@ -459,13 +478,6 @@ export function ObrasList({
 
       {!loading && obras.length === 0 && <p>{t("obrasList.sinObras")}</p>}
 
-      {obras.length > 0 && (
-        <div className="buscador-con-ayuda">
-          <input type="search" className="obras-list-buscador" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
-          <HelpIcon fieldKey="busqueda_general" />
-        </div>
-      )}
-
       {obras.length > 0 ? (
         <div className="galeria-filtros-selects">
           <label className="galeria-filtro-artista">
@@ -474,17 +486,6 @@ export function ObrasList({
               <option value="codigo_inventario">{t("obrasList.ordenarPorCodigoInventario")}</option>
               <option value="titulo">{t("obrasList.ordenarPorTitulo")}</option>
             </select>
-          </label>
-
-          <label className="galeria-filtro-artista">
-            {t("obrasList.tamanoMiniaturasLabel")}
-            <input
-              type="range"
-              min={MIN_COLUMNAS_OBRAS}
-              max={MAX_COLUMNAS_OBRAS}
-              value={MIN_COLUMNAS_OBRAS + MAX_COLUMNAS_OBRAS - columnasGrid}
-              onChange={(e) => handleTamanoMiniaturasChange(Number(e.target.value))}
-            />
           </label>
 
           {esGaleria && allArtistas.length > 0 && (

@@ -487,6 +487,76 @@ input[type="date"] {
   margin-top: 1rem;
 }
 
+/* Primera fila de Obras: los botones de accion, el buscador y el regulador
+   de tamano de miniaturas, todos en un mismo renglon. */
+.obras-list-fila-principal {
+  flex-wrap: wrap;
+  row-gap: 0.75rem;
+}
+
+.obras-list-buscador-fila-principal {
+  max-width: 320px;
+}
+
+.obras-list-buscador-fila-principal .obras-list-buscador {
+  margin-top: 0;
+}
+
+/* Campo del regulador de tamano de miniaturas: el ancho del renglon entero
+   (titulo + barra) queda determinado por el titulo, para que la barra de
+   abajo no quede mas ancha que el texto de arriba. */
+.miniaturas-slider-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: max-content;
+}
+
+.miniaturas-slider-titulo {
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+/* Barra finita con un triangulo gris claro como control, en vez del control
+   ovalado grueso que trae el navegador por defecto para type="range". */
+.miniaturas-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.miniaturas-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 10px solid #cfcfcf;
+}
+
+.miniaturas-slider::-moz-range-thumb {
+  width: 0;
+  height: 0;
+  border: none;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 10px solid #cfcfcf;
+  border-radius: 0;
+  background: transparent;
+}
+
+.miniaturas-slider::-moz-range-track {
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+}
+
 /* Cantidad de columnas fija (en vez de auto-fill/minmax, que depende de
    cuentas de ancho disponible dificiles de verificar sin poder correr la
    app) para que 4 (o 5 con la ventana bien ancha) sea un resultado
