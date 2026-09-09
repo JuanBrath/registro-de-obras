@@ -535,7 +535,9 @@ input[type="date"] {
 
 .obras-list-buscador-fila-principal {
   max-width: 320px;
-  margin-top: 1rem;
+  /* Sin margen propio: el titulo (h1) ya trae su propio margen inferior de
+     24px, que alcanza de sobra como separacion. */
+  margin-top: 0;
 }
 
 .obras-list-buscador-fila-principal .obras-list-buscador {
