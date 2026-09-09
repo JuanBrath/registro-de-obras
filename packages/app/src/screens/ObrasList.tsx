@@ -13,26 +13,11 @@ import { tInforme, type InformeIdioma } from "../reports/informeIdioma.js";
 import { resolveMembreteLogoBytes, resolveFirmaBytes, resolveLocalidad } from "../reports/reportBranding.js";
 import { buildObrasListadoPdfBytes, type ObraListadoItem } from "../reports/obrasListadoReports.js";
 import { savePdfWithDialog } from "../utils/savePdfDialog.js";
+import { MiniaturasSizeSlider } from "../components/MiniaturasSizeSlider.js";
+import { cargarColumnasGridInicial, guardarColumnasGrid } from "../utils/columnasGrid.js";
 
-// Regulador de tamaño de miniaturas: controla la cantidad de columnas de la
-// grilla (menos columnas = tarjetas mas anchas = miniaturas mas grandes),
-// sin tocar los archivos de imagen — cada miniatura ya es width:100% de su
-// celda, asi que alcanza con cambiar cuantas celdas entran por fila.
-const MIN_COLUMNAS_OBRAS = 2;
-const MAX_COLUMNAS_OBRAS = 8;
 const COLUMNAS_OBRAS_POR_DEFECTO = 4;
 const COLUMNAS_OBRAS_STORAGE_KEY = "obrasListColumnasGrid";
-
-function cargarColumnasGridInicial(): number {
-  try {
-    const guardado = localStorage.getItem(COLUMNAS_OBRAS_STORAGE_KEY);
-    const n = guardado ? parseInt(guardado, 10) : NaN;
-    if (n >= MIN_COLUMNAS_OBRAS && n <= MAX_COLUMNAS_OBRAS) return n;
-  } catch {
-    // localStorage puede no estar disponible (o bloqueado); se usa el valor por defecto.
-  }
-  return COLUMNAS_OBRAS_POR_DEFECTO;
-}
 
 export interface ObrasListFiltros {
   selectedTag: string | null;
@@ -110,7 +95,9 @@ export function ObrasList({
   const [busqueda, setBusqueda] = useState("");
   const [soloMarcadas, setSoloMarcadas] = useState(false);
   const [ordenPor, setOrdenPor] = useState<"titulo" | "codigo_inventario">("codigo_inventario");
-  const [columnasGrid, setColumnasGrid] = useState<number>(cargarColumnasGridInicial);
+  const [columnasGrid, setColumnasGrid] = useState<number>(() =>
+    cargarColumnasGridInicial(COLUMNAS_OBRAS_STORAGE_KEY, COLUMNAS_OBRAS_POR_DEFECTO),
+  );
   const objectUrlsRef = useRef<string[]>([]);
 
   const [informesMenuAbierto, setInformesMenuAbierto] = useState(false);
@@ -302,17 +289,9 @@ export function ObrasList({
     setSelectedSubtipo(null);
   }
 
-  // El regulador se muestra invertido respecto a "columnas": arrastrar hacia
-  // la derecha da miniaturas mas grandes, que en la grilla significa MENOS
-  // columnas — de ahi la resta en vez de asignar el valor del slider directo.
-  function handleTamanoMiniaturasChange(valorSlider: number) {
-    const columnas = MIN_COLUMNAS_OBRAS + MAX_COLUMNAS_OBRAS - valorSlider;
+  function handleTamanoMiniaturasChange(columnas: number) {
     setColumnasGrid(columnas);
-    try {
-      localStorage.setItem(COLUMNAS_OBRAS_STORAGE_KEY, String(columnas));
-    } catch {
-      // No se pudo persistir la preferencia (localStorage bloqueado); no rompe el uso de esta sesion.
-    }
+    guardarColumnasGrid(COLUMNAS_OBRAS_STORAGE_KEY, columnas);
   }
 
   async function handleAbrirInformesMenu() {
@@ -455,19 +434,7 @@ export function ObrasList({
             {t("informesObras.generarInforme")}
           </button>
         )}
-        {obras.length > 0 && (
-          <div className="miniaturas-slider-campo">
-            <span className="miniaturas-slider-titulo">{t("obrasList.tamanoMiniaturasLabel")}</span>
-            <input
-              type="range"
-              className="miniaturas-slider"
-              min={MIN_COLUMNAS_OBRAS}
-              max={MAX_COLUMNAS_OBRAS}
-              value={MIN_COLUMNAS_OBRAS + MAX_COLUMNAS_OBRAS - columnasGrid}
-              onChange={(e) => handleTamanoMiniaturasChange(Number(e.target.value))}
-            />
-          </div>
-        )}
+        {obras.length > 0 && <MiniaturasSizeSlider columnas={columnasGrid} onChange={handleTamanoMiniaturasChange} />}
       </div>
 
       {loading && <p>{t("common.loading")}</p>}

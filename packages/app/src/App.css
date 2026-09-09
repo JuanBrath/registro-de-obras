@@ -158,6 +158,20 @@ input[type="date"] {
   object-fit: cover;
   border-radius: 8px;
   background: var(--bg-panel);
+  position: relative;
+  cursor: default;
+  transition: transform 0.15s ease-out;
+}
+
+/* Al pasar el cursor, la miniatura recortada (object-fit: cover) pasa a
+   mostrarse completa (contain) y se agranda por encima de sus vecinas, sin
+   mover el resto del collage — transform no afecta el layout, solo lo
+   visual, y crea su propio contexto de apilamiento para el z-index. */
+.workspace-picker-collage-img:hover {
+  object-fit: contain;
+  transform: scale(2.2);
+  z-index: 5;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
 .obra-form {

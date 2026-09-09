@@ -9,6 +9,11 @@ import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
 import { formatFechaDDMMYYYY } from "../utils/formatFecha.js";
 import type { ObrasListFiltros } from "./ObrasList.js";
 import { subtipoTranslationKey } from "./fields/ObraDetalleFields.js";
+import { MiniaturasSizeSlider } from "../components/MiniaturasSizeSlider.js";
+import { cargarColumnasGridInicial, guardarColumnasGrid } from "../utils/columnasGrid.js";
+
+const COLUMNAS_GALERIA_POR_DEFECTO = 4;
+const COLUMNAS_GALERIA_STORAGE_KEY = "galeriaFotosColumnasGrid";
 
 interface PrimeraSerieDisponible {
   id: number;
@@ -115,6 +120,14 @@ export function GaleriaFotos({
   const [selectedSubtipo, setSelectedSubtipo] = useState<string | null>(filtrosIniciales?.selectedSubtipo ?? null);
   const [soloMarcadas, setSoloMarcadas] = useState(filtrosIniciales?.soloMarcadas ?? false);
   const [ordenPor, setOrdenPor] = useState<"titulo" | "codigo_inventario">("codigo_inventario");
+  const [columnasGrid, setColumnasGrid] = useState<number>(() =>
+    cargarColumnasGridInicial(COLUMNAS_GALERIA_STORAGE_KEY, COLUMNAS_GALERIA_POR_DEFECTO),
+  );
+
+  function handleTamanoMiniaturasChange(columnas: number) {
+    setColumnasGrid(columnas);
+    guardarColumnasGrid(COLUMNAS_GALERIA_STORAGE_KEY, columnas);
+  }
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [infoAbierta, setInfoAbierta] = useState(false);
   const [primeraSerieDisponible, setPrimeraSerieDisponible] = useState<PrimeraSerieDisponible | null>(null);
@@ -390,6 +403,8 @@ export function GaleriaFotos({
           </select>
         </label>
 
+        <MiniaturasSizeSlider columnas={columnasGrid} onChange={handleTamanoMiniaturasChange} />
+
         {esGaleria && allArtistas.length > 0 && (
           <label className="galeria-filtro-artista">
             {t("obraForm.artistaLabel")}
@@ -466,7 +481,7 @@ export function GaleriaFotos({
         )}
       </div>
 
-      <div className="obras-grid galeria-fotos-grid">
+      <div className="obras-grid galeria-fotos-grid" style={{ gridTemplateColumns: `repeat(${columnasGrid}, 1fr)` }}>
         {filteredFotos.map(
           (foto, i) =>
             thumbnails[foto.id] && (
