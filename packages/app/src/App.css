@@ -150,6 +150,11 @@ input[type="date"] {
   justify-content: center;
   gap: 0.6rem;
   margin-top: 1.5rem;
+  /* Al pasar el cursor una foto crece hasta 2.2x su tamano (ver
+     .workspace-picker-collage-img:hover), estirandose parejo hacia los
+     cuatro lados: este margen de abajo deja lugar de sobra para que esa
+     ampliacion nunca tape el boton de "entrar" que viene despues. */
+  margin-bottom: 3.5rem;
 }
 
 .workspace-picker-collage-img {
@@ -550,6 +555,14 @@ input[type="date"] {
 .miniaturas-slider-titulo {
   font-size: 0.9rem;
   white-space: nowrap;
+}
+
+/* En la fila de filtros de Galeria de obras, el resto de las etiquetas
+   (Ordenar por, Categoria, Subtipo, Etiquetas) tienen margin-top: 1rem
+   (.galeria-filtro-artista) — sin este mismo margen, el titulo del
+   regulador quedaba mas arriba que el resto. */
+.galeria-filtros-selects .miniaturas-slider-campo {
+  margin-top: 1rem;
 }
 
 /* Barra finita con un triangulo gris claro como control, en vez del control

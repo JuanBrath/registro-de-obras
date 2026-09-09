@@ -403,8 +403,6 @@ export function GaleriaFotos({
           </select>
         </label>
 
-        <MiniaturasSizeSlider columnas={columnasGrid} onChange={handleTamanoMiniaturasChange} />
-
         {esGaleria && allArtistas.length > 0 && (
           <label className="galeria-filtro-artista">
             {t("obraForm.artistaLabel")}
@@ -460,6 +458,8 @@ export function GaleriaFotos({
             </select>
           </label>
         )}
+
+        <MiniaturasSizeSlider columnas={columnasGrid} onChange={handleTamanoMiniaturasChange} />
 
         {hayMarcadas && (
           <div className="galeria-filtro-marcadas-row">

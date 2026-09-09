@@ -6,7 +6,7 @@ import { useLanguage } from "../i18n/LanguageContext.js";
 import { BrandHeader } from "../components/BrandHeader.js";
 import { isTauri } from "../adapters/detectPlatform.js";
 
-const CANTIDAD_MINIATURAS_COLLAGE = 6;
+const CANTIDAD_MINIATURAS_COLLAGE = 10;
 
 export function WorkspacePicker() {
   const { loading, error, open } = useWorkspace();
