@@ -573,6 +573,7 @@ export const es = {
   "obrasList.ordenarPorLabel": "Ordenar por",
   "obrasList.ordenarPorTitulo": "Nombre",
   "obrasList.ordenarPorCodigoInventario": "Número de inventario",
+  "obrasList.tamanoMiniaturasLabel": "Tamaño de las miniaturas",
   "obrasList.skuPrefix": "SKU:",
 
   // Informes de Obras (listado)

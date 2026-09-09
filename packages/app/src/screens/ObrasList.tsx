@@ -14,6 +14,26 @@ import { resolveMembreteLogoBytes, resolveFirmaBytes, resolveLocalidad } from ".
 import { buildObrasListadoPdfBytes, type ObraListadoItem } from "../reports/obrasListadoReports.js";
 import { savePdfWithDialog } from "../utils/savePdfDialog.js";
 
+// Regulador de tamaño de miniaturas: controla la cantidad de columnas de la
+// grilla (menos columnas = tarjetas mas anchas = miniaturas mas grandes),
+// sin tocar los archivos de imagen — cada miniatura ya es width:100% de su
+// celda, asi que alcanza con cambiar cuantas celdas entran por fila.
+const MIN_COLUMNAS_OBRAS = 2;
+const MAX_COLUMNAS_OBRAS = 8;
+const COLUMNAS_OBRAS_POR_DEFECTO = 4;
+const COLUMNAS_OBRAS_STORAGE_KEY = "obrasListColumnasGrid";
+
+function cargarColumnasGridInicial(): number {
+  try {
+    const guardado = localStorage.getItem(COLUMNAS_OBRAS_STORAGE_KEY);
+    const n = guardado ? parseInt(guardado, 10) : NaN;
+    if (n >= MIN_COLUMNAS_OBRAS && n <= MAX_COLUMNAS_OBRAS) return n;
+  } catch {
+    // localStorage puede no estar disponible (o bloqueado); se usa el valor por defecto.
+  }
+  return COLUMNAS_OBRAS_POR_DEFECTO;
+}
+
 export interface ObrasListFiltros {
   selectedTag: string | null;
   selectedArtistaId: number | null;
@@ -89,7 +109,8 @@ export function ObrasList({
   const [selectedSubtipo, setSelectedSubtipo] = useState<string | null>(null);
   const [busqueda, setBusqueda] = useState("");
   const [soloMarcadas, setSoloMarcadas] = useState(false);
-  const [ordenPor, setOrdenPor] = useState<"titulo" | "codigo_inventario">("titulo");
+  const [ordenPor, setOrdenPor] = useState<"titulo" | "codigo_inventario">("codigo_inventario");
+  const [columnasGrid, setColumnasGrid] = useState<number>(cargarColumnasGridInicial);
   const objectUrlsRef = useRef<string[]>([]);
 
   const [informesMenuAbierto, setInformesMenuAbierto] = useState(false);
@@ -281,6 +302,19 @@ export function ObrasList({
     setSelectedSubtipo(null);
   }
 
+  // El regulador se muestra invertido respecto a "columnas": arrastrar hacia
+  // la derecha da miniaturas mas grandes, que en la grilla significa MENOS
+  // columnas — de ahi la resta en vez de asignar el valor del slider directo.
+  function handleTamanoMiniaturasChange(valorSlider: number) {
+    const columnas = MIN_COLUMNAS_OBRAS + MAX_COLUMNAS_OBRAS - valorSlider;
+    setColumnasGrid(columnas);
+    try {
+      localStorage.setItem(COLUMNAS_OBRAS_STORAGE_KEY, String(columnas));
+    } catch {
+      // No se pudo persistir la preferencia (localStorage bloqueado); no rompe el uso de esta sesion.
+    }
+  }
+
   async function handleAbrirInformesMenu() {
     if (!context) return;
     setInformeSeleccionId("resumido");
@@ -437,9 +471,20 @@ export function ObrasList({
           <label className="galeria-filtro-artista">
             {t("obrasList.ordenarPorLabel")}
             <select value={ordenPor} onChange={(e) => setOrdenPor(e.target.value as "titulo" | "codigo_inventario")}>
-              <option value="titulo">{t("obrasList.ordenarPorTitulo")}</option>
               <option value="codigo_inventario">{t("obrasList.ordenarPorCodigoInventario")}</option>
+              <option value="titulo">{t("obrasList.ordenarPorTitulo")}</option>
             </select>
+          </label>
+
+          <label className="galeria-filtro-artista">
+            {t("obrasList.tamanoMiniaturasLabel")}
+            <input
+              type="range"
+              min={MIN_COLUMNAS_OBRAS}
+              max={MAX_COLUMNAS_OBRAS}
+              value={MIN_COLUMNAS_OBRAS + MAX_COLUMNAS_OBRAS - columnasGrid}
+              onChange={(e) => handleTamanoMiniaturasChange(Number(e.target.value))}
+            />
           </label>
 
           {esGaleria && allArtistas.length > 0 && (
@@ -514,7 +559,7 @@ export function ObrasList({
 
       {!loading && obras.length > 0 && filteredObras.length === 0 && <p>{t("obrasList.sinResultados")}</p>}
 
-      <div className="obras-grid">
+      <div className="obras-grid" style={{ gridTemplateColumns: `repeat(${columnasGrid}, 1fr)` }}>
         {filteredObras.map((obra) => (
           <div className="obra-card-wrapper" key={obra.id}>
             <button

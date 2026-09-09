@@ -575,6 +575,7 @@ export const en: Record<keyof typeof es, string> = {
   "obrasList.ordenarPorLabel": "Sort by",
   "obrasList.ordenarPorTitulo": "Name",
   "obrasList.ordenarPorCodigoInventario": "Inventory number",
+  "obrasList.tamanoMiniaturasLabel": "Thumbnail size",
   "obrasList.skuPrefix": "SKU:",
 
   // Obras report list

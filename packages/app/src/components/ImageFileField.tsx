@@ -127,6 +127,7 @@ export function ImageFileField({
   // ningun caso es una garantia de que la imagen quede identica a la obra
   // real, asi que conviene avisar aunque la conversion haya funcionado bien.
   const [avisoPsd, setAvisoPsd] = useState(false);
+  useEscapeToDismiss(avisoPsd, () => setAvisoPsd(false));
 
   useEffect(() => {
     if (value === null && inputRef.current) {
