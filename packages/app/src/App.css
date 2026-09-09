@@ -506,8 +506,9 @@ input[type="date"] {
   margin-top: 1rem;
 }
 
-/* Primera fila de Obras: los botones de accion, el buscador y el regulador
-   de tamano de miniaturas, todos en un mismo renglon. */
+/* Obras: el buscador va solo en su propio renglon arriba, y despues los
+   botones de accion junto con el regulador de tamano de miniaturas en otro
+   renglon aparte debajo. */
 .obras-list-fila-principal {
   flex-wrap: wrap;
   row-gap: 0.75rem;
@@ -515,6 +516,7 @@ input[type="date"] {
 
 .obras-list-buscador-fila-principal {
   max-width: 320px;
+  margin-top: 1rem;
 }
 
 .obras-list-buscador-fila-principal .obras-list-buscador {
