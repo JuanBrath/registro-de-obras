@@ -5,10 +5,11 @@ import { useEdicion } from "../state/EdicionContext.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
 import { bytesToObjectUrl } from "../utils/imageObjectUrl.js";
 
-// Exactamente lo que entra en una sola fila de 480px de ancho con miniaturas
-// de 84px (ver .workspace-home-collage, que no hace wrap a diferencia del
-// collage de la pantalla de presentacion).
-const CANTIDAD_MINIATURAS_HOME = 5;
+// Mas de las que entran en una sola fila de 480px de ancho con miniaturas de
+// 84px (ver .workspace-home-collage, que no hace wrap): la fila sencillamente
+// se ensancha mas alla de esos 480px en vez de recortarse o pasar a una
+// segunda linea, ya que nada le pone un limite de ancho propio.
+const CANTIDAD_MINIATURAS_HOME = 7;
 
 export function WorkspaceHome({
   onEditProfile,

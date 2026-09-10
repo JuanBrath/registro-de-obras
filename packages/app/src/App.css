@@ -229,8 +229,8 @@ input[type="date"] {
   gap: 0.5rem 0.25rem;
 }
 
-.obra-form label > *:not(.help-icon-wrapper):not(.campo-fecha-calendario):not([type="checkbox"]):not([type="radio"]),
-.obra-form .campo-con-ayuda > *:not(.help-icon-wrapper):not(.campo-fecha-calendario):not([type="checkbox"]):not([type="radio"]) {
+.obra-form label > *:not(.help-icon-wrapper):not(.notas-expandir-boton):not(.cantidad-ediciones-ayuda):not(.campo-fecha-calendario):not([type="checkbox"]):not([type="radio"]),
+.obra-form .campo-con-ayuda > *:not(.help-icon-wrapper):not(.notas-expandir-boton):not(.cantidad-ediciones-ayuda):not(.campo-fecha-calendario):not([type="checkbox"]):not([type="radio"]) {
   flex: 1 1 100%;
 }
 
@@ -1317,7 +1317,7 @@ input[type="date"] {
   gap: 0.5rem 0.25rem;
 }
 
-.ejemplar-row-editing label > *:not(.help-icon-wrapper):not(.campo-fecha-calendario):not([type="checkbox"]):not([type="radio"]) {
+.ejemplar-row-editing label > *:not(.help-icon-wrapper):not(.notas-expandir-boton):not(.campo-fecha-calendario):not([type="checkbox"]):not([type="radio"]) {
   flex: 1 1 100%;
 }
 
@@ -1421,7 +1421,7 @@ input[type="date"] {
   gap: 0.5rem 0.25rem;
 }
 
-.venta-form label > *:not(.help-icon-wrapper):not(.campo-fecha-calendario):not([type="checkbox"]):not([type="radio"]) {
+.venta-form label > *:not(.help-icon-wrapper):not(.notas-expandir-boton):not(.campo-fecha-calendario):not([type="checkbox"]):not([type="radio"]) {
   flex: 1 1 100%;
 }
 

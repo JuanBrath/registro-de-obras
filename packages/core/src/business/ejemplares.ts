@@ -69,19 +69,27 @@ export type ResultadoReducirSerie =
   | { permitido: false; indicesBloqueantes: number[] };
 
 // Al bajar la cantidad de ediciones de una serie (de N a un M menor) hay que
-// eliminar las ediciones con indice > M — no las pruebas de artista, que
-// quedan tal cual estan. Una edicion a eliminar cuenta como "bloqueante" con
-// el mismo criterio que evaluarDeshacerSerie (estado realmente comprometido
-// o datos cargados a mano; "destruida" nunca bloquea). A diferencia de
+// eliminar las ediciones con indice > M. Si tambien se pasa
+// nuevaCantidadPruebasArtista, se aplica el mismo criterio a las pruebas de
+// artista con indice mayor a ese numero; si no se pasa (undefined), las
+// pruebas de artista quedan tal cual estan, sin tocarse. Una copia a
+// eliminar (de cualquiera de los dos grupos) cuenta como "bloqueante" con el
+// mismo criterio que evaluarDeshacerSerie (estado realmente comprometido o
+// datos cargados a mano; "destruida" nunca bloquea). A diferencia de
 // deshacer serie, aca no hay ninguna copia "para conservar" entre las que se
-// eliminan: si una sola edicion a eliminar es bloqueante, se bloquea toda la
+// eliminan: si una sola copia a eliminar es bloqueante, se bloquea toda la
 // operacion completa.
 export function evaluarReducirSerie(
   ejemplares: InfoEjemplarParaReducirSerie[],
   nuevaCantidadEdiciones: number,
+  nuevaCantidadPruebasArtista?: number,
 ): ResultadoReducirSerie {
   const indicesBloqueantes = ejemplares.reduce<number[]>((acc, ej, indice) => {
-    const seEliminaria = ej.tipo === "edicion" && ej.indice > nuevaCantidadEdiciones;
+    const seEliminaria =
+      (ej.tipo === "edicion" && ej.indice > nuevaCantidadEdiciones) ||
+      (ej.tipo === "prueba_artista" &&
+        nuevaCantidadPruebasArtista !== undefined &&
+        ej.indice > nuevaCantidadPruebasArtista);
     const esBloqueante =
       seEliminaria &&
       ej.estado !== "destruida" &&

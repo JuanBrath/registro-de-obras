@@ -4,6 +4,7 @@ import {
   derivarEsSeriadaObraGrafica,
   formatTags,
   formatearNumeroEjemplar,
+  formatearNumeroPruebaArtista,
   generarEjemplarUnico,
   generarEjemplares,
   obraMiniaturaPath,
@@ -277,6 +278,18 @@ function describirNoSePuedeReducirSerie(
   idioma: string,
 ): string {
   return t("obraDetail.noSePuedeReducirSerieDetalle", {
+    detalle: listarMotivosBloqueantes(ejemplares, indicesBloqueantes, t, idioma),
+  });
+}
+
+/** Igual que describirNoSePuedeReducirSerie, pero para bajar la cantidad de pruebas de autor. */
+function describirNoSePuedeReducirPruebasAutor(
+  ejemplares: EjemplarRow[],
+  indicesBloqueantes: number[],
+  t: (key: TranslationKey, vars?: Record<string, string | number>) => string,
+  idioma: string,
+): string {
+  return t("obraDetail.noSePuedeReducirPruebasAutorDetalle", {
     detalle: listarMotivosBloqueantes(ejemplares, indicesBloqueantes, t, idioma),
   });
 }
@@ -1487,6 +1500,27 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       throw new Error(describirNoSePuedeReducirSerie(ejemplares, resultadoReducir.indicesBloqueantes, t, idioma));
     }
 
+    const cantidadPruebasArtistaActual = ejemplares.filter((ej) => ej.tipo === "prueba_artista").length;
+    const reducePruebasAutor =
+      !cambiaSeriada && eraSeriada && fields.esSeriada && fields.cantidadPruebaArtista < cantidadPruebasArtistaActual;
+    const resultadoReducirPruebas = reducePruebasAutor
+      ? evaluarReducirSerie(
+          ejemplares.map((ej) => ({
+            tipo: ej.tipo as "edicion" | "prueba_artista",
+            indice: ej.indice,
+            estado: ej.estado,
+            tieneDatosCargados: tieneDatosCargados(ej),
+          })),
+          cantidadEdicionesActual,
+          fields.cantidadPruebaArtista,
+        )
+      : null;
+    if (resultadoReducirPruebas && !resultadoReducirPruebas.permitido) {
+      throw new Error(
+        describirNoSePuedeReducirPruebasAutor(ejemplares, resultadoReducirPruebas.indicesBloqueantes, t, idioma),
+      );
+    }
+
     await context.db.transaction(async (tx) => {
       await tx.execute(
         `UPDATE obra SET
@@ -1565,29 +1599,54 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
             ? `Obra convertida a seriada (${fields.cantidadTotalEdiciones} ediciones)`
             : "Obra convertida a pieza única",
         ]);
-      } else if (reduceEdiciones) {
-        // Se borran las ediciones sobrantes (las de mayor indice) y se
-        // renumera el "numero" (i/N) de las que quedan para reflejar el
-        // nuevo total. Las pruebas de artista no se tocan.
-        const nuevaCantidad = fields.cantidadTotalEdiciones;
-        for (const ej of ejemplares) {
-          if (ej.tipo === "edicion" && ej.indice > nuevaCantidad) {
-            await tx.execute(`DELETE FROM ejemplar WHERE id = ?`, [ej.id]);
+      } else {
+        if (reduceEdiciones) {
+          // Se borran las ediciones sobrantes (las de mayor indice) y se
+          // renumera el "numero" (i/N) de las que quedan para reflejar el
+          // nuevo total. Las pruebas de artista se manejan aparte, abajo.
+          const nuevaCantidad = fields.cantidadTotalEdiciones;
+          for (const ej of ejemplares) {
+            if (ej.tipo === "edicion" && ej.indice > nuevaCantidad) {
+              await tx.execute(`DELETE FROM ejemplar WHERE id = ?`, [ej.id]);
+            }
           }
-        }
-        await tx.execute(`UPDATE ejemplar SET total_ediciones = ? WHERE obra_id = ?`, [nuevaCantidad, obraId]);
-        for (const ej of ejemplares) {
-          if (ej.tipo === "edicion" && ej.indice <= nuevaCantidad) {
-            await tx.execute(`UPDATE ejemplar SET numero = ? WHERE id = ?`, [
-              formatearNumeroEjemplar(ej.indice, nuevaCantidad),
-              ej.id,
-            ]);
+          await tx.execute(`UPDATE ejemplar SET total_ediciones = ? WHERE obra_id = ?`, [nuevaCantidad, obraId]);
+          for (const ej of ejemplares) {
+            if (ej.tipo === "edicion" && ej.indice <= nuevaCantidad) {
+              await tx.execute(`UPDATE ejemplar SET numero = ? WHERE id = ?`, [
+                formatearNumeroEjemplar(ej.indice, nuevaCantidad),
+                ej.id,
+              ]);
+            }
           }
+          await tx.execute(`INSERT INTO historial_evento (obra_id, tipo, descripcion) VALUES (?, 'edicion', ?)`, [
+            obraId,
+            `Cantidad de ediciones de la serie reducida de ${cantidadEdicionesActual} a ${nuevaCantidad}`,
+          ]);
         }
-        await tx.execute(`INSERT INTO historial_evento (obra_id, tipo, descripcion) VALUES (?, 'edicion', ?)`, [
-          obraId,
-          `Cantidad de ediciones de la serie reducida de ${cantidadEdicionesActual} a ${nuevaCantidad}`,
-        ]);
+        if (reducePruebasAutor) {
+          // Mismo criterio que reduceEdiciones, pero sobre las pruebas de
+          // artista: se borran las de indice mayor a la nueva cantidad y se
+          // renumera el "numero" (PA i/N) de las que quedan.
+          const nuevaCantidadPruebas = fields.cantidadPruebaArtista;
+          for (const ej of ejemplares) {
+            if (ej.tipo === "prueba_artista" && ej.indice > nuevaCantidadPruebas) {
+              await tx.execute(`DELETE FROM ejemplar WHERE id = ?`, [ej.id]);
+            }
+          }
+          for (const ej of ejemplares) {
+            if (ej.tipo === "prueba_artista" && ej.indice <= nuevaCantidadPruebas) {
+              await tx.execute(`UPDATE ejemplar SET numero = ? WHERE id = ?`, [
+                formatearNumeroPruebaArtista(ej.indice, nuevaCantidadPruebas),
+                ej.id,
+              ]);
+            }
+          }
+          await tx.execute(`INSERT INTO historial_evento (obra_id, tipo, descripcion) VALUES (?, 'edicion', ?)`, [
+            obraId,
+            `Cantidad de pruebas de autor reducida de ${cantidadPruebasArtistaActual} a ${nuevaCantidadPruebas}`,
+          ]);
+        }
       }
 
       if (cambiaCategoria) {
@@ -2501,7 +2560,12 @@ function ObraEditForm({
     eraSeriada ? String(ejemplares.filter((ej) => ej.tipo === "edicion").length || 1) : "1",
   );
   const [hayPruebaAutor, setHayPruebaAutor] = useState(false);
-  const [cantidadPruebaAutor, setCantidadPruebaAutor] = useState("1");
+  // Si la obra ya era seriada, arranca con la cantidad real que ya tiene
+  // (para poder bajarla desde aca); si se esta por convertir de unica a
+  // seriada recien ahora, arranca en "1" como valor inicial sugerido.
+  const [cantidadPruebaAutor, setCantidadPruebaAutor] = useState(() =>
+    eraSeriada ? String(ejemplares.filter((ej) => ej.tipo === "prueba_artista").length) : "1",
+  );
   const [advertenciaPruebaAutorVista, setAdvertenciaPruebaAutorVista] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -2619,18 +2683,44 @@ function ObraEditForm({
       ? describirNoSePuedeReducirSerie(ejemplares, resultadoReducir.indicesBloqueantes, t, idioma)
       : null;
 
-  // Cantidad de pruebas de artista que ya tiene la serie (solo informativo
-  // aca: bajarla no esta cubierto por este flujo, igual que subir la
-  // cantidad de ediciones). La pregunta de "¿hay prueba de autor?" solo
-  // aplica al convertir de obra unica a seriada, igual que en el alta.
+  // Cantidad de pruebas de artista que ya tiene la serie. La pregunta de
+  // "¿hay prueba de autor?" (hayPruebaAutor) solo aplica al convertir de
+  // obra unica a seriada; si la obra ya era seriada, el campo de cantidad
+  // directamente vale como la nueva cantidad (se puede bajar, igual que la
+  // cantidad de ediciones).
   const cantidadPruebasArtistaActual = ejemplares.filter((ej) => ej.tipo === "prueba_artista").length;
-  const cantidadPruebaAutorNum = hayPruebaAutor ? Math.max(0, parseInt(cantidadPruebaAutor, 10) || 0) : 0;
+  const cantidadPruebaAutorNum = eraSeriada
+    ? Math.max(0, parseInt(cantidadPruebaAutor, 10) || 0)
+    : hayPruebaAutor
+      ? Math.max(0, parseInt(cantidadPruebaAutor, 10) || 0)
+      : 0;
   const excedePruebaAutor =
     !eraSeriada &&
     esSeriadaCalculada &&
     hayPruebaAutor &&
     cantidadPruebaAutorNum > nuevaCantidadEdicionesNum * 0.1 &&
     !advertenciaPruebaAutorVista;
+  const reducePruebasAutor =
+    eraSeriada && esSeriadaCalculada && cantidadPruebaAutorNum < cantidadPruebasArtistaActual;
+  // Se pasa cantidadEdicionesActual (sin cambios) como primer umbral para que
+  // esta evaluacion, al reusar evaluarReducirSerie, no marque ninguna edicion
+  // como bloqueante — solo interesan las pruebas de artista aca.
+  const resultadoReducirPruebas = reducePruebasAutor
+    ? evaluarReducirSerie(
+        ejemplares.map((ej) => ({
+          tipo: ej.tipo as "edicion" | "prueba_artista",
+          indice: ej.indice,
+          estado: ej.estado,
+          tieneDatosCargados: tieneDatosCargados(ej),
+        })),
+        cantidadEdicionesActual,
+        cantidadPruebaAutorNum,
+      )
+    : null;
+  const mensajeNoSePuedeReducirPruebas =
+    resultadoReducirPruebas && !resultadoReducirPruebas.permitido
+      ? describirNoSePuedeReducirPruebasAutor(ejemplares, resultadoReducirPruebas.indicesBloqueantes, t, idioma)
+      : null;
 
   useEffect(() => {
     return () => {
@@ -3017,7 +3107,28 @@ function ObraEditForm({
                     })}
                 </p>
               )}
-              <p className="field-note">{t("obraDetail.pruebasAutorActuales", { cantidad: cantidadPruebasArtistaActual })}</p>
+              <label className="cantidad-ediciones-compacta">
+                {t("obraForm.cantidadPruebaAutorLabel")} <HelpIcon fieldKey="pruebas_artista" />
+                <input
+                  type="number"
+                  min={0}
+                  max={cantidadPruebasArtistaActual}
+                  value={cantidadPruebaAutor}
+                  onChange={(e) => setCantidadPruebaAutor(e.target.value)}
+                />
+              </label>
+              {reducePruebasAutor && (
+                <p
+                  className={mensajeNoSePuedeReducirPruebas ? "error" : "field-note"}
+                  role={mensajeNoSePuedeReducirPruebas ? "alert" : undefined}
+                >
+                  {mensajeNoSePuedeReducirPruebas ??
+                    t("obraDetail.reducirPruebasAutorAviso", {
+                      desde: cantidadPruebaAutorNum + 1,
+                      hasta: cantidadPruebasArtistaActual,
+                    })}
+                </p>
+              )}
             </>
           )}
           {obraDetalle.subtipo && (
@@ -3114,7 +3225,28 @@ function ObraEditForm({
                     })}
                 </p>
               )}
-              <p className="field-note">{t("obraDetail.pruebasAutorActuales", { cantidad: cantidadPruebasArtistaActual })}</p>
+              <label className="cantidad-ediciones-compacta">
+                {t("obraForm.cantidadPruebaAutorLabel")} <HelpIcon fieldKey="pruebas_artista" />
+                <input
+                  type="number"
+                  min={0}
+                  max={cantidadPruebasArtistaActual}
+                  value={cantidadPruebaAutor}
+                  onChange={(e) => setCantidadPruebaAutor(e.target.value)}
+                />
+              </label>
+              {reducePruebasAutor && (
+                <p
+                  className={mensajeNoSePuedeReducirPruebas ? "error" : "field-note"}
+                  role={mensajeNoSePuedeReducirPruebas ? "alert" : undefined}
+                >
+                  {mensajeNoSePuedeReducirPruebas ??
+                    t("obraDetail.reducirPruebasAutorAviso", {
+                      desde: cantidadPruebaAutorNum + 1,
+                      hasta: cantidadPruebasArtistaActual,
+                    })}
+                </p>
+              )}
             </>
           )}
         </>

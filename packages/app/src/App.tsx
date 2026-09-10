@@ -56,7 +56,7 @@ function WorkspaceScreens() {
     case "nueva-obra":
       content = (
         <ObraForm
-          onCancel={goHome}
+          onCancel={() => setScreen({ name: "obras" })}
           onViewObra={(obraId) => setScreen({ name: "obra-detail", obraId })}
           onVerObras={() => setScreen({ name: "obras" })}
           onEditProfile={context.workspace === "personal" ? () => setScreen({ name: "profile" }) : undefined}

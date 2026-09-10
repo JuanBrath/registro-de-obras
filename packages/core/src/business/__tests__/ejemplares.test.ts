@@ -187,4 +187,19 @@ describe("evaluarReducirSerie", () => {
     expect(evaluarReducirSerie(ejemplares, 2)).toEqual({ permitido: true });
     expect(evaluarReducirSerie(ejemplares, 5)).toEqual({ permitido: true });
   });
+
+  it("con nuevaCantidadPruebasArtista, tambien reduce las pruebas de artista con el mismo criterio", () => {
+    const ejemplares = [edicion(1, "disponible"), edicion(2, "disponible"), pruebaArtista(1, "disponible")];
+    expect(evaluarReducirSerie(ejemplares, 2, 0)).toEqual({ permitido: true });
+  });
+
+  it("bloquea si alguna prueba de artista a eliminar esta en un estado comprometido", () => {
+    const ejemplares = [edicion(1, "disponible"), pruebaArtista(1, "vendida")];
+    expect(evaluarReducirSerie(ejemplares, 1, 0)).toEqual({ permitido: false, indicesBloqueantes: [1] });
+  });
+
+  it("sin nuevaCantidadPruebasArtista, sigue sin tocar las pruebas de artista", () => {
+    const ejemplares = [edicion(1, "disponible"), edicion(2, "disponible"), pruebaArtista(1, "vendida")];
+    expect(evaluarReducirSerie(ejemplares, 1)).toEqual({ permitido: true });
+  });
 });

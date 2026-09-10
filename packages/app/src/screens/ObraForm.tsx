@@ -25,6 +25,7 @@ import {
   type EdicionDetalleState,
 } from "./fields/EdicionDetalleFields.js";
 import { HelpIcon } from "../components/HelpIcon.js";
+import { NotasLabel } from "../components/NotasLabel.js";
 import { ArtistaSelector } from "../components/ArtistaSelector.js";
 import { TagPicker } from "../components/TagPicker.js";
 import { ImageFileField } from "../components/ImageFileField.js";
@@ -55,6 +56,7 @@ export function ObraForm({
   const [anioPeriodo, setAnioPeriodo] = useState("");
   const [regimenIngreso, setRegimenIngreso] = useState("");
   const [historialProcedenciaExhibiciones, setHistorialProcedenciaExhibiciones] = useState("");
+  const [notas, setNotas] = useState("");
   const [statement, setStatement] = useState("");
   const [selectedArtistaId, setSelectedArtistaId] = useState<number | null>(null);
   const [ubicacion, setUbicacion] = useState("");
@@ -138,6 +140,7 @@ export function ObraForm({
     setAnioPeriodo("");
     setRegimenIngreso("");
     setHistorialProcedenciaExhibiciones("");
+    setNotas("");
     setStatement("");
     setSelectedArtistaId(null);
     setUbicacion("");
@@ -245,9 +248,9 @@ export function ObraForm({
         const insertObra = await tx.execute(
           `INSERT INTO obra (
              titulo, categoria_obra, artista_id, estado, ubicacion_fisica_actual, es_seriada, tags,
-             subtitulo, codigo_inventario, anio_periodo, regimen_ingreso, historial_procedencia_exhibiciones, statement
+             subtitulo, codigo_inventario, anio_periodo, regimen_ingreso, historial_procedencia_exhibiciones, notas, statement
            )
-           VALUES (?, ?, ?, 'disponible', ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           VALUES (?, ?, ?, 'disponible', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             titulo,
             categoria,
@@ -260,6 +263,7 @@ export function ObraForm({
             anioPeriodo || null,
             regimenIngreso || null,
             historialProcedenciaExhibiciones || null,
+            notas || null,
             statement || null,
           ],
         );
@@ -610,6 +614,14 @@ export function ObraForm({
           />
         </label>
       )}
+
+      <label>
+        <NotasLabel texto={notas} onChange={setNotas}>
+          {t("obraForm.notasLabel")}
+        </NotasLabel>{" "}
+        <HelpIcon fieldKey="notas_obra" />
+        <textarea rows={3} value={notas} onChange={(e) => setNotas(e.target.value)} />
+      </label>
 
       <label>
         {t("obraForm.categoriaLabel")} <HelpIcon fieldKey="categoria_obra" />
