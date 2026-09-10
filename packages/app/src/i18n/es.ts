@@ -576,6 +576,7 @@ export const es = {
   "obrasList.title": "Obras",
   "obrasList.sinObras": "Todavía no cargaste ninguna obra.",
   "obrasList.todas": "Todas",
+  "obrasList.agregarEtiqueta": "Agregar etiqueta…",
   "obrasList.sinResultados": "No se encontraron obras con esos filtros.",
   "obrasList.ordenarPorLabel": "Ordenar por",
   "obrasList.ordenarPorTitulo": "Nombre",

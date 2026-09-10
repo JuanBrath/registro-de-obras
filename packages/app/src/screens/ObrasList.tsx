@@ -14,6 +14,7 @@ import { resolveMembreteLogoBytes, resolveFirmaBytes, resolveLocalidad } from ".
 import { buildObrasListadoPdfBytes, type ObraListadoItem } from "../reports/obrasListadoReports.js";
 import { savePdfWithDialog } from "../utils/savePdfDialog.js";
 import { MiniaturasSizeSlider } from "../components/MiniaturasSizeSlider.js";
+import { TagFilterPicker } from "../components/TagFilterPicker.js";
 import { cargarColumnasGridInicial, guardarColumnasGrid } from "../utils/columnasGrid.js";
 import { marcarSiMiniaturaMuyVertical } from "../utils/miniaturaVertical.js";
 
@@ -21,7 +22,7 @@ const COLUMNAS_OBRAS_POR_DEFECTO = 4;
 const COLUMNAS_OBRAS_STORAGE_KEY = "obrasListColumnasGrid";
 
 export interface ObrasListFiltros {
-  selectedTag: string | null;
+  selectedTags: string[];
   selectedArtistaId: number | null;
   selectedCategoria: CategoriaObra | null;
   selectedSubtipo: string | null;
@@ -89,7 +90,7 @@ export function ObrasList({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   useEscapeToDismiss(error, setError);
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedArtistaId, setSelectedArtistaId] = useState<number | null>(null);
   const [selectedCategoria, setSelectedCategoria] = useState<CategoriaObra | null>(null);
   const [selectedSubtipo, setSelectedSubtipo] = useState<string | null>(null);
@@ -219,7 +220,7 @@ export function ObrasList({
     const busquedaNorm = busqueda.trim().toLowerCase();
     const filtradas = obras.filter((o) => {
       if (soloMarcadas && o.marcada === 0) return false;
-      if (selectedTag && !parseTags(o.tags).includes(selectedTag)) return false;
+      if (selectedTags.length > 0 && !selectedTags.every((tag) => parseTags(o.tags).includes(tag))) return false;
       if (esGaleria && selectedArtistaId !== null && o.artista_id !== selectedArtistaId) return false;
       if (selectedCategoria && o.categoria_obra !== selectedCategoria) return false;
       if (selectedSubtipo) {
@@ -249,7 +250,7 @@ export function ObrasList({
     return [...filtradas].sort((a, b) => a.titulo.localeCompare(b.titulo, undefined, { sensitivity: "base" }));
   }, [
     obras,
-    selectedTag,
+    selectedTags,
     selectedArtistaId,
     selectedCategoria,
     selectedSubtipo,
@@ -425,7 +426,7 @@ export function ObrasList({
         <button
           type="button"
           onClick={() =>
-            onVerGaleria({ selectedTag, selectedArtistaId, selectedCategoria, selectedSubtipo, soloMarcadas })
+            onVerGaleria({ selectedTags, selectedArtistaId, selectedCategoria, selectedSubtipo, soloMarcadas })
           }
         >
           {t("workspaceHome.galeriaFotos")}
@@ -502,14 +503,7 @@ export function ObrasList({
           {allTags.length > 0 && (
             <label className="galeria-filtro-artista">
               {t("obraForm.etiquetasLabel")}
-              <select value={selectedTag ?? ""} onChange={(e) => setSelectedTag(e.target.value || null)}>
-                <option value="">{t("obrasList.todas")}</option>
-                {allTags.map((tag) => (
-                  <option key={tag} value={tag}>
-                    {tag}
-                  </option>
-                ))}
-              </select>
+              <TagFilterPicker opciones={allTags} value={selectedTags} onChange={setSelectedTags} />
             </label>
           )}
 

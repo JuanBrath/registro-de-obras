@@ -578,6 +578,7 @@ export const en: Record<keyof typeof es, string> = {
   "obrasList.title": "Artworks",
   "obrasList.sinObras": "You haven't added any artworks yet.",
   "obrasList.todas": "All",
+  "obrasList.agregarEtiqueta": "Add tag…",
   "obrasList.sinResultados": "No artworks matched those filters.",
   "obrasList.ordenarPorLabel": "Sort by",
   "obrasList.ordenarPorTitulo": "Name",

@@ -156,11 +156,17 @@ input[type="date"] {
 
 /* Cada miniatura vive dentro de un recuadro fijo de 84x84 que es el que
    ocupa un lugar en la fila (para que el resto del collage nunca se mueva),
-   mientras que la foto de adentro es la que crece al pasar el cursor. */
+   mientras que la foto de adentro es la que crece al pasar el cursor.
+   flex-shrink:0 para que valga lo mismo en las dos pantallas que usan este
+   collage: en la de inicio (una sola fila sin wrap, mas ancha que los 480px
+   del contenedor con 7 fotos) el flex-shrink por defecto las achicaba para
+   que entraran todas, en vez de simplemente desbordar el contenedor como en
+   la de presentacion (que si tiene lugar de sobra porque hace wrap). */
 .workspace-picker-collage-thumb {
   position: relative;
   width: 84px;
   height: 84px;
+  flex-shrink: 0;
 }
 
 .workspace-picker-collage-img {
@@ -1075,6 +1081,15 @@ input[type="date"] {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
+}
+
+/* Filtro de etiquetas por acumulacion (ver TagFilterPicker.tsx): los chips
+   ya elegidos arriba, el desplegable para agregar una mas abajo. */
+.tag-filter-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 100%;
 }
 
 .tag-chip-removable button {

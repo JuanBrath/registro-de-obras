@@ -10,6 +10,7 @@ import { formatFechaDDMMYYYY } from "../utils/formatFecha.js";
 import type { ObrasListFiltros } from "./ObrasList.js";
 import { subtipoTranslationKey } from "./fields/ObraDetalleFields.js";
 import { MiniaturasSizeSlider } from "../components/MiniaturasSizeSlider.js";
+import { TagFilterPicker } from "../components/TagFilterPicker.js";
 import { cargarColumnasGridInicial, guardarColumnasGrid } from "../utils/columnasGrid.js";
 import { marcarSiMiniaturaMuyVertical } from "../utils/miniaturaVertical.js";
 
@@ -113,7 +114,7 @@ export function GaleriaFotos({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   useEscapeToDismiss(error, setError);
-  const [selectedTag, setSelectedTag] = useState<string | null>(filtrosIniciales?.selectedTag ?? null);
+  const [selectedTags, setSelectedTags] = useState<string[]>(filtrosIniciales?.selectedTags ?? []);
   const [selectedArtistaId, setSelectedArtistaId] = useState<number | null>(filtrosIniciales?.selectedArtistaId ?? null);
   const [selectedCategoria, setSelectedCategoria] = useState<CategoriaObra | null>(
     filtrosIniciales?.selectedCategoria ?? null,
@@ -223,7 +224,7 @@ export function GaleriaFotos({
 
   const filteredFotos = useMemo(() => {
     const filtradas = fotos.filter((f) => {
-      const tagMatch = selectedTag === null || parseTags(f.tags).includes(selectedTag);
+      const tagMatch = selectedTags.length === 0 || selectedTags.every((tag) => parseTags(f.tags).includes(tag));
       const artistaMatch = !esGaleria || selectedArtistaId === null || f.artista_id === selectedArtistaId;
       const categoriaMatch = selectedCategoria === null || f.categoria_obra === selectedCategoria;
       const subtipoValor = f.categoria_obra === "Fotografia" ? f.subtipo_fotografia : f.subtipo;
@@ -242,7 +243,7 @@ export function GaleriaFotos({
       });
     }
     return [...filtradas].sort((a, b) => a.titulo.localeCompare(b.titulo, undefined, { sensitivity: "base" }));
-  }, [fotos, selectedTag, selectedArtistaId, selectedCategoria, selectedSubtipo, soloMarcadas, esGaleria, ordenPor]);
+  }, [fotos, selectedTags, selectedArtistaId, selectedCategoria, selectedSubtipo, soloMarcadas, esGaleria, ordenPor]);
 
   const hayMarcadas = useMemo(() => fotos.some((f) => f.marcada !== 0), [fotos]);
 
@@ -269,8 +270,8 @@ export function GaleriaFotos({
     }
   }
 
-  function handleTagChange(value: string) {
-    setSelectedTag(value === "" ? null : value);
+  function handleTagsChange(next: string[]) {
+    setSelectedTags(next);
     closeLightbox();
   }
 
@@ -449,14 +450,7 @@ export function GaleriaFotos({
         {allTags.length > 0 && (
           <label className="galeria-filtro-artista">
             {t("obraForm.etiquetasLabel")}
-            <select value={selectedTag ?? ""} onChange={(e) => handleTagChange(e.target.value)}>
-              <option value="">{t("obrasList.todas")}</option>
-              {allTags.map((tag) => (
-                <option key={tag} value={tag}>
-                  {tag}
-                </option>
-              ))}
-            </select>
+            <TagFilterPicker opciones={allTags} value={selectedTags} onChange={handleTagsChange} />
           </label>
         )}
 
