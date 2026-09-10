@@ -2,7 +2,7 @@
 // que ancha se le agrega esta clase (ver App.css: .miniatura-muy-vertical)
 // para que se acote su alto sin deformarla, en vez de estirarla a
 // width:100% como el resto de las miniaturas.
-const RATIO_MUY_VERTICAL = 1.5;
+const RATIO_MUY_VERTICAL = 1.3;
 const CLASE_MUY_VERTICAL = "miniatura-muy-vertical";
 
 export function marcarSiMiniaturaMuyVertical(img: HTMLImageElement): void {

@@ -708,14 +708,14 @@ input[type="date"] {
    cargarla (ver marcarSiMiniaturaMuyVertical, usada en ObrasList y
    GaleriaFotos): forzar ancho:100% la estiraria/deformaria para entrar en
    el alto maximo, asi que en vez de eso toma su propio ancho segun su
-   proporcion real, acotado a 1.5 veces el ancho de la tarjeta — el resto
+   proporcion real, acotado a 1.3 veces el ancho de la tarjeta — el resto
    queda libre a los costados. */
 .obra-card img.miniatura-muy-vertical,
 .galeria-foto-thumb-button img.miniatura-muy-vertical {
   width: auto;
   max-width: 100%;
   height: auto;
-  max-height: 150cqw;
+  max-height: 130cqw;
   margin: 0 auto;
 }
 
