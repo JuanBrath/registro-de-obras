@@ -688,10 +688,11 @@ input[type="date"] {
   line-height: 0;
 }
 
+/* Mismo criterio que .obra-card img: sin aspect-ratio fijo, la miniatura
+   ocupa su alto real y no deja franjas de fondo vacias. */
 .galeria-foto-thumb-button img {
   width: 100%;
-  aspect-ratio: 1;
-  object-fit: contain;
+  height: auto;
   display: block;
 }
 
@@ -1161,21 +1162,24 @@ input[type="date"] {
   margin-bottom: 0;
 }
 
+/* Sin ancho/alto fijos: la miniatura ocupa su forma real, limitada solo a
+   no pasar de 220px de lado (mismo criterio que en Obras y la pantalla de
+   presentacion, para no dejar franjas de fondo vacias alrededor). */
 .obra-detail-thumbnail {
-  width: 220px;
-  height: 220px;
-  object-fit: contain;
+  width: auto;
+  height: auto;
+  max-width: 220px;
+  max-height: 220px;
   border-radius: 8px;
   display: block;
-  background: var(--bg-panel);
 }
 
 .obra-edit-imagen-actual {
-  width: 170px;
-  height: 170px;
-  object-fit: contain;
+  width: auto;
+  height: auto;
+  max-width: 170px;
+  max-height: 170px;
   border-radius: 8px;
-  background: var(--bg-panel);
   display: block;
   margin-bottom: 0.5rem;
 }
