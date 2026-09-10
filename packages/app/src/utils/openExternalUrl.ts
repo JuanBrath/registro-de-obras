@@ -20,3 +20,12 @@ export async function revealInFileManager(path: string): Promise<void> {
   const { revealItemInDir } = await import("@tauri-apps/plugin-opener");
   await revealItemInDir(path);
 }
+
+// Abre un archivo local con la aplicacion por defecto del sistema (ej. el
+// lector de PDF), a diferencia de revealInFileManager que solo lo muestra
+// en el explorador sin abrirlo.
+export async function openLocalFile(path: string): Promise<void> {
+  if (!isTauri()) return;
+  const { openPath } = await import("@tauri-apps/plugin-opener");
+  await openPath(path);
+}
