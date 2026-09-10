@@ -436,6 +436,17 @@ export function ObrasList({
             {t("informesObras.generarInforme")}
           </button>
         )}
+        {hayMarcadas && (
+          <div className="galeria-filtro-marcadas-row">
+            <label className="galeria-filtro-marcadas">
+              <input type="checkbox" checked={soloMarcadas} onChange={(e) => setSoloMarcadas(e.target.checked)} />
+              {t("galeria.soloMarcadas")}
+            </label>
+            <button type="button" onClick={handleDesmarcarTodas}>
+              {t("galeria.desmarcarTodas")}
+            </button>
+          </div>
+        )}
         {obras.length > 0 && <MiniaturasSizeSlider columnas={columnasGrid} onChange={handleTamanoMiniaturasChange} />}
       </div>
 
@@ -501,22 +512,12 @@ export function ObrasList({
           )}
 
           {allTags.length > 0 && (
-            <label className="galeria-filtro-artista">
-              {t("obraForm.etiquetasLabel")}
+            <label className="galeria-filtro-artista galeria-filtro-etiquetas">
+              <span>
+                {t("obraForm.etiquetasLabel")} <HelpIcon fieldKey="filtro_etiquetas_multiple" />
+              </span>
               <TagFilterPicker opciones={allTags} value={selectedTags} onChange={setSelectedTags} />
             </label>
-          )}
-
-          {hayMarcadas && (
-            <div className="galeria-filtro-marcadas-row">
-              <label className="galeria-filtro-marcadas">
-                <input type="checkbox" checked={soloMarcadas} onChange={(e) => setSoloMarcadas(e.target.checked)} />
-                {t("galeria.soloMarcadas")}
-              </label>
-              <button type="button" onClick={handleDesmarcarTodas}>
-                {t("galeria.desmarcarTodas")}
-              </button>
-            </div>
           )}
         </div>
       ) : null}

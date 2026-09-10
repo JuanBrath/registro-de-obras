@@ -11,6 +11,7 @@ import type { ObrasListFiltros } from "./ObrasList.js";
 import { subtipoTranslationKey } from "./fields/ObraDetalleFields.js";
 import { MiniaturasSizeSlider } from "../components/MiniaturasSizeSlider.js";
 import { TagFilterPicker } from "../components/TagFilterPicker.js";
+import { HelpIcon } from "../components/HelpIcon.js";
 import { cargarColumnasGridInicial, guardarColumnasGrid } from "../utils/columnasGrid.js";
 import { marcarSiMiniaturaMuyVertical } from "../utils/miniaturaVertical.js";
 
@@ -396,6 +397,28 @@ export function GaleriaFotos({
       )}
       {!loading && fotos.length === 0 && <p>{t("galeria.sinFotos")}</p>}
 
+      <div className="header-actions obras-list-options obras-list-fila-principal">
+        {hayMarcadas && (
+          <div className="galeria-filtro-marcadas-row">
+            <label className="galeria-filtro-marcadas">
+              <input
+                type="checkbox"
+                checked={soloMarcadas}
+                onChange={(e) => {
+                  setSoloMarcadas(e.target.checked);
+                  closeLightbox();
+                }}
+              />
+              {t("galeria.soloMarcadas")}
+            </label>
+            <button type="button" onClick={handleDesmarcarTodas}>
+              {t("galeria.desmarcarTodas")}
+            </button>
+          </div>
+        )}
+        <MiniaturasSizeSlider columnas={columnasGrid} onChange={handleTamanoMiniaturasChange} />
+      </div>
+
       <div className="galeria-filtros-selects">
         <label className="galeria-filtro-artista">
           {t("obrasList.ordenarPorLabel")}
@@ -448,31 +471,12 @@ export function GaleriaFotos({
         )}
 
         {allTags.length > 0 && (
-          <label className="galeria-filtro-artista">
-            {t("obraForm.etiquetasLabel")}
+          <label className="galeria-filtro-artista galeria-filtro-etiquetas">
+            <span>
+              {t("obraForm.etiquetasLabel")} <HelpIcon fieldKey="filtro_etiquetas_multiple" />
+            </span>
             <TagFilterPicker opciones={allTags} value={selectedTags} onChange={handleTagsChange} />
           </label>
-        )}
-
-        <MiniaturasSizeSlider columnas={columnasGrid} onChange={handleTamanoMiniaturasChange} />
-
-        {hayMarcadas && (
-          <div className="galeria-filtro-marcadas-row">
-            <label className="galeria-filtro-marcadas">
-              <input
-                type="checkbox"
-                checked={soloMarcadas}
-                onChange={(e) => {
-                  setSoloMarcadas(e.target.checked);
-                  closeLightbox();
-                }}
-              />
-              {t("galeria.soloMarcadas")}
-            </label>
-            <button type="button" onClick={handleDesmarcarTodas}>
-              {t("galeria.desmarcarTodas")}
-            </button>
-          </div>
         )}
       </div>
 

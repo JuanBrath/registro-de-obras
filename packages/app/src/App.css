@@ -609,14 +609,6 @@ input[type="date"] {
   white-space: nowrap;
 }
 
-/* En la fila de filtros de Galeria de obras, el resto de las etiquetas
-   (Ordenar por, Categoria, Subtipo, Etiquetas) tienen margin-top: 1rem
-   (.galeria-filtro-artista) — sin este mismo margen, el titulo del
-   regulador quedaba mas arriba que el resto. */
-.galeria-filtros-selects .miniaturas-slider-campo {
-  margin-top: 1rem;
-}
-
 /* Barra finita con un triangulo gris claro como control, en vez del control
    ovalado grueso que trae el navegador por defecto para type="range". */
 .miniaturas-slider {
@@ -1013,6 +1005,21 @@ input[type="date"] {
   max-width: 320px;
 }
 
+/* El filtro de etiquetas va al final de la fila y puede acumular varios
+   chips + el desplegable: se deja crecer mas que el resto de los filtros
+   (que solo tienen un select simple), sin el limite de 320px. */
+.galeria-filtro-etiquetas {
+  max-width: none;
+  flex: 1 1 auto;
+}
+
+/* El regulador de tamano de miniaturas, cuando comparte renglon con
+   "Solo marcadas"/"Desmarcar todas" (ver ObrasList.tsx y GaleriaFotos.tsx),
+   queda pegado al borde derecho en vez de seguir el flujo normal. */
+.obras-list-fila-principal .miniaturas-slider-campo {
+  margin-left: auto;
+}
+
 .tag-picker {
   position: relative;
   border: 1px solid var(--border);
@@ -1084,10 +1091,13 @@ input[type="date"] {
 }
 
 /* Filtro de etiquetas por acumulacion (ver TagFilterPicker.tsx): los chips
-   ya elegidos arriba, el desplegable para agregar una mas abajo. */
+   elegidos se acumulan en fila a la izquierda del desplegable, que siempre
+   queda al final (a la derecha, o mas abajo si ya no entran mas a la
+   derecha). */
 .tag-filter-picker {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 0.4rem;
   width: 100%;
 }
