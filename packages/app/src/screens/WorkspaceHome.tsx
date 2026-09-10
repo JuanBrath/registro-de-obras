@@ -3,7 +3,7 @@ import { edicionIncluyeGaleria, edicionIncluyePersonal } from "@registro/core";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { useEdicion } from "../state/EdicionContext.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
-import { isTauri } from "../adapters/detectPlatform.js";
+import { bytesToObjectUrl } from "../utils/imageObjectUrl.js";
 
 // Exactamente lo que entra en una sola fila de 480px de ancho con miniaturas
 // de 84px (ver .workspace-home-collage, que no hace wrap a diferencia del
@@ -32,18 +32,34 @@ export function WorkspaceHome({
   const miniaturasRef = useRef<string[]>([]);
 
   // Decora esta pantalla con fotos al azar de las obras de este workspace,
-  // igual que en la pantalla de presentacion (ver WorkspacePicker.tsx /
-  // peekRandomThumbnails) pero en una sola fila y para un unico workspace,
-  // ya que aca ya se sabe cual esta abierto.
+  // igual que en la pantalla de presentacion, pero en una sola fila. A
+  // diferencia de WorkspacePicker (donde todavia no hay ningun workspace
+  // abierto y peekRandomThumbnails abre su propia conexion de paso), aca ya
+  // hay una conexion abierta (context.db) — abrir otra al mismo archivo y
+  // despues cerrarla rompia esa conexion compartida para el resto de la app
+  // (tauri-plugin-sql comparte el pool por ruta de archivo).
   useEffect(() => {
-    if (!isTauri() || !context) return;
-    const workspace = context.workspace;
+    if (!context) return;
+    const ctx = context;
     let cancelado = false;
 
     async function cargarMiniaturas() {
-      const { peekRandomThumbnails } = await import("../adapters/tauri/tauriAdapterFactory.js");
-      const urls = await peekRandomThumbnails(workspace, CANTIDAD_MINIATURAS_HOME);
-      if (cancelado) return;
+      const rows = await ctx.db.query<{ miniatura_path: string }>(
+        "SELECT miniatura_path FROM obra WHERE miniatura_path IS NOT NULL ORDER BY RANDOM() LIMIT ?",
+        [CANTIDAD_MINIATURAS_HOME],
+      );
+      const urls: string[] = [];
+      for (const row of rows) {
+        try {
+          urls.push(bytesToObjectUrl(await ctx.fs.readFile(row.miniatura_path)));
+        } catch {
+          // Miniatura referenciada en la base pero faltante en disco: se omite sin romper el resto.
+        }
+      }
+      if (cancelado) {
+        for (const url of urls) URL.revokeObjectURL(url);
+        return;
+      }
       miniaturasRef.current = urls;
       setMiniaturas(urls);
     }
