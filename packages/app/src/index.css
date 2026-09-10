@@ -123,6 +123,15 @@ body {
   margin: 0;
 }
 
+/* Reserva siempre el espacio de la barra de scroll vertical, aunque no haga
+   falta todavia: sin esto, cada vez que un cartel de ayuda o un texto
+   deja el contenido un poco mas alto que la ventana, la barra aparece de
+   golpe y angosta todo lo demas (y desaparece y ensancha de nuevo al
+   cerrarse), dando la sensacion de que la pantalla "respira". */
+html {
+  overflow-y: scroll;
+}
+
 h1,
 h2 {
   font-family: var(--heading);

@@ -431,6 +431,13 @@ input[type="date"] {
   width: 380px;
 }
 
+/* Cuando no entra hacia la derecha sin salirse de la ventana (ver
+   HelpIcon.tsx), se abre hacia la izquierda del icono en su lugar. */
+.help-icon-tooltip-abre-izquierda {
+  left: auto;
+  right: 2.4em;
+}
+
 .help-icon-linea {
   display: block;
   margin-bottom: 0.45rem;
@@ -578,9 +585,14 @@ input[type="date"] {
 /* Obras y Galeria de obras: el buscador comparte renglon con el regulador
    de tamano de miniaturas arriba de todo (pegado al borde derecho, ver mas
    abajo), y los botones de accion van en otro renglon aparte debajo. */
+/* alineados por abajo (no al centro) porque algunos elementos de esta fila
+   (por ejemplo el regulador de tamano de miniaturas) traen su propia
+   etiqueta arriba del control, y centrarlos por altura total dejaba ese
+   control mas abajo (o mas arriba) que los demas. */
 .obras-list-fila-principal {
   flex-wrap: wrap;
   row-gap: 0.75rem;
+  align-items: flex-end;
 }
 
 .obras-list-buscador-fila-principal {
@@ -1007,9 +1019,13 @@ input[type="date"] {
   margin-top: 1rem;
 }
 
+/* Alineados por abajo: el boton de estrella (marcadas) no trae una
+   etiqueta de texto arriba como los demas campos, asi que centrarlos por
+   altura total lo dejaba mas arriba que los desplegables. */
 .galeria-filtros-selects {
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-end;
   gap: 1.5rem;
 }
 
