@@ -36,6 +36,7 @@ export interface Obra {
   regimenIngreso: RegimenIngreso | null;
   historialProcedenciaExhibiciones: string | null;
   notas: string | null;
+  statement: string | null;
   fechaAltaSistema: string;
 }
 

@@ -55,6 +55,7 @@ export function ObraForm({
   const [anioPeriodo, setAnioPeriodo] = useState("");
   const [regimenIngreso, setRegimenIngreso] = useState("");
   const [historialProcedenciaExhibiciones, setHistorialProcedenciaExhibiciones] = useState("");
+  const [statement, setStatement] = useState("");
   const [selectedArtistaId, setSelectedArtistaId] = useState<number | null>(null);
   const [ubicacion, setUbicacion] = useState("");
   const [tags, setTags] = useState<string[]>([]);
@@ -137,6 +138,7 @@ export function ObraForm({
     setAnioPeriodo("");
     setRegimenIngreso("");
     setHistorialProcedenciaExhibiciones("");
+    setStatement("");
     setSelectedArtistaId(null);
     setUbicacion("");
     setTags([]);
@@ -243,9 +245,9 @@ export function ObraForm({
         const insertObra = await tx.execute(
           `INSERT INTO obra (
              titulo, categoria_obra, artista_id, estado, ubicacion_fisica_actual, es_seriada, tags,
-             subtitulo, codigo_inventario, anio_periodo, regimen_ingreso, historial_procedencia_exhibiciones
+             subtitulo, codigo_inventario, anio_periodo, regimen_ingreso, historial_procedencia_exhibiciones, statement
            )
-           VALUES (?, ?, ?, 'disponible', ?, ?, ?, ?, ?, ?, ?, ?)`,
+           VALUES (?, ?, ?, 'disponible', ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             titulo,
             categoria,
@@ -258,6 +260,7 @@ export function ObraForm({
             anioPeriodo || null,
             regimenIngreso || null,
             historialProcedenciaExhibiciones || null,
+            statement || null,
           ],
         );
         const id = insertObra.lastInsertId;
@@ -641,10 +644,19 @@ export function ObraForm({
               onUbicacionChange={setUbicacion}
               onUbicacionMetadata={aplicarMetadataFotografia}
               mostrarUbicacion={esRegistroPersonal}
+              statement={statement}
+              onStatementChange={setStatement}
             />
           )}
           {categoria && categoria !== "Fotografia" && (
-            <ObraDetalleFields categoria={categoria} value={obraDetalle} onChange={setObraDetalle} mostrarEsSeriada={false} />
+            <ObraDetalleFields
+              categoria={categoria}
+              value={obraDetalle}
+              onChange={setObraDetalle}
+              mostrarEsSeriada={false}
+              statement={statement}
+              onStatementChange={setStatement}
+            />
           )}
 
           <div className="campo-con-ayuda">

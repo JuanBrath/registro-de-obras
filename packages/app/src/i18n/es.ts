@@ -212,6 +212,7 @@ export const es = {
   "obraForm.regimenIngresoCompraFirmeGaleria": "Compra en firme de la galería",
   "obraForm.historialProcedenciaExhibicionesLabel": "Historial de procedencia y exhibiciones",
   "obraForm.notasLabel": "Notas",
+  "obraForm.statementLabel": "Statement",
   "obraForm.artistaLabel": "Artista",
   "obraForm.ubicacionArchivoLabel": "Ubicación del archivo original",
   "obraForm.ubicacionNegativoLabel": "Ubicación del negativo",

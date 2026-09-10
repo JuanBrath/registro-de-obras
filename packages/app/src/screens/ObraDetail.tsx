@@ -80,6 +80,7 @@ interface ObraRow {
   regimen_ingreso: string | null;
   historial_procedencia_exhibiciones: string | null;
   notas: string | null;
+  statement: string | null;
 }
 
 interface ObraExtRow {
@@ -589,6 +590,7 @@ function buildObraDescripcionLineas(
       }
     }
   }
+  if (obra.statement) lineas.push(`${t("obraForm.statementLabel")}: ${obra.statement}`);
   if (obra.categoria_obra === "Fotografia") {
     if (ext?.serie_proyecto) lineas.push(`${t("fields.fotografia.serieProyectoLabel")}: ${ext.serie_proyecto}`);
     if (ext?.escala_por_tamanos) {
@@ -767,7 +769,8 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
         `SELECT obra.id, obra.titulo, obra.categoria_obra, obra.estado, obra.es_seriada,
                 obra.ubicacion_fisica_actual, obra.miniatura_path, obra.imagen_alta_resolucion_path, obra.tags,
                 obra.artista_id, artista.nombre_completo, obra.subtitulo, obra.codigo_inventario,
-                obra.anio_periodo, obra.regimen_ingreso, obra.historial_procedencia_exhibiciones, obra.notas
+                obra.anio_periodo, obra.regimen_ingreso, obra.historial_procedencia_exhibiciones, obra.notas,
+                obra.statement
          FROM obra JOIN artista ON artista.id = obra.artista_id
          WHERE obra.id = ?`,
         [obraId],
@@ -1435,6 +1438,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
     regimenIngreso: string;
     historialProcedenciaExhibiciones: string;
     notas: string;
+    statement: string;
     ubicacion: string;
     tags: string[];
     categoria: CategoriaObra;
@@ -1483,7 +1487,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
         `UPDATE obra SET
            titulo = ?, categoria_obra = ?, ubicacion_fisica_actual = ?, tags = ?, es_seriada = ?, artista_id = ?,
            subtitulo = ?, codigo_inventario = ?, anio_periodo = ?, regimen_ingreso = ?,
-           historial_procedencia_exhibiciones = ?, notas = ?
+           historial_procedencia_exhibiciones = ?, notas = ?, statement = ?
          WHERE id = ?`,
         [
           fields.titulo,
@@ -1498,6 +1502,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
           fields.regimenIngreso || null,
           fields.historialProcedenciaExhibiciones || null,
           fields.notas || null,
+          fields.statement || null,
           obraId,
         ],
       );
@@ -2026,6 +2031,19 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
             {ext?.tecnica && <p>{t("obraDetail.tecnica", { valor: ext.tecnica })}</p>}
             {ext?.dimensiones && <p>{t("obraDetail.dimensiones", { valor: ext.dimensiones })}</p>}
             {ext?.peso && <p>{t("obraDetail.peso", { valor: ext.peso })}</p>}
+            {obra.statement &&
+              (() => {
+                const statement = obra.statement!;
+                const primeraLinea = statement.split("\n")[0];
+                const hayMasContenido = statement.length > primeraLinea.length;
+                return (
+                  <p>
+                    <NotasLabel texto={statement}>{t("obraForm.statementLabel")}</NotasLabel>
+                    {": "}
+                    {hayMasContenido ? `${primeraLinea}…` : primeraLinea}
+                  </p>
+                );
+              })()}
             {obra.notas &&
               (() => {
                 const notas = obra.notas!;
@@ -2338,6 +2356,7 @@ function ObraEditForm({
     regimenIngreso: string;
     historialProcedenciaExhibiciones: string;
     notas: string;
+    statement: string;
     ubicacion: string;
     tags: string[];
     categoria: CategoriaObra;
@@ -2361,6 +2380,7 @@ function ObraEditForm({
     obra.historial_procedencia_exhibiciones ?? "",
   );
   const [notas, setNotas] = useState(obra.notas ?? "");
+  const [statement, setStatement] = useState(obra.statement ?? "");
   const [artistaId, setArtistaId] = useState<number | null>(obra.artista_id);
   const tituloInputRef = useRef<HTMLInputElement>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -2670,6 +2690,7 @@ function ObraEditForm({
         regimenIngreso,
         historialProcedenciaExhibiciones,
         notas,
+        statement,
         ubicacion,
         tags,
         categoria: categoriaObra,
@@ -2900,9 +2921,18 @@ function ObraEditForm({
           onUbicacionChange={setUbicacion}
           onUbicacionMetadata={aplicarMetadataFotografia}
           mostrarUbicacion={esRegistroPersonal}
+          statement={statement}
+          onStatementChange={setStatement}
         />
       ) : (
-        <ObraDetalleFields categoria={categoriaObra} value={obraDetalle} onChange={setObraDetalle} mostrarEsSeriada={false} />
+        <ObraDetalleFields
+          categoria={categoriaObra}
+          value={obraDetalle}
+          onChange={setObraDetalle}
+          mostrarEsSeriada={false}
+          statement={statement}
+          onStatementChange={setStatement}
+        />
       )}
 
       {categoriaObra === "ObraGrafica" && (

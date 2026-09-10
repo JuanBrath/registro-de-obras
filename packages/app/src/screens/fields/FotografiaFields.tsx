@@ -110,6 +110,8 @@ export function FotografiaFields({
   onUbicacionChange,
   onUbicacionMetadata,
   mostrarUbicacion = false,
+  statement,
+  onStatementChange,
 }: {
   value: FotografiaFieldsState;
   onChange: (next: FotografiaFieldsState) => void;
@@ -120,6 +122,10 @@ export function FotografiaFields({
   /** Metadatos (EXIF) leidos del archivo cuando se indica su ubicacion. */
   onUbicacionMetadata?: (metadata: ArchivoMetadata | null) => void;
   mostrarUbicacion?: boolean;
+  /** Campo comun a todas las categorias (vive en la tabla obra, no en
+     obra_fotografia): se pasa por prop, igual que ubicacion/onUbicacionChange. */
+  statement: string;
+  onStatementChange: (next: string) => void;
 }) {
   const { t } = useLanguage();
 
@@ -148,6 +154,11 @@ export function FotografiaFields({
           value={value.serieProyecto}
           onChange={(e) => onChange({ ...value, serieProyecto: e.target.value })}
         />
+      </label>
+
+      <label>
+        {t("obraForm.statementLabel")} <HelpIcon fieldKey="statement" />
+        <textarea rows={3} value={statement} onChange={(e) => onStatementChange(e.target.value)} />
       </label>
 
       {mostrarUbicacion &&

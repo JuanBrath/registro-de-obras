@@ -213,11 +213,17 @@ export function ObraDetalleFields({
   value,
   onChange,
   mostrarEsSeriada = true,
+  statement,
+  onStatementChange,
 }: {
   categoria: CategoriaObraDetalle;
   value: ObraDetalleFieldsState;
   onChange: (next: ObraDetalleFieldsState) => void;
   mostrarEsSeriada?: boolean;
+  /** Campo comun a todas las categorias (vive en la tabla obra): se pasa por
+     prop, no forma parte de ObraDetalleFieldsState. */
+  statement: string;
+  onStatementChange: (next: string) => void;
 }) {
   const { t } = useLanguage();
   const config = CATEGORIA_CONFIG[categoria];
@@ -239,6 +245,11 @@ export function ObraDetalleFields({
             </option>
           ))}
         </select>
+      </label>
+
+      <label>
+        {t("obraForm.statementLabel")} <HelpIcon fieldKey="statement" />
+        <textarea rows={3} value={statement} onChange={(e) => onStatementChange(e.target.value)} />
       </label>
 
       {esTecnicasTradicionales ? (

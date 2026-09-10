@@ -214,6 +214,7 @@ export const en: Record<keyof typeof es, string> = {
   "obraForm.regimenIngresoCompraFirmeGaleria": "Outright purchase by the gallery",
   "obraForm.historialProcedenciaExhibicionesLabel": "Provenance and exhibition history",
   "obraForm.notasLabel": "Notes",
+  "obraForm.statementLabel": "Statement",
   "obraForm.artistaLabel": "Artist",
   "obraForm.ubicacionArchivoLabel": "Original file location",
   "obraForm.ubicacionNegativoLabel": "Negative location",
