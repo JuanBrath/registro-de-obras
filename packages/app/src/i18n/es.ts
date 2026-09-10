@@ -776,6 +776,8 @@ export const es = {
   "obraDetail.errorTieneVentas":
     "Esta obra tiene ventas registradas — no se puede eliminar sin perder ese historial. Si igual querés eliminarla, primero tendrías que resolver esas ventas.",
   "obraDetail.ejemplares": "Ejemplares",
+  "obraDetail.verMasSeries": "Ver las demás series ({{n}})",
+  "obraDetail.verMenosSeries": "Ver menos",
   "obraDetail.ventaReserva": "Venta / Reserva",
   "obraDetail.ventaReservaDonacion": "Venta / Reserva / Donación",
   "obraDetail.estadoLabel": "Estado",

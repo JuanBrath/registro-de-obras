@@ -778,6 +778,8 @@ export const en: Record<keyof typeof es, string> = {
   "obraDetail.errorTieneVentas":
     "This artwork has registered sales — it can't be deleted without losing that history. If you still want to delete it, you'll need to resolve those sales first.",
   "obraDetail.ejemplares": "Copies",
+  "obraDetail.verMasSeries": "Show the other copies ({{n}})",
+  "obraDetail.verMenosSeries": "Show less",
   "obraDetail.ventaReserva": "Sale / Reservation",
   "obraDetail.ventaReservaDonacion": "Sale / Reservation / Donation",
   "obraDetail.estadoLabel": "Status",

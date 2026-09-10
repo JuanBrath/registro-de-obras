@@ -489,6 +489,20 @@ input[type="date"] {
   text-align: center;
 }
 
+/* Igual concepto que .workspace-picker-collage (fotos al azar de las obras
+   ya cargadas), pero en una sola fila: sin wrap, y sin dejar espacio de mas
+   si no hay suficientes miniaturas todavia. */
+.workspace-home-collage {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-top: 1.5rem;
+  /* Mismo motivo que en la pantalla de presentacion: deja lugar de sobra
+     para que el agrandado al pasar el cursor no tape los botones de abajo. */
+  margin-bottom: 3.5rem;
+}
+
 .workspace-home-options {
   display: flex;
   flex-direction: column;
@@ -1258,6 +1272,13 @@ input[type="date"] {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+}
+
+/* Por estetica, arranca mostrando solo la primera serie (ver ObraDetail.tsx)
+   y este boton despliega/oculta el resto — align-self para que no ocupe
+   todo el ancho como las filas de series de arriba. */
+.ejemplares-ver-mas {
+  align-self: flex-start;
 }
 
 .obra-venta-section {

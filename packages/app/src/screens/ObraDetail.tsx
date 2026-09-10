@@ -717,6 +717,9 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
   const [error, setError] = useState<string | null>(null);
   useEscapeToDismiss(error, setError);
   const [editingEjemplarId, setEditingEjemplarId] = useState<number | null>(null);
+  // Por estetica, la lista de series arranca mostrando solo la primera; el
+  // resto se despliega con el boton de abajo (ver .ejemplares-list).
+  const [mostrarTodasSeries, setMostrarTodasSeries] = useState(false);
   const [editingObra, setEditingObra] = useState(false);
   const [ventaTarget, setVentaTarget] = useState<{ ejemplarId: number; existingVenta?: VentaExistente } | null>(null);
   const [fullImageUrl, setFullImageUrl] = useState<string | null>(null);
@@ -758,6 +761,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
     setError(null);
     setEjemplares([]);
     setExt(null);
+    setMostrarTodasSeries(false);
     try {
       const obraRows = await context.db.query<ObraRow>(
         `SELECT obra.id, obra.titulo, obra.categoria_obra, obra.estado, obra.es_seriada,
@@ -2085,7 +2089,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       {obra && (
         <div className="ejemplares-list">
           <h2>{t("obraDetail.ejemplares")}</h2>
-          {ejemplares.map((ej) => (
+          {(mostrarTodasSeries ? ejemplares : ejemplares.slice(0, 1)).map((ej) => (
             <EjemplarRowView
               key={ej.id}
               ejemplar={ej}
@@ -2109,6 +2113,17 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
               onAbrirInformes={() => handleAbrirInformesVenta(ej)}
             />
           ))}
+          {ejemplares.length > 1 && (
+            <button
+              type="button"
+              className="ejemplares-ver-mas"
+              onClick={() => setMostrarTodasSeries((v) => !v)}
+            >
+              {mostrarTodasSeries
+                ? t("obraDetail.verMenosSeries")
+                : t("obraDetail.verMasSeries", { n: ejemplares.length - 1 })}
+            </button>
+          )}
         </div>
       )}
 
