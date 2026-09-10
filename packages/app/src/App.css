@@ -658,10 +658,13 @@ input[type="date"] {
   color: inherit;
 }
 
+/* Sin aspect-ratio fijo ni object-fit: la miniatura ocupa su alto real
+   segun su propia forma, para no dejar franjas vacias arriba/abajo o a los
+   costados cuando la obra no es cuadrada (mismo concepto que en la pantalla
+   de presentacion: que no se vea fondo de mas alrededor de la foto). */
 .obra-card img {
   width: 100%;
-  aspect-ratio: 1;
-  object-fit: contain;
+  height: auto;
   display: block;
 }
 
