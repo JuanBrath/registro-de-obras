@@ -785,6 +785,8 @@ export const es = {
   "obraDetail.ejemplares": "Ejemplares",
   "obraDetail.verMasSeries": "Ver las demás series ({{n}})",
   "obraDetail.verMenosSeries": "Ver menos",
+  "obraDetail.pruebasDeAutorTitulo": "Pruebas de autor",
+  "obraDetail.verMasPruebasAutor": "Ver las demás pruebas de autor ({{n}})",
   "obraDetail.ventaReserva": "Venta / Reserva",
   "obraDetail.ventaReservaDonacion": "Venta / Reserva / Donación",
   "obraDetail.estadoLabel": "Estado",

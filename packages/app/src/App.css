@@ -143,18 +143,15 @@ input[type="date"] {
 
 /* Collage de fotos al azar de las obras ya cargadas (ver WorkspacePicker.tsx
    / peekRandomThumbnails) — solo decorativo, no aparece si todavia no hay
-   ninguna obra con imagen. */
+   ninguna obra con imagen. Va debajo del boton de entrar (no arriba), asi
+   que el margen protector contra el agrandado al pasar el cursor va arriba. */
 .workspace-picker-collage {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 0.6rem;
-  margin-top: 1.5rem;
-  /* Al pasar el cursor una foto crece hasta 2.2x su tamano (ver
-     .workspace-picker-collage-img:hover), estirandose parejo hacia los
-     cuatro lados: este margen de abajo deja lugar de sobra para que esa
-     ampliacion nunca tape el boton de "entrar" que viene despues. */
-  margin-bottom: 3.5rem;
+  margin-top: 3.5rem;
+  margin-bottom: 1.5rem;
 }
 
 /* Cada miniatura vive dentro de un recuadro fijo de 84x84 que es el que
@@ -511,11 +508,20 @@ input[type="date"] {
   margin-bottom: 1.5rem;
 }
 
+/* align-items:center (en vez del stretch por defecto) para que los botones
+   se achiquen al tamano de su propio texto en vez de ocupar los 480px de
+   ancho de la pantalla — a proposito no se preocupa por igualar el ancho de
+   la fila de miniaturas de abajo, que es mas ancha. */
 .workspace-home-options {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 0.75rem;
   margin-top: 1.5rem;
+}
+
+.workspace-home-options button {
+  min-width: 12rem;
 }
 
 .workspace-home-cambiar-modulo {

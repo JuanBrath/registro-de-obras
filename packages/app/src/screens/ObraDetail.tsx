@@ -737,8 +737,10 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
   useEscapeToDismiss(error, setError);
   const [editingEjemplarId, setEditingEjemplarId] = useState<number | null>(null);
   // Por estetica, la lista de series arranca mostrando solo la primera; el
-  // resto se despliega con el boton de abajo (ver .ejemplares-list).
+  // resto se despliega con el boton de abajo (ver .ejemplares-list). Las
+  // pruebas de autor tienen su propio despliegue independiente, separado.
   const [mostrarTodasSeries, setMostrarTodasSeries] = useState(false);
+  const [mostrarTodasPruebas, setMostrarTodasPruebas] = useState(false);
   const [editingObra, setEditingObra] = useState(false);
   const [ventaTarget, setVentaTarget] = useState<{ ejemplarId: number; existingVenta?: VentaExistente } | null>(null);
   const [fullImageUrl, setFullImageUrl] = useState<string | null>(null);
@@ -783,6 +785,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
     setEjemplares([]);
     setExt(null);
     setMostrarTodasSeries(false);
+    setMostrarTodasPruebas(false);
     try {
       const obraRows = await context.db.query<ObraRow>(
         `SELECT obra.id, obra.titulo, obra.categoria_obra, obra.estado, obra.es_seriada,
@@ -2031,6 +2034,11 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
 
   if (!context) return null;
 
+  // Ediciones y pruebas de autor se muestran (y se despliegan/colapsan) por
+  // separado: cada una tiene su propio boton de "ver mas", ver mas abajo.
+  const edicionesEjemplares = ejemplares.filter((ej) => ej.tipo === "edicion");
+  const pruebasEjemplares = ejemplares.filter((ej) => ej.tipo === "prueba_artista");
+
   return (
     <div className="obra-detail">
       <div className="obras-list-header">
@@ -2171,7 +2179,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       {obra && (
         <div className="ejemplares-list">
           <h2>{t("obraDetail.ejemplares")}</h2>
-          {(mostrarTodasSeries ? ejemplares : ejemplares.slice(0, 1)).map((ej) => (
+          {(mostrarTodasSeries ? edicionesEjemplares : edicionesEjemplares.slice(0, 1)).map((ej) => (
             <EjemplarRowView
               key={ej.id}
               ejemplar={ej}
@@ -2195,7 +2203,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
               onAbrirInformes={() => handleAbrirInformesVenta(ej)}
             />
           ))}
-          {ejemplares.length > 1 && (
+          {edicionesEjemplares.length > 1 && (
             <button
               type="button"
               className="ejemplares-ver-mas"
@@ -2203,8 +2211,54 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
             >
               {mostrarTodasSeries
                 ? t("obraDetail.verMenosSeries")
-                : t("obraDetail.verMasSeries", { n: ejemplares.length - 1 })}
+                : t("obraDetail.verMasSeries", { n: edicionesEjemplares.length - 1 })}
             </button>
+          )}
+
+          {pruebasEjemplares.length > 0 && (
+            <>
+              <h2>{t("obraDetail.pruebasDeAutorTitulo")}</h2>
+              {(pruebasEjemplares.length > 1
+                ? mostrarTodasPruebas
+                  ? pruebasEjemplares
+                  : pruebasEjemplares.slice(0, 1)
+                : pruebasEjemplares
+              ).map((ej) => (
+                <EjemplarRowView
+                  key={ej.id}
+                  ejemplar={ej}
+                  categoria={obra.categoria_obra}
+                  esFotografiaDigital={obra.categoria_obra === "Fotografia" && ext?.subtipo_fotografia === "DigitalFineArt"}
+                  esFotografiaDigitalOSintografia={
+                    obra.categoria_obra === "Fotografia" &&
+                    (ext?.subtipo_fotografia === "DigitalFineArt" || ext?.subtipo_fotografia === "Sintografia")
+                  }
+                  venta={ej.venta_id ? ventas[ej.venta_id] : undefined}
+                  esGaleria={!esRegistroPersonal}
+                  editing={editingEjemplarId === ej.id}
+                  onEdit={() => setEditingEjemplarId(ej.id)}
+                  onCancelEdit={() => setEditingEjemplarId(null)}
+                  onSave={(fields) => handleSaveEjemplar(ej.id, fields)}
+                  onVender={() => setVentaTarget({ ejemplarId: ej.id })}
+                  onEditarVenta={(venta) => setVentaTarget({ ejemplarId: ej.id, existingVenta: toVentaExistente(venta) })}
+                  onAnularVenta={(venta, nuevoEstado) => handleAnularVenta(venta, ej.id, nuevoEstado)}
+                  onConfirmarVenta={(venta) => handleConfirmarVenta(venta, ej.id)}
+                  anulando={anulandoVenta}
+                  onAbrirInformes={() => handleAbrirInformesVenta(ej)}
+                />
+              ))}
+              {pruebasEjemplares.length > 1 && (
+                <button
+                  type="button"
+                  className="ejemplares-ver-mas"
+                  onClick={() => setMostrarTodasPruebas((v) => !v)}
+                >
+                  {mostrarTodasPruebas
+                    ? t("obraDetail.verMenosSeries")
+                    : t("obraDetail.verMasPruebasAutor", { n: pruebasEjemplares.length - 1 })}
+                </button>
+              )}
+            </>
           )}
         </div>
       )}

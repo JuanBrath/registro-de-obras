@@ -52,15 +52,6 @@ export function WorkspacePicker() {
   return (
     <div className="workspace-picker">
       <BrandHeader size="splash" className="workspace-picker-brand" />
-      {miniaturas.length > 0 && (
-        <div className="workspace-picker-collage">
-          {miniaturas.map((url, i) => (
-            <div key={i} className="workspace-picker-collage-thumb">
-              <img src={url} alt="" className="workspace-picker-collage-img" />
-            </div>
-          ))}
-        </div>
-      )}
       <div className="workspace-picker-options">
         {cargandoEdicion && <p>{t("common.loading")}</p>}
         {mostrarPersonal && (
@@ -76,6 +67,15 @@ export function WorkspacePicker() {
       </div>
       {loading && <p>{t("workspacePicker.opening")}</p>}
       {error && <p className="error">{error}</p>}
+      {miniaturas.length > 0 && (
+        <div className="workspace-picker-collage">
+          {miniaturas.map((url, i) => (
+            <div key={i} className="workspace-picker-collage-thumb">
+              <img src={url} alt="" className="workspace-picker-collage-img" />
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

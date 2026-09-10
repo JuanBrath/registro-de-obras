@@ -787,6 +787,8 @@ export const en: Record<keyof typeof es, string> = {
   "obraDetail.ejemplares": "Copies",
   "obraDetail.verMasSeries": "Show the other copies ({{n}})",
   "obraDetail.verMenosSeries": "Show less",
+  "obraDetail.pruebasDeAutorTitulo": "Artist's proofs",
+  "obraDetail.verMasPruebasAutor": "Show the other artist's proofs ({{n}})",
   "obraDetail.ventaReserva": "Sale / Reservation",
   "obraDetail.ventaReservaDonacion": "Sale / Reservation / Donation",
   "obraDetail.estadoLabel": "Status",
