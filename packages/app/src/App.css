@@ -425,6 +425,12 @@ input[type="date"] {
   font-size: 0.8rem;
   font-weight: normal;
   text-align: left;
+  /* Sin esto, el icono de ayuda de "Etiquetas" (cuyo texto de al lado no
+     baja de renglon a proposito, ver .galeria-filtro-etiquetas-label)
+     heredaba ese mismo "no bajar de renglon" para el texto del cartel, que
+     terminaba saliendo en una sola linea larguisima en vez de ajustarse al
+     ancho fijo de arriba. */
+  white-space: normal;
 }
 
 .help-icon-tooltip-wide {
