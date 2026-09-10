@@ -8,6 +8,7 @@ import type {
 import { HelpIcon } from "../../components/HelpIcon.js";
 import { FilePathField } from "../../components/FilePathField.js";
 import { CampoFecha, BotonCalendario } from "../../components/CampoFecha.js";
+import { NotasLabel } from "../../components/NotasLabel.js";
 import { useLanguage } from "../../i18n/LanguageContext.js";
 import type { ArchivoMetadata } from "../../utils/readImageMetadata.js";
 
@@ -157,7 +158,10 @@ export function FotografiaFields({
       </label>
 
       <label>
-        {t("obraForm.statementLabel")} <HelpIcon fieldKey="statement" />
+        <NotasLabel texto={statement} onChange={onStatementChange}>
+          {t("obraForm.statementLabel")}
+        </NotasLabel>{" "}
+        <HelpIcon fieldKey="statement" />
         <textarea rows={3} value={statement} onChange={(e) => onStatementChange(e.target.value)} />
       </label>
 

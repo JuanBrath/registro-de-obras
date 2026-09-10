@@ -1,6 +1,7 @@
 import { derivarEsSeriadaObraGrafica, type CategoriaObra, type SubtipoObraGrafica } from "@registro/core";
 import { HelpIcon } from "../../components/HelpIcon.js";
 import { CampoFecha, BotonCalendario } from "../../components/CampoFecha.js";
+import { NotasLabel } from "../../components/NotasLabel.js";
 import { useLanguage, type TranslationKey } from "../../i18n/LanguageContext.js";
 
 export type CategoriaObraDetalle = Exclude<CategoriaObra, "Fotografia">;
@@ -248,7 +249,10 @@ export function ObraDetalleFields({
       </label>
 
       <label>
-        {t("obraForm.statementLabel")} <HelpIcon fieldKey="statement" />
+        <NotasLabel texto={statement} onChange={onStatementChange}>
+          {t("obraForm.statementLabel")}
+        </NotasLabel>{" "}
+        <HelpIcon fieldKey="statement" />
         <textarea rows={3} value={statement} onChange={(e) => onStatementChange(e.target.value)} />
       </label>
 

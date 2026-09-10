@@ -89,16 +89,6 @@ export function WorkspaceHome({
         <p>{t("workspaceHome.titular", { nombre: personalArtista.nombreCompleto })}</p>
       )}
 
-      {miniaturas.length > 0 && (
-        <div className="workspace-home-collage">
-          {miniaturas.map((url, i) => (
-            <div key={i} className="workspace-picker-collage-thumb">
-              <img src={url} alt="" className="workspace-picker-collage-img" />
-            </div>
-          ))}
-        </div>
-      )}
-
       <div className="workspace-home-options">
         {esRegistroPersonal && (
           <button type="button" onClick={onEditProfile}>
@@ -130,6 +120,16 @@ export function WorkspaceHome({
         <button type="button" className="workspace-home-cambiar-modulo" onClick={() => void open(otroWorkspace)}>
           {t(esRegistroPersonal ? "workspacePicker.galeria" : "workspacePicker.personal")}
         </button>
+      )}
+
+      {miniaturas.length > 0 && (
+        <div className="workspace-home-collage">
+          {miniaturas.map((url, i) => (
+            <div key={i} className="workspace-picker-collage-thumb">
+              <img src={url} alt="" className="workspace-picker-collage-img" />
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

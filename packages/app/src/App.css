@@ -381,6 +381,14 @@ input[type="date"] {
   line-height: 1.5;
 }
 
+.notas-ampliadas-textarea {
+  width: 480px;
+  max-width: 100%;
+  min-height: 220px;
+  line-height: 1.5;
+  font: inherit;
+}
+
 .help-icon {
   border: none;
   background: none;
@@ -491,16 +499,16 @@ input[type="date"] {
 
 /* Igual concepto que .workspace-picker-collage (fotos al azar de las obras
    ya cargadas), pero en una sola fila: sin wrap, y sin dejar espacio de mas
-   si no hay suficientes miniaturas todavia. */
+   si no hay suficientes miniaturas todavia. Va al pie de la pantalla (ver
+   WorkspaceHome.tsx), despues de los botones — por eso el margen protector
+   contra el agrandado al pasar el cursor va arriba, no abajo. */
 .workspace-home-collage {
   display: flex;
   flex-wrap: nowrap;
   justify-content: center;
   gap: 0.6rem;
-  margin-top: 1.5rem;
-  /* Mismo motivo que en la pantalla de presentacion: deja lugar de sobra
-     para que el agrandado al pasar el cursor no tape los botones de abajo. */
-  margin-bottom: 3.5rem;
+  margin-top: 3.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .workspace-home-options {

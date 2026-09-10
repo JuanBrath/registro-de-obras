@@ -386,6 +386,8 @@ function buildObraDescripcionLineas(
     incluirInfoComercial = true,
     incluirDatosTecnicosArchivo = true,
     incluirTags = true,
+    incluirNotas = true,
+    incluirStatement = true,
   } = {},
 ): string[] {
   // Los valores cargados en el sistema (categoria, subtipo, tecnica, estado,
@@ -590,7 +592,9 @@ function buildObraDescripcionLineas(
       }
     }
   }
-  if (obra.statement) lineas.push(`${t("obraForm.statementLabel")}: ${obra.statement}`);
+  if (incluirInfoComercial && incluirStatement && obra.statement) {
+    lineas.push(`${t("obraForm.statementLabel")}: ${obra.statement}`);
+  }
   if (obra.categoria_obra === "Fotografia") {
     if (ext?.serie_proyecto) lineas.push(`${t("fields.fotografia.serieProyectoLabel")}: ${ext.serie_proyecto}`);
     if (ext?.escala_por_tamanos) {
@@ -695,7 +699,7 @@ function buildObraDescripcionLineas(
       `${t("obraForm.historialProcedenciaExhibicionesLabel")}: ${obra.historial_procedencia_exhibiciones}`,
     );
   }
-  if (incluirInfoComercial && obra.notas) {
+  if (incluirInfoComercial && incluirNotas && obra.notas) {
     lineas.push(`${t("obraForm.notasLabel")}: ${obra.notas}`);
   }
   if (incluirTags) {
@@ -737,6 +741,8 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
   const [informeIdioma, setInformeIdioma] = useState<InformeIdioma>("es");
   const [informeIncluirLogo, setInformeIncluirLogo] = useState(true);
   const [informeIncluirFecha, setInformeIncluirFecha] = useState(true);
+  const [informeIncluirNotas, setInformeIncluirNotas] = useState(true);
+  const [informeIncluirStatement, setInformeIncluirStatement] = useState(true);
   const [informeFirma, setInformeFirma] = useState<FirmaEleccion>("ninguna");
   const [firmaBytesDisponibles, setFirmaBytesDisponibles] = useState<Uint8Array | null>(null);
   const [fichaPdfIncluirTodas, setFichaPdfIncluirTodas] = useState(true);
@@ -980,15 +986,11 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       const imagenResuelta = await resolveObraImagenParaPdf(context, obra);
 
       const logoBytes = await resolveMembreteLogoBytes(context, personalArtista, galeriaPerfil);
-      const lineas = buildObraDescripcionLineas(
-        obra,
-        ext,
-        esRegistroPersonal,
-        (key, vars) => tInforme(informeIdioma, key, vars),
-        tipo === "terceros"
-          ? { incluirSoftwareEdicion: false, incluirDatosTecnicosArchivo: false, incluirTags: false }
-          : undefined,
-      );
+      const lineas = buildObraDescripcionLineas(obra, ext, esRegistroPersonal, (key, vars) => tInforme(informeIdioma, key, vars), {
+        ...(tipo === "terceros" ? { incluirSoftwareEdicion: false, incluirDatosTecnicosArchivo: false, incluirTags: false } : {}),
+        incluirNotas: informeIncluirNotas,
+        incluirStatement: informeIncluirStatement,
+      });
       const mensajeSinSeries = t(
         tipo === "no_disponibles" ? "obraDetail.sinSeriesNoDisponibles" : "obraDetail.sinSeriesDisponibles",
       );
@@ -1086,7 +1088,10 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       const pageWidth = doc.internal.pageSize.getWidth();
       const textWidth = pageWidth - textX - marginLeft;
 
-      const lineas = buildObraDescripcionLineas(obra, ext, esRegistroPersonal, (key, vars) => tInforme(informeIdioma, key, vars));
+      const lineas = buildObraDescripcionLineas(obra, ext, esRegistroPersonal, (key, vars) => tInforme(informeIdioma, key, vars), {
+        incluirNotas: informeIncluirNotas,
+        incluirStatement: informeIncluirStatement,
+      });
 
       let textY = textStartY;
       for (const linea of lineas) {
@@ -2216,6 +2221,10 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
           onIncluirLogoChange={setInformeIncluirLogo}
           incluirFecha={informeIncluirFecha}
           onIncluirFechaChange={setInformeIncluirFecha}
+          incluirNotas={informeIncluirNotas}
+          onIncluirNotasChange={obra.notas ? setInformeIncluirNotas : undefined}
+          incluirStatement={informeIncluirStatement}
+          onIncluirStatementChange={obra.statement ? setInformeIncluirStatement : undefined}
           firma={informeFirma}
           onFirmaChange={setInformeFirma}
           firmaDigitalDisponible={firmaBytesDisponibles !== null}
@@ -2887,7 +2896,10 @@ function ObraEditForm({
       )}
 
       <label>
-        <NotasLabel texto={notas}>{t("obraForm.notasLabel")}</NotasLabel> <HelpIcon fieldKey="notas_obra" />
+        <NotasLabel texto={notas} onChange={setNotas}>
+          {t("obraForm.notasLabel")}
+        </NotasLabel>{" "}
+        <HelpIcon fieldKey="notas_obra" />
         <textarea rows={3} value={notas} onChange={(e) => setNotas(e.target.value)} />
       </label>
 
@@ -3586,7 +3598,9 @@ function EjemplarRowView({
         )}
         <label>
           <span className="field-label">
-            <NotasLabel texto={notas}>{t("obraDetail.notasEjemplarLabel")}</NotasLabel>
+            <NotasLabel texto={notas} onChange={setNotas}>
+              {t("obraDetail.notasEjemplarLabel")}
+            </NotasLabel>
           </span>
           <textarea rows={2} value={notas} onChange={(e) => setNotas(e.target.value)} />
         </label>

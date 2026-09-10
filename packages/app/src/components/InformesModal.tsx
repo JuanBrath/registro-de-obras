@@ -31,6 +31,10 @@ export function InformesModal({
   onIncluirLogoChange,
   incluirFecha,
   onIncluirFechaChange,
+  incluirNotas,
+  onIncluirNotasChange,
+  incluirStatement,
+  onIncluirStatementChange,
   firma,
   onFirmaChange,
   firmaDigitalDisponible,
@@ -51,6 +55,12 @@ export function InformesModal({
   /** Opcional: solo las pantallas que lo necesiten (por ahora, Obra) muestran el fieldset de incluir/ocultar la fecha del membrete. */
   incluirFecha?: boolean;
   onIncluirFechaChange?: (incluirFecha: boolean) => void;
+  /** Opcional: solo se muestra si la obra tiene notas cargadas y el informe las contempla. */
+  incluirNotas?: boolean;
+  onIncluirNotasChange?: (incluirNotas: boolean) => void;
+  /** Opcional: solo se muestra si la obra tiene statement cargado y el informe lo contempla. */
+  incluirStatement?: boolean;
+  onIncluirStatementChange?: (incluirStatement: boolean) => void;
   firma: FirmaEleccion;
   onFirmaChange: (firma: FirmaEleccion) => void;
   firmaDigitalDisponible: boolean;
@@ -140,6 +150,58 @@ export function InformesModal({
                 onChange={() => onIncluirFechaChange(false)}
               />
               {t("informes.fechaSinFecha")}
+            </label>
+          </div>
+        </fieldset>
+      )}
+
+      {onIncluirNotasChange && (
+        <fieldset className="informes-fieldset">
+          <legend>{t("informes.notasLegend")}</legend>
+          <div className="radio-row">
+            <label>
+              <input
+                type="radio"
+                name="informeNotas"
+                checked={!!incluirNotas}
+                onChange={() => onIncluirNotasChange(true)}
+              />
+              {t("informes.notasIncluir")}
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="informeNotas"
+                checked={!incluirNotas}
+                onChange={() => onIncluirNotasChange(false)}
+              />
+              {t("informes.notasOmitir")}
+            </label>
+          </div>
+        </fieldset>
+      )}
+
+      {onIncluirStatementChange && (
+        <fieldset className="informes-fieldset">
+          <legend>{t("informes.statementLegend")}</legend>
+          <div className="radio-row">
+            <label>
+              <input
+                type="radio"
+                name="informeStatement"
+                checked={!!incluirStatement}
+                onChange={() => onIncluirStatementChange(true)}
+              />
+              {t("informes.statementIncluir")}
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="informeStatement"
+                checked={!incluirStatement}
+                onChange={() => onIncluirStatementChange(false)}
+              />
+              {t("informes.statementOmitir")}
             </label>
           </div>
         </fieldset>
