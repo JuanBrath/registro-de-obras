@@ -15,6 +15,7 @@ import { buildObrasListadoPdfBytes, type ObraListadoItem } from "../reports/obra
 import { savePdfWithDialog } from "../utils/savePdfDialog.js";
 import { MiniaturasSizeSlider } from "../components/MiniaturasSizeSlider.js";
 import { cargarColumnasGridInicial, guardarColumnasGrid } from "../utils/columnasGrid.js";
+import { marcarSiMiniaturaMuyVertical } from "../utils/miniaturaVertical.js";
 
 const COLUMNAS_OBRAS_POR_DEFECTO = 4;
 const COLUMNAS_OBRAS_STORAGE_KEY = "obrasListColumnasGrid";
@@ -545,7 +546,11 @@ export function ObrasList({
             </button>
             <button type="button" className="obra-card" onClick={() => onOpenObra(obra.id)}>
             {thumbnails[obra.id] ? (
-              <img src={thumbnails[obra.id]} alt={obra.titulo} />
+              <img
+                src={thumbnails[obra.id]}
+                alt={obra.titulo}
+                onLoad={(e) => marcarSiMiniaturaMuyVertical(e.currentTarget)}
+              />
             ) : (
               <div className="obra-card-placeholder">{t("obrasList.sinImagen")}</div>
             )}

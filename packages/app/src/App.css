@@ -646,6 +646,10 @@ input[type="date"] {
 .obra-card {
   display: flex;
   flex-direction: column;
+  /* Sin esto, el boton se encoge al tamano de la miniatura (por ser un
+     <button>) en vez de ocupar toda la columna de la grilla — se nota al
+     combinar el "max-height" de la miniatura con fotos angostas. */
+  width: 100%;
   gap: 0.5rem;
   padding: 0;
   border: 1px solid var(--border);
@@ -679,6 +683,10 @@ input[type="date"] {
 }
 
 .galeria-foto-thumb-button {
+  display: block;
+  /* Mismo motivo que en .obra-card: sin esto el boton se encoge al tamano
+     de la miniatura en vez de ocupar toda la columna. */
+  width: 100%;
   padding: 0;
   border: none;
   border-radius: 8px;
@@ -696,9 +704,28 @@ input[type="date"] {
   display: block;
 }
 
+/* Si la imagen es mucho mas alta que ancha, JS agrega esta clase al
+   cargarla (ver marcarSiMiniaturaMuyVertical, usada en ObrasList y
+   GaleriaFotos): forzar ancho:100% la estiraria/deformaria para entrar en
+   el alto maximo, asi que en vez de eso toma su propio ancho segun su
+   proporcion real, acotado a 1.5 veces el ancho de la tarjeta — el resto
+   queda libre a los costados. */
+.obra-card img.miniatura-muy-vertical,
+.galeria-foto-thumb-button img.miniatura-muy-vertical {
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 150cqw;
+  margin: 0 auto;
+}
+
 .galeria-foto-thumb-wrapper,
 .obra-card-wrapper {
   position: relative;
+  /* Habilita "cqw" en la miniatura de adentro (ver .obra-card img /
+     .galeria-foto-thumb-button img): en el boton mismo colapsa su ancho, por
+     eso se pone aca en el contenedor. */
+  container-type: inline-size;
 }
 
 /* El badge de marcado se ancla al borde superior derecho pero se ubica por

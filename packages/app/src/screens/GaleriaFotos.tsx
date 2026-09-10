@@ -11,6 +11,7 @@ import type { ObrasListFiltros } from "./ObrasList.js";
 import { subtipoTranslationKey } from "./fields/ObraDetalleFields.js";
 import { MiniaturasSizeSlider } from "../components/MiniaturasSizeSlider.js";
 import { cargarColumnasGridInicial, guardarColumnasGrid } from "../utils/columnasGrid.js";
+import { marcarSiMiniaturaMuyVertical } from "../utils/miniaturaVertical.js";
 
 const COLUMNAS_GALERIA_POR_DEFECTO = 4;
 const COLUMNAS_GALERIA_STORAGE_KEY = "galeriaFotosColumnasGrid";
@@ -487,7 +488,11 @@ export function GaleriaFotos({
             thumbnails[foto.id] && (
               <div className="galeria-foto-thumb-wrapper" key={foto.id}>
                 <button type="button" className="galeria-foto-thumb-button" onClick={() => setLightboxIndex(i)}>
-                  <img src={thumbnails[foto.id]} alt={foto.titulo} />
+                  <img
+                    src={thumbnails[foto.id]}
+                    alt={foto.titulo}
+                    onLoad={(e) => marcarSiMiniaturaMuyVertical(e.currentTarget)}
+                  />
                 </button>
                 <button
                   type="button"
