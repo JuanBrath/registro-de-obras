@@ -628,6 +628,7 @@ export const en: Record<keyof typeof es, string> = {
   "galeria.desmarcar": "Deselect",
   "galeria.soloMarcadas": "Selected",
   "galeria.desmarcarTodas": "Deselect all",
+  "galeria.desmarcarTodasConfirm": "Deselect all selected artworks?",
 
   // TagPicker
   "tagPicker.placeholder": "Choose or type a tag…",

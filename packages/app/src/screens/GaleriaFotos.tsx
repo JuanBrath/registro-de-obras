@@ -11,6 +11,7 @@ import type { ObrasListFiltros } from "./ObrasList.js";
 import { subtipoTranslationKey } from "./fields/ObraDetalleFields.js";
 import { MiniaturasSizeSlider } from "../components/MiniaturasSizeSlider.js";
 import { TagFilterPicker } from "../components/TagFilterPicker.js";
+import { MarcadasFilterButton } from "../components/MarcadasFilterButton.js";
 import { HelpIcon } from "../components/HelpIcon.js";
 import { cargarColumnasGridInicial, guardarColumnasGrid } from "../utils/columnasGrid.js";
 import { marcarSiMiniaturaMuyVertical } from "../utils/miniaturaVertical.js";
@@ -115,6 +116,7 @@ export function GaleriaFotos({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   useEscapeToDismiss(error, setError);
+  const [busqueda, setBusqueda] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>(filtrosIniciales?.selectedTags ?? []);
   const [selectedArtistaId, setSelectedArtistaId] = useState<number | null>(filtrosIniciales?.selectedArtistaId ?? null);
   const [selectedCategoria, setSelectedCategoria] = useState<CategoriaObra | null>(
@@ -224,14 +226,24 @@ export function GaleriaFotos({
   }, [fotos, selectedCategoria]);
 
   const filteredFotos = useMemo(() => {
+    const busquedaNorm = busqueda.trim().toLowerCase();
     const filtradas = fotos.filter((f) => {
-      const tagMatch = selectedTags.length === 0 || selectedTags.every((tag) => parseTags(f.tags).includes(tag));
+      const tagMatch = selectedTags.length === 0 || selectedTags.some((tag) => parseTags(f.tags).includes(tag));
       const artistaMatch = !esGaleria || selectedArtistaId === null || f.artista_id === selectedArtistaId;
       const categoriaMatch = selectedCategoria === null || f.categoria_obra === selectedCategoria;
       const subtipoValor = f.categoria_obra === "Fotografia" ? f.subtipo_fotografia : f.subtipo;
       const subtipoMatch = selectedSubtipo === null || subtipoValor === selectedSubtipo;
       const marcadaMatch = !soloMarcadas || f.marcada !== 0;
-      return tagMatch && artistaMatch && categoriaMatch && subtipoMatch && marcadaMatch;
+      if (!(tagMatch && artistaMatch && categoriaMatch && subtipoMatch && marcadaMatch)) return false;
+      if (!busquedaNorm) return true;
+      const enTitulo = f.titulo.toLowerCase().includes(busquedaNorm);
+      const enArtista = esGaleria && (f.nombre_completo ?? "").toLowerCase().includes(busquedaNorm);
+      const enNumero = String(f.id).includes(busquedaNorm);
+      const enCodigoInventario = (f.codigo_inventario ?? "").toLowerCase().includes(busquedaNorm);
+      // Igual que en ObrasList: en Personal el buscador es solo por titulo,
+      // el filtro de etiquetas ya tiene su propio desplegable.
+      const enEtiquetas = esGaleria && parseTags(f.tags).some((tag) => tag.toLowerCase().includes(busquedaNorm));
+      return enTitulo || enArtista || enNumero || enCodigoInventario || enEtiquetas;
     });
 
     // Mismo criterio que ObrasList: sin codigo de inventario, va al final.
@@ -244,7 +256,17 @@ export function GaleriaFotos({
       });
     }
     return [...filtradas].sort((a, b) => a.titulo.localeCompare(b.titulo, undefined, { sensitivity: "base" }));
-  }, [fotos, selectedTags, selectedArtistaId, selectedCategoria, selectedSubtipo, soloMarcadas, esGaleria, ordenPor]);
+  }, [
+    fotos,
+    selectedTags,
+    selectedArtistaId,
+    selectedCategoria,
+    selectedSubtipo,
+    busqueda,
+    soloMarcadas,
+    esGaleria,
+    ordenPor,
+  ]);
 
   const hayMarcadas = useMemo(() => fotos.some((f) => f.marcada !== 0), [fotos]);
 
@@ -389,6 +411,16 @@ export function GaleriaFotos({
         </div>
       </div>
 
+      {fotos.length > 0 && (
+        <div className="header-actions obras-list-options obras-list-fila-principal">
+          <div className="buscador-con-ayuda obras-list-buscador-fila-principal">
+            <input type="search" className="obras-list-buscador" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
+            <HelpIcon fieldKey="busqueda_general" />
+          </div>
+          <MiniaturasSizeSlider columnas={columnasGrid} onChange={handleTamanoMiniaturasChange} />
+        </div>
+      )}
+
       {loading && <p>{t("common.loading")}</p>}
       {error && (
         <p className="error" role="alert">
@@ -396,27 +428,6 @@ export function GaleriaFotos({
         </p>
       )}
       {!loading && fotos.length === 0 && <p>{t("galeria.sinFotos")}</p>}
-
-      <div className="header-actions obras-list-options obras-list-fila-principal">
-        {hayMarcadas && (
-          <div className="galeria-filtro-marcadas-row">
-            <label className="galeria-filtro-marcadas">
-              <input
-                type="checkbox"
-                checked={soloMarcadas}
-                onChange={(e) => {
-                  setSoloMarcadas(e.target.checked);
-                  closeLightbox();
-                }}
-              />
-              {t("galeria.soloMarcadas")}
-            </label>
-            <button type="button" onClick={handleDesmarcarTodas}>
-              {t("galeria.desmarcarTodas")}
-            </button>
-          </div>
-        )}
-      </div>
 
       <div className="galeria-filtros-selects">
         <label className="galeria-filtro-artista">
@@ -468,6 +479,17 @@ export function GaleriaFotos({
             </select>
           </label>
         )}
+
+        {hayMarcadas && (
+          <MarcadasFilterButton
+            soloMarcadas={soloMarcadas}
+            onToggle={() => {
+              setSoloMarcadas((v) => !v);
+              closeLightbox();
+            }}
+            onDesmarcarTodas={handleDesmarcarTodas}
+          />
+        )}
       </div>
 
       <div className="header-actions obras-list-options obras-list-fila-principal galeria-filtro-etiquetas-fila">
@@ -479,7 +501,6 @@ export function GaleriaFotos({
             <TagFilterPicker opciones={allTags} value={selectedTags} onChange={handleTagsChange} />
           </>
         )}
-        <MiniaturasSizeSlider columnas={columnasGrid} onChange={handleTamanoMiniaturasChange} />
       </div>
 
       <div className="obras-grid galeria-fotos-grid" style={{ gridTemplateColumns: `repeat(${columnasGrid}, 1fr)` }}>

@@ -626,6 +626,7 @@ export const es = {
   "galeria.desmarcar": "Deseleccionar",
   "galeria.soloMarcadas": "Seleccionadas",
   "galeria.desmarcarTodas": "Deseleccionar todas",
+  "galeria.desmarcarTodasConfirm": "¿Deseleccionar todas las obras seleccionadas?",
 
   // TagPicker
   "tagPicker.placeholder": "Elegir o escribir una etiqueta…",

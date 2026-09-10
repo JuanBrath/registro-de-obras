@@ -70,6 +70,8 @@ import { migration0070AyudaUbicacionArchivoMetadatosRawPsd } from "./0070_ayuda_
 import { migration0071AyudaImagenObraPsd } from "./0071_ayuda_imagen_obra_psd.js";
 import { migration0072ObraStatement } from "./0072_obra_statement.js";
 import { migration0073AyudaFiltroEtiquetas } from "./0073_ayuda_filtro_etiquetas.js";
+import { migration0074AyudaFiltroEtiquetasUnion } from "./0074_ayuda_filtro_etiquetas_union.js";
+import { migration0075AyudaFiltroSoloMarcadas } from "./0075_ayuda_filtro_solo_marcadas.js";
 
 export interface Migration {
   name: string;
@@ -271,4 +273,6 @@ export const ALL_MIGRATIONS: Migration[] = [
   migration0071AyudaImagenObraPsd,
   migration0072ObraStatement,
   migration0073AyudaFiltroEtiquetas,
+  migration0074AyudaFiltroEtiquetasUnion,
+  migration0075AyudaFiltroSoloMarcadas,
 ];

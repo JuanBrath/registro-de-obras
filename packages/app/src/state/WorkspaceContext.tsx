@@ -181,10 +181,21 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       if (context) await context.db.close();
       const factory = await createPlatformAdapterFactory();
       const ctx = await openWorkspace(workspace, factory);
+      // Se cargan los tres en paralelo y se aplican juntos (sin await entre
+      // los setState): si "context" se publicara antes de que
+      // "personalArtista" termine de cargar, habria un instante en el que
+      // needsPersonalProfile (mas abajo) lo interpreta como "todavia no
+      // completo mi perfil" y fuerza esa pantalla de golpe, aunque el
+      // perfil ya exista.
+      const [texts, artista, perfil] = await Promise.all([
+        loadHelpTexts(ctx),
+        loadPersonalArtista(ctx),
+        loadGaleriaPerfil(ctx),
+      ]);
       setContext(ctx);
-      setHelpTexts(await loadHelpTexts(ctx));
-      setPersonalArtista(await loadPersonalArtista(ctx));
-      setGaleriaPerfil(await loadGaleriaPerfil(ctx));
+      setHelpTexts(texts);
+      setPersonalArtista(artista);
+      setGaleriaPerfil(perfil);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {

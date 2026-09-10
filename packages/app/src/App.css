@@ -575,9 +575,9 @@ input[type="date"] {
   margin-top: 1rem;
 }
 
-/* Obras: el buscador va solo en su propio renglon arriba, y despues los
-   botones de accion junto con el regulador de tamano de miniaturas en otro
-   renglon aparte debajo. */
+/* Obras y Galeria de obras: el buscador comparte renglon con el regulador
+   de tamano de miniaturas arriba de todo (pegado al borde derecho, ver mas
+   abajo), y los botones de accion van en otro renglon aparte debajo. */
 .obras-list-fila-principal {
   flex-wrap: wrap;
   row-gap: 0.75rem;
@@ -785,18 +785,35 @@ input[type="date"] {
   margin-right: 0.4rem;
 }
 
-.galeria-filtro-marcadas-row {
-  display: flex;
+/* Boton de estrella que filtra por obras marcadas (ver
+   MarcadasFilterButton.tsx): un clic normal alterna el filtro, y mantenerlo
+   presionado ofrece desmarcarlas todas, asi que necesita quedar relativo
+   para anclar ese cartel de confirmacion debajo sin empujar el resto de la
+   fila. */
+.marcadas-filter-button-wrapper {
+  position: relative;
+  display: inline-flex;
   align-items: center;
-  gap: 1rem;
-  margin-top: 1rem;
+  gap: 0.3rem;
 }
 
-.galeria-filtro-marcadas {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  cursor: pointer;
+.marcadas-filter-button {
+  font-size: 1.2rem;
+  line-height: 1;
+  padding: 0.3rem 0.5rem;
+}
+
+.marcadas-filter-button-activo {
+  color: #f5c542;
+}
+
+.marcadas-filter-confirm-box {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.4rem;
+  z-index: 20;
+  white-space: nowrap;
 }
 
 .link-field-row {
@@ -996,6 +1013,13 @@ input[type="date"] {
   gap: 1.5rem;
 }
 
+/* El boton de estrella para filtrar por marcadas (ver
+   MarcadasFilterButton.tsx), cuando esta presente, queda pegado al borde
+   derecho de este renglon de filtros en vez de seguir el flujo normal. */
+.galeria-filtros-selects .marcadas-filter-button-wrapper {
+  margin-left: auto;
+}
+
 .galeria-filtro-artista {
   display: flex;
   flex-direction: column;
@@ -1006,26 +1030,23 @@ input[type="date"] {
 }
 
 /* El filtro de etiquetas tiene su propio renglon (ver
-   .galeria-filtro-etiquetas-fila), compartido con el regulador de tamano de
-   miniaturas: la etiqueta del campo se alinea con el resto de los campos
-   (mismo criterio que .galeria-filtro-artista) pero en fila, no en columna. */
+   .galeria-filtro-etiquetas-fila): la etiqueta del campo se alinea con el
+   resto de los campos (mismo criterio que .galeria-filtro-artista) pero en
+   fila, no en columna. */
 .galeria-filtro-etiquetas-label {
   white-space: nowrap;
 }
 
-/* Renglon propio para el filtro de etiquetas + el regulador de tamano de
-   miniaturas (ver ObrasList.tsx y GaleriaFotos.tsx): las etiquetas elegidas
-   se acumulan a la derecha del desplegable, y el regulador queda pegado al
-   borde derecho del renglon (misma regla de mas abajo que ya empuja
-   .miniaturas-slider-campo con margin-left:auto dentro de
-   .obras-list-fila-principal). */
+/* Renglon propio para el filtro de etiquetas (ver ObrasList.tsx y
+   GaleriaFotos.tsx): las etiquetas elegidas se acumulan a la derecha del
+   desplegable. */
 .galeria-filtro-etiquetas-fila {
   margin-top: 1rem;
 }
 
-/* El regulador de tamano de miniaturas, cuando comparte renglon con otros
-   controles (ver ObrasList.tsx y GaleriaFotos.tsx), queda pegado al borde
-   derecho en vez de seguir el flujo normal. */
+/* El regulador de tamano de miniaturas comparte renglon con el buscador,
+   arriba de todo (ver ObrasList.tsx y GaleriaFotos.tsx), y queda pegado al
+   borde derecho en vez de seguir el flujo normal. */
 .obras-list-fila-principal .miniaturas-slider-campo {
   margin-left: auto;
 }

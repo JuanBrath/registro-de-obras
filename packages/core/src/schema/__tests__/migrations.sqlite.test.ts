@@ -196,6 +196,8 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
       "0071_ayuda_imagen_obra_psd",
       "0072_obra_statement",
       "0073_ayuda_filtro_etiquetas",
+      "0074_ayuda_filtro_etiquetas_union",
+      "0075_ayuda_filtro_solo_marcadas",
     ]);
   });
 

@@ -15,6 +15,7 @@ import { buildObrasListadoPdfBytes, type ObraListadoItem } from "../reports/obra
 import { savePdfWithDialog } from "../utils/savePdfDialog.js";
 import { MiniaturasSizeSlider } from "../components/MiniaturasSizeSlider.js";
 import { TagFilterPicker } from "../components/TagFilterPicker.js";
+import { MarcadasFilterButton } from "../components/MarcadasFilterButton.js";
 import { cargarColumnasGridInicial, guardarColumnasGrid } from "../utils/columnasGrid.js";
 import { marcarSiMiniaturaMuyVertical } from "../utils/miniaturaVertical.js";
 
@@ -220,7 +221,7 @@ export function ObrasList({
     const busquedaNorm = busqueda.trim().toLowerCase();
     const filtradas = obras.filter((o) => {
       if (soloMarcadas && o.marcada === 0) return false;
-      if (selectedTags.length > 0 && !selectedTags.every((tag) => parseTags(o.tags).includes(tag))) return false;
+      if (selectedTags.length > 0 && !selectedTags.some((tag) => parseTags(o.tags).includes(tag))) return false;
       if (esGaleria && selectedArtistaId !== null && o.artista_id !== selectedArtistaId) return false;
       if (selectedCategoria && o.categoria_obra !== selectedCategoria) return false;
       if (selectedSubtipo) {
@@ -413,9 +414,12 @@ export function ObrasList({
       </div>
 
       {obras.length > 0 && (
-        <div className="buscador-con-ayuda obras-list-buscador-fila-principal">
-          <input type="search" className="obras-list-buscador" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
-          <HelpIcon fieldKey="busqueda_general" />
+        <div className="header-actions obras-list-options obras-list-fila-principal">
+          <div className="buscador-con-ayuda obras-list-buscador-fila-principal">
+            <input type="search" className="obras-list-buscador" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
+            <HelpIcon fieldKey="busqueda_general" />
+          </div>
+          <MiniaturasSizeSlider columnas={columnasGrid} onChange={handleTamanoMiniaturasChange} />
         </div>
       )}
 
@@ -435,17 +439,6 @@ export function ObrasList({
           <button type="button" onClick={handleAbrirInformesMenu} disabled={filteredObras.length === 0}>
             {t("informesObras.generarInforme")}
           </button>
-        )}
-        {hayMarcadas && (
-          <div className="galeria-filtro-marcadas-row">
-            <label className="galeria-filtro-marcadas">
-              <input type="checkbox" checked={soloMarcadas} onChange={(e) => setSoloMarcadas(e.target.checked)} />
-              {t("galeria.soloMarcadas")}
-            </label>
-            <button type="button" onClick={handleDesmarcarTodas}>
-              {t("galeria.desmarcarTodas")}
-            </button>
-          </div>
         )}
       </div>
 
@@ -509,6 +502,14 @@ export function ObrasList({
               </select>
             </label>
           )}
+
+          {hayMarcadas && (
+            <MarcadasFilterButton
+              soloMarcadas={soloMarcadas}
+              onToggle={() => setSoloMarcadas((v) => !v)}
+              onDesmarcarTodas={handleDesmarcarTodas}
+            />
+          )}
         </div>
       ) : null}
 
@@ -522,7 +523,6 @@ export function ObrasList({
               <TagFilterPicker opciones={allTags} value={selectedTags} onChange={setSelectedTags} />
             </>
           )}
-          <MiniaturasSizeSlider columnas={columnasGrid} onChange={handleTamanoMiniaturasChange} />
         </div>
       )}
 

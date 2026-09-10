@@ -4,9 +4,9 @@ import { useLanguage } from "../i18n/LanguageContext.js";
  * Filtro de etiquetas por acumulacion: elegir una del desplegable la agrega
  * como chip a la derecha del desplegable (no reemplaza a las que ya
  * estaban elegidas); cada chip se puede quitar por separado con su "x".
- * Compartido entre ObrasList y GaleriaFotos, que filtran por la
- * interseccion de las etiquetas elegidas (una obra tiene que tener todas,
- * no solo alguna).
+ * Compartido entre ObrasList y GaleriaFotos, que filtran por la union de
+ * las etiquetas elegidas (alcanza con que una obra tenga alguna, no hace
+ * falta que tenga todas).
  */
 export function TagFilterPicker({
   opciones,
