@@ -44,7 +44,6 @@ import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
 import { savePdfWithDialog } from "../utils/savePdfDialog.js";
 import { formatFechaDDMMYYYY } from "../utils/formatFecha.js";
-import { detectImageFormat } from "../utils/detectImageFormat.js";
 import { focusNextOnEnter } from "../utils/focusNextOnEnter.js";
 import { generarMiniatura } from "../utils/generarMiniatura.js";
 import type { ArchivoMetadata } from "../utils/readImageMetadata.js";
@@ -53,6 +52,7 @@ import { InformesModal } from "../components/InformesModal.js";
 import { tInforme, type InformeIdioma } from "../reports/informeIdioma.js";
 import { resolveFirmaBytes, resolveMembreteLogoBytes, resolveLocalidad } from "../reports/reportBranding.js";
 import { buildObraSeriesDetalladoPdfBytes, type ObraEjemplarDetalle } from "../reports/obraReports.js";
+import { resolveObraImagenParaPdf } from "../utils/resolveObraImagenPdf.js";
 import {
   buildCoaPdfBytes,
   buildComprobanteVentaPdfBytes,
@@ -970,15 +970,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
         ventaTexto: formatearVentaTexto(ej),
       }));
 
-      let imgBytes: Uint8Array | null = null;
-      const imagenPath = obra.imagen_alta_resolucion_path || obra.miniatura_path;
-      if (imagenPath) {
-        try {
-          imgBytes = await context.fs.readFile(imagenPath);
-        } catch {
-          imgBytes = null;
-        }
-      }
+      const imagenResuelta = await resolveObraImagenParaPdf(context, obra);
 
       const logoBytes = await resolveMembreteLogoBytes(context, personalArtista, galeriaPerfil);
       const lineas = buildObraDescripcionLineas(
@@ -994,15 +986,22 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
         tipo === "no_disponibles" ? "obraDetail.sinSeriesNoDisponibles" : "obraDetail.sinSeriesDisponibles",
       );
 
-      const bytes = await buildObraSeriesDetalladoPdfBytes(obra.titulo, imgBytes, lineas, ejemplaresDetalle, mensajeSinSeries, {
-        idioma: informeIdioma,
-        logoBytes,
-        incluirLogo: informeIncluirLogo,
-        firma: informeFirma,
-        firmaBytes: firmaBytesDisponibles,
-        localidad: resolveLocalidad(context, personalArtista, galeriaPerfil),
-        incluirFecha: informeIncluirFecha,
-      });
+      const bytes = await buildObraSeriesDetalladoPdfBytes(
+        obra.titulo,
+        imagenResuelta?.bytes ?? null,
+        lineas,
+        ejemplaresDetalle,
+        mensajeSinSeries,
+        {
+          idioma: informeIdioma,
+          logoBytes,
+          incluirLogo: informeIncluirLogo,
+          firma: informeFirma,
+          firmaBytes: firmaBytesDisponibles,
+          localidad: resolveLocalidad(context, personalArtista, galeriaPerfil),
+          incluirFecha: informeIncluirFecha,
+        },
+      );
 
       const sufijo =
         tipo === "disponibles"
@@ -1052,30 +1051,28 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       let textX = marginLeft;
       let imageBottom = startY;
 
-      const imagenPath = obra.imagen_alta_resolucion_path || obra.miniatura_path;
-      if (imagenPath) {
+      const imagenResuelta = await resolveObraImagenParaPdf(context, obra);
+      if (imagenResuelta) {
         try {
-          const imgBytes = await context.fs.readFile(imagenPath);
-          const formato = detectImageFormat(imgBytes);
-          if (formato) {
-            const blob = new Blob([imgBytes as BlobPart]);
-            const bitmap = await createImageBitmap(blob);
-            let displayW = imageBoxSize;
-            let displayH = imageBoxSize / (bitmap.width / bitmap.height);
-            if (displayH > imageBoxSize) {
-              displayH = imageBoxSize;
-              displayW = imageBoxSize * (bitmap.width / bitmap.height);
-            }
-            bitmap.close();
-            doc.addImage(imgBytes, formato, marginLeft, startY, displayW, displayH);
-            imageBottom = startY + displayH;
-            // La columna de texto arranca despues del recuadro maximo de la
-            // imagen (no del ancho real, que varia con el aspect ratio), asi
-            // el texto siempre alinea igual sin importar la proporcion de la foto.
-            textX = marginLeft + imageBoxSize + 8;
+          const { bytes: imgBytes, formato } = imagenResuelta;
+          const blob = new Blob([imgBytes as BlobPart]);
+          const bitmap = await createImageBitmap(blob);
+          let displayW = imageBoxSize;
+          let displayH = imageBoxSize / (bitmap.width / bitmap.height);
+          if (displayH > imageBoxSize) {
+            displayH = imageBoxSize;
+            displayW = imageBoxSize * (bitmap.width / bitmap.height);
           }
+          bitmap.close();
+          doc.addImage(imgBytes, formato, marginLeft, startY, displayW, displayH);
+          imageBottom = startY + displayH;
+          // La columna de texto arranca despues del recuadro maximo de la
+          // imagen (no del ancho real, que varia con el aspect ratio), asi
+          // el texto siempre alinea igual sin importar la proporcion de la foto.
+          textX = marginLeft + imageBoxSize + 8;
         } catch {
-          // Si falta el archivo o no se puede leer, la ficha se genera sin imagen.
+          // Los bytes pasaron la deteccion de formato pero no se pudieron
+          // decodificar (archivo corrupto): la ficha se genera sin imagen.
         }
       }
 
@@ -1190,17 +1187,9 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
 
       let certificado: CoaCertificadoDatos | undefined;
       if (ventaInformeSeleccionId === "coa") {
-        let imgBytes: Uint8Array | null = null;
-        const imagenPath = obra.imagen_alta_resolucion_path || obra.miniatura_path;
-        if (imagenPath) {
-          try {
-            imgBytes = await context.fs.readFile(imagenPath);
-          } catch {
-            imgBytes = null;
-          }
-        }
+        const imagenResuelta = await resolveObraImagenParaPdf(context, obra);
         certificado = {
-          imgBytes,
+          imgBytes: imagenResuelta?.bytes ?? null,
           fechaToma: ext?.fecha_captura ? ext.fecha_captura.slice(0, 4) : "",
           editadaPorAutor: ext?.anio_edicion ?? "",
           detalleTecnico1: ext?.subtipo_fotografia
@@ -1239,16 +1228,8 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       let nombreArchivo: string;
 
       if (ventaInformeSeleccionId === "presupuesto") {
-        let imgBytes: Uint8Array | null = null;
-        const imagenPath = obra.imagen_alta_resolucion_path || obra.miniatura_path;
-        if (imagenPath) {
-          try {
-            imgBytes = await context.fs.readFile(imagenPath);
-          } catch {
-            imgBytes = null;
-          }
-        }
-        bytes = await buildPresupuestoPdfBytes(obraDatos, imgBytes, brandOpts);
+        const imagenResuelta = await resolveObraImagenParaPdf(context, obra);
+        bytes = await buildPresupuestoPdfBytes(obraDatos, imagenResuelta?.bytes ?? null, brandOpts);
         nombreArchivo = `presupuesto_${base}.pdf`;
       } else if (venta) {
         const ventaDatos = {
