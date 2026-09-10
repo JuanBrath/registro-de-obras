@@ -1005,17 +1005,27 @@ input[type="date"] {
   max-width: 320px;
 }
 
-/* El filtro de etiquetas va al final de la fila y puede acumular varios
-   chips + el desplegable: se deja crecer mas que el resto de los filtros
-   (que solo tienen un select simple), sin el limite de 320px. */
-.galeria-filtro-etiquetas {
-  max-width: none;
-  flex: 1 1 auto;
+/* El filtro de etiquetas tiene su propio renglon (ver
+   .galeria-filtro-etiquetas-fila), compartido con el regulador de tamano de
+   miniaturas: la etiqueta del campo se alinea con el resto de los campos
+   (mismo criterio que .galeria-filtro-artista) pero en fila, no en columna. */
+.galeria-filtro-etiquetas-label {
+  white-space: nowrap;
 }
 
-/* El regulador de tamano de miniaturas, cuando comparte renglon con
-   "Solo marcadas"/"Desmarcar todas" (ver ObrasList.tsx y GaleriaFotos.tsx),
-   queda pegado al borde derecho en vez de seguir el flujo normal. */
+/* Renglon propio para el filtro de etiquetas + el regulador de tamano de
+   miniaturas (ver ObrasList.tsx y GaleriaFotos.tsx): las etiquetas elegidas
+   se acumulan a la derecha del desplegable, y el regulador queda pegado al
+   borde derecho del renglon (misma regla de mas abajo que ya empuja
+   .miniaturas-slider-campo con margin-left:auto dentro de
+   .obras-list-fila-principal). */
+.galeria-filtro-etiquetas-fila {
+  margin-top: 1rem;
+}
+
+/* El regulador de tamano de miniaturas, cuando comparte renglon con otros
+   controles (ver ObrasList.tsx y GaleriaFotos.tsx), queda pegado al borde
+   derecho en vez de seguir el flujo normal. */
 .obras-list-fila-principal .miniaturas-slider-campo {
   margin-left: auto;
 }
@@ -1090,16 +1100,14 @@ input[type="date"] {
   gap: 0.3rem;
 }
 
-/* Filtro de etiquetas por acumulacion (ver TagFilterPicker.tsx): los chips
-   elegidos se acumulan en fila a la izquierda del desplegable, que siempre
-   queda al final (a la derecha, o mas abajo si ya no entran mas a la
-   derecha). */
+/* Filtro de etiquetas por acumulacion (ver TagFilterPicker.tsx): el
+   desplegable para agregar va primero, y los chips elegidos se acumulan en
+   fila a su derecha. */
 .tag-filter-picker {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.4rem;
-  width: 100%;
 }
 
 .tag-chip-removable button {

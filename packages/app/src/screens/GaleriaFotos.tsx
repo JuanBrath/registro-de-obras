@@ -416,7 +416,6 @@ export function GaleriaFotos({
             </button>
           </div>
         )}
-        <MiniaturasSizeSlider columnas={columnasGrid} onChange={handleTamanoMiniaturasChange} />
       </div>
 
       <div className="galeria-filtros-selects">
@@ -469,15 +468,18 @@ export function GaleriaFotos({
             </select>
           </label>
         )}
+      </div>
 
+      <div className="header-actions obras-list-options obras-list-fila-principal galeria-filtro-etiquetas-fila">
         {allTags.length > 0 && (
-          <label className="galeria-filtro-artista galeria-filtro-etiquetas">
-            <span>
+          <>
+            <span className="galeria-filtro-etiquetas-label">
               {t("obraForm.etiquetasLabel")} <HelpIcon fieldKey="filtro_etiquetas_multiple" />
             </span>
             <TagFilterPicker opciones={allTags} value={selectedTags} onChange={handleTagsChange} />
-          </label>
+          </>
         )}
+        <MiniaturasSizeSlider columnas={columnasGrid} onChange={handleTamanoMiniaturasChange} />
       </div>
 
       <div className="obras-grid galeria-fotos-grid" style={{ gridTemplateColumns: `repeat(${columnasGrid}, 1fr)` }}>

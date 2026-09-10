@@ -447,7 +447,6 @@ export function ObrasList({
             </button>
           </div>
         )}
-        {obras.length > 0 && <MiniaturasSizeSlider columnas={columnasGrid} onChange={handleTamanoMiniaturasChange} />}
       </div>
 
       {loading && <p>{t("common.loading")}</p>}
@@ -510,17 +509,22 @@ export function ObrasList({
               </select>
             </label>
           )}
+        </div>
+      ) : null}
 
+      {obras.length > 0 && (
+        <div className="header-actions obras-list-options obras-list-fila-principal galeria-filtro-etiquetas-fila">
           {allTags.length > 0 && (
-            <label className="galeria-filtro-artista galeria-filtro-etiquetas">
-              <span>
+            <>
+              <span className="galeria-filtro-etiquetas-label">
                 {t("obraForm.etiquetasLabel")} <HelpIcon fieldKey="filtro_etiquetas_multiple" />
               </span>
               <TagFilterPicker opciones={allTags} value={selectedTags} onChange={setSelectedTags} />
-            </label>
+            </>
           )}
+          <MiniaturasSizeSlider columnas={columnasGrid} onChange={handleTamanoMiniaturasChange} />
         </div>
-      ) : null}
+      )}
 
       {!loading && obras.length > 0 && filteredObras.length === 0 && <p>{t("obrasList.sinResultados")}</p>}
 
