@@ -853,6 +853,8 @@ export const en: Record<keyof typeof es, string> = {
   "obraDetail.motivoCopia": "copy {{numero}} ({{motivo}})",
   "obraDetail.noSePuedeDeshacerSerieDetalle":
     "Can't convert to a unique piece: {{detalle}} already have their own history (status or loaded data) that would be lost by collapsing them into one piece.",
+  "obraDetail.noSePuedeConvertirASeriadaDetalle":
+    "Can't convert to a series: {{detalle}} already have their own history (status or loaded data), which shouldn't happen on a non-series artwork. Check this artwork's copies before continuing.",
   "obraDetail.noSePuedeReducirSerieDetalle":
     "Can't lower the edition size: {{detalle}} already have their own history (status or loaded data) that would be lost if removed.",
   "obraDetail.reducirSerieAviso":

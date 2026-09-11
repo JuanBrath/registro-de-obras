@@ -270,6 +270,25 @@ function describirNoSePuedeDeshacerSerie(
   });
 }
 
+/**
+ * Cartel especifico para la direccion opuesta: convertir una obra no
+ * seriada en serie tambien exige poder reducir sus ejemplares actuales a
+ * uno solo (el que pasa a ser la edicion 1/N), y esto nunca deberia
+ * bloquearse en una obra realmente no seriada (que por definicion tiene un
+ * unico ejemplar) — solo pasa si quedo mas de uno por un estado
+ * inconsistente de datos previo a este cambio.
+ */
+function describirNoSePuedeConvertirASeriada(
+  ejemplares: EjemplarRow[],
+  indicesBloqueantes: number[],
+  t: (key: TranslationKey, vars?: Record<string, string | number>) => string,
+  idioma: string,
+): string {
+  return t("obraDetail.noSePuedeConvertirASeriadaDetalle", {
+    detalle: listarMotivosBloqueantes(ejemplares, indicesBloqueantes, t, idioma),
+  });
+}
+
 /** Cartel especifico que explica por que no se puede bajar la cantidad de ediciones de una serie. */
 function describirNoSePuedeReducirSerie(
   ejemplares: EjemplarRow[],
@@ -1479,9 +1498,18 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
     const resultadoDeshacer = evaluarDeshacerSerie(
       ejemplares.map((ej) => ({ estado: ej.estado, tieneDatosCargados: tieneDatosCargados(ej) })),
     );
-    if (cambiaSeriada && !fields.esSeriada && !resultadoDeshacer.permitido) {
+    // El mismo chequeo aplica en las dos direcciones: tanto para deshacer
+    // una serie (volverla pieza unica) como para convertir una pieza unica
+    // en serie hay que reducir los ejemplares existentes a uno solo, y no
+    // es seguro hacerlo si mas de uno tiene un estado o datos propios
+    // cargados (por ejemplo, por un estado inconsistente de datos previo a
+    // este cambio en una obra que nunca deberia haber tenido mas de un
+    // ejemplar).
+    if (cambiaSeriada && !resultadoDeshacer.permitido) {
       throw new Error(
-        describirNoSePuedeDeshacerSerie(ejemplares, resultadoDeshacer.indicesBloqueantes, t, idioma),
+        fields.esSeriada
+          ? describirNoSePuedeConvertirASeriada(ejemplares, resultadoDeshacer.indicesBloqueantes, t, idioma)
+          : describirNoSePuedeDeshacerSerie(ejemplares, resultadoDeshacer.indicesBloqueantes, t, idioma),
       );
     }
 
@@ -1558,14 +1586,28 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
           // El ejemplar unico que ya existia pasa a ser la edicion 1/N de la
           // serie sin tocar su estado ni los datos que ya tenia cargados
           // (notas, fecha de impresion, venta asociada, etc.) — solo se
-          // agregan de cero los ejemplares nuevos que hacen falta.
+          // agregan de cero los ejemplares nuevos que hacen falta. Se usa
+          // indiceAConservar (ya validado arriba con evaluarDeshacerSerie)
+          // en vez de asumir directamente ejemplares[0]: por las dudas de
+          // que hubiera mas de un ejemplar asociado a esta obra (nunca
+          // deberia pasar en una no seriada, pero un estado inconsistente
+          // de datos previo a este cambio podria haberlo dejado asi), es el
+          // que efectivamente corresponde conservar.
+          const idAConservar =
+            resultadoDeshacer.permitido && resultadoDeshacer.indiceAConservar !== null
+              ? ejemplares[resultadoDeshacer.indiceAConservar].id
+              : ejemplares[0].id;
           const [primero, ...resto] = generarEjemplares(fields.cantidadTotalEdiciones, fields.cantidadPruebaArtista);
+          // Cualquier otro ejemplar de mas (ver comentario arriba) se borra
+          // antes de insertar los nuevos, para no chocar contra la
+          // restriccion unica de (obra_id, tipo, indice) de la tabla.
+          await tx.execute(`DELETE FROM ejemplar WHERE obra_id = ? AND id != ?`, [obraId, idAConservar]);
           await tx.execute(`UPDATE ejemplar SET tipo = ?, indice = ?, total_ediciones = ?, numero = ? WHERE id = ?`, [
             primero.tipo,
             primero.indice,
             primero.totalEdiciones,
             primero.numero,
-            ejemplares[0].id,
+            idAConservar,
           ]);
           for (const ejemplar of resto) {
             await tx.execute(

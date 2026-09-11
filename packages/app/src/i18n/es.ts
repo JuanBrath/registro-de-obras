@@ -851,6 +851,8 @@ export const es = {
   "obraDetail.motivoCopia": "la copia {{numero}} ({{motivo}})",
   "obraDetail.noSePuedeDeshacerSerieDetalle":
     "No se puede convertir en obra única: {{detalle}} ya tienen historial propio (estado o datos cargados) que se perdería si se colapsan en una sola pieza.",
+  "obraDetail.noSePuedeConvertirASeriadaDetalle":
+    "No se puede convertir en serie: {{detalle}} ya tienen historial propio (estado o datos cargados), algo que no debería pasar en una obra no seriada. Revisá los ejemplares de esta obra antes de continuar.",
   "obraDetail.noSePuedeReducirSerieDetalle":
     "No se puede bajar la cantidad de ediciones: {{detalle}} ya tienen historial propio (estado o datos cargados) que se perdería si se eliminan.",
   "obraDetail.reducirSerieAviso":
