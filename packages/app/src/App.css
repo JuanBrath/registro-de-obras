@@ -559,8 +559,17 @@ input[type="date"] {
    ".obras-list" (listas de texto como Clientes/Artistas, donde 900px sigue
    siendo comodo de leer): sin este ancho aparte, el limite de 900px
    heredado de ahi dejaba lugar para 3 miniaturas por fila sin importar
-   cuanto se agrandara la ventana ni el tamano minimo de cada miniatura. */
+   cuanto se agrandara la ventana ni el tamano minimo de cada miniatura.
+   El "width: 100%" es igual de necesario: ".obras-list" hereda un margen
+   izquierdo/derecho "auto" (para centrar las listas angostas de texto), y
+   sin un ancho propio explicito el margen automatico encoge esta pantalla
+   al ancho de SU CONTENIDO en vez de ocupar el ancho completo disponible.
+   Eso significaba que, mientras la grilla todavia estaba vacia (cargando),
+   la pantalla aparecia angosta y centrada, y de golpe se ensanchaba y se
+   corria hacia la izquierda apenas aparecian las obras — un salto que se
+   veia como un destello. */
 .obras-list.obras-list-grid-ancho {
+  width: 100%;
   max-width: min(97vw, 1800px);
 }
 
