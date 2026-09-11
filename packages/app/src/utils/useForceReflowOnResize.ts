@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { isTauri } from "../adapters/detectPlatform.js";
+import { forzarReflowDelRoot } from "./forzarReflowDelRoot.js";
 
 // Al maximizar o pasar a pantalla completa, el webview a veces no repinta el
 // contenido al tamaño real de la nueva ventana (queda con el layout viejo,
@@ -15,14 +16,7 @@ export function useForceReflowOnResize(): void {
     import("@tauri-apps/api/window").then(({ getCurrentWindow }) => {
       if (cancelled) return;
       getCurrentWindow()
-        .onResized(() => {
-          const root = document.getElementById("root");
-          if (!root) return;
-          const previousDisplay = root.style.display;
-          root.style.display = "none";
-          void root.offsetHeight;
-          root.style.display = previousDisplay;
-        })
+        .onResized(forzarReflowDelRoot)
         .then((fn) => {
           if (cancelled) {
             fn();

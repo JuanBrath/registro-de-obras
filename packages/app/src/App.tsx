@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useState, type ReactNode } from "react";
 import "./App.css";
 import { useWorkspace, WorkspaceProvider } from "./state/WorkspaceContext.js";
 import { EdicionProvider, useEdicion } from "./state/EdicionContext.js";
@@ -7,6 +7,7 @@ import { FontSizeProvider } from "./state/FontSizeContext.js";
 import { MiniaturasModoProvider } from "./state/MiniaturasModoContext.js";
 import { LanguageProvider, useLanguage } from "./i18n/LanguageContext.js";
 import { useForceReflowOnResize } from "./utils/useForceReflowOnResize.js";
+import { forzarReflowDelRoot } from "./utils/forzarReflowDelRoot.js";
 import { useAutoScrollToAlerts } from "./utils/useAutoScrollToAlerts.js";
 import { BrandHeader } from "./components/BrandHeader.js";
 import { WorkspacePicker } from "./screens/WorkspacePicker.js";
@@ -44,8 +45,20 @@ function WorkspaceScreens() {
   // de segundo se sigue viendo su contenido en esa posicion antes de que la
   // pantalla nueva la corrija — un destello que parece que "la pantalla
   // anterior se reabre" antes de mostrar la de destino.
-  useEffect(() => {
+  //
+  // Usa useLayoutEffect (no useEffect) a proposito: corre de forma
+  // sincronica justo despues de que React cambia el DOM pero ANTES de que
+  // el navegador pinte esa pantalla — si fuera useEffect (que corre
+  // despues del primer pintado), el destello ya se habria visto una vez
+  // antes de corregirse. forzarReflowDelRoot ataca la otra mitad del mismo
+  // sintoma: el webview a veces sigue mostrando un pintado viejo de la
+  // pantalla anterior superpuesto un instante hasta que algo lo obliga a
+  // recalcular — el mismo problema que ya se resolvia al cambiar el tamano
+  // de la ventana (ver useForceReflowOnResize), ahora tambien al cambiar
+  // de pantalla.
+  useLayoutEffect(() => {
     window.scrollTo(0, 0);
+    forzarReflowDelRoot();
   }, [screen.name]);
 
   if (!context) return null;
