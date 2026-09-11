@@ -185,6 +185,11 @@ export const en: Record<keyof typeof es, string> = {
   "settings.letraChica": "Small",
   "settings.letraMediana": "Medium",
   "settings.letraGrande": "Large",
+  "settings.miniaturas": "Home and splash screen thumbnails",
+  "settings.miniaturasEstaticas": "Static",
+  "settings.miniaturasDinamicas": "Dynamic",
+  "settings.miniaturasNota":
+    "Static: each thumbnail only enlarges when you hover over it. Dynamic: they enlarge on their own, one at a time, with no need to hover.",
   "settings.carpetaDatos": "Data folder",
   "settings.cambiarCarpetaNota":
     "Tells Galeris to use a different folder to read and save this registry's data. If the folder you pick already has Galeris data (for example, because you moved the original folder to an external drive), that data will be used. If you pick an empty folder, it will start fresh. After changing it, you'll go back to the home screen to reopen the registry.",

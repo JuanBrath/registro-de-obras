@@ -183,6 +183,11 @@ export const es = {
   "settings.letraChica": "Chica",
   "settings.letraMediana": "Mediana",
   "settings.letraGrande": "Grande",
+  "settings.miniaturas": "Miniaturas de inicio y presentación",
+  "settings.miniaturasEstaticas": "Estáticas",
+  "settings.miniaturasDinamicas": "Dinámicas",
+  "settings.miniaturasNota":
+    "Estáticas: cada miniatura se agranda solo al pasar el cursor por encima. Dinámicas: se van agrandando solas una por una, sin necesidad del cursor.",
   "settings.carpetaDatos": "Carpeta de datos",
   "settings.cambiarCarpetaNota":
     "Le indica a Galeris una carpeta distinta para leer y guardar los datos de este registro. Si la carpeta que elijas ya tiene datos de Galeris (por ejemplo, porque moviste la carpeta original a un disco externo), se van a usar esos. Si elegís una carpeta vacía, se va a empezar de cero. Después de cambiarla, volvés a la pantalla de inicio para reabrir el registro.",

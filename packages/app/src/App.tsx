@@ -4,6 +4,7 @@ import { useWorkspace, WorkspaceProvider } from "./state/WorkspaceContext.js";
 import { EdicionProvider, useEdicion } from "./state/EdicionContext.js";
 import { ThemeProvider } from "./state/ThemeContext.js";
 import { FontSizeProvider } from "./state/FontSizeContext.js";
+import { MiniaturasModoProvider } from "./state/MiniaturasModoContext.js";
 import { LanguageProvider, useLanguage } from "./i18n/LanguageContext.js";
 import { useForceReflowOnResize } from "./utils/useForceReflowOnResize.js";
 import { useAutoScrollToAlerts } from "./utils/useAutoScrollToAlerts.js";
@@ -161,11 +162,13 @@ function App() {
     <LanguageProvider>
       <ThemeProvider>
         <FontSizeProvider>
-          <EdicionProvider>
-            <WorkspaceProvider>
-              <AppShell />
-            </WorkspaceProvider>
-          </EdicionProvider>
+          <MiniaturasModoProvider>
+            <EdicionProvider>
+              <WorkspaceProvider>
+                <AppShell />
+              </WorkspaceProvider>
+            </EdicionProvider>
+          </MiniaturasModoProvider>
         </FontSizeProvider>
       </ThemeProvider>
     </LanguageProvider>

@@ -2,18 +2,22 @@ import { useEffect, useRef, useState } from "react";
 import { edicionIncluyeGaleria, edicionIncluyePersonal } from "@registro/core";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { useEdicion } from "../state/EdicionContext.js";
+import { useMiniaturasModo } from "../state/MiniaturasModoContext.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
 import { BrandHeader } from "../components/BrandHeader.js";
 import { isTauri } from "../adapters/detectPlatform.js";
+import { useAutoHoverCollage } from "../utils/useAutoHoverCollage.js";
 
 const CANTIDAD_MINIATURAS_COLLAGE = 10;
 
 export function WorkspacePicker() {
   const { loading, error, open } = useWorkspace();
   const { edicion } = useEdicion();
+  const { miniaturasModo } = useMiniaturasModo();
   const { t } = useLanguage();
   const [miniaturas, setMiniaturas] = useState<string[]>([]);
   const miniaturasRef = useRef<string[]>([]);
+  const indiceAutoAbierto = useAutoHoverCollage(miniaturas.length, miniaturasModo === "dinamicas");
 
   const cargandoEdicion = edicion === null;
   const mostrarPersonal = edicion !== null && edicionIncluyePersonal(edicion);
@@ -70,7 +74,10 @@ export function WorkspacePicker() {
       {miniaturas.length > 0 && (
         <div className="workspace-picker-collage">
           {miniaturas.map((url, i) => (
-            <div key={i} className="workspace-picker-collage-thumb">
+            <div
+              key={i}
+              className={`workspace-picker-collage-thumb${i === indiceAutoAbierto ? " workspace-picker-collage-thumb-auto-abierta" : ""}`}
+            >
               <img src={url} alt="" className="workspace-picker-collage-img" />
             </div>
           ))}

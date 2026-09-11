@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { edicionIncluyeGaleria, edicionIncluyePersonal } from "@registro/core";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { useEdicion } from "../state/EdicionContext.js";
+import { useMiniaturasModo } from "../state/MiniaturasModoContext.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
 import { leerMiniaturasEnParalelo } from "../utils/imageObjectUrl.js";
+import { useAutoHoverCollage } from "../utils/useAutoHoverCollage.js";
 
 // Mas de las que entran en una sola fila de 480px de ancho con miniaturas de
 // 84px (ver .workspace-home-collage, que no hace wrap): la fila sencillamente
@@ -28,9 +30,11 @@ export function WorkspaceHome({
 }) {
   const { context, personalArtista, open } = useWorkspace();
   const { edicion } = useEdicion();
+  const { miniaturasModo } = useMiniaturasModo();
   const { t } = useLanguage();
   const [miniaturas, setMiniaturas] = useState<string[]>([]);
   const miniaturasRef = useRef<string[]>([]);
+  const indiceAutoAbierto = useAutoHoverCollage(miniaturas.length, miniaturasModo === "dinamicas");
 
   // Decora esta pantalla con fotos al azar de las obras de este workspace,
   // igual que en la pantalla de presentacion, pero en una sola fila. A
@@ -122,7 +126,10 @@ export function WorkspaceHome({
       {miniaturas.length > 0 && (
         <div className="workspace-home-collage">
           {miniaturas.map((url, i) => (
-            <div key={i} className="workspace-picker-collage-thumb">
+            <div
+              key={i}
+              className={`workspace-picker-collage-thumb${i === indiceAutoAbierto ? " workspace-picker-collage-thumb-auto-abierta" : ""}`}
+            >
               <img src={url} alt="" className="workspace-picker-collage-img" />
             </div>
           ))}

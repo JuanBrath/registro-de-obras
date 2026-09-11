@@ -3,6 +3,7 @@ import { Modal } from "../components/Modal.js";
 import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
 import { useTheme } from "../state/ThemeContext.js";
 import { useFontSize } from "../state/FontSizeContext.js";
+import { useMiniaturasModo } from "../state/MiniaturasModoContext.js";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { isTauri } from "../adapters/detectPlatform.js";
 
@@ -26,6 +27,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
   const { idioma, setIdioma, t } = useLanguage();
   const { tema, setTema } = useTheme();
   const { tamanoFuente, setTamanoFuente } = useFontSize();
+  const { miniaturasModo, setMiniaturasModo } = useMiniaturasModo();
   const { context, close } = useWorkspace();
   const [confirmandoReset, setConfirmandoReset] = useState(false);
   const [reseteando, setReseteando] = useState(false);
@@ -183,6 +185,29 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
           />
           {t("settings.letraGrande")}
         </label>
+      </fieldset>
+
+      <fieldset className="settings-idioma-fieldset">
+        <legend>{t("settings.miniaturas")}</legend>
+        <label>
+          <input
+            type="radio"
+            name="miniaturasModo"
+            checked={miniaturasModo === "estaticas"}
+            onChange={() => setMiniaturasModo("estaticas")}
+          />
+          {t("settings.miniaturasEstaticas")}
+        </label>
+        <label>
+          <input
+            type="radio"
+            name="miniaturasModo"
+            checked={miniaturasModo === "dinamicas"}
+            onChange={() => setMiniaturasModo("dinamicas")}
+          />
+          {t("settings.miniaturasDinamicas")}
+        </label>
+        <p className="field-note">{t("settings.miniaturasNota")}</p>
       </fieldset>
 
       <fieldset className="settings-idioma-fieldset">

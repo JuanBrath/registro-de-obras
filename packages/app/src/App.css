@@ -184,8 +184,12 @@ input[type="date"] {
    completa con su propia forma real (ancho y alto en "auto", limitados a
    185px de lado maximo): asi no queda ningun hueco de color de fondo que se
    note al superponerse sobre las miniaturas vecinas. Se centra sobre su
-   propio recuadro y gana z-index para quedar por encima sin mover al resto. */
-.workspace-picker-collage-thumb:hover .workspace-picker-collage-img {
+   propio recuadro y gana z-index para quedar por encima sin mover al resto.
+   ".workspace-picker-collage-thumb-auto-abierta" (ver useAutoHoverCollage)
+   reusa exactamente el mismo tratamiento visual para la miniatura que el
+   modo "dinamicas" abre sola por unos segundos, sin necesidad del cursor. */
+.workspace-picker-collage-thumb:hover .workspace-picker-collage-img,
+.workspace-picker-collage-thumb-auto-abierta .workspace-picker-collage-img {
   inset: auto;
   top: 50%;
   left: 50%;
