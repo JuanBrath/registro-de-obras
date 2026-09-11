@@ -37,6 +37,16 @@ function WorkspaceScreens() {
   const { context, personalArtista, close } = useWorkspace();
   const [screen, setScreen] = useState<Screen>({ name: "home" });
 
+  // Sin esto, cambiar de pantalla arrastra el scroll de la pantalla
+  // anterior a la nueva: entre dos pantallas largas como Obras y Galeria de
+  // obras, si la anterior estaba scrolleada hacia abajo, por una fraccion
+  // de segundo se sigue viendo su contenido en esa posicion antes de que la
+  // pantalla nueva la corrija — un destello que parece que "la pantalla
+  // anterior se reabre" antes de mostrar la de destino.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [screen.name]);
+
   if (!context) return null;
 
   // Si ya estamos en "home", no dispara un cambio de estado: evita un
