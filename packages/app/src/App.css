@@ -611,7 +611,6 @@ input[type="date"] {
 }
 
 .obras-list-buscador-fila-principal {
-  max-width: 320px;
   /* Sin margen propio: el titulo (h1) ya trae su propio margen inferior de
      24px, que alcanza de sobra como separacion. */
   margin-top: 0;
@@ -619,6 +618,14 @@ input[type="date"] {
 
 .obras-list-buscador-fila-principal .obras-list-buscador {
   margin-top: 0;
+}
+
+/* En Obras y Galeria de obras el buscador puede ser un poco mas ancho que
+   en el resto de las pantallas que lo usan (por ejemplo Clientes): esta
+   combinacion de clases es mas especifica que ".buscador-con-ayuda" de mas
+   abajo, asi que solo ensancha a estas dos. */
+.buscador-con-ayuda.obras-list-buscador-fila-principal {
+  max-width: 520px;
 }
 
 /* Campo del regulador de tamano de miniaturas: el ancho del renglon entero
