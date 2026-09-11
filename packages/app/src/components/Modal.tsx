@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useLanguage } from "../i18n/LanguageContext.js";
+import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
 
 export function Modal({
   children,
@@ -14,6 +15,13 @@ export function Modal({
   className?: string;
 }) {
   const { t } = useLanguage();
+  // "true" en vez de algun estado propio: este modal esta "abierto" en todo
+  // momento mientras esta montado (no tiene un estado interno de
+  // abierto/cerrado aparte, es el padre el que lo monta o no), asi que la
+  // tecla Escape simplemente llama a onClose todo el tiempo que este
+  // presente en pantalla — igual que ya se puede cerrar clickeando afuera o
+  // en la X.
+  useEscapeToDismiss(true, onClose);
 
   // Portal directo a document.body: si no, un modal abierto desde un campo
   // anidado dentro de un <label> (como las notas ampliadas dentro de
