@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { artistaFotoPath } from "@registro/core";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { createArtista } from "../data/createArtista.js";
-import { bytesToObjectUrl } from "../utils/imageObjectUrl.js";
+import { leerMiniaturasPorIdEnParalelo } from "../utils/imageObjectUrl.js";
 import { ImageFileField } from "../components/ImageFileField.js";
 import { LinkField } from "../components/LinkField.js";
 import { HelpIcon } from "../components/HelpIcon.js";
@@ -381,18 +381,13 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
 
       for (const url of objectUrlsRef.current) URL.revokeObjectURL(url);
       objectUrlsRef.current = [];
-      const urls: Record<number, string> = {};
-      for (const a of rows) {
-        if (!a.foto_path) continue;
-        try {
-          const bytes = await context.fs.readFile(a.foto_path);
-          const url = bytesToObjectUrl(bytes);
-          objectUrlsRef.current.push(url);
-          urls[a.id] = url;
-        } catch {
-          // Sin foto disponible; se omite sin romper la lista.
-        }
-      }
+      const { urls, objectUrls } = await leerMiniaturasPorIdEnParalelo(
+        context.fs,
+        rows,
+        (a) => a.id,
+        (a) => a.foto_path,
+      );
+      objectUrlsRef.current.push(...objectUrls);
       setThumbnails(urls);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));

@@ -6,7 +6,7 @@ import type { DatabaseAdapter, PlatformAdapterFactory, WorkspaceId } from "@regi
 import { createTauriDatabaseAdapter } from "./TauriDatabaseAdapter.js";
 import { TauriFileSystemAdapter, pickTauriRootDirectory } from "./TauriFileSystemAdapter.js";
 import { detectarProveedorNubeEnRuta } from "./detectCloudSyncFolder.js";
-import { bytesToObjectUrl } from "../../utils/imageObjectUrl.js";
+import { leerMiniaturasEnParalelo } from "../../utils/imageObjectUrl.js";
 
 const STORE_FILE = "workspace-roots.json";
 
@@ -195,15 +195,10 @@ export async function peekRandomThumbnails(workspace: WorkspaceId, cantidad: num
         [cantidad],
       );
       const fs = new TauriFileSystemAdapter(root);
-      const urls: string[] = [];
-      for (const row of rows) {
-        try {
-          urls.push(bytesToObjectUrl(await fs.readFile(row.miniatura_path)));
-        } catch {
-          // Miniatura referenciada en la base pero faltante en disco: se omite sin romper el resto.
-        }
-      }
-      return urls;
+      return await leerMiniaturasEnParalelo(
+        fs,
+        rows.map((row) => row.miniatura_path),
+      );
     } finally {
       await db.close();
     }

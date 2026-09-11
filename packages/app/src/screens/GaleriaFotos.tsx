@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { parseTags, type CategoriaObra } from "@registro/core";
 import { useWorkspace } from "../state/WorkspaceContext.js";
-import { bytesToObjectUrl } from "../utils/imageObjectUrl.js";
+import { bytesToObjectUrl, leerMiniaturasPorIdEnParalelo } from "../utils/imageObjectUrl.js";
 import { Modal } from "../components/Modal.js";
 import { VentaForm } from "../components/VentaForm.js";
 import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
@@ -162,18 +162,13 @@ export function GaleriaFotos({
         if (cancelled) return;
         setFotos(rows);
 
-        const urls: Record<number, string> = {};
-        for (const foto of rows) {
-          if (!foto.miniatura_path) continue;
-          try {
-            const bytes = await context!.fs.readFile(foto.miniatura_path);
-            const url = bytesToObjectUrl(bytes);
-            objectUrlsRef.current.push(url);
-            urls[foto.id] = url;
-          } catch {
-            // Falta el archivo; se omite sin romper la galería.
-          }
-        }
+        const { urls, objectUrls } = await leerMiniaturasPorIdEnParalelo(
+          context!.fs,
+          rows,
+          (foto) => foto.id,
+          (foto) => foto.miniatura_path,
+        );
+        objectUrlsRef.current.push(...objectUrls);
         if (!cancelled) setThumbnails(urls);
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : String(err));
@@ -267,8 +262,6 @@ export function GaleriaFotos({
     esGaleria,
     ordenPor,
   ]);
-
-  const hayMarcadas = useMemo(() => fotos.some((f) => f.marcada !== 0), [fotos]);
 
   async function handleToggleMarcada(fotoId: number, current: number) {
     const nuevoValor = current ? 0 : 1;
@@ -480,16 +473,14 @@ export function GaleriaFotos({
           </label>
         )}
 
-        {hayMarcadas && (
-          <MarcadasFilterButton
-            soloMarcadas={soloMarcadas}
-            onToggle={() => {
-              setSoloMarcadas((v) => !v);
-              closeLightbox();
-            }}
-            onDesmarcarTodas={handleDesmarcarTodas}
-          />
-        )}
+        <MarcadasFilterButton
+          soloMarcadas={soloMarcadas}
+          onToggle={() => {
+            setSoloMarcadas((v) => !v);
+            closeLightbox();
+          }}
+          onDesmarcarTodas={handleDesmarcarTodas}
+        />
       </div>
 
       <div className="header-actions obras-list-options obras-list-fila-principal galeria-filtro-etiquetas-fila">

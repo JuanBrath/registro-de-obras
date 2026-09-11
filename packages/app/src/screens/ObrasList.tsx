@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { parseTags, type CategoriaObra } from "@registro/core";
 import { useWorkspace } from "../state/WorkspaceContext.js";
-import { bytesToObjectUrl } from "../utils/imageObjectUrl.js";
+import { leerMiniaturasPorIdEnParalelo } from "../utils/imageObjectUrl.js";
 import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
 import { subtipoTranslationKey } from "./fields/ObraDetalleFields.js";
@@ -151,18 +151,13 @@ export function ObrasList({
         if (cancelled) return;
         setObras(rows);
 
-        const urls: Record<number, string> = {};
-        for (const obra of rows) {
-          if (!obra.miniatura_path) continue;
-          try {
-            const bytes = await context!.fs.readFile(obra.miniatura_path);
-            const url = bytesToObjectUrl(bytes);
-            objectUrlsRef.current.push(url);
-            urls[obra.id] = url;
-          } catch {
-            // La miniatura puede faltar si esa carga no incluyó imagen; se omite sin romper la lista.
-          }
-        }
+        const { urls, objectUrls } = await leerMiniaturasPorIdEnParalelo(
+          context!.fs,
+          rows,
+          (obra) => obra.id,
+          (obra) => obra.miniatura_path,
+        );
+        objectUrlsRef.current.push(...objectUrls);
         if (!cancelled) setThumbnails(urls);
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : String(err));
@@ -261,8 +256,6 @@ export function ObrasList({
     esGaleria,
     ordenPor,
   ]);
-
-  const hayMarcadas = useMemo(() => obras.some((o) => o.marcada !== 0), [obras]);
 
   async function handleToggleMarcada(obraId: number, current: number) {
     const nuevoValor = current ? 0 : 1;
@@ -503,13 +496,11 @@ export function ObrasList({
             </label>
           )}
 
-          {hayMarcadas && (
-            <MarcadasFilterButton
-              soloMarcadas={soloMarcadas}
-              onToggle={() => setSoloMarcadas((v) => !v)}
-              onDesmarcarTodas={handleDesmarcarTodas}
-            />
-          )}
+          <MarcadasFilterButton
+            soloMarcadas={soloMarcadas}
+            onToggle={() => setSoloMarcadas((v) => !v)}
+            onDesmarcarTodas={handleDesmarcarTodas}
+          />
         </div>
       ) : null}
 

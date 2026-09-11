@@ -18,7 +18,11 @@ export class TauriFileSystemAdapter implements FileSystemAdapter {
   }
 
   async readFile(relativePath: string): Promise<Uint8Array> {
-    const bytes = await invoke<number[]>("fs_read_file", { root: this.rootDir, relativePath });
+    // fs_read_file devuelve una respuesta IPC "cruda" (ArrayBuffer), no un
+    // JSON con un numero por byte: para las miniaturas/imagenes que se leen
+    // todo el tiempo, evita el costo (mucho mas notorio en una computadora
+    // con un procesador mas modesto) de serializar cada byte como numero.
+    const bytes = await invoke<ArrayBuffer>("fs_read_file", { root: this.rootDir, relativePath });
     return new Uint8Array(bytes);
   }
 

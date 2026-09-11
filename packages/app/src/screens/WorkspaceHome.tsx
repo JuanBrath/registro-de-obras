@@ -3,7 +3,7 @@ import { edicionIncluyeGaleria, edicionIncluyePersonal } from "@registro/core";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { useEdicion } from "../state/EdicionContext.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
-import { bytesToObjectUrl } from "../utils/imageObjectUrl.js";
+import { leerMiniaturasEnParalelo } from "../utils/imageObjectUrl.js";
 
 // Mas de las que entran en una sola fila de 480px de ancho con miniaturas de
 // 84px (ver .workspace-home-collage, que no hace wrap): la fila sencillamente
@@ -49,14 +49,10 @@ export function WorkspaceHome({
         "SELECT miniatura_path FROM obra WHERE miniatura_path IS NOT NULL ORDER BY RANDOM() LIMIT ?",
         [CANTIDAD_MINIATURAS_HOME],
       );
-      const urls: string[] = [];
-      for (const row of rows) {
-        try {
-          urls.push(bytesToObjectUrl(await ctx.fs.readFile(row.miniatura_path)));
-        } catch {
-          // Miniatura referenciada en la base pero faltante en disco: se omite sin romper el resto.
-        }
-      }
+      const urls = await leerMiniaturasEnParalelo(
+        ctx.fs,
+        rows.map((row) => row.miniatura_path),
+      );
       if (cancelado) {
         for (const url of urls) URL.revokeObjectURL(url);
         return;

@@ -2,6 +2,7 @@ use std::fs;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 use serde::Serialize;
+use tauri::ipc::Response;
 use tauri::{AppHandle, Emitter};
 
 /// Lexically resolves ".."/"." segments without touching the filesystem, so a
@@ -51,10 +52,17 @@ pub fn fs_write_file(root: String, relative_path: String, data: Vec<u8>) -> Resu
     fs::write(path, data).map_err(|e| e.to_string())
 }
 
+/// Devuelve los bytes como respuesta IPC "cruda" (no como arreglo JSON de
+/// numeros): para una miniatura de unos cientos de KB, serializar cada byte
+/// como un numero en JSON es mucho mas lento (y mas notorio en una
+/// computadora con un procesador mas modesto) que mandar los bytes tal cual.
+/// El lado JS (TauriFileSystemAdapter.readFile) recibe esto como un
+/// ArrayBuffer en vez del arreglo de numeros de antes.
 #[tauri::command]
-pub fn fs_read_file(root: String, relative_path: String) -> Result<Vec<u8>, String> {
+pub fn fs_read_file(root: String, relative_path: String) -> Result<Response, String> {
     let path = resolve(&root, &relative_path)?;
-    fs::read(path).map_err(|e| e.to_string())
+    let bytes = fs::read(path).map_err(|e| e.to_string())?;
+    Ok(Response::new(bytes))
 }
 
 #[tauri::command]
@@ -209,6 +217,14 @@ pub fn fs_remove_workspace_root(path: String) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tauri::ipc::{InvokeResponseBody, IpcResponse};
+
+    fn read_file_bytes(root: String, relative_path: String) -> Vec<u8> {
+        match fs_read_file(root, relative_path).unwrap().body().unwrap() {
+            InvokeResponseBody::Raw(bytes) => bytes,
+            InvokeResponseBody::Json(_) => panic!("fs_read_file deberia devolver bytes crudos, no JSON"),
+        }
+    }
 
     fn temp_root(name: &str) -> PathBuf {
         let dir = std::env::temp_dir().join(format!("registro_fs_test_{name}"));
@@ -223,7 +239,7 @@ mod tests {
         let root_str = root.to_string_lossy().to_string();
 
         fs_write_file(root_str.clone(), "obras/1/original.jpg".into(), vec![1, 2, 3]).unwrap();
-        let bytes = fs_read_file(root_str.clone(), "obras/1/original.jpg".into()).unwrap();
+        let bytes = read_file_bytes(root_str.clone(), "obras/1/original.jpg".into());
 
         assert_eq!(bytes, vec![1, 2, 3]);
         assert!(fs_exists(root_str.clone(), "obras/1/original.jpg".into()).unwrap());
