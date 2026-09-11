@@ -7,6 +7,7 @@ import { HelpIcon } from "../components/HelpIcon.js";
 import { CampoFecha, BotonCalendario } from "../components/CampoFecha.js";
 import { focusNextOnEnter } from "../utils/focusNextOnEnter.js";
 import { LinkField } from "../components/LinkField.js";
+import { NotasLabel } from "../components/NotasLabel.js";
 import { Modal } from "../components/Modal.js";
 import { InformesModal } from "../components/InformesModal.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
@@ -420,17 +421,24 @@ export function PersonalProfileForm({ onExit }: { onExit: () => void }) {
       </label>
 
       <label>
-        {t("artistas.bio")}
+        <NotasLabel texto={bio} onChange={setBio}>
+          {t("artistas.bio")}
+        </NotasLabel>
         <textarea rows={4} value={bio} onChange={(e) => setBio(e.target.value)} />
       </label>
 
       <label>
-        {t("artistas.bioEnLabel")} <HelpIcon fieldKey="bio_en" />
+        <NotasLabel texto={bioEn} onChange={setBioEn}>
+          {t("artistas.bioEnLabel")}
+        </NotasLabel>{" "}
+        <HelpIcon fieldKey="bio_en" />
         <textarea rows={4} value={bioEn} onChange={(e) => setBioEn(e.target.value)} />
       </label>
 
       <label>
-        {t("artistas.notas")}
+        <NotasLabel texto={notas} onChange={setNotas}>
+          {t("artistas.notas")}
+        </NotasLabel>
         <textarea rows={3} value={notas} onChange={(e) => setNotas(e.target.value)} />
       </label>
 
