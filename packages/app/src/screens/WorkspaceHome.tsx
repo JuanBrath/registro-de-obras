@@ -124,7 +124,7 @@ export function WorkspaceHome({
       )}
 
       {miniaturas.length > 0 && (
-        <div className="workspace-home-collage">
+        <div className={`workspace-home-collage${indiceAutoAbierto !== null ? " collage-auto-activo" : ""}`}>
           {miniaturas.map((url, i) => (
             <div
               key={i}

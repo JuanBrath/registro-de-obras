@@ -72,7 +72,7 @@ export function WorkspacePicker() {
       {loading && <p>{t("workspacePicker.opening")}</p>}
       {error && <p className="error">{error}</p>}
       {miniaturas.length > 0 && (
-        <div className="workspace-picker-collage">
+        <div className={`workspace-picker-collage${indiceAutoAbierto !== null ? " collage-auto-activo" : ""}`}>
           {miniaturas.map((url, i) => (
             <div
               key={i}

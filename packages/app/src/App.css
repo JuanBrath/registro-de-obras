@@ -202,6 +202,28 @@ input[type="date"] {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
+/* Mientras una miniatura esta agrandada (con el cursor encima, o sola en
+   modo "dinamicas"), el resto baja el tono para no competir visualmente
+   con la que se esta mostrando. ".collage-auto-activo" lo marca el modo
+   dinamico por JS (ver useAutoHoverCollage); el caso del cursor no necesita
+   marca aparte porque ":hover" en el contenedor ya alcanza mientras el
+   mouse este arriba de CUALQUIER miniatura suya. La propia miniatura
+   agrandada se excluye devolviendole opacidad completa — con selectores
+   mas especificos que la regla de abajo (no solo despues en el archivo),
+   para que la excepcion gane pase lo que pase con el orden. */
+.workspace-picker-collage:hover .workspace-picker-collage-thumb,
+.workspace-home-collage:hover .workspace-picker-collage-thumb,
+.collage-auto-activo .workspace-picker-collage-thumb {
+  opacity: 0.4;
+  transition: opacity 0.2s ease-out;
+}
+
+.workspace-picker-collage:hover .workspace-picker-collage-thumb:hover,
+.workspace-home-collage:hover .workspace-picker-collage-thumb:hover,
+.collage-auto-activo .workspace-picker-collage-thumb.workspace-picker-collage-thumb-auto-abierta {
+  opacity: 1;
+}
+
 .obra-form {
   max-width: 640px;
   margin: 2rem auto;
