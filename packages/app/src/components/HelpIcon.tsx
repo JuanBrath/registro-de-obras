@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
+import { EVENTO_MODAL_ABIERTO } from "../utils/modalAbiertoEvent.js";
 
 // Mismos valores que .help-icon-tooltip/.help-icon-tooltip-wide en App.css
 // (ancho y separacion respecto del icono), para decidir si conviene abrir
@@ -26,11 +27,22 @@ export function HelpIcon({ fieldKey }: { fieldKey: string }) {
     function handleClickOutside(e: MouseEvent) {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) setOpen(false);
     }
+    // Si se abre un modal (por ejemplo "Ver completo" de Statement/Notas)
+    // mientras este cartel esta abierto, se cierra: su z-index es mas bajo
+    // que el del modal a proposito, asi que si sigue abierto queda
+    // escondido detras en vez de por encima. El "clic afuera" de arriba no
+    // alcanza a cubrir esto solo si lo que abrio el modal fue, por ejemplo,
+    // una activacion por teclado (sin clic de mouse de por medio).
+    function handleModalAbierto() {
+      setOpen(false);
+    }
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener(EVENTO_MODAL_ABIERTO, handleModalAbierto);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener(EVENTO_MODAL_ABIERTO, handleModalAbierto);
     };
   }, [open]);
 
@@ -65,12 +77,16 @@ export function HelpIcon({ fieldKey }: { fieldKey: string }) {
         className="help-icon"
         aria-label={t("helpIcon.ayuda")}
         onClick={(e) => {
-          // Sin esto, un click aca burbujea hasta el <label> que envuelve
-          // este icono (por ejemplo, junto a la miniatura de la obra) y el
-          // navegador lo reenvia al control asociado del label — como este
-          // <span> no es un elemento "labelable" nativo, no cuenta como
-          // ese control y termina activando otro (el boton de ver la
-          // imagen completa) ademas de abrir este tooltip.
+          // Sin el preventDefault, el navegador reenvia igual este click al
+          // control "labelable" del <label> que envuelve este icono (el
+          // primero que encuentre — por ejemplo el boton de "Ver completo"
+          // de Statement/Notas, o el de ver la imagen completa), ademas de
+          // abrir este tooltip: como este <span> no es el "labelable"
+          // propio del label, el navegador igual lo activa. stopPropagation
+          // por si solo NO alcanza para evitar eso (el reenvio del label no
+          // es un listener de bubbling que se pueda frenar asi), hace falta
+          // preventDefault.
+          e.preventDefault();
           e.stopPropagation();
           toggleOpen();
         }}
