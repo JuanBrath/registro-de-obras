@@ -13,9 +13,6 @@
     "sql:allow-execute",
     "opener:default",
     "opener:allow-reveal-item-in-dir",
-    {
-      "identifier": "opener:allow-open-path",
-      "allow": [{ "path": "$HOME/**" }]
-    }
+    "opener:allow-open-path"
   ]
 }
