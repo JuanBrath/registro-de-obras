@@ -1077,13 +1077,6 @@ input[type="date"] {
   gap: 1.5rem;
 }
 
-/* El boton de estrella para filtrar por marcadas (ver
-   MarcadasFilterButton.tsx), cuando esta presente, queda pegado al borde
-   derecho de este renglon de filtros en vez de seguir el flujo normal. */
-.galeria-filtros-selects .marcadas-filter-button-wrapper {
-  margin-left: auto;
-}
-
 .galeria-filtro-artista {
   display: flex;
   flex-direction: column;
