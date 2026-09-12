@@ -584,8 +584,9 @@ export const es = {
   "obrasList.agregarEtiqueta": "Agregar etiqueta…",
   "obrasList.sinResultados": "No se encontraron obras con esos filtros.",
   "obrasList.ordenarPorLabel": "Ordenar por",
-  "obrasList.ordenarPorTitulo": "Nombre",
+  "obrasList.ordenarPorTitulo": "Título",
   "obrasList.ordenarPorCodigoInventario": "Número de inventario",
+  "obrasList.ordenarPorFechaCaptura": "Fecha de captura",
   "obrasList.tamanoMiniaturasLabel": "Tamaño de las miniaturas",
   "obrasList.skuPrefix": "SKU:",
 

@@ -586,8 +586,9 @@ export const en: Record<keyof typeof es, string> = {
   "obrasList.agregarEtiqueta": "Add tag…",
   "obrasList.sinResultados": "No artworks matched those filters.",
   "obrasList.ordenarPorLabel": "Sort by",
-  "obrasList.ordenarPorTitulo": "Name",
+  "obrasList.ordenarPorTitulo": "Title",
   "obrasList.ordenarPorCodigoInventario": "Inventory number",
+  "obrasList.ordenarPorFechaCaptura": "Capture date",
   "obrasList.tamanoMiniaturasLabel": "Thumbnail size",
   "obrasList.skuPrefix": "SKU:",
 

@@ -43,6 +43,7 @@ interface ObraRow {
   nombre_completo: string;
   subtipo_fotografia: string | null;
   subtipo: string | null;
+  fecha_captura: string | null;
   total_ejemplares: number;
   ejemplares_disponible: number;
   ejemplares_en_stock: number;
@@ -97,7 +98,7 @@ export function ObrasList({
   const [selectedSubtipo, setSelectedSubtipo] = useState<string | null>(null);
   const [busqueda, setBusqueda] = useState("");
   const [soloMarcadas, setSoloMarcadas] = useState(false);
-  const [ordenPor, setOrdenPor] = useState<"titulo" | "codigo_inventario">("codigo_inventario");
+  const [ordenPor, setOrdenPor] = useState<"titulo" | "codigo_inventario" | "fecha_captura">("codigo_inventario");
   const [columnasGrid, setColumnasGrid] = useState<number>(() =>
     cargarColumnasGridInicial(COLUMNAS_OBRAS_STORAGE_KEY, COLUMNAS_OBRAS_POR_DEFECTO),
   );
@@ -128,6 +129,7 @@ export function ObrasList({
                   obra.codigo_inventario, obra.tags,
                   obra.marcada, obra.artista_id, artista.nombre_completo,
                   obra_fotografia.subtipo_fotografia, obra_detalle.subtipo,
+                  obra_fotografia.fecha_captura,
                   COUNT(CASE WHEN ejemplar.tipo = 'edicion' THEN ejemplar.id END) as total_ejemplares,
                   SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'disponible' THEN 1 ELSE 0 END) as ejemplares_disponible,
                   SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'en_stock' THEN 1 ELSE 0 END) as ejemplares_en_stock,
@@ -241,6 +243,16 @@ export function ObrasList({
         if (!a.codigo_inventario) return 1;
         if (!b.codigo_inventario) return -1;
         return a.codigo_inventario.localeCompare(b.codigo_inventario, undefined, { sensitivity: "base", numeric: true });
+      });
+    }
+    if (ordenPor === "fecha_captura") {
+      // Solo Fotografia tiene fecha de captura; el resto de las categorias
+      // (sin ese dato) va al final, igual que sin codigo de inventario.
+      return [...filtradas].sort((a, b) => {
+        if (!a.fecha_captura && !b.fecha_captura) return 0;
+        if (!a.fecha_captura) return 1;
+        if (!b.fecha_captura) return -1;
+        return a.fecha_captura.localeCompare(b.fecha_captura);
       });
     }
     return [...filtradas].sort((a, b) => a.titulo.localeCompare(b.titulo, undefined, { sensitivity: "base" }));
@@ -448,9 +460,10 @@ export function ObrasList({
         <div className="galeria-filtros-selects">
           <label className="galeria-filtro-artista">
             {t("obrasList.ordenarPorLabel")}
-            <select value={ordenPor} onChange={(e) => setOrdenPor(e.target.value as "titulo" | "codigo_inventario")}>
+            <select value={ordenPor} onChange={(e) => setOrdenPor(e.target.value as "titulo" | "codigo_inventario" | "fecha_captura")}>
               <option value="codigo_inventario">{t("obrasList.ordenarPorCodigoInventario")}</option>
               <option value="titulo">{t("obrasList.ordenarPorTitulo")}</option>
+              <option value="fecha_captura">{t("obrasList.ordenarPorFechaCaptura")}</option>
             </select>
           </label>
 
