@@ -189,9 +189,9 @@ export function GaleriaFotos({
   }, [context]);
 
   const allTags = useMemo(() => {
-    const set = new Set<string>();
-    for (const foto of fotos) for (const tag of parseTags(foto.tags)) set.add(tag);
-    return Array.from(set).sort((a, b) => a.localeCompare(b));
+    const counts = new Map<string, number>();
+    for (const foto of fotos) for (const tag of parseTags(foto.tags)) counts.set(tag, (counts.get(tag) ?? 0) + 1);
+    return Array.from(counts, ([tag, count]) => ({ tag, count })).sort((a, b) => a.tag.localeCompare(b.tag));
   }, [fotos]);
 
   const allArtistas = useMemo(() => {
