@@ -16,6 +16,7 @@ import { StarRating } from "../components/StarRating.js";
 import { HelpIcon } from "../components/HelpIcon.js";
 import { cargarColumnasGridInicial, guardarColumnasGrid } from "../utils/columnasGrid.js";
 import { marcarSiMiniaturaMuyVertical } from "../utils/miniaturaVertical.js";
+import { escribirCalificacionEnSidecar } from "../utils/xmpSidecar.js";
 
 const COLUMNAS_GALERIA_POR_DEFECTO = 4;
 const COLUMNAS_GALERIA_STORAGE_KEY = "galeriaFotosColumnasGrid";
@@ -48,6 +49,7 @@ interface FotoRow {
   dimensiones: string | null;
   escala_por_tamanos: string | null;
   calificacion: number;
+  ubicacion_fisica_actual: string | null;
   estado: string;
   es_seriada: number;
   total_ejemplares: number;
@@ -68,7 +70,7 @@ interface FotoRow {
 // de informacion, para no duplicar esta consulta larga en dos lugares.
 const FOTOS_QUERY_SELECT = `
   SELECT obra.id, obra.titulo, obra.codigo_inventario, obra.miniatura_path, obra.imagen_alta_resolucion_path, obra.tags, obra.artista_id,
-         obra.categoria_obra, obra.calificacion, obra.estado, obra.es_seriada, artista.nombre_completo,
+         obra.categoria_obra, obra.calificacion, obra.ubicacion_fisica_actual, obra.estado, obra.es_seriada, artista.nombre_completo,
          obra_fotografia.subtipo_fotografia, obra_detalle.subtipo,
          obra_fotografia.fecha_captura,
          obra_fotografia.dimensiones, obra_fotografia.escala_por_tamanos,
@@ -277,13 +279,25 @@ export function GaleriaFotos({
   ]);
 
   async function handleSetCalificacion(fotoId: number, nuevaCalificacion: number) {
-    const anterior = fotos.find((f) => f.id === fotoId)?.calificacion ?? 0;
+    const fotoActual = fotos.find((f) => f.id === fotoId);
+    const anterior = fotoActual?.calificacion ?? 0;
     setFotos((prev) => prev.map((f) => (f.id === fotoId ? { ...f, calificacion: nuevaCalificacion } : f)));
     try {
       await context!.db.execute("UPDATE obra SET calificacion = ? WHERE id = ?", [nuevaCalificacion, fotoId]);
     } catch (err) {
       setFotos((prev) => prev.map((f) => (f.id === fotoId ? { ...f, calificacion: anterior } : f)));
       setError(err instanceof Error ? err.message : String(err));
+      return;
+    }
+    // La calificacion en Galeris ya quedo guardada (arriba); esto es aparte,
+    // una sincronizacion "mejor esfuerzo" hacia el sidecar XMP del archivo
+    // original, que si falla no debe deshacer lo que ya se guardo en Galeris.
+    if (fotoActual?.ubicacion_fisica_actual) {
+      try {
+        await escribirCalificacionEnSidecar(fotoActual.ubicacion_fisica_actual, nuevaCalificacion);
+      } catch (err) {
+        setError(t("galeria.errorGuardarCalificacionArchivo", { mensaje: err instanceof Error ? err.message : String(err) }));
+      }
     }
   }
 
@@ -296,6 +310,15 @@ export function GaleriaFotos({
     } catch (err) {
       setFotos(previo);
       setError(err instanceof Error ? err.message : String(err));
+      return;
+    }
+    const conArchivo = previo.filter((f) => f.calificacion !== 0 && f.ubicacion_fisica_actual);
+    const resultados = await Promise.allSettled(
+      conArchivo.map((f) => escribirCalificacionEnSidecar(f.ubicacion_fisica_actual!, 0)),
+    );
+    const fallidos = resultados.filter((r) => r.status === "rejected").length;
+    if (fallidos > 0) {
+      setError(t("galeria.errorGuardarCalificacionArchivoVarias", { n: fallidos }));
     }
   }
 

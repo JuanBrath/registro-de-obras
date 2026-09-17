@@ -19,6 +19,7 @@ import { CalificacionFilterButton } from "../components/CalificacionFilterButton
 import { StarRating } from "../components/StarRating.js";
 import { cargarColumnasGridInicial, guardarColumnasGrid } from "../utils/columnasGrid.js";
 import { marcarSiMiniaturaMuyVertical } from "../utils/miniaturaVertical.js";
+import { escribirCalificacionEnSidecar } from "../utils/xmpSidecar.js";
 
 const COLUMNAS_OBRAS_POR_DEFECTO = 4;
 const COLUMNAS_OBRAS_STORAGE_KEY = "obrasListColumnasGrid";
@@ -58,6 +59,7 @@ interface ObraRow {
   ejemplares_destruida: number;
   tiene_prueba_artista: number;
   calificacion: number;
+  ubicacion_fisica_actual: string | null;
 }
 
 // Los fragmentos que se muestran junto a la fraccion "X/Y disponibles" —
@@ -128,7 +130,7 @@ export function ObrasList({
         const rows = await context!.db.query<ObraRow>(
           `SELECT obra.id, obra.titulo, obra.categoria_obra, obra.estado, obra.es_seriada, obra.miniatura_path,
                   obra.codigo_inventario, obra.tags,
-                  obra.calificacion, obra.artista_id, artista.nombre_completo,
+                  obra.calificacion, obra.ubicacion_fisica_actual, obra.artista_id, artista.nombre_completo,
                   obra_fotografia.subtipo_fotografia, obra_detalle.subtipo,
                   obra_fotografia.fecha_captura,
                   COUNT(CASE WHEN ejemplar.tipo = 'edicion' THEN ejemplar.id END) as total_ejemplares,
@@ -271,13 +273,25 @@ export function ObrasList({
   ]);
 
   async function handleSetCalificacion(obraId: number, nuevaCalificacion: number) {
-    const anterior = obras.find((o) => o.id === obraId)?.calificacion ?? 0;
+    const obraActual = obras.find((o) => o.id === obraId);
+    const anterior = obraActual?.calificacion ?? 0;
     setObras((prev) => prev.map((o) => (o.id === obraId ? { ...o, calificacion: nuevaCalificacion } : o)));
     try {
       await context!.db.execute("UPDATE obra SET calificacion = ? WHERE id = ?", [nuevaCalificacion, obraId]);
     } catch (err) {
       setObras((prev) => prev.map((o) => (o.id === obraId ? { ...o, calificacion: anterior } : o)));
       setError(err instanceof Error ? err.message : String(err));
+      return;
+    }
+    // La calificacion en Galeris ya quedo guardada (arriba); esto es aparte,
+    // una sincronizacion "mejor esfuerzo" hacia el sidecar XMP del archivo
+    // original, que si falla no debe deshacer lo que ya se guardo en Galeris.
+    if (obraActual?.ubicacion_fisica_actual) {
+      try {
+        await escribirCalificacionEnSidecar(obraActual.ubicacion_fisica_actual, nuevaCalificacion);
+      } catch (err) {
+        setError(t("galeria.errorGuardarCalificacionArchivo", { mensaje: err instanceof Error ? err.message : String(err) }));
+      }
     }
   }
 
@@ -290,6 +304,15 @@ export function ObrasList({
     } catch (err) {
       setObras(previo);
       setError(err instanceof Error ? err.message : String(err));
+      return;
+    }
+    const conArchivo = previo.filter((o) => o.calificacion !== 0 && o.ubicacion_fisica_actual);
+    const resultados = await Promise.allSettled(
+      conArchivo.map((o) => escribirCalificacionEnSidecar(o.ubicacion_fisica_actual!, 0)),
+    );
+    const fallidos = resultados.filter((r) => r.status === "rejected").length;
+    if (fallidos > 0) {
+      setError(t("galeria.errorGuardarCalificacionArchivoVarias", { n: fallidos }));
     }
   }
 

@@ -634,6 +634,8 @@ export const en: Record<keyof typeof es, string> = {
   "galeria.filtrarPorEstrellas": "Show only artworks with {{n}} star(s)",
   "galeria.quitarCalificacionATodas": "Clear rating from all",
   "galeria.quitarCalificacionATodasConfirm": "Clear the rating from every artwork?",
+  "galeria.errorGuardarCalificacionArchivo": "The rating was saved in Galeris, but couldn't be saved to the original file: {{mensaje}}",
+  "galeria.errorGuardarCalificacionArchivoVarias": "Ratings were cleared in Galeris, but the original file couldn't be updated for {{n}} artwork(s).",
 
   // TagPicker
   "tagPicker.placeholder": "Choose or type a tag…",

@@ -632,6 +632,8 @@ export const es = {
   "galeria.filtrarPorEstrellas": "Mostrar solo las obras con {{n}} estrella(s)",
   "galeria.quitarCalificacionATodas": "Quitar la calificación a todas",
   "galeria.quitarCalificacionATodasConfirm": "¿Quitar la calificación a todas las obras?",
+  "galeria.errorGuardarCalificacionArchivo": "La calificación se guardó en Galeris, pero no se pudo guardar en el archivo original: {{mensaje}}",
+  "galeria.errorGuardarCalificacionArchivoVarias": "Las calificaciones se quitaron en Galeris, pero no se pudieron actualizar en el archivo original de {{n}} obra(s).",
 
   // TagPicker
   "tagPicker.placeholder": "Elegir o escribir una etiqueta…",
