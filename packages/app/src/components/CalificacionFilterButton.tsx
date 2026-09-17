@@ -6,17 +6,18 @@ const DURACION_PULSACION_LARGA_MS = 700;
 const ESTRELLAS = [1, 2, 3, 4, 5] as const;
 
 /**
- * Filtro por calificacion: un clic en una estrella muestra las obras con esa
- * cantidad de estrellas o mas (volver a hacer clic en la misma la quita).
- * Mantener presionado el boton ofrece quitarle la calificacion a todas las
- * obras de una vez (con confirmacion), igual que antes con "desmarcar todas".
+ * Filtro por calificacion: un clic en una estrella muestra solo las obras
+ * con exactamente esa cantidad de estrellas (volver a hacer clic en la
+ * misma la quita). Mantener presionado el boton ofrece quitarle la
+ * calificacion a todas las obras de una vez (con confirmacion), igual que
+ * antes con "desmarcar todas".
  */
 export function CalificacionFilterButton({
-  calificacionMinima,
+  calificacionFiltro,
   onChange,
   onQuitarATodas,
 }: {
-  calificacionMinima: number;
+  calificacionFiltro: number;
   onChange: (nueva: number) => void;
   onQuitarATodas: () => void;
 }) {
@@ -48,7 +49,7 @@ export function CalificacionFilterButton({
       pulsacionLargaRef.current = false;
       return;
     }
-    onChange(n === calificacionMinima ? 0 : n);
+    onChange(n === calificacionFiltro ? 0 : n);
   }
 
   return (
@@ -58,16 +59,16 @@ export function CalificacionFilterButton({
           <button
             key={n}
             type="button"
-            className={`star-rating-star${n <= calificacionMinima ? " star-rating-star-activa" : ""}`}
+            className={`star-rating-star${n === calificacionFiltro ? " star-rating-star-activa" : ""}`}
             onPointerDown={handlePointerDown}
             onPointerUp={cancelarTimer}
             onPointerLeave={cancelarTimer}
             onClick={() => handleClick(n)}
-            aria-pressed={n <= calificacionMinima}
+            aria-pressed={n === calificacionFiltro}
             aria-label={t("galeria.filtrarPorEstrellas", { n })}
             title={t("galeria.filtrarPorEstrellas", { n })}
           >
-            {n <= calificacionMinima ? "★" : "☆"}
+            {n === calificacionFiltro ? "★" : "☆"}
           </button>
         ))}
       </span>

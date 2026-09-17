@@ -629,7 +629,7 @@ export const es = {
   "galeria.todasCategorias": "Todas las categorías",
   "galeria.todosSubtipos": "Todos",
   "galeria.calificarConEstrellas": "Calificar con {{n}} estrella(s)",
-  "galeria.filtrarPorEstrellas": "Mostrar obras con {{n}} estrella(s) o más",
+  "galeria.filtrarPorEstrellas": "Mostrar solo las obras con {{n}} estrella(s)",
   "galeria.quitarCalificacionATodas": "Quitar la calificación a todas",
   "galeria.quitarCalificacionATodasConfirm": "¿Quitar la calificación a todas las obras?",
 

@@ -200,6 +200,8 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
       "0075_ayuda_filtro_solo_marcadas",
       "0076_obra_calificacion",
       "0077_ayuda_filtro_calificacion",
+      "0078_ayuda_filtro_calificacion_exacta",
+      "0079_ayuda_ubicacion_archivo_calificacion",
     ]);
   });
 

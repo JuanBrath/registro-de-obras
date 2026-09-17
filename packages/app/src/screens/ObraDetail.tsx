@@ -82,6 +82,7 @@ interface ObraRow {
   historial_procedencia_exhibiciones: string | null;
   notas: string | null;
   statement: string | null;
+  calificacion: number;
 }
 
 interface ObraExtRow {
@@ -811,7 +812,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
                 obra.ubicacion_fisica_actual, obra.miniatura_path, obra.imagen_alta_resolucion_path, obra.tags,
                 obra.artista_id, artista.nombre_completo, obra.subtitulo, obra.codigo_inventario,
                 obra.anio_periodo, obra.regimen_ingreso, obra.historial_procedencia_exhibiciones, obra.notas,
-                obra.statement
+                obra.statement, obra.calificacion
          FROM obra JOIN artista ON artista.id = obra.artista_id
          WHERE obra.id = ?`,
         [obraId],
@@ -1489,6 +1490,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
     imageFile: File | null;
     removeImage: boolean;
     artistaId: number;
+    calificacion: number;
   }) {
     if (!context || !obra) return;
     const eraSeriada = Number(obra.es_seriada) === 1;
@@ -1557,7 +1559,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
         `UPDATE obra SET
            titulo = ?, categoria_obra = ?, ubicacion_fisica_actual = ?, tags = ?, es_seriada = ?, artista_id = ?,
            subtitulo = ?, codigo_inventario = ?, anio_periodo = ?, regimen_ingreso = ?,
-           historial_procedencia_exhibiciones = ?, notas = ?, statement = ?
+           historial_procedencia_exhibiciones = ?, notas = ?, statement = ?, calificacion = ?
          WHERE id = ?`,
         [
           fields.titulo,
@@ -1573,6 +1575,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
           fields.historialProcedenciaExhibiciones || null,
           fields.notas || null,
           fields.statement || null,
+          fields.calificacion,
           obraId,
         ],
       );
@@ -2531,6 +2534,7 @@ function ObraEditForm({
     imageFile: File | null;
     removeImage: boolean;
     artistaId: number;
+    calificacion: number;
   }) => Promise<void>;
   onCancel: () => void;
 }) {
@@ -2551,6 +2555,11 @@ function ObraEditForm({
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const imagePreviewUrlRef = useRef<string | null>(null);
   const [removerImagen, setRemoverImagen] = useState(false);
+  // Calificacion en estrellas leida de un archivo re-elegido en "Ubicacion
+  // del archivo" (ver aplicarMetadataFotografia): null significa que no se
+  // re-eligio ningun archivo con calificacion en esta edicion, asi que se
+  // guarda la que la obra ya tenia (obra.calificacion) sin tocarla.
+  const [calificacionDesdeArchivo, setCalificacionDesdeArchivo] = useState<number | null>(null);
   const [ubicacion, setUbicacion] = useState(obra.ubicacion_fisica_actual ?? "");
   const [tags, setTags] = useState<string[]>(parseTags(obra.tags));
   const [categoriaObra, setCategoriaObra] = useState<CategoriaObra>(obra.categoria_obra);
@@ -2845,6 +2854,9 @@ function ObraEditForm({
     if (metadata.palabrasClave.length > 0) {
       setTags((prev) => [...prev, ...metadata.palabrasClave.filter((p) => !prev.includes(p))]);
     }
+    if (metadata.calificacion !== null) {
+      setCalificacionDesdeArchivo(metadata.calificacion);
+    }
   }
 
   function handleImageChange(file: File | null) {
@@ -2990,6 +3002,7 @@ function ObraEditForm({
         imageFile,
         removeImage: removerImagen,
         artistaId: artistaId ?? obra.artista_id,
+        calificacion: calificacionDesdeArchivo ?? obra.calificacion,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));

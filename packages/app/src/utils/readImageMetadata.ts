@@ -7,6 +7,8 @@ export interface ArchivoMetadata {
   diafragma: string | null;
   distanciaFocal: string | null;
   palabrasClave: string[];
+  /** Calificacion en estrellas (1 a 5) leida del XMP (xmp:Rating), si tiene una valida. */
+  calificacion: number | null;
 }
 
 const VACIO: ArchivoMetadata = {
@@ -18,6 +20,7 @@ const VACIO: ArchivoMetadata = {
   diafragma: null,
   distanciaFocal: null,
   palabrasClave: [],
+  calificacion: null,
 };
 
 // Tipos de campo TIFF y su tamano en bytes por elemento (spec EXIF/TIFF 6.0).
@@ -139,7 +142,7 @@ function extraerDeTiff(view: DataView, tiffStart: number): ArchivoMetadata {
     }
   }
 
-  return { fechaCaptura, software, camara, iso, velocidadObturador, diafragma, distanciaFocal, palabrasClave: [] };
+  return { fechaCaptura, software, camara, iso, velocidadObturador, diafragma, distanciaFocal, palabrasClave: [], calificacion: null };
 }
 
 /** JPEG: recorre los marcadores buscando el segmento APP1 con cabecera "Exif\0\0". */
@@ -214,11 +217,28 @@ function extraerPalabrasClaveDeXmp(xml: string): string[] {
   return [...bloque[1].matchAll(/<rdf:li[^>]*>([\s\S]*?)<\/rdf:li>/g)].map((m) => m[1].trim()).filter(Boolean);
 }
 
+/**
+ * xmp:Rating dentro de un paquete XMP (texto XML plano): programas como
+ * Lightroom o Bridge lo escriben como atributo de rdf:Description
+ * (xmp:Rating="3"), y algunos como elemento propio (<xmp:Rating>3</xmp:Rating>).
+ * Cualquier valor fuera de 1 a 5 (0 = sin calificar, -1 = "rechazada" en
+ * Lightroom) se descarta, ya que esta app solo distingue esas 5 estrellas.
+ */
+export function extraerCalificacionDeXmp(xml: string): number | null {
+  const atributo = xml.match(/\bxmp:Rating\s*=\s*"(-?\d+)"/);
+  const elemento = xml.match(/<xmp:Rating>\s*(-?\d+)\s*<\/xmp:Rating>/);
+  const texto = atributo?.[1] ?? elemento?.[1];
+  if (texto === undefined) return null;
+  const n = Number(texto);
+  return n >= 1 && n <= 5 ? n : null;
+}
+
 const FIRMA_PHOTOSHOP = "Photoshop 3.0";
 
 interface RecursosPhotoshop {
   exif: ArchivoMetadata | null;
   palabrasClave: string[];
+  calificacion: number | null;
   /** Miniatura JPEG embebida (recurso "Thumbnail"), ya lista para usar. */
   miniaturaJpeg: Uint8Array | null;
 }
@@ -243,6 +263,7 @@ const RECURSO_THUMBNAIL = 0x040c; // 1036, "Thumbnail Resource" (formato kJpegRG
 function leerRecursosPhotoshop(bytes: Uint8Array, view: DataView, inicio: number, fin: number): RecursosPhotoshop {
   let exif: ArchivoMetadata | null = null;
   let miniaturaJpeg: Uint8Array | null = null;
+  let calificacion: number | null = null;
   const palabrasClave: string[] = [];
   let pos = inicio;
   while (pos + 8 <= fin) {
@@ -260,6 +281,7 @@ function leerRecursosPhotoshop(bytes: Uint8Array, view: DataView, inicio: number
     } else if (resourceId === RECURSO_XMP) {
       const texto = new TextDecoder("utf-8").decode(bytes.subarray(p, p + tamano));
       palabrasClave.push(...extraerPalabrasClaveDeXmp(texto));
+      calificacion = extraerCalificacionDeXmp(texto);
     } else if (resourceId === RECURSO_EXIF_1 && tamano >= 8) {
       try {
         exif = extraerDeTiff(view, p);
@@ -281,19 +303,25 @@ function leerRecursosPhotoshop(bytes: Uint8Array, view: DataView, inicio: number
     }
     pos = p + tamano + (tamano % 2);
   }
-  return { exif, palabrasClave, miniaturaJpeg };
+  return { exif, palabrasClave, calificacion, miniaturaJpeg };
 }
 
 const FIRMA_XMP = "http://ns.adobe.com/xap/1.0/";
+
+interface MetadataAdicional {
+  palabrasClave: string[];
+  calificacion: number | null;
+}
 
 /**
  * JPEG: a diferencia del EXIF (que se queda con el primer APP1 y corta), acá
  * hay que recorrer TODOS los segmentos, porque IPTC vive en un APP13 y XMP en
  * un APP1 aparte del de Exif (puede haber mas de un APP1 en el mismo archivo).
  */
-function leerPalabrasClaveDeJpeg(bytes: Uint8Array, view: DataView): string[] {
-  if (bytes.length < 4 || bytes[0] !== 0xff || bytes[1] !== 0xd8) return [];
+function leerMetadataAdicionalDeJpeg(bytes: Uint8Array, view: DataView): MetadataAdicional {
+  if (bytes.length < 4 || bytes[0] !== 0xff || bytes[1] !== 0xd8) return { palabrasClave: [], calificacion: null };
   const palabras: string[] = [];
+  let calificacion: number | null = null;
   let pos = 2;
   while (pos + 4 <= bytes.length) {
     if (bytes[pos] !== 0xff) break;
@@ -308,21 +336,22 @@ function leerPalabrasClaveDeJpeg(bytes: Uint8Array, view: DataView): string[] {
     if (marker === 0xed && inicioPayload + FIRMA_PHOTOSHOP.length <= bytes.length) {
       const firma = new TextDecoder("ascii").decode(bytes.subarray(inicioPayload, inicioPayload + FIRMA_PHOTOSHOP.length));
       if (firma === FIRMA_PHOTOSHOP) {
-        palabras.push(
-          ...leerRecursosPhotoshop(bytes, view, inicioPayload + FIRMA_PHOTOSHOP.length + 1, finPayload).palabrasClave,
-        );
+        const recursos = leerRecursosPhotoshop(bytes, view, inicioPayload + FIRMA_PHOTOSHOP.length + 1, finPayload);
+        palabras.push(...recursos.palabrasClave);
+        calificacion = calificacion ?? recursos.calificacion;
       }
     } else if (marker === 0xe1 && inicioPayload + FIRMA_XMP.length <= bytes.length) {
       const firma = new TextDecoder("ascii").decode(bytes.subarray(inicioPayload, inicioPayload + FIRMA_XMP.length));
       if (firma === FIRMA_XMP) {
         const texto = new TextDecoder("utf-8").decode(bytes.subarray(inicioPayload + FIRMA_XMP.length + 1, finPayload));
         palabras.push(...extraerPalabrasClaveDeXmp(texto));
+        calificacion = calificacion ?? extraerCalificacionDeXmp(texto);
       }
     }
     if (marker === 0xda) break; // Start of Scan: ya no hay mas segmentos de metadata.
     pos = finPayload;
   }
-  return [...new Set(palabras)];
+  return { palabrasClave: [...new Set(palabras)], calificacion };
 }
 
 /**
@@ -332,10 +361,11 @@ function leerPalabrasClaveDeJpeg(bytes: Uint8Array, view: DataView): string[] {
  * TIFF esta embebida dentro de otro contenedor (por ejemplo, el item "Exif"
  * de un HEIC), igual que ya hace `extraerDeTiff` con el resto de los tags.
  */
-function leerPalabrasClaveDeTiffEmbebido(bytes: Uint8Array, view: DataView, tiffStart: number): string[] {
+function leerMetadataAdicionalDeTiffEmbebido(bytes: Uint8Array, view: DataView, tiffStart: number): MetadataAdicional {
   const littleEndian = view.getUint16(tiffStart, false) === 0x4949;
   const ifd0 = leerIfd(view, tiffStart + view.getUint32(tiffStart + 4, littleEndian), littleEndian);
   const palabras: string[] = [];
+  let calificacion: number | null = null;
 
   const iptcEntry = ifd0.get(33723);
   if (iptcEntry) {
@@ -349,12 +379,13 @@ function leerPalabrasClaveDeTiffEmbebido(bytes: Uint8Array, view: DataView, tiff
     const offset = tamano <= 4 ? xmpEntry.valorOffset : tiffStart + view.getUint32(xmpEntry.valorOffset, littleEndian);
     const texto = new TextDecoder("utf-8").decode(bytes.subarray(offset, offset + tamano));
     palabras.push(...extraerPalabrasClaveDeXmp(texto));
+    calificacion = extraerCalificacionDeXmp(texto);
   }
-  return [...new Set(palabras)];
+  return { palabrasClave: [...new Set(palabras)], calificacion };
 }
 
-function leerPalabrasClaveDeTiff(bytes: Uint8Array, view: DataView): string[] {
-  return leerPalabrasClaveDeTiffEmbebido(bytes, view, 0);
+function leerMetadataAdicionalDeTiff(bytes: Uint8Array, view: DataView): MetadataAdicional {
+  return leerMetadataAdicionalDeTiffEmbebido(bytes, view, 0);
 }
 
 interface CajaIso {
@@ -517,22 +548,26 @@ function leerExifDeHeic(bytes: Uint8Array, view: DataView): ArchivoMetadata | nu
 
   let exif: ArchivoMetadata | null = null;
   const palabrasClave: string[] = [];
+  let calificacion: number | null = null;
 
   if (exifExtent && exifExtent.length >= 8) {
     const offsetInterno = view.getUint32(exifExtent.offset, false);
     const tiffStart = exifExtent.offset + 4 + offsetInterno;
     if (tiffStart + 8 <= bytes.length) {
       exif = extraerDeTiff(view, tiffStart);
-      palabrasClave.push(...leerPalabrasClaveDeTiffEmbebido(bytes, view, tiffStart));
+      const metadataAdicional = leerMetadataAdicionalDeTiffEmbebido(bytes, view, tiffStart);
+      palabrasClave.push(...metadataAdicional.palabrasClave);
+      calificacion = metadataAdicional.calificacion;
     }
   }
   if (xmpExtent && xmpExtent.length > 0 && xmpExtent.offset + xmpExtent.length <= bytes.length) {
     const texto = new TextDecoder("utf-8").decode(bytes.subarray(xmpExtent.offset, xmpExtent.offset + xmpExtent.length));
     palabrasClave.push(...extraerPalabrasClaveDeXmp(texto));
+    calificacion = calificacion ?? extraerCalificacionDeXmp(texto);
   }
 
   if (!exif && palabrasClave.length === 0) return null;
-  return { ...(exif ?? VACIO), palabrasClave: [...new Set(palabrasClave)] };
+  return { ...(exif ?? VACIO), palabrasClave: [...new Set(palabrasClave)], calificacion };
 }
 
 const FIRMA_PSD = [0x38, 0x42, 0x50, 0x53]; // "8BPS"
@@ -572,9 +607,9 @@ function leerExifDePsd(bytes: Uint8Array, view: DataView): ArchivoMetadata | nul
   const seccion = ubicarSeccionRecursosPsd(bytes, view);
   if (!seccion) return null;
 
-  const { exif, palabrasClave } = leerRecursosPhotoshop(bytes, view, seccion.inicio, seccion.fin);
+  const { exif, palabrasClave, calificacion } = leerRecursosPhotoshop(bytes, view, seccion.inicio, seccion.fin);
   if (!exif && palabrasClave.length === 0) return null;
-  return { ...(exif ?? VACIO), palabrasClave: [...new Set(palabrasClave)] };
+  return { ...(exif ?? VACIO), palabrasClave: [...new Set(palabrasClave)], calificacion };
 }
 
 /**
@@ -799,13 +834,14 @@ export function readImageMetadata(bytes: Uint8Array): ArchivoMetadata {
     const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
     if (bytes.length >= 2 && bytes[0] === 0xff && bytes[1] === 0xd8) {
       const exif = leerExifDeJpeg(bytes, view);
-      return { ...(exif ?? VACIO), palabrasClave: leerPalabrasClaveDeJpeg(bytes, view) };
+      const adicional = leerMetadataAdicionalDeJpeg(bytes, view);
+      return { ...(exif ?? VACIO), ...adicional };
     }
     if (esPsdOPsb(bytes)) {
       return leerExifDePsd(bytes, view) ?? VACIO;
     }
     const tiff = leerExifDeTiff(bytes, view);
-    if (tiff) return { ...tiff, palabrasClave: leerPalabrasClaveDeTiff(bytes, view) };
+    if (tiff) return { ...tiff, ...leerMetadataAdicionalDeTiff(bytes, view) };
     return leerExifDeHeic(bytes, view) ?? VACIO;
   } catch {
     return VACIO;

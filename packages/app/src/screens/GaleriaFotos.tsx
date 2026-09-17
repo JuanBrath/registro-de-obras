@@ -126,7 +126,7 @@ export function GaleriaFotos({
     filtrosIniciales?.selectedCategoria ?? null,
   );
   const [selectedSubtipo, setSelectedSubtipo] = useState<string | null>(filtrosIniciales?.selectedSubtipo ?? null);
-  const [calificacionMinima, setCalificacionMinima] = useState(filtrosIniciales?.calificacionMinima ?? 0);
+  const [calificacionFiltro, setCalificacionFiltro] = useState(filtrosIniciales?.calificacionFiltro ?? 0);
   const [ordenPor, setOrdenPor] = useState<"titulo" | "codigo_inventario" | "fecha_captura">("codigo_inventario");
   const [columnasGrid, setColumnasGrid] = useState<number>(() =>
     cargarColumnasGridInicial(COLUMNAS_GALERIA_STORAGE_KEY, COLUMNAS_GALERIA_POR_DEFECTO),
@@ -231,7 +231,7 @@ export function GaleriaFotos({
       const categoriaMatch = selectedCategoria === null || f.categoria_obra === selectedCategoria;
       const subtipoValor = f.categoria_obra === "Fotografia" ? f.subtipo_fotografia : f.subtipo;
       const subtipoMatch = selectedSubtipo === null || subtipoValor === selectedSubtipo;
-      const calificacionMatch = calificacionMinima === 0 || f.calificacion >= calificacionMinima;
+      const calificacionMatch = calificacionFiltro === 0 || f.calificacion === calificacionFiltro;
       if (!(tagMatch && artistaMatch && categoriaMatch && subtipoMatch && calificacionMatch)) return false;
       if (!busquedaNorm) return true;
       const enTitulo = f.titulo.toLowerCase().includes(busquedaNorm);
@@ -271,7 +271,7 @@ export function GaleriaFotos({
     selectedCategoria,
     selectedSubtipo,
     busqueda,
-    calificacionMinima,
+    calificacionFiltro,
     esGaleria,
     ordenPor,
   ]);
@@ -292,7 +292,7 @@ export function GaleriaFotos({
     setFotos((prev) => prev.map((f) => ({ ...f, calificacion: 0 })));
     try {
       await context!.db.execute("UPDATE obra SET calificacion = 0 WHERE calificacion != 0");
-      setCalificacionMinima(0);
+      setCalificacionFiltro(0);
     } catch (err) {
       setFotos(previo);
       setError(err instanceof Error ? err.message : String(err));
@@ -488,9 +488,9 @@ export function GaleriaFotos({
         )}
 
         <CalificacionFilterButton
-          calificacionMinima={calificacionMinima}
+          calificacionFiltro={calificacionFiltro}
           onChange={(n) => {
-            setCalificacionMinima(n);
+            setCalificacionFiltro(n);
             closeLightbox();
           }}
           onQuitarATodas={handleQuitarCalificacionATodas}

@@ -631,7 +631,7 @@ export const en: Record<keyof typeof es, string> = {
   "galeria.todasCategorias": "All categories",
   "galeria.todosSubtipos": "All",
   "galeria.calificarConEstrellas": "Rate {{n}} star(s)",
-  "galeria.filtrarPorEstrellas": "Show artworks with {{n}} star(s) or more",
+  "galeria.filtrarPorEstrellas": "Show only artworks with {{n}} star(s)",
   "galeria.quitarCalificacionATodas": "Clear rating from all",
   "galeria.quitarCalificacionATodasConfirm": "Clear the rating from every artwork?",
 

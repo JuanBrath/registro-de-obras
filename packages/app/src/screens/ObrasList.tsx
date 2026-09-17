@@ -28,7 +28,7 @@ export interface ObrasListFiltros {
   selectedArtistaId: number | null;
   selectedCategoria: CategoriaObra | null;
   selectedSubtipo: string | null;
-  calificacionMinima: number;
+  calificacionFiltro: number;
 }
 
 interface ObraRow {
@@ -94,7 +94,7 @@ export function ObrasList({
   const [error, setError] = useState<string | null>(null);
   useEscapeToDismiss(error, setError);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [calificacionMinima, setCalificacionMinima] = useState(0);
+  const [calificacionFiltro, setCalificacionFiltro] = useState(0);
   const [selectedArtistaId, setSelectedArtistaId] = useState<number | null>(null);
   const [selectedCategoria, setSelectedCategoria] = useState<CategoriaObra | null>(null);
   const [selectedSubtipo, setSelectedSubtipo] = useState<string | null>(null);
@@ -218,7 +218,7 @@ export function ObrasList({
   const filteredObras = useMemo(() => {
     const busquedaNorm = busqueda.trim().toLowerCase();
     const filtradas = obras.filter((o) => {
-      if (calificacionMinima > 0 && o.calificacion < calificacionMinima) return false;
+      if (calificacionFiltro > 0 && o.calificacion !== calificacionFiltro) return false;
       if (selectedTags.length > 0 && !selectedTags.some((tag) => parseTags(o.tags).includes(tag))) return false;
       if (esGaleria && selectedArtistaId !== null && o.artista_id !== selectedArtistaId) return false;
       if (selectedCategoria && o.categoria_obra !== selectedCategoria) return false;
@@ -264,7 +264,7 @@ export function ObrasList({
     selectedCategoria,
     selectedSubtipo,
     busqueda,
-    calificacionMinima,
+    calificacionFiltro,
     esRegistroPersonal,
     esGaleria,
     ordenPor,
@@ -286,7 +286,7 @@ export function ObrasList({
     setObras((prev) => prev.map((o) => ({ ...o, calificacion: 0 })));
     try {
       await context!.db.execute("UPDATE obra SET calificacion = 0 WHERE calificacion != 0");
-      setCalificacionMinima(0);
+      setCalificacionFiltro(0);
     } catch (err) {
       setObras(previo);
       setError(err instanceof Error ? err.message : String(err));
@@ -436,7 +436,7 @@ export function ObrasList({
         <button
           type="button"
           onClick={() =>
-            onVerGaleria({ selectedTags, selectedArtistaId, selectedCategoria, selectedSubtipo, calificacionMinima })
+            onVerGaleria({ selectedTags, selectedArtistaId, selectedCategoria, selectedSubtipo, calificacionFiltro })
           }
         >
           {t("workspaceHome.galeriaFotos")}
@@ -511,8 +511,8 @@ export function ObrasList({
           )}
 
           <CalificacionFilterButton
-            calificacionMinima={calificacionMinima}
-            onChange={setCalificacionMinima}
+            calificacionFiltro={calificacionFiltro}
+            onChange={setCalificacionFiltro}
             onQuitarATodas={handleQuitarCalificacionATodas}
           />
         </div>

@@ -68,6 +68,10 @@ export function ObraForm({
 
   const [fotografia, setFotografia] = useState<FotografiaFieldsState>(initialFotografiaFieldsState);
   const [obraDetalle, setObraDetalle] = useState<ObraDetalleFieldsState>(initialObraDetalleFieldsState);
+  // Calificacion en estrellas leida del archivo elegido en "Ubicacion del
+  // archivo" (ver aplicarMetadataFotografia): null significa que el archivo
+  // no traia ninguna, y la obra se crea sin calificar (0), igual que siempre.
+  const [calificacionDesdeArchivo, setCalificacionDesdeArchivo] = useState<number | null>(null);
 
   const [cantidadTotalEdiciones, setCantidadTotalEdiciones] = useState("1");
   const [hayPruebaAutor, setHayPruebaAutor] = useState(false);
@@ -117,6 +121,9 @@ export function ObraForm({
     }));
     if (metadata.palabrasClave.length > 0) {
       setTags((prev) => [...prev, ...metadata.palabrasClave.filter((p) => !prev.includes(p))]);
+    }
+    if (metadata.calificacion !== null) {
+      setCalificacionDesdeArchivo(metadata.calificacion);
     }
   }
 
@@ -248,9 +255,10 @@ export function ObraForm({
         const insertObra = await tx.execute(
           `INSERT INTO obra (
              titulo, categoria_obra, artista_id, estado, ubicacion_fisica_actual, es_seriada, tags,
-             subtitulo, codigo_inventario, anio_periodo, regimen_ingreso, historial_procedencia_exhibiciones, notas, statement
+             subtitulo, codigo_inventario, anio_periodo, regimen_ingreso, historial_procedencia_exhibiciones, notas, statement,
+             calificacion
            )
-           VALUES (?, ?, ?, 'disponible', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           VALUES (?, ?, ?, 'disponible', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             titulo,
             categoria,
@@ -265,6 +273,7 @@ export function ObraForm({
             historialProcedenciaExhibiciones || null,
             notas || null,
             statement || null,
+            calificacionDesdeArchivo ?? 0,
           ],
         );
         const id = insertObra.lastInsertId;

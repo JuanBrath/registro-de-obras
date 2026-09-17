@@ -74,6 +74,8 @@ import { migration0074AyudaFiltroEtiquetasUnion } from "./0074_ayuda_filtro_etiq
 import { migration0075AyudaFiltroSoloMarcadas } from "./0075_ayuda_filtro_solo_marcadas.js";
 import { migration0076ObraCalificacion } from "./0076_obra_calificacion.js";
 import { migration0077AyudaFiltroCalificacion } from "./0077_ayuda_filtro_calificacion.js";
+import { migration0078AyudaFiltroCalificacionExacta } from "./0078_ayuda_filtro_calificacion_exacta.js";
+import { migration0079AyudaUbicacionArchivoCalificacion } from "./0079_ayuda_ubicacion_archivo_calificacion.js";
 
 export interface Migration {
   name: string;
@@ -279,4 +281,6 @@ export const ALL_MIGRATIONS: Migration[] = [
   migration0075AyudaFiltroSoloMarcadas,
   migration0076ObraCalificacion,
   migration0077AyudaFiltroCalificacion,
+  migration0078AyudaFiltroCalificacionExacta,
+  migration0079AyudaUbicacionArchivoCalificacion,
 ];
