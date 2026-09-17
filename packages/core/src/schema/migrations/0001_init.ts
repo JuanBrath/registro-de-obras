@@ -78,6 +78,7 @@ import { migration0078AyudaFiltroCalificacionExacta } from "./0078_ayuda_filtro_
 import { migration0079AyudaUbicacionArchivoCalificacion } from "./0079_ayuda_ubicacion_archivo_calificacion.js";
 import { migration0080AyudaUbicacionArchivoCalificacionSoloNueva } from "./0080_ayuda_ubicacion_archivo_calificacion_solo_nueva.js";
 import { migration0081AyudaUbicacionArchivoCalificacionSidecar } from "./0081_ayuda_ubicacion_archivo_calificacion_sidecar.js";
+import { migration0082AyudaCalificacionJpegEmbebida } from "./0082_ayuda_calificacion_jpeg_embebida.js";
 
 export interface Migration {
   name: string;
@@ -287,4 +288,5 @@ export const ALL_MIGRATIONS: Migration[] = [
   migration0079AyudaUbicacionArchivoCalificacion,
   migration0080AyudaUbicacionArchivoCalificacionSoloNueva,
   migration0081AyudaUbicacionArchivoCalificacionSidecar,
+  migration0082AyudaCalificacionJpegEmbebida,
 ];

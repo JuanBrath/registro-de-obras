@@ -71,10 +71,10 @@ export async function readAbsoluteFileBytes(path: string, maxBytes?: number): Pr
 
 /**
  * Escribe bytes en una ruta absoluta ya conocida (no elegida en el momento
- * por un dialogo nativo, a diferencia de savePdfDialog.ts). Se usa para el
- * sidecar XMP de calificacion (ver xmpSidecar.ts), que vive al lado del
- * archivo original en la "ubicacion del archivo" de la obra — nunca para el
- * archivo original en si.
+ * por un dialogo nativo, a diferencia de savePdfDialog.ts). Se usa para
+ * sincronizar la calificacion de una obra con su archivo original (ver
+ * calificacionArchivo.ts): un sidecar XMP al lado del original para la
+ * mayoria de los formatos, o el propio archivo para JPEG.
  */
 export async function writeAbsoluteFileBytes(path: string, data: Uint8Array): Promise<void> {
   await invoke("fs_write_absolute", { path, data: Array.from(data) });

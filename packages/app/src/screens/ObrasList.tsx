@@ -19,7 +19,7 @@ import { CalificacionFilterButton } from "../components/CalificacionFilterButton
 import { StarRating } from "../components/StarRating.js";
 import { cargarColumnasGridInicial, guardarColumnasGrid } from "../utils/columnasGrid.js";
 import { marcarSiMiniaturaMuyVertical } from "../utils/miniaturaVertical.js";
-import { escribirCalificacionEnSidecar } from "../utils/xmpSidecar.js";
+import { sincronizarCalificacionConArchivo } from "../utils/calificacionArchivo.js";
 
 const COLUMNAS_OBRAS_POR_DEFECTO = 4;
 const COLUMNAS_OBRAS_STORAGE_KEY = "obrasListColumnasGrid";
@@ -288,7 +288,7 @@ export function ObrasList({
     // original, que si falla no debe deshacer lo que ya se guardo en Galeris.
     if (obraActual?.ubicacion_fisica_actual) {
       try {
-        await escribirCalificacionEnSidecar(obraActual.ubicacion_fisica_actual, nuevaCalificacion);
+        await sincronizarCalificacionConArchivo(obraActual.ubicacion_fisica_actual, nuevaCalificacion);
       } catch (err) {
         setError(t("galeria.errorGuardarCalificacionArchivo", { mensaje: err instanceof Error ? err.message : String(err) }));
       }
@@ -308,7 +308,7 @@ export function ObrasList({
     }
     const conArchivo = previo.filter((o) => o.calificacion !== 0 && o.ubicacion_fisica_actual);
     const resultados = await Promise.allSettled(
-      conArchivo.map((o) => escribirCalificacionEnSidecar(o.ubicacion_fisica_actual!, 0)),
+      conArchivo.map((o) => sincronizarCalificacionConArchivo(o.ubicacion_fisica_actual!, 0)),
     );
     const fallidos = resultados.filter((r) => r.status === "rejected").length;
     if (fallidos > 0) {
