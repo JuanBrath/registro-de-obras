@@ -15,7 +15,8 @@ import { buildObrasListadoPdfBytes, type ObraListadoItem } from "../reports/obra
 import { savePdfWithDialog } from "../utils/savePdfDialog.js";
 import { MiniaturasSizeSlider } from "../components/MiniaturasSizeSlider.js";
 import { TagFilterPicker } from "../components/TagFilterPicker.js";
-import { MarcadasFilterButton } from "../components/MarcadasFilterButton.js";
+import { CalificacionFilterButton } from "../components/CalificacionFilterButton.js";
+import { StarRating } from "../components/StarRating.js";
 import { cargarColumnasGridInicial, guardarColumnasGrid } from "../utils/columnasGrid.js";
 import { marcarSiMiniaturaMuyVertical } from "../utils/miniaturaVertical.js";
 
@@ -27,7 +28,7 @@ export interface ObrasListFiltros {
   selectedArtistaId: number | null;
   selectedCategoria: CategoriaObra | null;
   selectedSubtipo: string | null;
-  soloMarcadas: boolean;
+  calificacionMinima: number;
 }
 
 interface ObraRow {
@@ -56,7 +57,7 @@ interface ObraRow {
   ejemplares_descartada: number;
   ejemplares_destruida: number;
   tiene_prueba_artista: number;
-  marcada: number;
+  calificacion: number;
 }
 
 // Los fragmentos que se muestran junto a la fraccion "X/Y disponibles" —
@@ -93,11 +94,11 @@ export function ObrasList({
   const [error, setError] = useState<string | null>(null);
   useEscapeToDismiss(error, setError);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [calificacionMinima, setCalificacionMinima] = useState(0);
   const [selectedArtistaId, setSelectedArtistaId] = useState<number | null>(null);
   const [selectedCategoria, setSelectedCategoria] = useState<CategoriaObra | null>(null);
   const [selectedSubtipo, setSelectedSubtipo] = useState<string | null>(null);
   const [busqueda, setBusqueda] = useState("");
-  const [soloMarcadas, setSoloMarcadas] = useState(false);
   const [ordenPor, setOrdenPor] = useState<"titulo" | "codigo_inventario" | "fecha_captura">("codigo_inventario");
   const [columnasGrid, setColumnasGrid] = useState<number>(() =>
     cargarColumnasGridInicial(COLUMNAS_OBRAS_STORAGE_KEY, COLUMNAS_OBRAS_POR_DEFECTO),
@@ -127,7 +128,7 @@ export function ObrasList({
         const rows = await context!.db.query<ObraRow>(
           `SELECT obra.id, obra.titulo, obra.categoria_obra, obra.estado, obra.es_seriada, obra.miniatura_path,
                   obra.codigo_inventario, obra.tags,
-                  obra.marcada, obra.artista_id, artista.nombre_completo,
+                  obra.calificacion, obra.artista_id, artista.nombre_completo,
                   obra_fotografia.subtipo_fotografia, obra_detalle.subtipo,
                   obra_fotografia.fecha_captura,
                   COUNT(CASE WHEN ejemplar.tipo = 'edicion' THEN ejemplar.id END) as total_ejemplares,
@@ -217,7 +218,7 @@ export function ObrasList({
   const filteredObras = useMemo(() => {
     const busquedaNorm = busqueda.trim().toLowerCase();
     const filtradas = obras.filter((o) => {
-      if (soloMarcadas && o.marcada === 0) return false;
+      if (calificacionMinima > 0 && o.calificacion < calificacionMinima) return false;
       if (selectedTags.length > 0 && !selectedTags.some((tag) => parseTags(o.tags).includes(tag))) return false;
       if (esGaleria && selectedArtistaId !== null && o.artista_id !== selectedArtistaId) return false;
       if (selectedCategoria && o.categoria_obra !== selectedCategoria) return false;
@@ -263,29 +264,29 @@ export function ObrasList({
     selectedCategoria,
     selectedSubtipo,
     busqueda,
-    soloMarcadas,
+    calificacionMinima,
     esRegistroPersonal,
     esGaleria,
     ordenPor,
   ]);
 
-  async function handleToggleMarcada(obraId: number, current: number) {
-    const nuevoValor = current ? 0 : 1;
-    setObras((prev) => prev.map((o) => (o.id === obraId ? { ...o, marcada: nuevoValor } : o)));
+  async function handleSetCalificacion(obraId: number, nuevaCalificacion: number) {
+    const anterior = obras.find((o) => o.id === obraId)?.calificacion ?? 0;
+    setObras((prev) => prev.map((o) => (o.id === obraId ? { ...o, calificacion: nuevaCalificacion } : o)));
     try {
-      await context!.db.execute("UPDATE obra SET marcada = ? WHERE id = ?", [nuevoValor, obraId]);
+      await context!.db.execute("UPDATE obra SET calificacion = ? WHERE id = ?", [nuevaCalificacion, obraId]);
     } catch (err) {
-      setObras((prev) => prev.map((o) => (o.id === obraId ? { ...o, marcada: current } : o)));
+      setObras((prev) => prev.map((o) => (o.id === obraId ? { ...o, calificacion: anterior } : o)));
       setError(err instanceof Error ? err.message : String(err));
     }
   }
 
-  async function handleDesmarcarTodas() {
+  async function handleQuitarCalificacionATodas() {
     const previo = obras;
-    setObras((prev) => prev.map((o) => ({ ...o, marcada: 0 })));
+    setObras((prev) => prev.map((o) => ({ ...o, calificacion: 0 })));
     try {
-      await context!.db.execute("UPDATE obra SET marcada = 0 WHERE marcada = 1");
-      setSoloMarcadas(false);
+      await context!.db.execute("UPDATE obra SET calificacion = 0 WHERE calificacion != 0");
+      setCalificacionMinima(0);
     } catch (err) {
       setObras(previo);
       setError(err instanceof Error ? err.message : String(err));
@@ -435,7 +436,7 @@ export function ObrasList({
         <button
           type="button"
           onClick={() =>
-            onVerGaleria({ selectedTags, selectedArtistaId, selectedCategoria, selectedSubtipo, soloMarcadas })
+            onVerGaleria({ selectedTags, selectedArtistaId, selectedCategoria, selectedSubtipo, calificacionMinima })
           }
         >
           {t("workspaceHome.galeriaFotos")}
@@ -509,10 +510,10 @@ export function ObrasList({
             </label>
           )}
 
-          <MarcadasFilterButton
-            soloMarcadas={soloMarcadas}
-            onToggle={() => setSoloMarcadas((v) => !v)}
-            onDesmarcarTodas={handleDesmarcarTodas}
+          <CalificacionFilterButton
+            calificacionMinima={calificacionMinima}
+            onChange={setCalificacionMinima}
+            onQuitarATodas={handleQuitarCalificacionATodas}
           />
         </div>
       ) : null}
@@ -535,18 +536,6 @@ export function ObrasList({
       <div className="obras-grid" style={{ gridTemplateColumns: `repeat(${columnasGrid}, 1fr)` }}>
         {filteredObras.map((obra) => (
           <div className="obra-card-wrapper" key={obra.id}>
-            <button
-              type="button"
-              className={`marcar-badge${obra.marcada ? " marcada" : ""}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleToggleMarcada(obra.id, obra.marcada);
-              }}
-              aria-label={t(obra.marcada ? "galeria.desmarcar" : "galeria.marcar")}
-              title={t(obra.marcada ? "galeria.desmarcar" : "galeria.marcar")}
-            >
-              {obra.marcada ? "★" : "☆"}
-            </button>
             <button type="button" className="obra-card" onClick={() => onOpenObra(obra.id)}>
             {thumbnails[obra.id] ? (
               <img
@@ -604,6 +593,7 @@ export function ObrasList({
               )}
             </div>
             </button>
+            <StarRating value={obra.calificacion} onChange={(n) => handleSetCalificacion(obra.id, n)} />
           </div>
         ))}
       </div>

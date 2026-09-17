@@ -630,11 +630,10 @@ export const en: Record<keyof typeof es, string> = {
   "galeria.todosArtistas": "All artists",
   "galeria.todasCategorias": "All categories",
   "galeria.todosSubtipos": "All",
-  "galeria.marcar": "Select",
-  "galeria.desmarcar": "Deselect",
-  "galeria.soloMarcadas": "Selected",
-  "galeria.desmarcarTodas": "Deselect all",
-  "galeria.desmarcarTodasConfirm": "Deselect all selected artworks?",
+  "galeria.calificarConEstrellas": "Rate {{n}} star(s)",
+  "galeria.filtrarPorEstrellas": "Show artworks with {{n}} star(s) or more",
+  "galeria.quitarCalificacionATodas": "Clear rating from all",
+  "galeria.quitarCalificacionATodasConfirm": "Clear the rating from every artwork?",
 
   // TagPicker
   "tagPicker.placeholder": "Choose or type a tag…",

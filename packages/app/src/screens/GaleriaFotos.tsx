@@ -11,7 +11,8 @@ import type { ObrasListFiltros } from "./ObrasList.js";
 import { subtipoTranslationKey } from "./fields/ObraDetalleFields.js";
 import { MiniaturasSizeSlider } from "../components/MiniaturasSizeSlider.js";
 import { TagFilterPicker } from "../components/TagFilterPicker.js";
-import { MarcadasFilterButton } from "../components/MarcadasFilterButton.js";
+import { CalificacionFilterButton } from "../components/CalificacionFilterButton.js";
+import { StarRating } from "../components/StarRating.js";
 import { HelpIcon } from "../components/HelpIcon.js";
 import { cargarColumnasGridInicial, guardarColumnasGrid } from "../utils/columnasGrid.js";
 import { marcarSiMiniaturaMuyVertical } from "../utils/miniaturaVertical.js";
@@ -46,7 +47,7 @@ interface FotoRow {
   fecha_captura: string | null;
   dimensiones: string | null;
   escala_por_tamanos: string | null;
-  marcada: number;
+  calificacion: number;
   estado: string;
   es_seriada: number;
   total_ejemplares: number;
@@ -67,7 +68,7 @@ interface FotoRow {
 // de informacion, para no duplicar esta consulta larga en dos lugares.
 const FOTOS_QUERY_SELECT = `
   SELECT obra.id, obra.titulo, obra.codigo_inventario, obra.miniatura_path, obra.imagen_alta_resolucion_path, obra.tags, obra.artista_id,
-         obra.categoria_obra, obra.marcada, obra.estado, obra.es_seriada, artista.nombre_completo,
+         obra.categoria_obra, obra.calificacion, obra.estado, obra.es_seriada, artista.nombre_completo,
          obra_fotografia.subtipo_fotografia, obra_detalle.subtipo,
          obra_fotografia.fecha_captura,
          obra_fotografia.dimensiones, obra_fotografia.escala_por_tamanos,
@@ -125,7 +126,7 @@ export function GaleriaFotos({
     filtrosIniciales?.selectedCategoria ?? null,
   );
   const [selectedSubtipo, setSelectedSubtipo] = useState<string | null>(filtrosIniciales?.selectedSubtipo ?? null);
-  const [soloMarcadas, setSoloMarcadas] = useState(filtrosIniciales?.soloMarcadas ?? false);
+  const [calificacionMinima, setCalificacionMinima] = useState(filtrosIniciales?.calificacionMinima ?? 0);
   const [ordenPor, setOrdenPor] = useState<"titulo" | "codigo_inventario" | "fecha_captura">("codigo_inventario");
   const [columnasGrid, setColumnasGrid] = useState<number>(() =>
     cargarColumnasGridInicial(COLUMNAS_GALERIA_STORAGE_KEY, COLUMNAS_GALERIA_POR_DEFECTO),
@@ -230,8 +231,8 @@ export function GaleriaFotos({
       const categoriaMatch = selectedCategoria === null || f.categoria_obra === selectedCategoria;
       const subtipoValor = f.categoria_obra === "Fotografia" ? f.subtipo_fotografia : f.subtipo;
       const subtipoMatch = selectedSubtipo === null || subtipoValor === selectedSubtipo;
-      const marcadaMatch = !soloMarcadas || f.marcada !== 0;
-      if (!(tagMatch && artistaMatch && categoriaMatch && subtipoMatch && marcadaMatch)) return false;
+      const calificacionMatch = calificacionMinima === 0 || f.calificacion >= calificacionMinima;
+      if (!(tagMatch && artistaMatch && categoriaMatch && subtipoMatch && calificacionMatch)) return false;
       if (!busquedaNorm) return true;
       const enTitulo = f.titulo.toLowerCase().includes(busquedaNorm);
       const enArtista = esGaleria && (f.nombre_completo ?? "").toLowerCase().includes(busquedaNorm);
@@ -270,28 +271,28 @@ export function GaleriaFotos({
     selectedCategoria,
     selectedSubtipo,
     busqueda,
-    soloMarcadas,
+    calificacionMinima,
     esGaleria,
     ordenPor,
   ]);
 
-  async function handleToggleMarcada(fotoId: number, current: number) {
-    const nuevoValor = current ? 0 : 1;
-    setFotos((prev) => prev.map((f) => (f.id === fotoId ? { ...f, marcada: nuevoValor } : f)));
+  async function handleSetCalificacion(fotoId: number, nuevaCalificacion: number) {
+    const anterior = fotos.find((f) => f.id === fotoId)?.calificacion ?? 0;
+    setFotos((prev) => prev.map((f) => (f.id === fotoId ? { ...f, calificacion: nuevaCalificacion } : f)));
     try {
-      await context!.db.execute("UPDATE obra SET marcada = ? WHERE id = ?", [nuevoValor, fotoId]);
+      await context!.db.execute("UPDATE obra SET calificacion = ? WHERE id = ?", [nuevaCalificacion, fotoId]);
     } catch (err) {
-      setFotos((prev) => prev.map((f) => (f.id === fotoId ? { ...f, marcada: current } : f)));
+      setFotos((prev) => prev.map((f) => (f.id === fotoId ? { ...f, calificacion: anterior } : f)));
       setError(err instanceof Error ? err.message : String(err));
     }
   }
 
-  async function handleDesmarcarTodas() {
+  async function handleQuitarCalificacionATodas() {
     const previo = fotos;
-    setFotos((prev) => prev.map((f) => ({ ...f, marcada: 0 })));
+    setFotos((prev) => prev.map((f) => ({ ...f, calificacion: 0 })));
     try {
-      await context!.db.execute("UPDATE obra SET marcada = 0 WHERE marcada = 1");
-      setSoloMarcadas(false);
+      await context!.db.execute("UPDATE obra SET calificacion = 0 WHERE calificacion != 0");
+      setCalificacionMinima(0);
     } catch (err) {
       setFotos(previo);
       setError(err instanceof Error ? err.message : String(err));
@@ -486,13 +487,13 @@ export function GaleriaFotos({
           </label>
         )}
 
-        <MarcadasFilterButton
-          soloMarcadas={soloMarcadas}
-          onToggle={() => {
-            setSoloMarcadas((v) => !v);
+        <CalificacionFilterButton
+          calificacionMinima={calificacionMinima}
+          onChange={(n) => {
+            setCalificacionMinima(n);
             closeLightbox();
           }}
-          onDesmarcarTodas={handleDesmarcarTodas}
+          onQuitarATodas={handleQuitarCalificacionATodas}
         />
       </div>
 
@@ -519,18 +520,7 @@ export function GaleriaFotos({
                     onLoad={(e) => marcarSiMiniaturaMuyVertical(e.currentTarget)}
                   />
                 </button>
-                <button
-                  type="button"
-                  className={`marcar-badge${foto.marcada ? " marcada" : ""}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleToggleMarcada(foto.id, foto.marcada);
-                  }}
-                  aria-label={t(foto.marcada ? "galeria.desmarcar" : "galeria.marcar")}
-                  title={t(foto.marcada ? "galeria.desmarcar" : "galeria.marcar")}
-                >
-                  {foto.marcada ? "★" : "☆"}
-                </button>
+                <StarRating value={foto.calificacion} onChange={(n) => handleSetCalificacion(foto.id, n)} />
               </div>
             ),
         )}
@@ -572,15 +562,11 @@ export function GaleriaFotos({
             )}
             <p className="lightbox-caption">
               {filteredFotos[lightboxIndex] && (
-                <button
-                  type="button"
-                  className={`marcar-badge marcar-badge-lightbox${filteredFotos[lightboxIndex].marcada ? " marcada" : ""}`}
-                  onClick={() => handleToggleMarcada(filteredFotos[lightboxIndex].id, filteredFotos[lightboxIndex].marcada)}
-                  aria-label={t(filteredFotos[lightboxIndex].marcada ? "galeria.desmarcar" : "galeria.marcar")}
-                  title={t(filteredFotos[lightboxIndex].marcada ? "galeria.desmarcar" : "galeria.marcar")}
-                >
-                  {filteredFotos[lightboxIndex].marcada ? "★" : "☆"}
-                </button>
+                <StarRating
+                  value={filteredFotos[lightboxIndex].calificacion}
+                  onChange={(n) => handleSetCalificacion(filteredFotos[lightboxIndex].id, n)}
+                  className="star-rating-lightbox"
+                />
               )}
               {filteredFotos[lightboxIndex]?.titulo} — {lightboxIndex + 1} / {filteredFotos.length}
               {filteredFotos[lightboxIndex] && (

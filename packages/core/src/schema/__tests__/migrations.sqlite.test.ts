@@ -8,7 +8,7 @@ function adaptNodeSqlite(sqliteDb: DatabaseSync): DatabaseAdapter {
   const adapter: DatabaseAdapter = {
     async execute(sql, params = []): Promise<ExecuteResult> {
       const info = sqliteDb.prepare(sql).run(...(params as never[]));
-      return { rowsAffected: info.changes, lastInsertId: Number(info.lastInsertRowid) };
+      return { rowsAffected: Number(info.changes), lastInsertId: Number(info.lastInsertRowid) };
     },
     async query<T>(sql: string, params: unknown[] = []): Promise<T[]> {
       return sqliteDb.prepare(sql).all(...(params as never[])) as T[];
@@ -198,6 +198,8 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
       "0073_ayuda_filtro_etiquetas",
       "0074_ayuda_filtro_etiquetas_union",
       "0075_ayuda_filtro_solo_marcadas",
+      "0076_obra_calificacion",
+      "0077_ayuda_filtro_calificacion",
     ]);
   });
 

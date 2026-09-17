@@ -628,11 +628,10 @@ export const es = {
   "galeria.todosArtistas": "Todos los artistas",
   "galeria.todasCategorias": "Todas las categorías",
   "galeria.todosSubtipos": "Todos",
-  "galeria.marcar": "Seleccionar",
-  "galeria.desmarcar": "Deseleccionar",
-  "galeria.soloMarcadas": "Seleccionadas",
-  "galeria.desmarcarTodas": "Deseleccionar todas",
-  "galeria.desmarcarTodasConfirm": "¿Deseleccionar todas las obras seleccionadas?",
+  "galeria.calificarConEstrellas": "Calificar con {{n}} estrella(s)",
+  "galeria.filtrarPorEstrellas": "Mostrar obras con {{n}} estrella(s) o más",
+  "galeria.quitarCalificacionATodas": "Quitar la calificación a todas",
+  "galeria.quitarCalificacionATodasConfirm": "¿Quitar la calificación a todas las obras?",
 
   // TagPicker
   "tagPicker.placeholder": "Elegir o escribir una etiqueta…",

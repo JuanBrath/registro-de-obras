@@ -72,6 +72,8 @@ import { migration0072ObraStatement } from "./0072_obra_statement.js";
 import { migration0073AyudaFiltroEtiquetas } from "./0073_ayuda_filtro_etiquetas.js";
 import { migration0074AyudaFiltroEtiquetasUnion } from "./0074_ayuda_filtro_etiquetas_union.js";
 import { migration0075AyudaFiltroSoloMarcadas } from "./0075_ayuda_filtro_solo_marcadas.js";
+import { migration0076ObraCalificacion } from "./0076_obra_calificacion.js";
+import { migration0077AyudaFiltroCalificacion } from "./0077_ayuda_filtro_calificacion.js";
 
 export interface Migration {
   name: string;
@@ -275,4 +277,6 @@ export const ALL_MIGRATIONS: Migration[] = [
   migration0073AyudaFiltroEtiquetas,
   migration0074AyudaFiltroEtiquetasUnion,
   migration0075AyudaFiltroSoloMarcadas,
+  migration0076ObraCalificacion,
+  migration0077AyudaFiltroCalificacion,
 ];

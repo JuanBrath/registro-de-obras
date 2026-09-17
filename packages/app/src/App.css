@@ -814,42 +814,44 @@ input[type="date"] {
   container-type: inline-size;
 }
 
-/* El badge de marcado se ancla al borde superior derecho pero se ubica por
-   fuera del rectángulo de la imagen (offset negativo), nunca tapando la foto. */
-.marcar-badge {
-  position: absolute;
-  top: -0.5rem;
-  right: -0.1rem;
-  z-index: 1;
-  width: 1.3rem;
-  height: 1.3rem;
-  padding: 0;
-  border-radius: 999px;
-  border: 1px solid #0a1730;
-  background: #16274d;
-  color: rgba(255, 255, 255, 0.5);
-  cursor: pointer;
+/* Fila de 5 estrellas para calificar una obra (ver StarRating.tsx): va
+   debajo de toda la tarjeta, nunca adentro del boton que la abre (un boton
+   dentro de otro rompe el click de abrir la obra). */
+.star-rating {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.8rem;
+  gap: 0.1rem;
+  padding: 0.15rem 0.75rem 0.5rem;
+}
+
+.star-rating-star {
+  background: none;
+  border: none;
+  padding: 0;
+  color: rgba(128, 128, 128, 0.5);
+  cursor: pointer;
+  font-size: 0.95rem;
   line-height: 1;
 }
 
-.marcar-badge.marcada {
+.star-rating-star-activa,
+.star-rating-star:hover {
   color: #f5c542;
 }
 
-.marcar-badge-lightbox {
-  position: static;
-  margin-right: 0.4rem;
+.star-rating-lightbox {
+  padding: 0;
+  margin-right: 0.5rem;
 }
 
-/* Boton de estrella que filtra por obras marcadas (ver
-   MarcadasFilterButton.tsx): un clic normal alterna el filtro, y mantenerlo
-   presionado ofrece desmarcarlas todas, asi que necesita quedar relativo
-   para anclar ese cartel de confirmacion debajo sin empujar el resto de la
-   fila. */
+.star-rating-lightbox .star-rating-star {
+  font-size: 1.3rem;
+}
+
+/* Filtro por calificacion (ver CalificacionFilterButton.tsx): un clic en una
+   estrella muestra las obras con esa cantidad o mas, y mantener presionado
+   el boton ofrece quitarle la calificacion a todas, asi que necesita quedar
+   relativo para anclar ese cartel de confirmacion debajo sin empujar el
+   resto de la fila. */
 .marcadas-filter-button-wrapper {
   position: relative;
   display: inline-flex;
@@ -857,14 +859,12 @@ input[type="date"] {
   gap: 0.3rem;
 }
 
-.marcadas-filter-button {
-  font-size: 1.2rem;
-  line-height: 1;
+.marcadas-filter-button-wrapper .star-rating {
   padding: 0.3rem 0.5rem;
 }
 
-.marcadas-filter-button-activo {
-  color: #f5c542;
+.marcadas-filter-button-wrapper .star-rating-star {
+  font-size: 1.2rem;
 }
 
 .marcadas-filter-confirm-box {
