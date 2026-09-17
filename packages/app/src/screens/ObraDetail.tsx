@@ -2854,7 +2854,10 @@ function ObraEditForm({
     if (metadata.palabrasClave.length > 0) {
       setTags((prev) => [...prev, ...metadata.palabrasClave.filter((p) => !prev.includes(p))]);
     }
-    if (metadata.calificacion !== null) {
+    // Solo se toma la calificacion del archivo si la obra todavia no tiene
+    // ninguna: si ya la calificaste (desde las estrellas de la lista), volver
+    // a elegir o corregir la ubicacion del archivo NUNCA debe pisarla.
+    if (metadata.calificacion !== null && obra.calificacion === 0) {
       setCalificacionDesdeArchivo(metadata.calificacion);
     }
   }
