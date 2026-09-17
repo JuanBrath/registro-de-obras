@@ -1178,63 +1178,14 @@ input[type="date"] {
   gap: 0.3rem;
 }
 
-/* Filtro de etiquetas por acumulacion (ver TagFilterPicker.tsx): arriba las
-   etiquetas ya elegidas (si hay), como chips; abajo la nube de las
-   disponibles, para agregar mas. */
+/* Filtro de etiquetas por acumulacion (ver TagFilterPicker.tsx): el
+   desplegable para agregar va primero, y los chips elegidos se acumulan en
+   fila a su derecha. */
 .tag-filter-picker {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.tag-filter-seleccion {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.4rem;
-}
-
-.tag-filter-seleccion-label {
-  font-size: 0.85rem;
-  color: var(--text);
-}
-
-.tag-filter-quitar-todo {
-  background: none;
-  border: none;
-  color: var(--accent);
-  cursor: pointer;
-  font: inherit;
-  font-size: 0.8rem;
-  padding: 0;
-  text-decoration: underline;
-}
-
-/* Nube de palabras: cada etiqueta disponible se ve mas grande y mas nitida
-   cuanta mas obras la tengan (ver tamano()/opacidad() en TagFilterPicker.tsx),
-   asi de un vistazo se nota cuales son las etiquetas mas usadas. */
-.tag-nube {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.3rem 0.9rem;
-  max-width: 640px;
-}
-
-.tag-nube-palabra {
-  background: none;
-  border: none;
-  color: var(--accent);
-  cursor: pointer;
-  padding: 0;
-  line-height: 1.3;
-  font-family: inherit;
-}
-
-.tag-nube-palabra:hover,
-.tag-nube-palabra:focus-visible {
-  text-decoration: underline;
-  opacity: 1 !important;
 }
 
 .tag-chip-removable button {

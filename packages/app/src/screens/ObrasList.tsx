@@ -178,9 +178,9 @@ export function ObrasList({
   }, [context]);
 
   const allTags = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const obra of obras) for (const tag of parseTags(obra.tags)) counts.set(tag, (counts.get(tag) ?? 0) + 1);
-    return Array.from(counts, ([tag, count]) => ({ tag, count })).sort((a, b) => a.tag.localeCompare(b.tag));
+    const set = new Set<string>();
+    for (const obra of obras) for (const tag of parseTags(obra.tags)) set.add(tag);
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
   }, [obras]);
 
   const esRegistroPersonal = context?.workspace === "personal";
