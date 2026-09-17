@@ -8,7 +8,11 @@ const ESTRELLAS = [1, 2, 3, 4, 5] as const;
 /**
  * Filtro por calificacion: un clic en una estrella muestra solo las obras
  * con exactamente esa cantidad de estrellas (volver a hacer clic en la
- * misma la quita). Mantener presionado el boton ofrece quitarle la
+ * misma la quita). Se marcan todas las estrellas hasta la elegida (no solo
+ * esa), igual que una calificacion normal, para que de un vistazo se lea
+ * claramente "3 estrellas" en vez de una sola estrella suelta en el medio de
+ * la fila — aunque el filtro en si siga siendo por cantidad exacta, no por
+ * "esa cantidad o mas". Mantener presionado el boton ofrece quitarle la
  * calificacion a todas las obras de una vez (con confirmacion), igual que
  * antes con "desmarcar todas".
  */
@@ -59,7 +63,7 @@ export function CalificacionFilterButton({
           <button
             key={n}
             type="button"
-            className={`star-rating-star${n === calificacionFiltro ? " star-rating-star-activa" : ""}`}
+            className={`star-rating-star${n <= calificacionFiltro ? " star-rating-star-activa" : ""}`}
             onPointerDown={handlePointerDown}
             onPointerUp={cancelarTimer}
             onPointerLeave={cancelarTimer}
@@ -68,7 +72,7 @@ export function CalificacionFilterButton({
             aria-label={t("galeria.filtrarPorEstrellas", { n })}
             title={t("galeria.filtrarPorEstrellas", { n })}
           >
-            {n === calificacionFiltro ? "★" : "☆"}
+            {n <= calificacionFiltro ? "★" : "☆"}
           </button>
         ))}
       </span>
