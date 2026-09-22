@@ -732,6 +732,7 @@ export const es = {
   "ventaForm.informesButton": "Informes",
   "ventaForm.informeOpcionComprobante": "Comprobante de venta",
   "ventaForm.informeOpcionCoa": "Certificado de autenticidad (COA)",
+  "ventaForm.informeOpcionCoaFicha": "Certificado de autenticidad (tipo ficha)",
   "ventaForm.informeOpcionContratoEstandar": "Contrato de compraventa (estándar)",
   "ventaForm.informeOpcionContratoRofr": "Contrato de compraventa (con derecho de tanteo)",
   "ventaForm.informeOpcionRemito": "Remito de salida",

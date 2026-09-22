@@ -734,6 +734,7 @@ export const en: Record<keyof typeof es, string> = {
   "ventaForm.informesButton": "Reports",
   "ventaForm.informeOpcionComprobante": "Sale receipt",
   "ventaForm.informeOpcionCoa": "Certificate of authenticity (COA)",
+  "ventaForm.informeOpcionCoaFicha": "Certificate of authenticity (record style)",
   "ventaForm.informeOpcionContratoEstandar": "Sale contract (standard)",
   "ventaForm.informeOpcionContratoRofr": "Sale contract (with right of first refusal)",
   "ventaForm.informeOpcionRemito": "Delivery note",

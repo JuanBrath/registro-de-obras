@@ -56,11 +56,13 @@ import { buildObraSeriesDetalladoPdfBytes, type ObraEjemplarDetalle } from "../r
 import { resolveObraImagenParaPdf } from "../utils/resolveObraImagenPdf.js";
 import {
   buildCoaPdfBytes,
+  buildCoaFichaPdfBytes,
   buildComprobanteVentaPdfBytes,
   buildContratoPdfBytes,
   buildPresupuestoPdfBytes,
   buildRemitoPdfBytes,
   type CoaCertificadoDatos,
+  type CoaFichaDatos,
 } from "../reports/ventaReports.js";
 
 interface ObraRow {
@@ -1353,6 +1355,38 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
         } else if (ventaInformeSeleccionId === "coa") {
           bytes = await buildCoaPdfBytes(obraDatos, ventaDatos, brandOpts);
           nombreArchivo = `coa_${base}.pdf`;
+        } else if (ventaInformeSeleccionId === "coaFicha") {
+          const imagenResuelta = await resolveObraImagenParaPdf(context, obra);
+          const artistaRows = await context.db.query<{ firma_path: string | null; lugar_residencia_trabajo: string | null }>(
+            "SELECT firma_path, lugar_residencia_trabajo FROM artista WHERE id = ?",
+            [obra.artista_id],
+          );
+          const artistaFirmaPath = artistaRows[0]?.firma_path ?? null;
+          const artistaFirmaBytes = artistaFirmaPath ? await context.fs.readFile(artistaFirmaPath).catch(() => null) : null;
+          const galeriaFirmaBytes = await resolveFirmaBytes(context, null, galeriaPerfil);
+          const galeriaLogoBytes = await resolveMembreteLogoBytes(context, null, galeriaPerfil);
+          const fichaDatos: CoaFichaDatos = {
+            imgBytes: imagenResuelta?.bytes ?? null,
+            categoriaLabel: [
+              tInforme("es", `categoria.${obra.categoria_obra}` as TranslationKey),
+              ext?.subtipo_fotografia ? tInforme("es", `fields.fotografia.subtipo${ext.subtipo_fotografia}` as TranslationKey) : "",
+            ]
+              .filter(Boolean)
+              .join(" — "),
+            materialesTexto: [ejemplar.tipo_impresion, ejemplar.soporte_impresion].filter(Boolean).join(" — "),
+            anio: obra.anio_periodo ?? (ext?.fecha_captura ? ext.fecha_captura.slice(0, 4) : ""),
+            serieProyecto: ext?.serie_proyecto ?? "",
+            ubicacionFirma: ejemplar.ubicacion_firma ?? "",
+            artistaReside: artistaRows[0]?.lugar_residencia_trabajo ?? "",
+            artistaFirmaBytes,
+            galeriaFirmaBytes,
+            galeriaNombre: galeriaPerfil?.nombre ?? "",
+            galeriaTelefono: galeriaPerfil?.telefono ?? "",
+            galeriaEmail: galeriaPerfil?.email ?? "",
+            galeriaLogoBytes,
+          };
+          bytes = await buildCoaFichaPdfBytes(obraDatos, fichaDatos, { firma: ventaInformeFirma });
+          nombreArchivo = `coa_ficha_${base}.pdf`;
         } else if (ventaInformeSeleccionId === "remito") {
           bytes = await buildRemitoPdfBytes(obraDatos, ventaDatos, compradorDatos, brandOpts);
           nombreArchivo = `remito_${base}.pdf`;
@@ -2429,6 +2463,9 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
               : []),
             ...(venta && venta.tipo !== "donacion" ? [{ id: "comprobante", label: t("ventaForm.informeOpcionComprobante") }] : []),
             ...(venta ? [{ id: "coa", label: t("ventaForm.informeOpcionCoa") }] : []),
+            ...(venta && !esRegistroPersonal
+              ? [{ id: "coaFicha", label: t("ventaForm.informeOpcionCoaFicha"), hideIdioma: true }]
+              : []),
             ...(venta ? [{ id: "remito", label: t("ventaForm.informeOpcionRemito") }] : []),
             ...(venta && venta.tipo === "venta"
               ? [{ id: "contratoEstandar", label: t("ventaForm.informeOpcionContratoEstandar"), hideIdioma: true }]
@@ -2482,7 +2519,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
               selectedId={ventaInformeSeleccionId}
               onSelectId={(id) => {
                 setVentaInformeSeleccionId(id);
-                if (id === "coa" && ventaInformeFirma === "manuscrita") setVentaInformeFirma("ninguna");
+                if ((id === "coa" || id === "coaFicha") && ventaInformeFirma === "manuscrita") setVentaInformeFirma("ninguna");
               }}
               idioma={ventaInformeIdioma}
               onIdiomaChange={setVentaInformeIdioma}
@@ -2491,7 +2528,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
               firma={ventaInformeFirma}
               onFirmaChange={setVentaInformeFirma}
               firmaDigitalDisponible={firmaBytesDisponibles !== null}
-              firmaManuscritaDeshabilitada={ventaInformeSeleccionId === "coa"}
+              firmaManuscritaDeshabilitada={ventaInformeSeleccionId === "coa" || ventaInformeSeleccionId === "coaFicha"}
               onGenerar={handleGenerarInformeVenta}
               generando={generandoVentaInforme}
               mensaje={ventaInformeMensaje}

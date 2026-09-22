@@ -2,7 +2,14 @@ import type { TranslationKey } from "../i18n/LanguageContext.js";
 import { tInforme, type InformeIdioma } from "./informeIdioma.js";
 import { detectImageFormat } from "../utils/detectImageFormat.js";
 import { formatFechaDDMMYYYY } from "../utils/formatFecha.js";
-import { dibujarLogo, drawSignatureBlock, fittedImageSize, registerBrandFonts, writeWrappedText } from "../utils/pdfBranding.js";
+import {
+  dibujarLogo,
+  drawSignatureBlock,
+  fittedImageSize,
+  registerBrandFonts,
+  writeWrappedText,
+  type FirmaEleccion,
+} from "../utils/pdfBranding.js";
 import { nuevoDocConMembrete, type InformeBrandingOpts } from "./reportPdfBase.js";
 
 /** Detalle propio de la serie/ejemplar vendido (distinto del detalle general de la obra). */
@@ -466,6 +473,180 @@ export async function buildCoaPdfBytes(
     pageHeight - outerMargin - 8,
     { align: "center" },
   );
+
+  return new Uint8Array(doc.output("arraybuffer"));
+}
+
+/** Datos que solo usa el certificado tipo ficha (ver buildCoaFichaPdfBytes), ademas de obra/venta. */
+export interface CoaFichaDatos {
+  imgBytes: Uint8Array | null;
+  categoriaLabel: string;
+  materialesTexto: string;
+  anio: string;
+  serieProyecto: string;
+  ubicacionFirma: string;
+  artistaReside: string;
+  artistaFirmaBytes: Uint8Array | null;
+  galeriaFirmaBytes: Uint8Array | null;
+  galeriaNombre: string;
+  galeriaTelefono: string;
+  galeriaEmail: string;
+  galeriaLogoBytes: Uint8Array | null;
+}
+
+/**
+ * Segundo modelo de certificado de autenticidad, "tipo ficha": una grilla
+ * bilingue ingles/español (fija, no sigue el selector de idioma del resto de
+ * los informes) con los datos basicos de la obra, firma del artista y del
+ * titular de la galeria una al lado de la otra, y logo + contacto de la
+ * galeria junto a una foto de la obra al pie. Pensado para el flujo de
+ * galeria (representa a un artista distinto de quien firma como galeria);
+ * en registro personal no se ofrece esta opcion.
+ */
+export async function buildCoaFichaPdfBytes(
+  obra: VentaReporteObraDatos,
+  ficha: CoaFichaDatos,
+  opts: { firma: FirmaEleccion },
+): Promise<Uint8Array> {
+  const { default: jsPDF } = await import("jspdf");
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  await registerBrandFonts(doc);
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  const outerMargin = 10;
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.6);
+  doc.rect(outerMargin, outerMargin, pageWidth - outerMargin * 2, pageHeight - outerMargin * 2);
+
+  doc.setFont("helvetica", "bolditalic");
+  doc.setFontSize(15);
+  doc.setTextColor(0, 0, 0);
+  doc.text("CERTIFICATE OF AUTHENTICITY ARTWORK  |  CERTIFICADO DE AUTENTICIDAD DE ARTE", pageWidth / 2, outerMargin + 16, {
+    align: "center",
+  });
+
+  const tableX = 18;
+  const tableWidth = pageWidth - tableX * 2;
+  const colRatios = [0.28, 0.32, 0.18, 0.22];
+  const colX = [tableX];
+  for (const ratio of colRatios) colX.push(colX[colX.length - 1] + tableWidth * ratio);
+
+  // Alto de fila dinamico: algunas etiquetas bilingues son largas y no
+  // entran en una sola linea en columnas angostas (ej. "Is this part of a
+  // series? | Es parte de una serie:"), asi que se envuelven con
+  // splitTextToSize y la fila crece para acomodarlas.
+  type FichaCelda = { label: string; value?: string };
+  function fichaFila(celdas: FichaCelda[], y: number): number {
+    const colWidths = celdas.map((_, i) => colX[i + 1] - colX[i] - 4);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    const labelLineas = celdas.map((c, i) => doc.splitTextToSize(c.label, colWidths[i]) as string[]);
+    doc.setFont("times", "italic");
+    doc.setFontSize(10.5);
+    const valorLineas = celdas.map((c, i) => (c.value ? (doc.splitTextToSize(c.value, colWidths[i]) as string[]) : []));
+    const labelBlockHeight = Math.max(...labelLineas.map((l) => l.length)) * 3.6;
+    const valorLineCount = Math.max(0, ...valorLineas.map((l) => l.length));
+    const rowHeight = Math.max(13, 4 + labelBlockHeight + (valorLineCount > 0 ? valorLineCount * 4.3 + 2 : 0));
+
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.25);
+    doc.line(tableX, y, tableX + tableWidth, y);
+    celdas.forEach((_celda, i) => {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.text(labelLineas[i], colX[i] + 2, y + 4.5);
+      if (valorLineas[i].length > 0) {
+        doc.setFont("times", "italic");
+        doc.setFontSize(10.5);
+        doc.text(valorLineas[i], colX[i] + 2, y + 4.5 + labelLineas[i].length * 3.6 + 4);
+      }
+      if (i > 0) doc.line(colX[i], y, colX[i], y + rowHeight);
+    });
+    doc.line(tableX, y + rowHeight, tableX + tableWidth, y + rowHeight);
+    return y + rowHeight;
+  }
+
+  let y = outerMargin + 26;
+  y = fichaFila([{ label: "Author | Autor :", value: obra.autor }], y);
+  y = fichaFila([{ label: "Based | Reside:", value: ficha.artistaReside }], y);
+  y = fichaFila(
+    [
+      { label: "Title of artwork | Título de la obra:", value: obra.titulo },
+      { label: "Year | Año:", value: ficha.anio },
+    ],
+    y,
+  );
+  y = fichaFila(
+    [
+      { label: "Medium type | Disciplina:", value: ficha.categoriaLabel },
+      { label: "Materials | Materiales:", value: ficha.materialesTexto },
+    ],
+    y,
+  );
+  y = fichaFila(
+    [
+      { label: "Is this part of a series? | Es parte de una serie:", value: ficha.serieProyecto },
+      { label: "# of artwork | # de obras", value: formatearNumeroConPA(obra.serie) },
+    ],
+    y,
+  );
+  y = fichaFila([{ label: "Placement of signature | Ubicación de la firma", value: ficha.ubicacionFirma }], y);
+
+  y += 14;
+  const firmaColWidth = tableWidth / 2;
+  const firmaColXs = [tableX, tableX + firmaColWidth];
+  const firmaBytesPorColumna = [ficha.artistaFirmaBytes, ficha.galeriaFirmaBytes];
+  const firmaCaptions = ["Firma | Signature  Artist", "Firma | Signature Gallery Owner"];
+  for (let i = 0; i < 2; i++) {
+    const x = firmaColXs[i];
+    const bytes = firmaBytesPorColumna[i];
+    let lineY = y;
+    if (opts.firma === "digital" && bytes) {
+      const formato = detectImageFormat(bytes);
+      if (formato) {
+        const { width, height } = await fittedImageSize(bytes, 22);
+        doc.addImage(bytes, formato, x + 6, y - height - 2, width, height);
+        lineY = y;
+      }
+    }
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.2);
+    doc.line(x + 6, lineY, x + firmaColWidth - 10, lineY);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text(firmaCaptions[i], x + 6, lineY + 6);
+  }
+
+  const footerY = pageHeight - outerMargin - 34;
+  if (ficha.galeriaLogoBytes) {
+    const formatoLogo = detectImageFormat(ficha.galeriaLogoBytes);
+    if (formatoLogo) {
+      const { width, height } = await fittedImageSize(ficha.galeriaLogoBytes, 18);
+      doc.addImage(ficha.galeriaLogoBytes, formatoLogo, tableX, footerY, width, height);
+    }
+  }
+  doc.setFont("Inter", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(0, 0, 0);
+  const contacto = [ficha.galeriaNombre, ficha.galeriaTelefono, ficha.galeriaEmail].filter(Boolean).join("  |  ");
+  if (contacto) doc.text(contacto, tableX + 24, footerY + 12);
+
+  if (ficha.imgBytes) {
+    const formatoObra = detectImageFormat(ficha.imgBytes);
+    if (formatoObra) {
+      const imageBoxSize = 32;
+      const { width, height } = await fittedImageSize(ficha.imgBytes, imageBoxSize);
+      doc.addImage(
+        ficha.imgBytes,
+        formatoObra,
+        tableX + tableWidth - width,
+        footerY - imageBoxSize + 2,
+        width,
+        height,
+      );
+    }
+  }
 
   return new Uint8Array(doc.output("arraybuffer"));
 }
