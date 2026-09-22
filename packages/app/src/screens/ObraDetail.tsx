@@ -421,6 +421,12 @@ function buildObraDescripcionLineas(
     incluirTags = true,
     incluirNotas = true,
     incluirStatement = true,
+    // El comprobante de venta solo necesita los datos basicos que
+    // identifican la pieza (categoria, subtipo, tecnica, dimensiones), no
+    // todo el detalle tecnico de produccion propio de la ficha/COA (fechas
+    // de captura/edicion, escala por tamaños, y todos los campos propios de
+    // cada categoria: materiales, matriz, papel, etc.).
+    incluirDetalleTecnico = true,
   } = {},
 ): string[] {
   // Los valores cargados en el sistema (categoria, subtipo, tecnica, estado,
@@ -456,20 +462,20 @@ function buildObraDescripcionLineas(
   if (ext?.tecnica) lineas.push(t("obraDetail.tecnica", { valor: ext.tecnica }));
   if (ext?.dimensiones) lineas.push(t("obraDetail.dimensiones", { valor: ext.dimensiones }));
   if (ext?.peso) lineas.push(t("obraDetail.peso", { valor: ext.peso }));
-  if (ext?.fecha_captura) {
+  if (incluirDetalleTecnico && ext?.fecha_captura) {
     lineas.push(`${t("fields.fotografia.fechaCaptura")}: ${formatFechaDDMMYYYY(ext.fecha_captura)}`);
   }
-  if (ext?.anio_edicion) {
+  if (incluirDetalleTecnico && ext?.anio_edicion) {
     lineas.push(`${t("fields.fotografia.anioEdicion")}: ${ext.anio_edicion}`);
   }
-  if (incluirSoftwareEdicion && esRegistroPersonal && ext?.software_edicion) {
+  if (incluirDetalleTecnico && incluirSoftwareEdicion && esRegistroPersonal && ext?.software_edicion) {
     lineas.push(`${t("fields.fotografia.softwareEdicion")}: ${ext.software_edicion}`);
   }
-  if (ext?.fecha_creacion) {
+  if (incluirDetalleTecnico && ext?.fecha_creacion) {
     lineas.push(`${t("field.fechaCreacion")}: ${formatFechaDDMMYYYY(ext.fecha_creacion)}`);
   }
-  if (obra.anio_periodo) lineas.push(`${t("obraForm.anioPeriodoLabel")}: ${obra.anio_periodo}`);
-  if (obra.categoria_obra === "Pintura") {
+  if (incluirDetalleTecnico && obra.anio_periodo) lineas.push(`${t("obraForm.anioPeriodoLabel")}: ${obra.anio_periodo}`);
+  if (incluirDetalleTecnico && obra.categoria_obra === "Pintura") {
     if (ext?.materiales_mixtura) {
       lineas.push(`${t("fields.pintura.materialesMixturaLabel")}: ${ext.materiales_mixtura}`);
     }
@@ -494,7 +500,7 @@ function buildObraDescripcionLineas(
     }
     if (ext?.estado_cantos) lineas.push(`${t("fields.pintura.estadoCantosLabel")}: ${ext.estado_cantos}`);
   }
-  if (obra.categoria_obra === "ObraGrafica") {
+  if (incluirDetalleTecnico && obra.categoria_obra === "ObraGrafica") {
     if (ext?.matriz_material) {
       lineas.push(
         `${t("fields.obraGrafica.matrizMaterialLabel")}: ${tEs(`fields.obraGrafica.matrizMaterial${ext.matriz_material}` as TranslationKey)}`,
@@ -514,7 +520,7 @@ function buildObraDescripcionLineas(
       lineas.push(`${t("fields.obraGrafica.editorPublicadorLabel")}: ${ext.editor_publicador}`);
     }
   }
-  if (obra.categoria_obra === "Escultura") {
+  if (incluirDetalleTecnico && obra.categoria_obra === "Escultura") {
     if (ext?.materiales_principales) {
       lineas.push(`${t("fields.escultura.materialesPrincipalesLabel")}: ${ext.materiales_principales}`);
     }
@@ -531,7 +537,7 @@ function buildObraDescripcionLineas(
       lineas.push(`${t("fields.escultura.requisitosInstalacionLabel")}: ${ext.requisitos_instalacion}`);
     }
   }
-  if (obra.categoria_obra === "Dibujo") {
+  if (incluirDetalleTecnico && obra.categoria_obra === "Dibujo") {
     if (ext?.papel_marca) lineas.push(`${t("fields.obraGrafica.papelMarcaLabel")}: ${ext.papel_marca}`);
     if (ext?.papel_gramaje) lineas.push(`${t("fields.obraGrafica.papelGramajeLabel")}: ${ext.papel_gramaje}`);
     if (ext?.papel_caracteristicas) {
@@ -542,7 +548,7 @@ function buildObraDescripcionLineas(
       lineas.push(`${t("fields.dibujo.elementosAdicionalesLabel")}: ${ext.elementos_adicionales}`);
     }
   }
-  if (obra.categoria_obra === "TextilCeramica") {
+  if (incluirDetalleTecnico && obra.categoria_obra === "TextilCeramica") {
     if (ext?.subtipo === "TapiceriaFibra") {
       if (ext?.composicion_fibras) {
         lineas.push(`${t("fields.textilCeramica.composicionFibrasLabel")}: ${ext.composicion_fibras}`);
@@ -571,7 +577,7 @@ function buildObraDescripcionLineas(
       lineas.push(`${t("fields.escultura.requisitosInstalacionLabel")}: ${ext.requisitos_instalacion}`);
     }
   }
-  if (obra.categoria_obra === "NuevosMedios") {
+  if (incluirDetalleTecnico && obra.categoria_obra === "NuevosMedios") {
     if (ext?.naturaleza_obra) {
       lineas.push(`${t("fields.nuevosMedios.naturalezaObraLabel")}: ${ext.naturaleza_obra}`);
     }
@@ -628,7 +634,7 @@ function buildObraDescripcionLineas(
   if (incluirInfoComercial && incluirStatement && obra.statement) {
     lineas.push(`${t("obraForm.statementLabel")}: ${obra.statement}`);
   }
-  if (obra.categoria_obra === "Fotografia") {
+  if (incluirDetalleTecnico && obra.categoria_obra === "Fotografia") {
     if (ext?.serie_proyecto) lineas.push(`${t("fields.fotografia.serieProyectoLabel")}: ${ext.serie_proyecto}`);
     if (ext?.escala_por_tamanos) {
       lineas.push(
@@ -1257,6 +1263,12 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
         descripcionLineas: buildObraDescripcionLineas(obra, ext, esRegistroPersonal, tr, {
           incluirSoftwareEdicion: false,
           incluirInfoComercial: false,
+          // El comprobante de venta es el unico documento que se recorta a
+          // los datos basicos de identificacion: sin fechas/detalle tecnico
+          // de produccion ni etiquetas internas.
+          ...(ventaInformeSeleccionId === "comprobante"
+            ? { incluirDetalleTecnico: false, incluirDatosTecnicosArchivo: false, incluirTags: false }
+            : {}),
         }),
         serie: {
           numero: ejemplar.numero,
@@ -1330,7 +1342,8 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
         };
 
         if (ventaInformeSeleccionId === "comprobante") {
-          bytes = await buildComprobanteVentaPdfBytes(obraDatos, ventaDatos, compradorDatos, brandOpts);
+          const imagenResuelta = await resolveObraImagenParaPdf(context, obra);
+          bytes = await buildComprobanteVentaPdfBytes(obraDatos, ventaDatos, compradorDatos, imagenResuelta?.bytes ?? null, brandOpts);
           nombreArchivo = `comprobante_${base}.pdf`;
         } else if (ventaInformeSeleccionId === "coa") {
           bytes = await buildCoaPdfBytes(obraDatos, ventaDatos, brandOpts);

@@ -182,11 +182,19 @@ export async function buildPresupuestoPdfBytes(
   return new Uint8Array(doc.output("arraybuffer"));
 }
 
-/** Recibo/comprobante de venta con el desglose financiero completo (Fase A) + comprador + entrega (Fase B). No se ofrece para donaciones (no tienen valor comercial). */
+/**
+ * Recibo/comprobante de venta con el desglose financiero completo (Fase A) +
+ * comprador + entrega (Fase B). No se ofrece para donaciones (no tienen
+ * valor comercial). A diferencia de la ficha/COA, este documento se limita a
+ * los datos basicos que identifican la pieza (sin el detalle tecnico de
+ * produccion propio de la obra) mas los datos puntuales de impresion de la
+ * serie, e incluye una imagen de la obra junto al encabezado.
+ */
 export async function buildComprobanteVentaPdfBytes(
   obra: VentaReporteObraDatos,
   venta: VentaReporteVentaDatos,
   comprador: VentaReporteCompradorDatos,
+  imgBytes: Uint8Array | null,
   opts: InformeBrandingOpts,
 ): Promise<Uint8Array> {
   const titulo = tInforme(opts.idioma, "ventaReport.comprobanteTitulo", {
@@ -195,15 +203,44 @@ export async function buildComprobanteVentaPdfBytes(
   const { doc, marginLeft, startY } = await nuevoDocConMembrete(titulo, opts);
   const pageWidth = doc.internal.pageSize.getWidth();
   const width = pageWidth - marginLeft * 2;
-  let y = startY;
 
-  const lineas: string[] = [
+  const imageBoxSize = 60;
+  let textX = marginLeft;
+  let imageBottom = startY;
+  if (imgBytes) {
+    const formato = detectImageFormat(imgBytes);
+    if (formato) {
+      const { width: imgWidth, height: imgHeight } = await fittedImageSize(imgBytes, imageBoxSize);
+      doc.addImage(imgBytes, formato, marginLeft, startY, imgWidth, imgHeight);
+      imageBottom = startY + imgHeight;
+      textX = marginLeft + imageBoxSize + 8;
+    }
+  }
+  const textWidth = pageWidth - textX - marginLeft;
+
+  const encabezadoLineas: string[] = [
     campo(opts.idioma, "ventaForm.fechaVenta", formatFechaDDMMYYYY(venta.fechaVenta)),
     campo(opts.idioma, "ventaReport.compradorLabel", comprador.nombre),
     `${tInforme(opts.idioma, "obraForm.tituloLabel")}: ${obra.titulo}`,
     ...obra.descripcionLineas,
-    ...buildSerieLineas(obra.serie, opts.idioma),
+    `${tInforme(opts.idioma, "ventasReport.colSerie")}: ${obra.serie.numero}`,
   ];
+  if (obra.serie.tipoImpresion) {
+    encabezadoLineas.push(`${tInforme(opts.idioma, "obraDetail.tipoImpresionLabel")}: ${obra.serie.tipoImpresion}`);
+  }
+  if (obra.serie.soporteImpresion) {
+    encabezadoLineas.push(`${tInforme(opts.idioma, "obraDetail.soporteImpresion")}: ${obra.serie.soporteImpresion}`);
+  }
+  if (obra.serie.tallerImpresion) {
+    encabezadoLineas.push(`${tInforme(opts.idioma, "obraDetail.tallerImpresionLabel")}: ${obra.serie.tallerImpresion}`);
+  }
+
+  let textY = startY;
+  for (const linea of encabezadoLineas) textY = writeWrappedText(doc, linea, textX, textY, textWidth, { lineHeight: 6 });
+
+  let y = Math.max(imageBottom, textY) + 4;
+
+  const lineas: string[] = [];
   if (venta.precioLista != null) lineas.push(campo(opts.idioma, "ventaForm.precioListaLabel", formatMoneda(venta.moneda, venta.precioLista)));
   if (venta.motivoDescuento) lineas.push(campo(opts.idioma, "ventaForm.motivoDescuentoLabel", venta.motivoDescuento));
   if (venta.tipoCambio != null) lineas.push(campo(opts.idioma, "ventaForm.tipoCambioLabel", String(venta.tipoCambio)));
