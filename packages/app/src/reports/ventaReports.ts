@@ -282,7 +282,7 @@ export async function buildCoaPdfBytes(
     pageHeight - (outerMargin + innerGap) * 2,
   );
 
-  const contentX = outerMargin + 10;
+  const contentX = outerMargin + 5;
   const contentWidth = pageWidth - contentX * 2;
 
   const bannerY = outerMargin + 6;
@@ -323,7 +323,7 @@ export async function buildCoaPdfBytes(
     doc.setFontSize(10);
     doc.setTextColor(90, 90, 90);
     doc.text(label, contentX, y);
-    doc.setFont("times", "bold");
+    doc.setFont("helvetica", "italic");
     doc.setFontSize(15);
     doc.setTextColor(20, 20, 20);
     const valorLineas = doc.splitTextToSize(valor || "—", contentWidth) as string[];
@@ -343,7 +343,7 @@ export async function buildCoaPdfBytes(
       doc.setFontSize(9.5);
       doc.setTextColor(90, 90, 90);
       doc.text(col.label, colCenter, y, { align: "center" });
-      doc.setFont("times", "bold");
+      doc.setFont("helvetica", "italic");
       doc.setFontSize(12);
       doc.setTextColor(20, 20, 20);
       doc.text(col.valor || "—", colCenter, y + 7, { align: "center" });
@@ -375,7 +375,7 @@ export async function buildCoaPdfBytes(
   doc.setTextColor(90, 90, 90);
   doc.text(tInforme(opts.idioma, "ventaReport.coaEditadaPorAutorLabel"), col1Center, y, { align: "center" });
   doc.text(tInforme(opts.idioma, "ventaReport.coaFirmaAutorLabel"), col2Center, y, { align: "center" });
-  doc.setFont("times", "bold");
+  doc.setFont("helvetica", "italic");
   doc.setFontSize(12);
   doc.setTextColor(20, 20, 20);
   doc.text(cert?.editadaPorAutor || "—", col1Center, y + 7, { align: "center" });
@@ -392,7 +392,7 @@ export async function buildCoaPdfBytes(
   doc.line(contentX + colWidth2 + 6, y + 10, contentX + contentWidth - 6, y + 10);
   y += 24;
 
-  doc.setFont("times", "italic");
+  doc.setFont("helvetica", "italic");
   doc.setFontSize(11);
   doc.setTextColor(20, 20, 20);
   doc.text(`${venta.lugarVenta || "—"}, ${formatFechaLargaEs(venta.fechaVenta)}`, pageWidth / 2, y, { align: "center" });
