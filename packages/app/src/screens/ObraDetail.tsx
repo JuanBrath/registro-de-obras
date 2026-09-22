@@ -1245,6 +1245,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
             ? tInforme("es", `fields.fotografia.subtipo${ext.subtipo_fotografia}` as TranslationKey)
             : "",
           detalleTecnico2: [ejemplar.tipo_impresion, ejemplar.soporte_impresion].filter(Boolean).join(" — "),
+          cantidadPruebasAutor: ejemplares.filter((e) => e.tipo === "prueba_artista").length,
         };
       }
 
@@ -2461,7 +2462,10 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
               titulo={t("ventaForm.informesButton")}
               opciones={opciones}
               selectedId={ventaInformeSeleccionId}
-              onSelectId={setVentaInformeSeleccionId}
+              onSelectId={(id) => {
+                setVentaInformeSeleccionId(id);
+                if (id === "coa" && ventaInformeFirma === "manuscrita") setVentaInformeFirma("ninguna");
+              }}
               idioma={ventaInformeIdioma}
               onIdiomaChange={setVentaInformeIdioma}
               incluirLogo={ventaInformeIncluirLogo}
@@ -2469,6 +2473,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
               firma={ventaInformeFirma}
               onFirmaChange={setVentaInformeFirma}
               firmaDigitalDisponible={firmaBytesDisponibles !== null}
+              firmaManuscritaDeshabilitada={ventaInformeSeleccionId === "coa"}
               onGenerar={handleGenerarInformeVenta}
               generando={generandoVentaInforme}
               mensaje={ventaInformeMensaje}
