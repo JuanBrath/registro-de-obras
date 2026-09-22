@@ -422,11 +422,16 @@ function buildObraDescripcionLineas(
     incluirNotas = true,
     incluirStatement = true,
     // El comprobante de venta solo necesita los datos basicos que
-    // identifican la pieza (categoria, subtipo, tecnica, dimensiones), no
-    // todo el detalle tecnico de produccion propio de la ficha/COA (fechas
-    // de captura/edicion, escala por tamaños, y todos los campos propios de
+    // identifican la pieza (categoria, subtipo, tecnica), no todo el detalle
+    // tecnico de produccion propio de la ficha/COA (fechas de
+    // captura/edicion, escala por tamaños, y todos los campos propios de
     // cada categoria: materiales, matriz, papel, etc.).
     incluirDetalleTecnico = true,
+    // Las dimensiones de la obra en general (ext.dimensiones) son un dato de
+    // referencia de la pieza; para el comprobante de venta lo que importa es
+    // el tamaño puntual de la copia vendida (obra.serie.dimensiones), asi
+    // que este se omite y el llamador agrega el de la serie aparte.
+    incluirDimensionesObra = true,
   } = {},
 ): string[] {
   // Los valores cargados en el sistema (categoria, subtipo, tecnica, estado,
@@ -460,7 +465,7 @@ function buildObraDescripcionLineas(
     lineas.push(t("obraDetail.soporte", { valor: tEs(`fields.pintura.soporte${ext.soporte}` as TranslationKey) }));
   }
   if (ext?.tecnica) lineas.push(t("obraDetail.tecnica", { valor: ext.tecnica }));
-  if (ext?.dimensiones) lineas.push(t("obraDetail.dimensiones", { valor: ext.dimensiones }));
+  if (incluirDimensionesObra && ext?.dimensiones) lineas.push(t("obraDetail.dimensiones", { valor: ext.dimensiones }));
   if (ext?.peso) lineas.push(t("obraDetail.peso", { valor: ext.peso }));
   if (incluirDetalleTecnico && ext?.fecha_captura) {
     lineas.push(`${t("fields.fotografia.fechaCaptura")}: ${formatFechaDDMMYYYY(ext.fecha_captura)}`);
@@ -1267,7 +1272,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
           // los datos basicos de identificacion: sin fechas/detalle tecnico
           // de produccion ni etiquetas internas.
           ...(ventaInformeSeleccionId === "comprobante"
-            ? { incluirDetalleTecnico: false, incluirDatosTecnicosArchivo: false, incluirTags: false }
+            ? { incluirDetalleTecnico: false, incluirDatosTecnicosArchivo: false, incluirTags: false, incluirDimensionesObra: false }
             : {}),
         }),
         serie: {

@@ -225,6 +225,9 @@ export async function buildComprobanteVentaPdfBytes(
     ...obra.descripcionLineas,
     `${tInforme(opts.idioma, "ventasReport.colSerie")}: ${obra.serie.numero}`,
   ];
+  if (obra.serie.dimensiones) {
+    encabezadoLineas.push(`${tInforme(opts.idioma, "obraDetail.tamanoEjemplarLabel")}: ${obra.serie.dimensiones}`);
+  }
   if (obra.serie.tipoImpresion) {
     encabezadoLineas.push(`${tInforme(opts.idioma, "obraDetail.tipoImpresionLabel")}: ${obra.serie.tipoImpresion}`);
   }
