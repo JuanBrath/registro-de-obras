@@ -18,6 +18,22 @@ export interface VentaReporteSerieDatos {
   tipoEnmarcado: string;
   tamanoFinalEnmarcado: string;
   notas: string;
+  /** Cantidad de pruebas de autor de la serie (0 si no tiene). */
+  cantidadPruebasAutor: number;
+}
+
+/**
+ * El numero de copia ("2/7"), mas la cantidad de pruebas de autor de la
+ * serie si las hay ("2/7 + 2 PA") — salvo que la copia en cuestion sea, en
+ * si, una prueba de autor ("PA 1/2"), donde sumarlas de nuevo no tendria
+ * sentido. Se usa tanto en el certificado (campo "Copia") como en el
+ * comprobante de venta (campo "Serie").
+ */
+function formatearNumeroConPA(serie: VentaReporteSerieDatos): string {
+  if (serie.cantidadPruebasAutor > 0 && !serie.numero.startsWith("PA")) {
+    return `${serie.numero} + ${serie.cantidadPruebasAutor} PA`;
+  }
+  return serie.numero;
 }
 
 /** Datos que solo usa el certificado de autenticidad (ver buildCoaPdfBytes), ademas de obra/venta. */
@@ -31,8 +47,6 @@ export interface CoaCertificadoDatos {
   detalleTecnico1: string;
   /** Segunda linea de "Detalles tecnicos" (ej. tipo de impresion + soporte). */
   detalleTecnico2: string;
-  /** Cantidad de pruebas de autor de la serie (0 si no tiene). Si hay y esta copia es una edicion (no una PA en si), se informa en el campo "Copia" como "2/7 + N PA". */
-  cantidadPruebasAutor: number;
 }
 
 /** Datos de la obra/ejemplar comunes a todos los documentos de venta. `descripcionLineas` ya viene armada por el llamador (misma logica que usa la ficha/presupuesto para no duplicar el detalle por categoria). */
@@ -223,7 +237,7 @@ export async function buildComprobanteVentaPdfBytes(
     campo(opts.idioma, "ventaReport.compradorLabel", comprador.nombre),
     `${tInforme(opts.idioma, "obraForm.tituloLabel")}: ${obra.titulo}`,
     ...obra.descripcionLineas,
-    `${tInforme(opts.idioma, "ventasReport.colSerie")}: ${obra.serie.numero}`,
+    `${tInforme(opts.idioma, "ventasReport.colSerie")}: ${formatearNumeroConPA(obra.serie)}`,
   ];
   if (obra.serie.dimensiones) {
     encabezadoLineas.push(`${tInforme(opts.idioma, "obraDetail.tamanoEjemplarLabel")}: ${obra.serie.dimensiones}`);
@@ -399,16 +413,8 @@ export async function buildCoaPdfBytes(
   fila(tInforme(opts.idioma, "ventaReport.coaArtistaLabel"), obra.autor);
   fila(tInforme(opts.idioma, "obraForm.tituloLabel"), `"${obra.titulo}"`);
 
-  // Si la serie tiene pruebas de autor, se informan junto al numero de copia
-  // ("2/7 + 2 PA") — salvo que la copia certificada sea, en si, una prueba
-  // de autor (numero "PA 1/2"), donde sumarlas de nuevo no tendria sentido.
-  const copiaValor =
-    cert && cert.cantidadPruebasAutor > 0 && !obra.serie.numero.startsWith("PA")
-      ? `${obra.serie.numero} + ${cert.cantidadPruebasAutor} PA`
-      : obra.serie.numero;
-
   filaColumnas([
-    { label: tInforme(opts.idioma, "ventaReport.coaCopiaLabel"), valor: copiaValor },
+    { label: tInforme(opts.idioma, "ventaReport.coaCopiaLabel"), valor: formatearNumeroConPA(obra.serie) },
     { label: tInforme(opts.idioma, "ventaReport.coaMedidasImagenLabel"), valor: obra.serie.dimensiones },
     { label: tInforme(opts.idioma, "ventaReport.coaFechaTomaLabel"), valor: cert?.fechaToma ?? "" },
   ]);

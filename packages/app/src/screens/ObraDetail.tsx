@@ -1256,7 +1256,6 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
             ? tInforme("es", `fields.fotografia.subtipo${ext.subtipo_fotografia}` as TranslationKey)
             : "",
           detalleTecnico2: [ejemplar.tipo_impresion, ejemplar.soporte_impresion].filter(Boolean).join(" — "),
-          cantidadPruebasAutor: ejemplares.filter((e) => e.tipo === "prueba_artista").length,
         };
       }
 
@@ -1283,6 +1282,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
           tipoImpresion: ejemplar.tipo_impresion ?? "",
           soporteImpresion: ejemplar.soporte_impresion ?? "",
           tallerImpresion: ejemplar.taller_impresion ?? "",
+          cantidadPruebasAutor: ejemplares.filter((e) => e.tipo === "prueba_artista").length,
           dimensiones: ejemplar.dimensiones ?? "",
           tipoEnmarcado: ejemplar.tipo_enmarcado ?? "",
           tamanoFinalEnmarcado: ejemplar.tamano_final_enmarcado ?? "",
