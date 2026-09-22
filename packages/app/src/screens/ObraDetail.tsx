@@ -756,9 +756,10 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
   const [error, setError] = useState<string | null>(null);
   useEscapeToDismiss(error, setError);
   const [editingEjemplarId, setEditingEjemplarId] = useState<number | null>(null);
-  // Por estetica, la lista de series arranca mostrando solo la primera; el
-  // resto se despliega con el boton de abajo (ver .ejemplares-list). Las
-  // pruebas de autor tienen su propio despliegue independiente, separado.
+  // La lista de series arranca mostrando las que no estan disponibles (ver
+  // edicionesColapsadas/pruebasColapsadas en .ejemplares-list); el resto se
+  // despliega con el boton de abajo. Las pruebas de autor tienen su propio
+  // despliegue independiente, separado.
   const [mostrarTodasSeries, setMostrarTodasSeries] = useState(false);
   const [mostrarTodasPruebas, setMostrarTodasPruebas] = useState(false);
   const [editingObra, setEditingObra] = useState(false);
@@ -2083,6 +2084,13 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
   // separado: cada una tiene su propio boton de "ver mas", ver mas abajo.
   const edicionesEjemplares = ejemplares.filter((ej) => ej.tipo === "edicion");
   const pruebasEjemplares = ejemplares.filter((ej) => ej.tipo === "prueba_artista");
+  // Colapsado, se muestra cualquier ejemplar que no este disponible (vendido,
+  // reservado, etc.), que es lo que interesa ver de entrada; si todos estan
+  // disponibles no hay nada que destacar y se muestra solo el primero.
+  const edicionesNoDisponibles = edicionesEjemplares.filter((ej) => ej.estado !== "disponible");
+  const edicionesColapsadas = edicionesNoDisponibles.length > 0 ? edicionesNoDisponibles : edicionesEjemplares.slice(0, 1);
+  const pruebasNoDisponibles = pruebasEjemplares.filter((ej) => ej.estado !== "disponible");
+  const pruebasColapsadas = pruebasNoDisponibles.length > 0 ? pruebasNoDisponibles : pruebasEjemplares.slice(0, 1);
 
   return (
     <div className="obra-detail">
@@ -2224,7 +2232,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       {obra && (
         <div className="ejemplares-list">
           <h2>{t("obraDetail.ejemplares")}</h2>
-          {(mostrarTodasSeries ? edicionesEjemplares : edicionesEjemplares.slice(0, 1)).map((ej) => (
+          {(mostrarTodasSeries ? edicionesEjemplares : edicionesColapsadas).map((ej) => (
             <EjemplarRowView
               key={ej.id}
               ejemplar={ej}
@@ -2248,7 +2256,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
               onAbrirInformes={() => handleAbrirInformesVenta(ej)}
             />
           ))}
-          {edicionesEjemplares.length > 1 && (
+          {edicionesEjemplares.length > edicionesColapsadas.length && (
             <button
               type="button"
               className="ejemplares-ver-mas"
@@ -2256,17 +2264,17 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
             >
               {mostrarTodasSeries
                 ? t("obraDetail.verMenosSeries")
-                : t("obraDetail.verMasSeries", { n: edicionesEjemplares.length - 1 })}
+                : t("obraDetail.verMasSeries", { n: edicionesEjemplares.length - edicionesColapsadas.length })}
             </button>
           )}
 
           {pruebasEjemplares.length > 0 && (
             <>
               <h2>{t("obraDetail.pruebasDeAutorTitulo")}</h2>
-              {(pruebasEjemplares.length > 1
+              {(pruebasEjemplares.length > pruebasColapsadas.length
                 ? mostrarTodasPruebas
                   ? pruebasEjemplares
-                  : pruebasEjemplares.slice(0, 1)
+                  : pruebasColapsadas
                 : pruebasEjemplares
               ).map((ej) => (
                 <EjemplarRowView
@@ -2292,7 +2300,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
                   onAbrirInformes={() => handleAbrirInformesVenta(ej)}
                 />
               ))}
-              {pruebasEjemplares.length > 1 && (
+              {pruebasEjemplares.length > pruebasColapsadas.length && (
                 <button
                   type="button"
                   className="ejemplares-ver-mas"
@@ -2300,7 +2308,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
                 >
                   {mostrarTodasPruebas
                     ? t("obraDetail.verMenosSeries")
-                    : t("obraDetail.verMasPruebasAutor", { n: pruebasEjemplares.length - 1 })}
+                    : t("obraDetail.verMasPruebasAutor", { n: pruebasEjemplares.length - pruebasColapsadas.length })}
                 </button>
               )}
             </>

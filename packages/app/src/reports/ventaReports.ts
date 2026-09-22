@@ -282,7 +282,7 @@ export async function buildCoaPdfBytes(
     pageHeight - (outerMargin + innerGap) * 2,
   );
 
-  const contentX = outerMargin + 16;
+  const contentX = outerMargin + 22;
   const contentWidth = pageWidth - contentX * 2;
 
   const bannerY = outerMargin + 6;
