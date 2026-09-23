@@ -522,23 +522,24 @@ export async function buildCoaFichaPdfBytes(
   doc.setFont("helvetica", "bolditalic");
   doc.setFontSize(15);
   doc.setTextColor(0, 0, 0);
-  doc.text("CERTIFICATE OF AUTHENTICITY ARTWORK  |  CERTIFICADO DE AUTENTICIDAD DE ARTE", pageWidth / 2, outerMargin + 16, {
-    align: "center",
-  });
+  // En una sola linea el titulo bilingue es mas ancho que la hoja A4, asi
+  // que va partido en dos lineas: ingles arriba, espanol abajo.
+  doc.text("CERTIFICATE OF AUTHENTICITY ARTWORK", pageWidth / 2, outerMargin + 14, { align: "center" });
+  doc.text("CERTIFICADO DE AUTENTICIDAD DE ARTE", pageWidth / 2, outerMargin + 21, { align: "center" });
 
   const tableX = 18;
   const tableWidth = pageWidth - tableX * 2;
-  const colRatios = [0.28, 0.32, 0.18, 0.22];
-  const colX = [tableX];
-  for (const ratio of colRatios) colX.push(colX[colX.length - 1] + tableWidth * ratio);
 
   // Alto de fila dinamico: algunas etiquetas bilingues son largas y no
   // entran en una sola linea en columnas angostas (ej. "Is this part of a
   // series? | Es parte de una serie:"), asi que se envuelven con
   // splitTextToSize y la fila crece para acomodarlas.
   type FichaCelda = { label: string; value?: string };
+  // Cada fila reparte el ancho de la tabla en partes iguales segun cuantas
+  // celdas tiene (1 o 2), para que los valores largos no se corten de mas.
   function fichaFila(celdas: FichaCelda[], y: number): number {
-    const colWidths = celdas.map((_, i) => colX[i + 1] - colX[i] - 4);
+    const colX = celdas.map((_, i) => tableX + (tableWidth / celdas.length) * i);
+    const colWidths = celdas.map(() => tableWidth / celdas.length - 4);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
     const labelLineas = celdas.map((c, i) => doc.splitTextToSize(c.label, colWidths[i]) as string[]);
@@ -567,7 +568,7 @@ export async function buildCoaFichaPdfBytes(
     return y + rowHeight;
   }
 
-  let y = outerMargin + 26;
+  let y = outerMargin + 30;
   y = fichaFila([{ label: "Author | Autor :", value: obra.autor }], y);
   y = fichaFila([{ label: "Based | Reside:", value: ficha.artistaReside }], y);
   y = fichaFila(
