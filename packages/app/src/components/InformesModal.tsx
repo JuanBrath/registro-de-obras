@@ -42,7 +42,6 @@ export function InformesModal({
   firma,
   onFirmaChange,
   firmaDigitalDisponible,
-  firmaManuscritaDeshabilitada,
   onGenerar,
   generando,
   disabled,
@@ -69,8 +68,6 @@ export function InformesModal({
   firma: FirmaEleccion;
   onFirmaChange: (firma: FirmaEleccion) => void;
   firmaDigitalDisponible: boolean;
-  /** El certificado de autenticidad ya deja ese espacio en blanco pase lo que pase, asi que elegir esta opcion no cambia nada: se deshabilita (en gris) para ese documento. */
-  firmaManuscritaDeshabilitada?: boolean;
   onGenerar: () => void;
   generando: boolean;
   /** Deshabilita el boton "Generar" por una razon distinta a estar generando (ej. falta elegir series). */
@@ -239,7 +236,6 @@ export function InformesModal({
                 type="radio"
                 name="informeFirma"
                 checked={firma === "manuscrita"}
-                disabled={firmaManuscritaDeshabilitada}
                 onChange={() => onFirmaChange("manuscrita")}
               />
               {t("informes.firmaManuscrita")}

@@ -734,7 +734,6 @@ export const en: Record<keyof typeof es, string> = {
   "ventaForm.informesButton": "Reports",
   "ventaForm.informeOpcionComprobante": "Sale receipt",
   "ventaForm.informeOpcionCoa": "Certificate of authenticity (COA)",
-  "ventaForm.informeOpcionCoaFicha": "Certificate of authenticity (record style)",
   "ventaForm.informeOpcionContratoEstandar": "Sale contract (standard)",
   "ventaForm.informeOpcionContratoRofr": "Sale contract (with right of first refusal)",
   "ventaForm.informeOpcionRemito": "Delivery note",
@@ -822,15 +821,6 @@ export const en: Record<keyof typeof es, string> = {
     "This purchase is subject to the right-of-first-refusal terms detailed in the attached contract.",
   "ventaReport.remitoTitulo": "Delivery note",
   "ventaReport.estadoConservacionLabel": "Condition at time of delivery",
-  "ventaReport.coaTituloDobleHoja": "Certificate of Authenticity",
-  "ventaReport.coaArtistaLabel": "Artist",
-  "ventaReport.coaCopiaLabel": "Copy no.",
-  "ventaReport.coaMedidasImagenLabel": "Image Dimensions",
-  "ventaReport.coaFechaTomaLabel": "Date Taken",
-  "ventaReport.coaDetallesTecnicosLabel": "Technical details",
-  "ventaReport.coaEditadaPorAutorLabel": "Edited by the artist",
-  "ventaReport.coaFirmaAutorLabel": "Artist's Signature",
-  "ventaReport.coaDerechosReservados": "All rights reserved",
 
   // ObraDetail
   "obraDetail.fallbackTitulo": "Artwork",

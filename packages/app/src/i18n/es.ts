@@ -732,7 +732,6 @@ export const es = {
   "ventaForm.informesButton": "Informes",
   "ventaForm.informeOpcionComprobante": "Comprobante de venta",
   "ventaForm.informeOpcionCoa": "Certificado de autenticidad (COA)",
-  "ventaForm.informeOpcionCoaFicha": "Certificado de autenticidad (tipo ficha)",
   "ventaForm.informeOpcionContratoEstandar": "Contrato de compraventa (estándar)",
   "ventaForm.informeOpcionContratoRofr": "Contrato de compraventa (con derecho de tanteo)",
   "ventaForm.informeOpcionRemito": "Remito de salida",
@@ -820,15 +819,6 @@ export const es = {
     "La adquisición de esta obra está sujeta a los términos y acuerdos de derecho de adquisición preferente detallados en el contrato adjunto.",
   "ventaReport.remitoTitulo": "Remito de salida",
   "ventaReport.estadoConservacionLabel": "Estado de conservación al momento de la entrega",
-  "ventaReport.coaTituloDobleHoja": "Certificado de Autenticidad de Obra",
-  "ventaReport.coaArtistaLabel": "Artista",
-  "ventaReport.coaCopiaLabel": "Copia n°",
-  "ventaReport.coaMedidasImagenLabel": "Medidas de Imagen",
-  "ventaReport.coaFechaTomaLabel": "Fecha de Toma",
-  "ventaReport.coaDetallesTecnicosLabel": "Detalles técnicos",
-  "ventaReport.coaEditadaPorAutorLabel": "Editada por el autor",
-  "ventaReport.coaFirmaAutorLabel": "Firma del Autor",
-  "ventaReport.coaDerechosReservados": "Todos los derechos reservados",
 
   // ObraDetail
   "obraDetail.fallbackTitulo": "Obra",
