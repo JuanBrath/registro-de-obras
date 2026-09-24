@@ -4,7 +4,7 @@ import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
 import { detectImageFormat } from "../utils/detectImageFormat.js";
 import { savePdfWithDialog } from "../utils/savePdfDialog.js";
 import { certificadoVacio, type Certificado, type GuiasCorte, type Idioma, type Modelo, type TamanoHoja } from "./certificado.js";
-import { valoresDeStudio, type DatosStudioCertificado } from "./datosStudio.js";
+import { valoresDeStudio, type DatosStudioCertificado, type FormatoCertificado } from "./datosStudio.js";
 import { generarCertificado } from "./generar.js";
 import { leerImagen } from "./imagen.js";
 
@@ -17,9 +17,10 @@ type CampoImagen = "imagen" | "firmaArtista" | "logo" | "galeriaFirma";
  * Pantalla para preparar un certificado de autenticidad: a la izquierda los
  * datos y a la derecha la vista previa en vivo. Los datos que Studio ya tiene
  * (de la obra, la copia, la venta y el perfil) salen en gris y no se pueden
- * cambiar acá: para eso están los botones "Editar en la obra" y "Editar la
- * copia". Solo quedan habilitados los datos que Studio no tiene, que se
- * completan para este certificado sin tocar el registro.
+ * cambiar acá: para eso están los botones "Editar en la obra", "Editar la
+ * copia" y "Editar la venta". Solo quedan habilitados los datos que están
+ * vacíos en Studio, que se completan para este certificado sin tocar el
+ * registro.
  */
 export function CertificadoEditor({
   datos,
@@ -28,45 +29,48 @@ export function CertificadoEditor({
   nombreArchivo,
   onEditarObra,
   onEditarCopia,
+  onEditarVenta,
   onClose,
 }: {
   datos: DatosStudioCertificado;
-  modelosDisponibles: Modelo[];
+  modelosDisponibles: FormatoCertificado[];
   idiomaInicial: Idioma;
   /** Nombre sugerido para el PDF, sin extension. */
   nombreArchivo: string;
   onEditarObra: () => void;
   onEditarCopia: () => void;
+  onEditarVenta: () => void;
   onClose: () => void;
 }) {
   const { t } = useLanguage();
-  const [modelo, setModelo] = useState<Modelo>("clasico");
+  const [formato, setFormato] = useState<FormatoCertificado>("clasico");
   const [tamanoHoja, setTamanoHoja] = useState<TamanoHoja>("a4");
   const [idioma, setIdioma] = useState<Idioma>(idiomaInicial);
   const [guiasCorte, setGuiasCorte] = useState<GuiasCorte>("ninguna");
   const [incluirFirma, setIncluirFirma] = useState(false);
   const [incluirLogo, setIncluirLogo] = useState(true);
-  // Lo que se completa a mano en los campos que Studio no tiene. Lugar y
-  // fecha arrancan con los de la venta, pero se pueden cambiar.
-  const [manual, setManual] = useState<Partial<Certificado>>({ lugar: datos.lugar, fecha: datos.fecha });
+  // Lo que se completa a mano en los campos que estan vacios en Studio.
+  const [manual, setManual] = useState<Partial<Certificado>>({});
   const [vistaPrevia, setVistaPrevia] = useState<string | null>(null);
   const [mensaje, setMensaje] = useState<{ tipo: "ok" | "error"; texto: string } | null>(null);
   const [guardando, setGuardando] = useState(false);
   const urlAnterior = useRef<string | null>(null);
 
+  const modelo: Modelo = formato === "fichaSinGaleria" ? "ficha" : formato;
+  const sinFirmaGaleria = formato === "fichaSinGaleria";
   const esFicha = modelo === "ficha";
   const esClasico = modelo === "clasico";
   const deStudio = useMemo(() => valoresDeStudio(datos, modelo), [datos, modelo]);
 
   const cert = useMemo<Certificado>(() => {
-    const c: Certificado = { ...certificadoVacio(idioma), ...manual, ...deStudio, modelo, tamanoHoja, idioma, guiasCorte };
+    const c: Certificado = { ...certificadoVacio(idioma), ...manual, ...deStudio, modelo, sinFirmaGaleria, tamanoHoja, idioma, guiasCorte };
     if (!incluirFirma) {
       if (deStudio.firmaArtista) c.firmaArtista = null;
       if (deStudio.galeriaFirma) c.galeriaFirma = null;
     }
     if (!incluirLogo && deStudio.logo) c.logo = null;
     return c;
-  }, [manual, deStudio, modelo, tamanoHoja, idioma, guiasCorte, incluirFirma, incluirLogo]);
+  }, [manual, deStudio, modelo, sinFirmaGaleria, tamanoHoja, idioma, guiasCorte, incluirFirma, incluirLogo]);
 
   // La vista previa se regenera medio segundo despues de dejar de tocar algo.
   useEffect(() => {
@@ -119,21 +123,24 @@ export function CertificadoEditor({
   function texto(
     campo: CampoTexto,
     etiqueta: TranslationKey,
-    opciones: { renglones?: number; medio?: boolean; vacioGris?: TranslationKey } = {},
+    opciones: { renglones?: number; medio?: boolean; fecha?: boolean } = {},
   ) {
+    // Gris si Studio tiene el dato; habilitado si esta vacio en Studio.
     const bloqueado = campo in deStudio;
-    const valor = bloqueado ? (deStudio[campo] as string) : ((manual[campo] as string | undefined) ?? "");
     const propiedades = {
-      value: valor,
+      value: cert[campo] as string,
       disabled: bloqueado,
       title: bloqueado ? t("certificado.campoDeRegistro") : undefined,
-      placeholder: bloqueado && !valor && opciones.vacioGris ? t(opciones.vacioGris) : undefined,
       onChange: (e: { target: { value: string } }) => completar(campo, e.target.value),
     };
     return (
       <label className={`certificado-campo${opciones.medio ? " certificado-campo-medio" : ""}`}>
         <span className="certificado-etiqueta">{t(etiqueta)}</span>
-        {opciones.renglones ? <textarea rows={opciones.renglones} {...propiedades} /> : <input type="text" {...propiedades} />}
+        {opciones.renglones ? (
+          <textarea rows={opciones.renglones} {...propiedades} />
+        ) : (
+          <input type={opciones.fecha ? "date" : "text"} {...propiedades} />
+        )}
       </label>
     );
   }
@@ -178,12 +185,13 @@ export function CertificadoEditor({
     );
   }
 
-  const hayFirmaDeRegistro = Boolean(deStudio.firmaArtista || deStudio.galeriaFirma);
+  const hayFirmaDeRegistro = Boolean(deStudio.firmaArtista || (esFicha && !sinFirmaGaleria && deStudio.galeriaFirma));
   const hayLogoDeRegistro = Boolean(deStudio.logo);
-  const modelos: { valor: Modelo; nombre: TranslationKey; detalle: TranslationKey }[] = [
+  const modelos: { valor: FormatoCertificado; nombre: TranslationKey; detalle: TranslationKey }[] = [
     { valor: "clasico", nombre: "certificado.modeloClasico", detalle: "certificado.modeloClasicoDetalle" },
     { valor: "simple", nombre: "certificado.modeloSimple", detalle: "certificado.modeloSimpleDetalle" },
     { valor: "ficha", nombre: "certificado.modeloFicha", detalle: "certificado.modeloFichaDetalle" },
+    { valor: "fichaSinGaleria", nombre: "certificado.modeloFichaSinGaleria", detalle: "certificado.modeloFichaSinGaleriaDetalle" },
   ];
 
   return (
@@ -197,7 +205,7 @@ export function CertificadoEditor({
               {modelos
                 .filter((m) => modelosDisponibles.includes(m.valor))
                 .map((m) => (
-                  <Opcion key={m.valor} activa={modelo === m.valor} onClick={() => setModelo(m.valor)} titulo={t(m.nombre)} detalle={t(m.detalle)} />
+                  <Opcion key={m.valor} activa={formato === m.valor} onClick={() => setFormato(m.valor)} titulo={t(m.nombre)} detalle={t(m.detalle)} />
                 ))}
             </Opciones>
             <Opciones etiqueta={t("certificado.tamanoHoja")}>
@@ -226,6 +234,9 @@ export function CertificadoEditor({
               <button type="button" className="certificado-boton" onClick={onEditarCopia}>
                 {t("certificado.editarEnCopia")}
               </button>
+              <button type="button" className="certificado-boton" onClick={onEditarVenta}>
+                {t("certificado.editarEnVenta")}
+              </button>
             </div>
 
             <Subseccion titulo={t("certificado.seccionObra")}>
@@ -243,7 +254,7 @@ export function CertificadoEditor({
             <Subseccion titulo={t("certificado.seccionCopia")}>
               <div className="certificado-fila">
                 {texto("copia", "certificado.copia", { medio: true })}
-                {texto("pruebasAutor", "certificado.pruebasAutor", { medio: true, vacioGris: "certificado.pruebasAutorNinguna" })}
+                {texto("pruebasAutor", "certificado.pruebasAutor", { medio: true })}
               </div>
               {texto("medidas", "certificado.medidas")}
             </Subseccion>
@@ -256,7 +267,7 @@ export function CertificadoEditor({
 
             <Subseccion titulo={t("certificado.seccionFirma")}>
               {imagen("firmaArtista", "certificado.firmaArtista", "grafico")}
-              {esFicha && imagen("galeriaFirma", "certificado.firmaGaleria", "grafico")}
+              {esFicha && !sinFirmaGaleria && imagen("galeriaFirma", "certificado.firmaGaleria", "grafico")}
               {hayFirmaDeRegistro ? (
                 <label className="certificado-casilla">
                   <input type="checkbox" checked={incluirFirma} onChange={(e) => setIncluirFirma(e.target.checked)} />
@@ -293,10 +304,7 @@ export function CertificadoEditor({
           <Seccion titulo={t("certificado.seccionEmision")}>
             <div className="certificado-fila">
               {texto("lugar", "certificado.lugar", { medio: true })}
-              <label className="certificado-campo certificado-campo-medio">
-                <span className="certificado-etiqueta">{t("certificado.fecha")}</span>
-                <input type="date" value={cert.fecha} onChange={(e) => completar("fecha", e.target.value)} />
-              </label>
+              {texto("fecha", "certificado.fecha", { medio: true, fecha: true })}
             </div>
           </Seccion>
         </section>

@@ -107,7 +107,7 @@ export async function generarFicha(c: Certificado): Promise<Uint8Array> {
   // Firmas. La de la galeria solo aparece si se cargaron datos de galeria:
   // un fotografo que vende directo no necesita esa segunda linea.
   y += 14 * k;
-  const conGaleria = Boolean(c.galeriaNombre || c.galeriaFirma);
+  const conGaleria = !c.sinFirmaGaleria && Boolean(c.galeriaNombre || c.galeriaFirma);
   const firmas: { bytes: Uint8Array | null; caption: string }[] = [
     { bytes: c.firmaArtista, caption: rotulo(c.idioma, "Firma del artista", "Artist signature", " | ") },
   ];

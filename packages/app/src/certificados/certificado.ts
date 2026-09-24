@@ -2,6 +2,8 @@
 // de Galeris Cert (github.com/JuanBrath/galeris-cert, carpeta src/). Si se
 // corrige o mejora un diseño en un programa, hay que hacer lo mismo en el
 // otro para que los dos sigan sacando el mismo certificado.
+// Diferencia conocida: `sinFirmaGaleria` (ficha sin la linea de firma de la
+// galeria) existe solo aca; Galeris Cert todavia no la tiene.
 
 export type Modelo = "clasico" | "ficha" | "simple";
 export type TamanoHoja = "a4" | "carta" | "a5";
@@ -53,6 +55,8 @@ export interface Certificado {
   galeriaTelefono: string;
   galeriaEmail: string;
   galeriaFirma: Uint8Array | null;
+  /** Solo ficha: sin la segunda linea de firma (la de la galeria); el resto del pie queda igual. */
+  sinFirmaGaleria: boolean;
 
   lugar: string;
   /** Fecha de emision, AAAA-MM-DD. */
@@ -92,6 +96,7 @@ export function certificadoVacio(idioma: Idioma = "es"): Certificado {
     galeriaTelefono: "",
     galeriaEmail: "",
     galeriaFirma: null,
+    sinFirmaGaleria: false,
     lugar: "",
     fecha: hoyISO(),
   };

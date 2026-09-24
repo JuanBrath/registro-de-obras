@@ -1,6 +1,13 @@
 import type { Certificado, Modelo } from "./certificado.js";
 
 /**
+ * Lo que se elige como "modelo" en la pantalla: los tres diseños, mas la
+ * ficha sin la linea de firma de la galeria (es la misma ficha con
+ * `sinFirmaGaleria`).
+ */
+export type FormatoCertificado = Modelo | "fichaSinGaleria";
+
+/**
  * Lo que Galeris Studio ya sabe de la obra, la copia y la venta para armar un
  * certificado. Son datos crudos: cuales van a cada campo del certificado
  * depende del modelo elegido (ver valoresDeStudio).
@@ -25,7 +32,7 @@ export interface DatosStudioCertificado {
   impresion: string;
   serieProyecto: string;
   ubicacionFirma: string;
-  /** Firma y logo del perfil activo (registro personal o galeria). */
+  /** Firma y logo del perfil activo (del artista en registro personal, de la galeria en galeria). */
   firmaPerfil: Uint8Array | null;
   logoPerfil: Uint8Array | null;
   /** Firma del artista de la obra (la ficha representa a un artista distinto del que firma como galeria). */
@@ -34,8 +41,7 @@ export interface DatosStudioCertificado {
   galeriaTelefono: string;
   galeriaEmail: string;
   galeriaFirma: Uint8Array | null;
-  galeriaLogo: Uint8Array | null;
-  /** Punto de partida de "Lugar" y "Fecha" (los de la venta); se pueden cambiar. */
+  /** Lugar y fecha de la venta ("" si no estan cargados o la fecha no es valida). */
   lugar: string;
   fecha: string;
 }
@@ -44,8 +50,8 @@ export interface DatosStudioCertificado {
  * Los valores que Studio ya tiene para cada campo del certificado, segun el
  * modelo. Solo aparece un campo si Studio tiene algo cargado: los que faltan
  * quedan libres para que la persona los complete (ver CertificadoEditor).
- * La cantidad de pruebas de autor siempre aparece, porque "ninguna" tambien
- * es un dato que Studio conoce.
+ * Regla: un campo sale en gris si Studio tiene el dato, y habilitado si esta
+ * vacio en Studio.
  */
 export function valoresDeStudio(d: DatosStudioCertificado, modelo: Modelo): Partial<Certificado> {
   const esFicha = modelo === "ficha";
@@ -63,16 +69,18 @@ export function valoresDeStudio(d: DatosStudioCertificado, modelo: Modelo): Part
     serieProyecto: d.serieProyecto,
     ubicacionFirma: d.ubicacionFirma,
     firmaArtista: esFicha ? d.firmaArtistaObra : d.firmaPerfil,
-    logo: esFicha ? d.galeriaLogo : d.logoPerfil,
+    logo: d.logoPerfil,
     galeriaNombre: d.galeriaNombre,
     galeriaTelefono: d.galeriaTelefono,
     galeriaEmail: d.galeriaEmail,
     galeriaFirma: d.galeriaFirma,
+    pruebasAutor: d.cantidadPruebasAutor > 0 ? String(d.cantidadPruebasAutor) : "",
+    lugar: d.lugar,
+    fecha: d.fecha,
   };
   const conDatos: Partial<Certificado> = {};
   for (const [campo, valor] of Object.entries(todos)) {
     if (valor !== "" && valor != null) Object.assign(conDatos, { [campo]: valor });
   }
-  conDatos.pruebasAutor = d.cantidadPruebasAutor > 0 ? String(d.cantidadPruebasAutor) : "";
   return conDatos;
 }

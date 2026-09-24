@@ -45,7 +45,6 @@ import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
 import { savePdfWithDialog } from "../utils/savePdfDialog.js";
 import { formatFechaDDMMYYYY } from "../utils/formatFecha.js";
-import { todayISO } from "../utils/today.js";
 import { focusNextOnEnter } from "../utils/focusNextOnEnter.js";
 import { generarMiniatura } from "../utils/generarMiniatura.js";
 import type { ArchivoMetadata } from "../utils/readImageMetadata.js";
@@ -56,8 +55,7 @@ import { resolveFirmaBytes, resolveMembreteLogoBytes, resolveLocalidad } from ".
 import { buildObraSeriesDetalladoPdfBytes, type ObraEjemplarDetalle } from "../reports/obraReports.js";
 import { resolveObraImagenParaPdf } from "../utils/resolveObraImagenPdf.js";
 import { CertificadoEditor } from "../certificados/CertificadoEditor.js";
-import type { DatosStudioCertificado } from "../certificados/datosStudio.js";
-import type { Modelo as ModeloCertificado } from "../certificados/certificado.js";
+import type { DatosStudioCertificado, FormatoCertificado } from "../certificados/datosStudio.js";
 import {
   buildComprobanteVentaPdfBytes,
   buildContratoPdfBytes,
@@ -755,9 +753,9 @@ function buildObraDescripcionLineas(
   return lineas;
 }
 
-// El modelo "ficha" es el de galeria (representa a un artista distinto de quien firma como galeria): en registro personal no se ofrece.
-const MODELOS_CERTIFICADO_PERSONAL: ModeloCertificado[] = ["clasico", "simple"];
-const MODELOS_CERTIFICADO_GALERIA: ModeloCertificado[] = ["clasico", "simple", "ficha"];
+// La ficha con firma de la galeria es la de galeria (representa a un artista distinto de quien firma como galeria): en registro personal solo se ofrece la ficha sin esa firma.
+const MODELOS_CERTIFICADO_PERSONAL: FormatoCertificado[] = ["clasico", "simple", "fichaSinGaleria"];
+const MODELOS_CERTIFICADO_GALERIA: FormatoCertificado[] = ["clasico", "simple", "ficha", "fichaSinGaleria"];
 
 export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => void }) {
   const { context, personalArtista, galeriaPerfil } = useWorkspace();
@@ -811,7 +809,11 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
   const [ventaInformeMensaje, setVentaInformeMensaje] = useState<string | null>(null);
   useEscapeToDismiss(ventaInformeMensaje, setVentaInformeMensaje);
   // Pantalla del certificado de autenticidad (ver CertificadoEditor): tiene su propia ventana, aparte de "Informes".
-  const [certificadoTarget, setCertificadoTarget] = useState<{ ejemplar: EjemplarRow; datos: DatosStudioCertificado } | null>(null);
+  const [certificadoTarget, setCertificadoTarget] = useState<{
+    ejemplar: EjemplarRow;
+    venta: VentaRow | undefined;
+    datos: DatosStudioCertificado;
+  } | null>(null);
   const [rofrPlazoAnios, setRofrPlazoAnios] = useState("3");
   const [rofrPlazoDias, setRofrPlazoDias] = useState("30");
   const [rofrCriterioPrecio, setRofrCriterioPrecio] = useState("");
@@ -1272,13 +1274,12 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
         galeriaTelefono: galeriaPerfil?.telefono ?? "",
         galeriaEmail: galeriaPerfil?.email ?? "",
         galeriaFirma: await resolveFirmaBytes(context, null, galeriaPerfil),
-        galeriaLogo: await resolveMembreteLogoBytes(context, null, galeriaPerfil),
         lugar: venta?.lugar_venta ?? "",
-        fecha: /^\d{4}-\d{2}-\d{2}$/.test(fechaVenta) ? fechaVenta : todayISO(),
+        fecha: /^\d{4}-\d{2}-\d{2}$/.test(fechaVenta) ? fechaVenta : "",
       };
       setVentaInformeTarget(null);
       setVentaInformeMensaje(null);
-      setCertificadoTarget({ ejemplar, datos });
+      setCertificadoTarget({ ejemplar, venta, datos });
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -2570,6 +2571,11 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
           onEditarCopia={() => {
             setEditingEjemplarId(certificadoTarget.ejemplar.id);
             setCertificadoTarget(null);
+          }}
+          onEditarVenta={() => {
+            const { ejemplar, venta } = certificadoTarget;
+            setCertificadoTarget(null);
+            if (venta) setVentaTarget({ ejemplarId: ejemplar.id, existingVenta: toVentaExistente(venta) });
           }}
           onClose={() => setCertificadoTarget(null)}
         />
