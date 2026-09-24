@@ -1878,3 +1878,250 @@ input[type="date"] {
 .ventas-report-tarjeta p {
   margin: 0.25rem 0 0;
 }
+
+/* Pantalla del certificado de autenticidad (certificados/CertificadoEditor.tsx):
+   formulario a la izquierda con los datos, vista previa a la derecha. Los
+   datos que vienen del registro se ven en gris y deshabilitados. */
+.modal-content-certificado {
+  max-width: min(96vw, 1500px);
+  height: 92vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: 1rem;
+  text-align: left;
+}
+
+.certificado-editor {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(340px, 480px) 1fr;
+  gap: 1.25rem;
+}
+
+.certificado-formulario {
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.certificado-formulario h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.2rem;
+}
+
+.certificado-previa {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+  min-height: 0;
+}
+
+.certificado-previa iframe {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-panel);
+}
+
+.certificado-pie {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.certificado-pie .success,
+.certificado-pie .error {
+  margin: 0 auto 0 0;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+.certificado-seccion {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 0;
+  padding: 0.75rem 0 0.25rem;
+  min-width: 0;
+}
+
+.certificado-seccion legend {
+  padding: 0 0.5rem 0 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--galeris-gold);
+}
+
+.certificado-subseccion {
+  margin-top: 0.75rem;
+}
+
+.certificado-subseccion h3 {
+  margin: 0 0 0.4rem;
+  font-size: 0.9rem;
+  color: var(--text-h);
+}
+
+.certificado-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-bottom: 0.65rem;
+}
+
+.certificado-campo-medio {
+  flex: 1;
+  min-width: 0;
+}
+
+.certificado-fila {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.certificado-etiqueta {
+  font-weight: 500;
+  color: var(--text-h);
+}
+
+.certificado-ayuda {
+  margin: 0.25rem 0 0.5rem;
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+.certificado-campo input[type="text"],
+.certificado-campo input[type="date"],
+.certificado-campo textarea {
+  font: inherit;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-h);
+  min-width: 0;
+}
+
+.certificado-campo textarea {
+  resize: vertical;
+}
+
+/* Datos que vienen del registro: en gris, sin poder tocarlos. */
+.certificado-campo input:disabled,
+.certificado-campo textarea:disabled {
+  background: var(--bg-panel);
+  color: var(--text);
+  opacity: 1;
+  -webkit-text-fill-color: var(--text);
+  cursor: not-allowed;
+}
+
+.certificado-opciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.certificado-opcion {
+  flex: 1 1 6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  padding: 0.45rem 0.6rem;
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-h);
+  cursor: pointer;
+}
+
+.certificado-opcion span {
+  font-size: 0.75rem;
+  color: var(--text);
+}
+
+.certificado-opcion-activa {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.certificado-acciones-registro {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.certificado-boton {
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-h);
+  cursor: pointer;
+}
+
+.certificado-link {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--text);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.certificado-imagen-fila {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.certificado-miniatura {
+  width: 3.5rem;
+  height: 3.5rem;
+  object-fit: contain;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  /* Blanco fijo: firmas y logos suelen ser de tinta oscura sobre fondo transparente. */
+  background: #fff;
+}
+
+.certificado-miniatura-gris {
+  opacity: 0.75;
+}
+
+.certificado-casilla {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.65rem;
+}
+
+@media (max-width: 900px) {
+  .modal-content-certificado {
+    overflow-y: auto;
+  }
+
+  .certificado-editor {
+    grid-template-columns: 1fr;
+  }
+
+  .certificado-formulario {
+    overflow-y: visible;
+  }
+
+  .certificado-previa iframe {
+    min-height: 60vh;
+  }
+}

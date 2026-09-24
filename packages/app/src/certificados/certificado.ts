@@ -59,6 +59,44 @@ export interface Certificado {
   fecha: string;
 }
 
+function hoyISO(): string {
+  const d = new Date();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${mm}-${dd}`;
+}
+
+/** `idioma`: el de los titulos del certificado. */
+export function certificadoVacio(idioma: Idioma = "es"): Certificado {
+  return {
+    modelo: "clasico",
+    tamanoHoja: "a4",
+    idioma,
+    guiasCorte: "ninguna",
+    imagen: null,
+    titulo: "",
+    artista: "",
+    artistaReside: "",
+    anioToma: "",
+    anioEdicion: "",
+    copia: "",
+    pruebasAutor: "",
+    medidas: "",
+    captura: "",
+    impresion: "",
+    serieProyecto: "",
+    ubicacionFirma: "",
+    firmaArtista: null,
+    logo: null,
+    galeriaNombre: "",
+    galeriaTelefono: "",
+    galeriaEmail: "",
+    galeriaFirma: null,
+    lugar: "",
+    fecha: hoyISO(),
+  };
+}
+
 /**
  * El numero de copia ("2/7"), mas la cantidad de pruebas de autor de la
  * edicion si las hay ("2/7 + 2 PA", o "+ 2 AP" en ingles) — salvo que la

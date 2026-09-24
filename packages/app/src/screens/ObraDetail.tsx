@@ -45,6 +45,7 @@ import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
 import { savePdfWithDialog } from "../utils/savePdfDialog.js";
 import { formatFechaDDMMYYYY } from "../utils/formatFecha.js";
+import { todayISO } from "../utils/today.js";
 import { focusNextOnEnter } from "../utils/focusNextOnEnter.js";
 import { generarMiniatura } from "../utils/generarMiniatura.js";
 import type { ArchivoMetadata } from "../utils/readImageMetadata.js";
@@ -54,6 +55,9 @@ import { tInforme, type InformeIdioma } from "../reports/informeIdioma.js";
 import { resolveFirmaBytes, resolveMembreteLogoBytes, resolveLocalidad } from "../reports/reportBranding.js";
 import { buildObraSeriesDetalladoPdfBytes, type ObraEjemplarDetalle } from "../reports/obraReports.js";
 import { resolveObraImagenParaPdf } from "../utils/resolveObraImagenPdf.js";
+import { CertificadoEditor } from "../certificados/CertificadoEditor.js";
+import type { DatosStudioCertificado } from "../certificados/datosStudio.js";
+import type { Modelo as ModeloCertificado } from "../certificados/certificado.js";
 import {
   buildCoaPdfBytes,
   buildCoaFichaPdfBytes,
@@ -755,6 +759,10 @@ function buildObraDescripcionLineas(
   return lineas;
 }
 
+// El modelo "ficha" es el de galeria (representa a un artista distinto de quien firma como galeria): en registro personal no se ofrece.
+const MODELOS_CERTIFICADO_PERSONAL: ModeloCertificado[] = ["clasico", "simple"];
+const MODELOS_CERTIFICADO_GALERIA: ModeloCertificado[] = ["clasico", "simple", "ficha"];
+
 export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => void }) {
   const { context, personalArtista, galeriaPerfil } = useWorkspace();
   const { t, idioma } = useLanguage();
@@ -806,6 +814,8 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
   const [generandoVentaInforme, setGenerandoVentaInforme] = useState(false);
   const [ventaInformeMensaje, setVentaInformeMensaje] = useState<string | null>(null);
   useEscapeToDismiss(ventaInformeMensaje, setVentaInformeMensaje);
+  // Pantalla del certificado de autenticidad (ver CertificadoEditor): tiene su propia ventana, aparte de "Informes".
+  const [certificadoTarget, setCertificadoTarget] = useState<{ ejemplar: EjemplarRow; datos: DatosStudioCertificado } | null>(null);
   const [rofrPlazoAnios, setRofrPlazoAnios] = useState("3");
   const [rofrPlazoDias, setRofrPlazoDias] = useState("30");
   const [rofrCriterioPrecio, setRofrCriterioPrecio] = useState("");
@@ -1213,7 +1223,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
     const defaultId = !presupuestoBloqueadoPara(ejemplar.estado)
       ? "presupuesto"
       : venta?.tipo === "donacion"
-        ? "coa"
+        ? "certificado"
         : "comprobante";
     setVentaInformeSeleccionId(defaultId);
     setVentaInformeIdioma(idioma);
@@ -1226,12 +1236,70 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
     setFirmaBytesDisponibles(await resolveFirmaBytes(context, personalArtista, galeriaPerfil));
   }
 
+  // Junta todo lo que Studio ya sabe de esta obra, copia y venta, y abre la
+  // pantalla del certificado con esos datos (que ahi salen en gris).
+  async function handleAbrirCertificado(ejemplar: EjemplarRow, venta: VentaRow | undefined) {
+    if (!obra || !context) return;
+    setGenerandoVentaInforme(true);
+    setError(null);
+    try {
+      const imagenResuelta = await resolveObraImagenParaPdf(context, obra);
+      const artistaRows = await context.db.query<{ firma_path: string | null; lugar_residencia_trabajo: string | null }>(
+        "SELECT firma_path, lugar_residencia_trabajo FROM artista WHERE id = ?",
+        [obra.artista_id],
+      );
+      const artistaFirmaPath = artistaRows[0]?.firma_path ?? null;
+      const subtipoLabel = ext?.subtipo_fotografia
+        ? tInforme("es", `fields.fotografia.subtipo${ext.subtipo_fotografia}` as TranslationKey)
+        : "";
+      const fechaVenta = venta?.fecha_venta?.slice(0, 10) ?? "";
+      const datos: DatosStudioCertificado = {
+        imagen: imagenResuelta?.bytes ?? null,
+        titulo: obra.titulo,
+        artista: obra.nombre_completo,
+        artistaReside: artistaRows[0]?.lugar_residencia_trabajo ?? "",
+        anioPeriodo: obra.anio_periodo ?? "",
+        anioCaptura: ext?.fecha_captura ? ext.fecha_captura.slice(0, 4) : "",
+        anioEdicion: ext?.anio_edicion ?? "",
+        copia: ejemplar.numero,
+        cantidadPruebasAutor: ejemplares.filter((e) => e.tipo === "prueba_artista").length,
+        medidas: ejemplar.dimensiones ?? "",
+        categoriaLabel: [tInforme("es", `categoria.${obra.categoria_obra}` as TranslationKey), subtipoLabel].filter(Boolean).join(" — "),
+        subtipoLabel,
+        impresion: [ejemplar.tipo_impresion, ejemplar.soporte_impresion].filter(Boolean).join(" — "),
+        serieProyecto: ext?.serie_proyecto ?? "",
+        ubicacionFirma: ejemplar.ubicacion_firma ?? "",
+        firmaPerfil: await resolveFirmaBytes(context, personalArtista, galeriaPerfil),
+        logoPerfil: await resolveMembreteLogoBytes(context, personalArtista, galeriaPerfil),
+        firmaArtistaObra: artistaFirmaPath ? await context.fs.readFile(artistaFirmaPath).catch(() => null) : null,
+        galeriaNombre: galeriaPerfil?.nombre ?? "",
+        galeriaTelefono: galeriaPerfil?.telefono ?? "",
+        galeriaEmail: galeriaPerfil?.email ?? "",
+        galeriaFirma: await resolveFirmaBytes(context, null, galeriaPerfil),
+        galeriaLogo: await resolveMembreteLogoBytes(context, null, galeriaPerfil),
+        lugar: venta?.lugar_venta ?? "",
+        fecha: /^\d{4}-\d{2}-\d{2}$/.test(fechaVenta) ? fechaVenta : todayISO(),
+      };
+      setVentaInformeTarget(null);
+      setVentaInformeMensaje(null);
+      setCertificadoTarget({ ejemplar, datos });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setGenerandoVentaInforme(false);
+    }
+  }
+
   // Documento distinto de la ficha: la ficha describe toda la obra con todas
   // sus series; estos documentos son puntuales de una unica serie (y, salvo
   // el presupuesto, de una venta ya registrada).
   async function handleGenerarInformeVenta() {
     if (!obra || !context || !ventaInformeTarget) return;
     const { ejemplar, venta } = ventaInformeTarget;
+    if (ventaInformeSeleccionId === "certificado") {
+      await handleAbrirCertificado(ejemplar, venta);
+      return;
+    }
     setGenerandoVentaInforme(true);
     setError(null);
     setVentaInformeMensaje(null);
@@ -2462,9 +2530,15 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
               ? [{ id: "presupuesto", label: t("obraDetail.generarPresupuesto") }]
               : []),
             ...(venta && venta.tipo !== "donacion" ? [{ id: "comprobante", label: t("ventaForm.informeOpcionComprobante") }] : []),
-            ...(venta ? [{ id: "coa", label: t("ventaForm.informeOpcionCoa") }] : []),
-            ...(venta && !esRegistroPersonal
-              ? [{ id: "coaFicha", label: t("ventaForm.informeOpcionCoaFicha"), hideIdioma: true }]
+            ...(venta
+              ? [
+                  {
+                    id: "certificado",
+                    label: t("ventaForm.informeOpcionCoa"),
+                    ocultarAjustes: true,
+                    accionLabel: t("certificado.opcionAccion"),
+                  },
+                ]
               : []),
             ...(venta ? [{ id: "remito", label: t("ventaForm.informeOpcionRemito") }] : []),
             ...(venta && venta.tipo === "venta"
@@ -2539,6 +2613,25 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
             />
           );
         })()}
+
+      {certificadoTarget && obra && (
+        <CertificadoEditor
+          datos={certificadoTarget.datos}
+          modelosDisponibles={esRegistroPersonal ? MODELOS_CERTIFICADO_PERSONAL : MODELOS_CERTIFICADO_GALERIA}
+          idiomaInicial={idioma}
+          nombreArchivo={`coa_${obra.titulo.replace(/[^a-zA-Z0-9]+/g, "_")}_${certificadoTarget.ejemplar.numero.replace(/[^a-zA-Z0-9]+/g, "_")}`}
+          onEditarObra={() => {
+            setCertificadoTarget(null);
+            setEditingObra(true);
+            setTimeout(() => document.querySelector(".obra-form")?.scrollIntoView({ block: "start" }), 50);
+          }}
+          onEditarCopia={() => {
+            setEditingEjemplarId(certificadoTarget.ejemplar.id);
+            setCertificadoTarget(null);
+          }}
+          onClose={() => setCertificadoTarget(null)}
+        />
+      )}
 
       {ventaTarget && (
         <Modal onClose={() => setVentaTarget(null)} className="modal-content-drawer">
