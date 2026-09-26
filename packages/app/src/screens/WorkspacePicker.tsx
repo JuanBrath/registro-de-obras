@@ -10,7 +10,7 @@ import { useAutoHoverCollage } from "../utils/useAutoHoverCollage.js";
 
 const CANTIDAD_MINIATURAS_COLLAGE = 10;
 
-export function WorkspacePicker() {
+export function WorkspacePicker({ onManual }: { onManual: () => void }) {
   const { loading, error, open } = useWorkspace();
   const { edicion } = useEdicion();
   const { miniaturasModo } = useMiniaturasModo();
@@ -68,6 +68,11 @@ export function WorkspacePicker() {
             {t("workspacePicker.galeria")}
           </button>
         )}
+      </div>
+      <div className="workspace-picker-manual">
+        <button type="button" onClick={onManual}>
+          {t("workspaceHome.manual")}
+        </button>
       </div>
       {loading && <p>{t("workspacePicker.opening")}</p>}
       {error && <p className="error">{error}</p>}

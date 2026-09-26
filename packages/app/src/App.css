@@ -2167,3 +2167,252 @@ input[type="date"] {
     min-height: 60vh;
   }
 }
+
+/* Boton del manual en la pantalla de presentacion: aparte de los botones de entrada. */
+.workspace-picker-manual {
+  margin-top: 1.5rem;
+}
+
+/* Manual del usuario (manual/ManualScreen.tsx): indice a la izquierda, capitulo
+   o resultados de la busqueda a la derecha. */
+.manual {
+  max-width: 1100px;
+  margin: 0 auto;
+  text-align: left;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.manual h1 {
+  font-size: 1.6rem;
+}
+
+.manual-buscador input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-h);
+  font-size: 1rem;
+}
+
+.manual-cuerpo {
+  display: grid;
+  grid-template-columns: minmax(200px, 250px) minmax(0, 1fr);
+  gap: 2rem;
+  margin-top: 1.25rem;
+  align-items: start;
+}
+
+.manual-indice {
+  position: sticky;
+  top: calc(var(--topbar-height) + 0.75rem);
+  max-height: calc(100vh - var(--topbar-height) - 2rem);
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.manual-indice h2 {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--galeris-gold);
+}
+
+.manual-indice ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.manual-indice-boton {
+  width: 100%;
+  padding: 0.35rem 0.6rem;
+  border: none;
+  border-left: 3px solid transparent;
+  border-radius: 4px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.manual-indice-boton:hover {
+  background: var(--bg-panel);
+}
+
+.manual-indice-boton.activo {
+  border-left-color: var(--galeris-gold);
+  background: var(--bg-panel);
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+.manual-contenido {
+  min-width: 0;
+  max-width: 52rem;
+}
+
+.manual-capitulo-titulo {
+  margin: 0 0 0.25rem;
+  font-size: 1.5rem;
+  scroll-margin-top: calc(var(--topbar-height) + 1rem);
+}
+
+.manual-resumen {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.manual-seccion {
+  margin-top: 1.75rem;
+  scroll-margin-top: calc(var(--topbar-height) + 1rem);
+}
+
+.manual-seccion-titulo {
+  margin: 0 0 0.5rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 1.15rem;
+  color: var(--text-h);
+}
+
+.manual-seccion h3:not(.manual-seccion-titulo) {
+  margin: 1.25rem 0 0.35rem;
+  font-size: 1rem;
+  color: var(--text-h);
+}
+
+.manual p,
+.manual li {
+  color: var(--text-h);
+}
+
+.manual-seccion p,
+.manual-resumen {
+  margin: 0.6rem 0;
+}
+
+.manual ol,
+.manual ul {
+  padding-left: 1.4rem;
+  margin: 0.5rem 0;
+}
+
+.manual li {
+  margin: 0.25rem 0;
+}
+
+.manual li > ul {
+  margin: 0.25rem 0;
+}
+
+.manual code {
+  padding: 0.05rem 0.3rem;
+  border-radius: 4px;
+  background: var(--bg-panel);
+  font-size: 0.9em;
+}
+
+.manual-nota {
+  margin: 0.75rem 0;
+  padding: 0.5rem 0.9rem;
+  border-left: 4px solid var(--galeris-gold);
+  border-radius: 4px;
+  background: var(--bg-panel);
+  color: var(--text-h);
+}
+
+.manual mark {
+  padding: 0 0.1rem;
+  border-radius: 3px;
+  background: rgba(201, 162, 71, 0.4);
+  color: inherit;
+}
+
+.manual-en-este-capitulo {
+  margin: 0.75rem 0 0;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.manual-en-este-capitulo ul {
+  margin: 0.35rem 0 0;
+}
+
+.manual-resultados ul {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.manual-resultado {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  width: 100%;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.manual-resultado:hover {
+  border-color: var(--galeris-gold);
+  background: var(--bg-panel);
+}
+
+.manual-resultado strong {
+  color: var(--text-h);
+}
+
+.manual-cantidad {
+  margin: 0;
+  font-weight: 600;
+}
+
+.manual-limpiar {
+  margin-top: 0.5rem;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-h);
+  cursor: pointer;
+}
+
+.manual-anterior-siguiente {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 2.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+@media (max-width: 800px) {
+  .manual-cuerpo {
+    grid-template-columns: 1fr;
+  }
+
+  .manual-indice {
+    position: static;
+    max-height: none;
+  }
+}

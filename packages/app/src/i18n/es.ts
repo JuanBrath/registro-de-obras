@@ -125,6 +125,22 @@ export const es = {
   "workspaceHome.galeriaFotos": "Galería de obras",
   "workspaceHome.ventas": "Ventas",
   "workspaceHome.clientes": "Clientes",
+  "workspaceHome.manual": "Manual del usuario",
+
+  // Manual del usuario
+  "manual.titulo": "Manual del usuario",
+  "manual.buscarPlaceholder": "Buscar en el manual… (por ejemplo: firma digital)",
+  "manual.indice": "Índice",
+  "manual.enEsteCapitulo": "En este capítulo",
+  "manual.resultadosUno": "1 resultado",
+  "manual.resultadosVarios": "{{n}} resultados",
+  "manual.sinResultados": "No se encontró nada para «{{consulta}}». Probá con otras palabras.",
+  "manual.resultadosParciales": "Ninguna sección tiene todas esas palabras. Estas son las que más se parecen.",
+  "manual.limpiarBusqueda": "Borrar la búsqueda",
+  "manual.quitarResaltado": "Quitar el resaltado",
+  "manual.capituloAnterior": "← Capítulo anterior",
+  "manual.capituloSiguiente": "Capítulo siguiente →",
+  "manual.soloEspanol": "El manual está disponible solo en español por ahora.",
 
   // VentasReport
   "ventasReport.title": "Ventas",

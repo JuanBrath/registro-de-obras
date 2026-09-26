@@ -127,6 +127,22 @@ export const en: Record<keyof typeof es, string> = {
   "workspaceHome.galeriaFotos": "Artwork gallery",
   "workspaceHome.ventas": "Sales",
   "workspaceHome.clientes": "Clients",
+  "workspaceHome.manual": "User manual",
+
+  // User manual
+  "manual.titulo": "User manual",
+  "manual.buscarPlaceholder": "Search the manual… (for example: digital signature)",
+  "manual.indice": "Contents",
+  "manual.enEsteCapitulo": "In this chapter",
+  "manual.resultadosUno": "1 result",
+  "manual.resultadosVarios": "{{n}} results",
+  "manual.sinResultados": "Nothing found for “{{consulta}}”. Try other words.",
+  "manual.resultadosParciales": "No section has all of those words. These are the closest matches.",
+  "manual.limpiarBusqueda": "Clear the search",
+  "manual.quitarResaltado": "Remove highlighting",
+  "manual.capituloAnterior": "← Previous chapter",
+  "manual.capituloSiguiente": "Next chapter →",
+  "manual.soloEspanol": "The manual is only available in Spanish for now.",
 
   // VentasReport
   "ventasReport.title": "Sales",

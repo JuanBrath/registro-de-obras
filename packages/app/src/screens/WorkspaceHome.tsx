@@ -20,6 +20,7 @@ export function WorkspaceHome({
   onVentas,
   onGaleriaPerfil,
   onClientes,
+  onManual,
 }: {
   onEditProfile: () => void;
   onVerObras: () => void;
@@ -27,6 +28,7 @@ export function WorkspaceHome({
   onVentas: () => void;
   onGaleriaPerfil: () => void;
   onClientes: () => void;
+  onManual: () => void;
 }) {
   const { context, personalArtista, open } = useWorkspace();
   const { edicion } = useEdicion();
@@ -114,6 +116,9 @@ export function WorkspaceHome({
         </button>
         <button type="button" onClick={onVentas}>
           {t("workspaceHome.ventas")}
+        </button>
+        <button type="button" onClick={onManual}>
+          {t("workspaceHome.manual")}
         </button>
       </div>
 

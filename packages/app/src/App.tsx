@@ -22,6 +22,7 @@ import { SettingsModal } from "./screens/SettingsModal.js";
 import { VentasReport } from "./screens/VentasReport.js";
 import { GaleriaProfileForm } from "./screens/GaleriaProfileForm.js";
 import { ClientesScreen } from "./screens/ClientesScreen.js";
+import { ManualScreen } from "./manual/ManualScreen.js";
 
 type Screen =
   | { name: "home" }
@@ -35,7 +36,7 @@ type Screen =
   | { name: "galeria-perfil" }
   | { name: "clientes" };
 
-function WorkspaceScreens() {
+function WorkspaceScreens({ onManual }: { onManual: () => void }) {
   const { context, personalArtista, close } = useWorkspace();
   const [screen, setScreen] = useState<Screen>({ name: "home" });
 
@@ -127,6 +128,7 @@ function WorkspaceScreens() {
           onVentas={() => setScreen({ name: "ventas" })}
           onGaleriaPerfil={() => setScreen({ name: "galeria-perfil" })}
           onClientes={() => setScreen({ name: "clientes" })}
+          onManual={onManual}
         />
       );
   }
@@ -139,6 +141,9 @@ function AppShell() {
   const { edicion } = useEdicion();
   const { t } = useLanguage();
   const [showSettings, setShowSettings] = useState(false);
+  // El manual se lee tanto desde la pantalla de presentacion como desde el
+  // inicio de un registro abierto: al cerrarlo se vuelve a donde se estaba.
+  const [showManual, setShowManual] = useState(false);
   useForceReflowOnResize();
   useAutoScrollToAlerts();
 
@@ -164,7 +169,13 @@ function AppShell() {
           ⚙
         </button>
       </div>
-      {context ? <WorkspaceScreens key={context.workspace} /> : <WorkspacePicker />}
+      {showManual ? (
+        <ManualScreen onBack={() => setShowManual(false)} />
+      ) : context ? (
+        <WorkspaceScreens key={context.workspace} onManual={() => setShowManual(true)} />
+      ) : (
+        <WorkspacePicker onManual={() => setShowManual(true)} />
+      )}
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
     </>
   );

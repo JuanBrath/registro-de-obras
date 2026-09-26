@@ -26,3 +26,4 @@ export * from "./business/fechas.js";
 export * from "./business/tags.js";
 export * from "./business/edicion.js";
 export * from "./business/correccionesRegistro.js";
+export * from "./business/manual.js";
