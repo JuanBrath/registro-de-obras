@@ -731,7 +731,6 @@ export const es = {
   "ventaForm.clausulaReventaLabel": "Cláusula de reventa / primera opción de compra",
   "ventaForm.informesButton": "Informes",
   "ventaForm.informeOpcionComprobante": "Comprobante de venta",
-  "ventaForm.informeOpcionCoa": "Certificado de autenticidad (COA)",
   "ventaForm.informeOpcionContratoEstandar": "Contrato de compraventa (estándar)",
   "ventaForm.informeOpcionContratoRofr": "Contrato de compraventa (con derecho de tanteo)",
   "ventaForm.informeOpcionRemito": "Remito de salida",
@@ -739,9 +738,8 @@ export const es = {
   "ventaForm.plazoDiasLabel": "Plazo para ejercer el derecho (días)",
   "ventaForm.criterioPrecioLabel": "Criterio de precio de igualación",
   "ventaForm.informeGenerado": "Informe generado correctamente.",
-  "certificado.opcionAccion": "Preparar",
-  "certificado.confirmarTexto":
-    "Se abre la pantalla para preparar el certificado de esta copia, con los datos de la obra, la copia y la venta.",
+  "certificado.boton": "Certificado",
+  "certificado.botonAyuda": "Preparar el certificado de autenticidad de esta copia",
   "certificado.corregirDatos": "Corregir datos del registro",
   "certificado.avisoTitulo": "Atención",
   "certificado.avisoTexto":

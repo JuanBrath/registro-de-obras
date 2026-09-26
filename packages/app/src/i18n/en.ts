@@ -733,7 +733,6 @@ export const en: Record<keyof typeof es, string> = {
   "ventaForm.clausulaReventaLabel": "Resale clause / right of first refusal",
   "ventaForm.informesButton": "Reports",
   "ventaForm.informeOpcionComprobante": "Sale receipt",
-  "ventaForm.informeOpcionCoa": "Certificate of authenticity (COA)",
   "ventaForm.informeOpcionContratoEstandar": "Sale contract (standard)",
   "ventaForm.informeOpcionContratoRofr": "Sale contract (with right of first refusal)",
   "ventaForm.informeOpcionRemito": "Delivery note",
@@ -741,9 +740,8 @@ export const en: Record<keyof typeof es, string> = {
   "ventaForm.plazoDiasLabel": "Term to exercise the right (days)",
   "ventaForm.criterioPrecioLabel": "Price-matching criterion",
   "ventaForm.informeGenerado": "Report generated successfully.",
-  "certificado.opcionAccion": "Prepare",
-  "certificado.confirmarTexto":
-    "Opens the screen to prepare this copy's certificate, with the details of the artwork, the copy and the sale.",
+  "certificado.boton": "Certificate",
+  "certificado.botonAyuda": "Prepare this copy's certificate of authenticity",
   "certificado.corregirDatos": "Correct records",
   "certificado.avisoTitulo": "Heads up",
   "certificado.avisoTexto":

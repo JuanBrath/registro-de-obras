@@ -11,11 +11,6 @@ export interface InformeOpcion {
   extra?: ReactNode;
   /** Oculta el selector de idioma para documentos legales que solo se generan en espanol (ej. contratos). */
   hideIdioma?: boolean;
-  /**
-   * Para documentos que tienen su propia pantalla (ej. el certificado): al tocar la opcion se
-   * ejecuta esto en vez de dejarla elegida (el punto no queda marcado).
-   */
-  alElegir?: () => void;
 }
 
 /**
@@ -87,12 +82,7 @@ export function InformesModal({
       <div className="informes-lista">
         {opciones.map((op) => (
           <label key={op.id} className="informes-opcion">
-            <input
-              type="radio"
-              name="informeOpcion"
-              checked={!op.alElegir && selectedId === op.id}
-              onChange={() => (op.alElegir ? op.alElegir() : onSelectId(op.id))}
-            />
+            <input type="radio" name="informeOpcion" checked={selectedId === op.id} onChange={() => onSelectId(op.id)} />
             {op.label}
           </label>
         ))}

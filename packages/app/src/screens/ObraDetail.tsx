@@ -810,8 +810,8 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
   const [ventaInformeMensaje, setVentaInformeMensaje] = useState<string | null>(null);
   useEscapeToDismiss(ventaInformeMensaje, setVentaInformeMensaje);
   // Pantalla del certificado de autenticidad (ver CertificadoEditor): tiene su propia ventana, aparte de "Informes".
-  // Ventanita "Preparar / Volver" que aparece al elegir el certificado en Informes, antes de abrir su pantalla.
-  const [certificadoConfirmar, setCertificadoConfirmar] = useState(false);
+  // Mientras se juntan los datos (imagen, firmas, logo) para abrir la pantalla del certificado.
+  const [abriendoCertificado, setAbriendoCertificado] = useState(false);
   const [certificadoTarget, setCertificadoTarget] = useState<{
     ejemplar: EjemplarRow;
     venta: VentaRow | undefined;
@@ -1238,10 +1238,11 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
   }
 
   // Junta todo lo que Studio ya sabe de esta obra, copia y venta, y abre la
-  // pantalla del certificado con esos datos (que ahi salen en gris).
+  // pantalla del certificado con esos datos (que ahi salen en gris). Se abre
+  // con el boton "Certificado de autenticidad" de cada copia vendida.
   async function handleAbrirCertificado(ejemplar: EjemplarRow, venta: VentaRow | undefined) {
     if (!obra || !context) return;
-    setGenerandoVentaInforme(true);
+    setAbriendoCertificado(true);
     setError(null);
     try {
       const imagenResuelta = await resolveObraImagenParaPdf(context, obra);
@@ -1281,14 +1282,11 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
         lugar: venta?.lugar_venta ?? "",
         fecha: /^\d{4}-\d{2}-\d{2}$/.test(fechaVenta) ? fechaVenta : "",
       };
-      setVentaInformeTarget(null);
-      setVentaInformeMensaje(null);
-      setCertificadoConfirmar(false);
       setCertificadoTarget({ ejemplar, venta, datos });
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
-      setGenerandoVentaInforme(false);
+      setAbriendoCertificado(false);
     }
   }
 
@@ -2323,6 +2321,8 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
               onConfirmarVenta={(venta) => handleConfirmarVenta(venta, ej.id)}
               anulando={anulandoVenta}
               onAbrirInformes={() => handleAbrirInformesVenta(ej)}
+              onAbrirCertificado={() => handleAbrirCertificado(ej, ej.venta_id ? ventas[ej.venta_id] : undefined)}
+              abriendoCertificado={abriendoCertificado}
             />
           ))}
           {edicionesEjemplares.length > edicionesColapsadas.length && (
@@ -2367,6 +2367,8 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
                   onConfirmarVenta={(venta) => handleConfirmarVenta(venta, ej.id)}
                   anulando={anulandoVenta}
                   onAbrirInformes={() => handleAbrirInformesVenta(ej)}
+                  onAbrirCertificado={() => handleAbrirCertificado(ej, ej.venta_id ? ventas[ej.venta_id] : undefined)}
+                  abriendoCertificado={abriendoCertificado}
                 />
               ))}
               {pruebasEjemplares.length > pruebasColapsadas.length && (
@@ -2471,19 +2473,9 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       )}
 
       {ventaInformeTarget &&
-        !certificadoConfirmar &&
         (() => {
           const { ejemplar, venta } = ventaInformeTarget;
           const opciones = [
-            ...(venta
-              ? [
-                  {
-                    id: "certificado",
-                    label: t("ventaForm.informeOpcionCoa"),
-                    alElegir: () => setCertificadoConfirmar(true),
-                  },
-                ]
-              : []),
             ...(!presupuestoBloqueadoPara(ejemplar.estado)
               ? [{ id: "presupuesto", label: t("obraDetail.generarPresupuesto") }]
               : []),
@@ -2557,25 +2549,6 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
             />
           );
         })()}
-
-      {ventaInformeTarget && certificadoConfirmar && (
-        <Modal onClose={() => setCertificadoConfirmar(false)}>
-          <h2>{t("certificado.titulo")}</h2>
-          <p>{t("certificado.confirmarTexto")}</p>
-          <div className="obra-form-saved-actions">
-            <button
-              type="button"
-              onClick={() => handleAbrirCertificado(ventaInformeTarget.ejemplar, ventaInformeTarget.venta)}
-              disabled={generandoVentaInforme}
-            >
-              {generandoVentaInforme ? t("common.saving") : t("certificado.opcionAccion")}
-            </button>
-            <button type="button" onClick={() => setCertificadoConfirmar(false)} disabled={generandoVentaInforme}>
-              {t("common.back")}
-            </button>
-          </div>
-        </Modal>
-      )}
 
       {certificadoTarget && obra && (
         <CertificadoEditor
@@ -3560,6 +3533,8 @@ function EjemplarRowView({
   onConfirmarVenta,
   anulando,
   onAbrirInformes,
+  onAbrirCertificado,
+  abriendoCertificado,
 }: {
   ejemplar: EjemplarRow;
   categoria: CategoriaObra;
@@ -3610,6 +3585,9 @@ function EjemplarRowView({
   onConfirmarVenta: (venta: VentaRow) => void;
   anulando: boolean;
   onAbrirInformes: () => void;
+  /** Abre la pantalla del certificado de autenticidad (solo se ofrece si la copia tiene venta). */
+  onAbrirCertificado: () => void;
+  abriendoCertificado: boolean;
 }) {
   const { t } = useLanguage();
   const [estado, setEstado] = useState(ejemplar.estado);
@@ -4219,6 +4197,11 @@ function EjemplarRowView({
         {(!["descartada", "coleccion_autor", "destruida"].includes(ejemplar.estado) || venta) && (
           <button type="button" onClick={onAbrirInformes}>
             {t("ventaForm.informesButton")}
+          </button>
+        )}
+        {venta && (
+          <button type="button" onClick={onAbrirCertificado} disabled={abriendoCertificado} title={t("certificado.botonAyuda")}>
+            {abriendoCertificado ? t("common.loading") : t("certificado.boton")}
           </button>
         )}
       </div>
