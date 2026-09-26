@@ -442,32 +442,100 @@ export function ObrasList({
         </div>
       </div>
 
-      {obras.length > 0 && (
-        <div className="header-actions obras-list-options obras-list-fila-principal">
-          <div className="buscador-con-ayuda obras-list-buscador-fila-principal">
-            <input type="search" className="obras-list-buscador" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
-            <HelpIcon fieldKey="busqueda_general" />
-          </div>
-          <MiniaturasSizeSlider columnas={columnasGrid} onChange={handleTamanoMiniaturasChange} />
-        </div>
-      )}
-
-      <div className="header-actions obras-list-options obras-list-fila-principal">
-        <button type="button" onClick={onNuevaObra}>
-          {t("workspaceHome.nuevaObra")}
-        </button>
-        <button
-          type="button"
-          onClick={() =>
-            onVerGaleria({ selectedTags, selectedArtistaId, selectedCategoria, selectedSubtipo, calificacionFiltro })
-          }
-        >
-          {t("workspaceHome.galeriaFotos")}
-        </button>
-        {obras.length > 0 && (
-          <button type="button" onClick={handleAbrirInformesMenu} disabled={filteredObras.length === 0}>
-            {t("informesObras.generarInforme")}
+      <div className="obras-toolbar">
+        <div className="obras-toolbar-fila">
+          {obras.length > 0 && (
+            <div className="buscador-con-ayuda obras-list-buscador-fila-principal">
+              <input type="search" className="obras-list-buscador" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
+              <HelpIcon fieldKey="busqueda_general" />
+            </div>
+          )}
+          <button type="button" onClick={onNuevaObra}>
+            {t("workspaceHome.nuevaObra")}
           </button>
+          <button
+            type="button"
+            onClick={() =>
+              onVerGaleria({ selectedTags, selectedArtistaId, selectedCategoria, selectedSubtipo, calificacionFiltro })
+            }
+          >
+            {t("workspaceHome.galeriaFotos")}
+          </button>
+          {obras.length > 0 && (
+            <button type="button" onClick={handleAbrirInformesMenu} disabled={filteredObras.length === 0}>
+              {t("informesObras.generarInforme")}
+            </button>
+          )}
+          {obras.length > 0 && <MiniaturasSizeSlider columnas={columnasGrid} onChange={handleTamanoMiniaturasChange} />}
+        </div>
+
+        {obras.length > 0 && (
+          <div className="obras-toolbar-fila">
+            <label className="galeria-filtro-artista">
+              {t("obrasList.ordenarPorLabel")}
+              <select value={ordenPor} onChange={(e) => setOrdenPor(e.target.value as "titulo" | "codigo_inventario" | "fecha_captura")}>
+                <option value="codigo_inventario">{t("obrasList.ordenarPorCodigoInventario")}</option>
+                <option value="titulo">{t("obrasList.ordenarPorTitulo")}</option>
+                <option value="fecha_captura">{t("obrasList.ordenarPorFechaCaptura")}</option>
+              </select>
+            </label>
+
+            {esGaleria && allArtistas.length > 0 && (
+              <label className="galeria-filtro-artista">
+                {t("obraForm.artistaLabel")}
+                <select value={selectedArtistaId ?? ""} onChange={(e) => setSelectedArtistaId(e.target.value === "" ? null : Number(e.target.value))}>
+                  <option value="">{t("galeria.todosArtistas")}</option>
+                  {allArtistas.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.nombre}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+
+            {allCategorias.length > 0 && (
+              <label className="galeria-filtro-artista">
+                {t("obraForm.categoriaLabel")}
+                <select value={selectedCategoria ?? ""} onChange={(e) => handleCategoriaChange(e.target.value)}>
+                  <option value="">{t("galeria.todasCategorias")}</option>
+                  {allCategorias.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {t(`categoria.${cat}` as TranslationKey)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+
+            {allSubtipos.length > 0 && (
+              <label className="galeria-filtro-artista">
+                {t("field.subtipo")}
+                <select value={selectedSubtipo ?? ""} onChange={(e) => setSelectedSubtipo(e.target.value || null)}>
+                  <option value="">{t("galeria.todosSubtipos")}</option>
+                  {allSubtipos.map((entry) => (
+                    <option key={`${entry.categoria}:${entry.subtipo}`} value={entry.subtipo}>
+                      {t(subtipoTranslationKey(entry.categoria, entry.subtipo))}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+
+            <CalificacionFilterButton
+              calificacionFiltro={calificacionFiltro}
+              onChange={setCalificacionFiltro}
+              onQuitarATodas={handleQuitarCalificacionATodas}
+            />
+            {allTags.length > 0 && (
+              <div className="obras-toolbar-etiquetas">
+                <span className="galeria-filtro-etiquetas-label">
+                  {t("obraForm.etiquetasLabel")} <HelpIcon fieldKey="filtro_etiquetas_multiple" />
+                </span>
+                <TagFilterPicker opciones={allTags} value={selectedTags} onChange={setSelectedTags} />
+              </div>
+            )}
+          </div>
         )}
       </div>
 
@@ -479,80 +547,6 @@ export function ObrasList({
       )}
 
       {!loading && obras.length === 0 && <p>{t("obrasList.sinObras")}</p>}
-
-      {obras.length > 0 ? (
-        <div className="galeria-filtros-selects">
-          <label className="galeria-filtro-artista">
-            {t("obrasList.ordenarPorLabel")}
-            <select value={ordenPor} onChange={(e) => setOrdenPor(e.target.value as "titulo" | "codigo_inventario" | "fecha_captura")}>
-              <option value="codigo_inventario">{t("obrasList.ordenarPorCodigoInventario")}</option>
-              <option value="titulo">{t("obrasList.ordenarPorTitulo")}</option>
-              <option value="fecha_captura">{t("obrasList.ordenarPorFechaCaptura")}</option>
-            </select>
-          </label>
-
-          {esGaleria && allArtistas.length > 0 && (
-            <label className="galeria-filtro-artista">
-              {t("obraForm.artistaLabel")}
-              <select value={selectedArtistaId ?? ""} onChange={(e) => setSelectedArtistaId(e.target.value === "" ? null : Number(e.target.value))}>
-                <option value="">{t("galeria.todosArtistas")}</option>
-                {allArtistas.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.nombre}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-
-          {allCategorias.length > 0 && (
-            <label className="galeria-filtro-artista">
-              {t("obraForm.categoriaLabel")}
-              <select value={selectedCategoria ?? ""} onChange={(e) => handleCategoriaChange(e.target.value)}>
-                <option value="">{t("galeria.todasCategorias")}</option>
-                {allCategorias.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {t(`categoria.${cat}` as TranslationKey)}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-
-          {allSubtipos.length > 0 && (
-            <label className="galeria-filtro-artista">
-              {t("field.subtipo")}
-              <select value={selectedSubtipo ?? ""} onChange={(e) => setSelectedSubtipo(e.target.value || null)}>
-                <option value="">{t("galeria.todosSubtipos")}</option>
-                {allSubtipos.map((entry) => (
-                  <option key={`${entry.categoria}:${entry.subtipo}`} value={entry.subtipo}>
-                    {t(subtipoTranslationKey(entry.categoria, entry.subtipo))}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-
-          <CalificacionFilterButton
-            calificacionFiltro={calificacionFiltro}
-            onChange={setCalificacionFiltro}
-            onQuitarATodas={handleQuitarCalificacionATodas}
-          />
-        </div>
-      ) : null}
-
-      {obras.length > 0 && (
-        <div className="header-actions obras-list-options obras-list-fila-principal galeria-filtro-etiquetas-fila">
-          {allTags.length > 0 && (
-            <>
-              <span className="galeria-filtro-etiquetas-label">
-                {t("obraForm.etiquetasLabel")} <HelpIcon fieldKey="filtro_etiquetas_multiple" />
-              </span>
-              <TagFilterPicker opciones={allTags} value={selectedTags} onChange={setSelectedTags} />
-            </>
-          )}
-        </div>
-      )}
 
       {!loading && obras.length > 0 && filteredObras.length === 0 && <p>{t("obrasList.sinResultados")}</p>}
 

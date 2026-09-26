@@ -2416,3 +2416,109 @@ input[type="date"] {
     max-height: none;
   }
 }
+
+/* Obras y Galeria de obras: el buscador y los filtros forman una barra
+   compacta que queda fija justo debajo de la barra superior al hacer
+   scroll (el titulo, que esta afuera, se va con el scroll). Asi siempre se
+   ve que se esta mostrando, y con letra mas chica y los controles en dos
+   renglones queda mas lugar para las miniaturas. Ver ObrasList.tsx y
+   GaleriaFotos.tsx. */
+.obras-toolbar {
+  position: sticky;
+  top: var(--topbar-height);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.25rem;
+  padding: 0.4rem 0 0.5rem;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.72rem;
+  line-height: 1.3;
+}
+
+.obras-toolbar-fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.9rem;
+}
+
+.obras-toolbar .obras-toolbar-fila > button {
+  padding: 0.2rem 0.7rem;
+}
+
+.obras-toolbar input,
+.obras-toolbar select {
+  font-size: inherit;
+}
+
+.obras-toolbar select {
+  padding: 0.15rem 0.3rem;
+}
+
+/* Buscador: mas angosto y sin el margen de arriba que trae para otras pantallas. */
+.obras-toolbar .buscador-con-ayuda.obras-list-buscador-fila-principal {
+  flex: 1 1 200px;
+  max-width: 340px;
+  margin: 0;
+}
+
+.obras-toolbar .obras-list-buscador {
+  margin-top: 0;
+  padding: 0.25rem 0.55rem;
+}
+
+/* Cada filtro con su nombre al costado (no arriba), para ocupar un solo renglon. */
+.obras-toolbar .galeria-filtro-artista {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0;
+  max-width: none;
+}
+
+/* Regulador de tamano de miniaturas: titulo y barra en el mismo renglon, pegado a la derecha. */
+.obras-toolbar .miniaturas-slider-campo {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.obras-toolbar .miniaturas-slider-titulo {
+  font-size: inherit;
+}
+
+.obras-toolbar .miniaturas-slider {
+  width: 90px;
+}
+
+.obras-toolbar .marcadas-filter-button-wrapper .star-rating {
+  padding: 0;
+}
+
+.obras-toolbar .marcadas-filter-button-wrapper .star-rating-star {
+  font-size: 0.95rem;
+}
+
+.obras-toolbar-etiquetas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.obras-toolbar .galeria-filtro-etiquetas-label {
+  white-space: nowrap;
+}
+
+.obras-toolbar .tag-chip {
+  padding: 0.05rem 0.5rem;
+  font-size: 0.68rem;
+}
+
+.obras-toolbar ~ .obras-grid {
+  margin-top: 0.75rem;
+}

@@ -31,7 +31,7 @@ Debajo de los botones hay varios controles que se combinan entre sí:
 - **Estrellas**: tocá una estrella para ver solo las obras con esa calificación; si tocás la misma estrella otra vez, se quita el filtro. Si dejás apretada una estrella un momento, el programa te pregunta si querés quitar la calificación a todas las obras.
 - **Etiquetas**: elegí una o varias etiquetas para ver las obras que las tengan. Ver [Filtrar por etiquetas](cap:obras).
 
-Los filtros no borran nada: solo cambian lo que ves. Para volver a ver todo, elegí en cada uno la primera opción (**Todas las categorías**, **Todos**) y sacá las estrellas y las etiquetas.
+La barra con el buscador y los filtros queda **fija en la parte de arriba** mientras te desplazás por las obras (el título se va con el scroll), así siempre ves qué filtros tenés puestos. Los filtros no borran nada: solo cambian lo que ves. Para volver a ver todo, elegí en cada uno la primera opción (**Todas las categorías**, **Todos**) y sacá las estrellas y las etiquetas.
 
 ## Filtrar por etiquetas
 

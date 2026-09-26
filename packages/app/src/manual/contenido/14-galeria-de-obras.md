@@ -8,7 +8,7 @@ En **Obras**, tocá **Galería de obras**. Se abre con los mismos filtros que te
 
 ## Filtrar
 
-Arriba tenés los mismos filtros que en el listado: **Todas las categorías**, subtipo, calificación por estrellas y etiquetas. Los filtros funcionan igual que en el listado: se combinan entre sí y, con varias etiquetas, se muestran las fotos que tengan **al menos una** de ellas. Ver [Filtrar por etiquetas](cap:obras). Si ninguna foto cumple, aparece "Ninguna foto tiene esa etiqueta."
+Arriba tenés los mismos filtros que en el listado, en una barra que queda fija mientras te desplazás por las fotos: **Todas las categorías**, subtipo, calificación por estrellas y etiquetas. Los filtros funcionan igual que en el listado: se combinan entre sí y, con varias etiquetas, se muestran las fotos que tengan **al menos una** de ellas. Ver [Filtrar por etiquetas](cap:obras). Si ninguna foto cumple, aparece "Ninguna foto tiene esa etiqueta."
 
 ## Ver una foto en grande
 
