@@ -7,6 +7,7 @@ import {
   parsearInline,
   resaltar,
   terminosDeBusqueda,
+  textoParaPdf,
   textoSinFormato,
 } from "../manual.js";
 
@@ -177,6 +178,20 @@ describe("resaltar", () => {
   });
 });
 
+describe("textoParaPdf", () => {
+  it("cambia los simbolos que la tipografia del PDF no tiene", () => {
+    expect(textoParaPdf("Ajustes → Privacidad → Archivos")).toBe("Ajustes › Privacidad › Archivos");
+    expect(textoParaPdf("Tocá la ✕ de arriba y el botón ⓘ")).toBe("Tocá la X de arriba y el botón (i)");
+    expect(textoParaPdf("Tocá el engranaje ⚙ de arriba")).toBe("Tocá el engranaje de arriba");
+    expect(textoParaPdf("Guardado ✅ y ⚠️ aviso")).toBe("Guardado y aviso");
+  });
+
+  it("deja igual los acentos, la eñe y los signos comunes", () => {
+    const texto = "¿Qué pasó? «Sí» — “ok” … 40 × 60 cm · €5 ‹a› ñandú";
+    expect(textoParaPdf(texto)).toBe(texto);
+  });
+});
+
 // El manual de verdad: que este bien armado y que no tenga enlaces rotos.
 describe("el manual del usuario", () => {
   const carpeta = new URL("../../../../app/src/manual/contenido/", import.meta.url);
@@ -220,5 +235,15 @@ describe("el manual del usuario", () => {
     expect(primero("firma digital")).toBeDefined();
     expect(primero("anular venta")?.capituloId).toBe("ventas");
     expect(primero("prueba de autor")).toBeDefined();
+  });
+
+  it("todo su texto se puede imprimir en PDF (no queda ningun simbolo sin tipografia)", () => {
+    const permitido = /^[\u0020-\u007E\u00A0-\u00FF\u2013\u2014\u2018\u2019\u201C\u201D\u2022\u2026\u20AC\u2039\u203A\u2122\n]*$/;
+    for (const archivo of archivos) {
+      const original = readFileSync(new URL(archivo, carpeta), "utf-8");
+      const paraPdf = textoParaPdf(original);
+      const raros = Array.from(paraPdf).filter((c) => !permitido.test(c));
+      expect(raros, archivo).toEqual([]);
+    }
   });
 });

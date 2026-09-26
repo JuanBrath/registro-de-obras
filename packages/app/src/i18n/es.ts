@@ -141,6 +141,14 @@ export const es = {
   "manual.capituloAnterior": "← Capítulo anterior",
   "manual.capituloSiguiente": "Capítulo siguiente →",
   "manual.soloEspanol": "El manual está disponible solo en español por ahora.",
+  "manual.pdfBoton": "Generar PDF",
+  "manual.pdfAyuda": "Guardar el manual en PDF, para imprimirlo",
+  "manual.pdfTitulo": "Generar PDF del manual",
+  "manual.pdfExplicacion": "Arma un archivo PDF para imprimir o guardar. El manual completo lleva portada e índice con el número de página de cada capítulo.",
+  "manual.pdfTodo": "Manual completo ({{n}} capítulos)",
+  "manual.pdfCapitulo": "Solo el capítulo «{{titulo}}»",
+  "manual.pdfGenerando": "Generando…",
+  "manual.pdfGenerado": "PDF generado correctamente.",
 
   // VentasReport
   "ventasReport.title": "Ventas",

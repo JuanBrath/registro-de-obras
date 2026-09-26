@@ -8,8 +8,11 @@ import {
   type CapituloManual,
   type ResultadoBusqueda,
 } from "@registro/core";
+import { Modal } from "../components/Modal.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
+import { savePdfWithDialog } from "../utils/savePdfDialog.js";
 import { CAPITULOS } from "./cargarManual.js";
+import { generarManualPdf } from "./manualPdf.js";
 
 /** Texto con las palabras buscadas marcadas. */
 function Resaltado({ texto, terminos }: { texto: string; terminos: string[] }) {
@@ -87,6 +90,11 @@ export function ManualScreen({ onBack }: { onBack: () => void }) {
   const [resaltadas, setResaltadas] = useState<string[]>([]);
   const [irASeccion, setIrASeccion] = useState<string | null>(null);
   const primeraVez = useRef(true);
+  // Ventana "Generar PDF": el manual completo o solo el capitulo abierto.
+  const [pdfAbierto, setPdfAbierto] = useState(false);
+  const [pdfAlcance, setPdfAlcance] = useState<"todo" | "capitulo">("todo");
+  const [generandoPdf, setGenerandoPdf] = useState(false);
+  const [pdfMensaje, setPdfMensaje] = useState<{ tipo: "ok" | "error"; texto: string } | null>(null);
 
   const terminos = useMemo(() => terminosDeBusqueda(consulta), [consulta]);
   const buscando = terminos.length > 0;
@@ -125,6 +133,28 @@ export function ManualScreen({ onBack }: { onBack: () => void }) {
     setCapituloId(id);
   }
 
+  function abrirVentanaPdf() {
+    setPdfAlcance("todo");
+    setPdfMensaje(null);
+    setPdfAbierto(true);
+  }
+
+  async function generarPdf() {
+    setGenerandoPdf(true);
+    setPdfMensaje(null);
+    try {
+      const soloCapitulo = pdfAlcance === "capitulo" && capitulo ? capitulo : null;
+      const bytes = await generarManualPdf(CAPITULOS, { capituloId: soloCapitulo?.id });
+      const nombre = soloCapitulo ? `manual_galeris_${soloCapitulo.id.replace(/-/g, "_")}.pdf` : "manual_del_usuario_galeris.pdf";
+      const guardado = await savePdfWithDialog(bytes, nombre);
+      if (guardado) setPdfMensaje({ tipo: "ok", texto: t("manual.pdfGenerado") });
+    } catch (e) {
+      setPdfMensaje({ tipo: "error", texto: e instanceof Error ? e.message : String(e) });
+    } finally {
+      setGenerandoPdf(false);
+    }
+  }
+
   function abrirResultado(r: ResultadoBusqueda) {
     setResaltadas(terminos);
     setConsulta("");
@@ -152,6 +182,9 @@ export function ManualScreen({ onBack }: { onBack: () => void }) {
           aria-label={t("manual.buscarPlaceholder")}
           autoFocus
         />
+        <button type="button" className="manual-pdf-boton" onClick={abrirVentanaPdf} title={t("manual.pdfAyuda")}>
+          {t("manual.pdfBoton")}
+        </button>
       </div>
 
       <div className="manual-cuerpo">
@@ -266,6 +299,46 @@ export function ManualScreen({ onBack }: { onBack: () => void }) {
           {t("common.back")}
         </button>
       </div>
+
+      {pdfAbierto && (
+        <Modal onClose={() => setPdfAbierto(false)}>
+          <h2>{t("manual.pdfTitulo")}</h2>
+          <p>{t("manual.pdfExplicacion")}</p>
+          <fieldset className="informes-fieldset">
+            <div className="informes-lista">
+              <label className="informes-opcion">
+                <input type="radio" name="manualPdfAlcance" checked={pdfAlcance === "todo"} onChange={() => setPdfAlcance("todo")} />
+                {t("manual.pdfTodo", { n: CAPITULOS.length })}
+              </label>
+              {capitulo && (
+                <label className="informes-opcion">
+                  <input
+                    type="radio"
+                    name="manualPdfAlcance"
+                    checked={pdfAlcance === "capitulo"}
+                    onChange={() => setPdfAlcance("capitulo")}
+                  />
+                  {t("manual.pdfCapitulo", { titulo: capitulo.titulo })}
+                </label>
+              )}
+            </div>
+          </fieldset>
+          {pdfMensaje && (
+            <p className={pdfMensaje.tipo === "ok" ? "success" : "error"} role="status">
+              {pdfMensaje.tipo === "ok" ? "✅ " : ""}
+              {pdfMensaje.texto}
+            </p>
+          )}
+          <div className="obra-form-saved-actions">
+            <button type="button" onClick={generarPdf} disabled={generandoPdf}>
+              {generandoPdf ? t("manual.pdfGenerando") : t("common.generarInformeAccion")}
+            </button>
+            <button type="button" onClick={() => setPdfAbierto(false)} disabled={generandoPdf}>
+              {t("common.back")}
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

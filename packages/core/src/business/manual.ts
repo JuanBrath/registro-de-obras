@@ -369,3 +369,28 @@ export function resaltar(texto: string, terminos: string[]): { texto: string; co
   }
   return tramos;
 }
+
+// Simbolos que las tipografias del PDF no dibujan, y con que se reemplazan.
+const REEMPLAZOS_PDF: [RegExp, string][] = [
+  [/→/g, "›"],
+  [/ⓘ/g, "(i)"],
+  [/✕/g, "X"],
+  [/[⚙⚠✅\uFE0F]/g, ""],
+];
+
+// Lo que se puede dibujar seguro en un PDF con tipografias estandar: latin-1 y los signos comunes de Windows-1252.
+const CARACTER_SEGURO_PDF = /^[\u0020-\u007E\u00A0-\u00FF\u2013\u2014\u2018\u2019\u201C\u201D\u2022\u2026\u20AC\u2039\u203A\u2122]$/;
+
+/**
+ * Prepara un texto del manual para imprimirlo en PDF: cambia los simbolos que
+ * la tipografia no tiene (flechas, engranaje, tildes de colores) por letras o
+ * signos equivalentes, y descarta cualquier otro caracter que no se pueda dibujar.
+ */
+export function textoParaPdf(texto: string): string {
+  let salida = texto;
+  for (const [patron, reemplazo] of REEMPLAZOS_PDF) salida = salida.replace(patron, reemplazo);
+  return Array.from(salida)
+    .filter((c) => c === "\n" || CARACTER_SEGURO_PDF.test(c))
+    .join("")
+    .replace(/ {2,}/g, " ");
+}

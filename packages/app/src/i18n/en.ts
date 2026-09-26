@@ -143,6 +143,14 @@ export const en: Record<keyof typeof es, string> = {
   "manual.capituloAnterior": "← Previous chapter",
   "manual.capituloSiguiente": "Next chapter →",
   "manual.soloEspanol": "The manual is only available in Spanish for now.",
+  "manual.pdfBoton": "Generate PDF",
+  "manual.pdfAyuda": "Save the manual as a PDF, to print it",
+  "manual.pdfTitulo": "Generate the manual as a PDF",
+  "manual.pdfExplicacion": "Builds a PDF file to print or save. The complete manual has a cover and a contents page with each chapter's page number.",
+  "manual.pdfTodo": "Complete manual ({{n}} chapters)",
+  "manual.pdfCapitulo": "Only the chapter “{{titulo}}”",
+  "manual.pdfGenerando": "Generating…",
+  "manual.pdfGenerado": "PDF generated successfully.",
 
   // VentasReport
   "ventasReport.title": "Sales",

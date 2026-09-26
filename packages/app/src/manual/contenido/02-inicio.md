@@ -40,3 +40,10 @@ Cuando estás completando un formulario, la tecla **Enter** no lo envía: pasa a
 
 - Las ventanas emergentes se cierran con su **✕**, con el botón **Volver** o con la tecla **Esc**.
 - Los avisos de error aparecen en rojo con el símbolo ⚠️ y los de éxito en verde con ✅.
+
+## Buscar en el manual e imprimirlo
+
+Al entrar al manual (botón **Manual del usuario**) ves a la izquierda el **Índice** de capítulos y, a la derecha, el capítulo que estás leyendo. Para saltar a otro capítulo tocalo en el índice, o usá los botones **← Capítulo anterior** y **Capítulo siguiente →** del final de cada capítulo.
+
+- **Buscar**: escribí en el cuadro de arriba lo que necesitás, con tus palabras, por ejemplo "cómo cambio la carpeta de datos" o "firma digital". El manual muestra las secciones que hablan de eso, con las palabras marcadas; al tocar un resultado se abre esa sección. No importa si escribís sin tildes o en plural.
+- **Generar PDF**: el botón **Generar PDF** (al lado del cuadro de búsqueda) arma un archivo para imprimir o guardar. Podés elegir **Manual completo**, que lleva portada e índice con el número de página de cada capítulo, o **Solo el capítulo** que tenés abierto. Después elegís dónde guardarlo. En el PDF, cada referencia a otro capítulo lleva al lado su número, por ejemplo "Mi perfil (cap. 4)", ya que en papel no se pueden tocar los enlaces.

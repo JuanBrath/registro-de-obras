@@ -2187,7 +2187,26 @@ input[type="date"] {
   font-size: 1.6rem;
 }
 
+.manual-buscador {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.manual-pdf-boton {
+  flex: 0 0 auto;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--galeris-gold);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-h);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
 .manual-buscador input {
+  flex: 1;
+  min-width: 0;
   width: 100%;
   box-sizing: border-box;
   padding: 0.6rem 0.8rem;
@@ -2422,19 +2441,26 @@ input[type="date"] {
    scroll (el titulo, que esta afuera, se va con el scroll). Asi siempre se
    ve que se esta mostrando, y con letra mas chica y los controles en dos
    renglones queda mas lugar para las miniaturas. Ver ObrasList.tsx y
-   GaleriaFotos.tsx. */
+   GaleriaFotos.tsx.
+   El tamano de la barra sale de una sola medida (font-size): todo lo de
+   adentro (separaciones, rellenos, ancho del regulador) esta en "em", asi que
+   crece o se achica junto con la letra. Vale 14,4 px como minimo (el tamano
+   que se juzgo ideal, el de la letra "Mediana" con 0.72 del tamano base), o
+   0.72rem si la letra elegida es mas grande: con "Chica" y "Mediana" queda en
+   14,4 px y con "Grande" en 17,3 px, asi quien elige letra grande para leer
+   mejor tambien la ve mas grande en la barra. */
 .obras-toolbar {
   position: sticky;
   top: var(--topbar-height);
   z-index: 50;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  margin-bottom: 0.25rem;
-  padding: 0.4rem 0 0.5rem;
+  gap: 0.55em;
+  margin-bottom: 0.35em;
+  padding: 0.55em 0 0.7em;
   background: var(--bg);
   border-bottom: 1px solid var(--border);
-  font-size: 0.72rem;
+  font-size: max(14.4px, 0.72rem);
   line-height: 1.3;
 }
 
@@ -2442,11 +2468,11 @@ input[type="date"] {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.35rem 0.9rem;
+  gap: 0.5em 1.25em;
 }
 
 .obras-toolbar .obras-toolbar-fila > button {
-  padding: 0.2rem 0.7rem;
+  padding: 0.28em 0.97em;
 }
 
 .obras-toolbar input,
@@ -2455,26 +2481,26 @@ input[type="date"] {
 }
 
 .obras-toolbar select {
-  padding: 0.15rem 0.3rem;
+  padding: 0.21em 0.42em;
 }
 
 /* Buscador: mas angosto y sin el margen de arriba que trae para otras pantallas. */
 .obras-toolbar .buscador-con-ayuda.obras-list-buscador-fila-principal {
-  flex: 1 1 200px;
-  max-width: 340px;
+  flex: 1 1 14em;
+  max-width: 23.5em;
   margin: 0;
 }
 
 .obras-toolbar .obras-list-buscador {
   margin-top: 0;
-  padding: 0.25rem 0.55rem;
+  padding: 0.35em 0.76em;
 }
 
 /* Cada filtro con su nombre al costado (no arriba), para ocupar un solo renglon. */
 .obras-toolbar .galeria-filtro-artista {
   flex-direction: row;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.5em;
   margin-top: 0;
   max-width: none;
 }
@@ -2483,7 +2509,7 @@ input[type="date"] {
 .obras-toolbar .miniaturas-slider-campo {
   flex-direction: row;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.7em;
   margin-left: auto;
 }
 
@@ -2492,7 +2518,7 @@ input[type="date"] {
 }
 
 .obras-toolbar .miniaturas-slider {
-  width: 90px;
+  width: 6.25em;
 }
 
 .obras-toolbar .marcadas-filter-button-wrapper .star-rating {
@@ -2500,14 +2526,14 @@ input[type="date"] {
 }
 
 .obras-toolbar .marcadas-filter-button-wrapper .star-rating-star {
-  font-size: 0.95rem;
+  font-size: 1.32em;
 }
 
 .obras-toolbar-etiquetas {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.5em;
 }
 
 .obras-toolbar .galeria-filtro-etiquetas-label {
@@ -2515,8 +2541,8 @@ input[type="date"] {
 }
 
 .obras-toolbar .tag-chip {
-  padding: 0.05rem 0.5rem;
-  font-size: 0.68rem;
+  padding: 0.07em 0.7em;
+  font-size: 0.94em;
 }
 
 .obras-toolbar ~ .obras-grid {

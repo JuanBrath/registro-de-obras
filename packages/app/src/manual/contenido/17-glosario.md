@@ -20,7 +20,7 @@ Cada unidad física numerada de una obra. El programa las llama **ejemplares** y
 
 ## Prueba de autor (PA)
 
-Copias adicionales que se reservan para el artista, fuera de la numeración comercial. Se numeran **PA 1/2**, **PA 2/2**. La regla habitual es el 10 % de la edición, redondeado hacia arriba (7 obras → 1 PA; 25 obras → 3 PA). Por convención no se venden: se conservan, se donan o se usan para difusión. El programa igualmente permite registrar su venta.
+Copias adicionales que se reservan para el artista, fuera de la numeración comercial. Se numeran **PA 1/2**, **PA 2/2**. La regla habitual es el 10 % de la edición, redondeado hacia arriba (para 7 obras, 1 PA; para 25 obras, 3 PA). Por convención no se venden: se conservan, se donan o se usan para difusión. El programa igualmente permite registrar su venta.
 
 ## Estado de una copia
 
