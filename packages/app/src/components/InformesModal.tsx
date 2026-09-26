@@ -11,10 +11,11 @@ export interface InformeOpcion {
   extra?: ReactNode;
   /** Oculta el selector de idioma para documentos legales que solo se generan en espanol (ej. contratos). */
   hideIdioma?: boolean;
-  /** Oculta idioma, logo y firma: el documento tiene su propia pantalla con esos ajustes (ej. el certificado). */
-  ocultarAjustes?: boolean;
-  /** Texto del boton de la ventana para esta opcion, en vez de "Generar". */
-  accionLabel?: string;
+  /**
+   * Para documentos que tienen su propia pantalla (ej. el certificado): la opcion no se elige
+   * con el punto sino que es un boton que ejecuta esto al tocarlo.
+   */
+  alElegir?: () => void;
 }
 
 /**
@@ -84,17 +85,26 @@ export function InformesModal({
       <h2>{titulo}</h2>
 
       <div className="informes-lista">
-        {opciones.map((op) => (
-          <label key={op.id} className="informes-opcion">
-            <input type="radio" name="informeOpcion" checked={selectedId === op.id} onChange={() => onSelectId(op.id)} />
-            {op.label}
-          </label>
-        ))}
+        {opciones.map((op) =>
+          op.alElegir ? (
+            <button key={op.id} type="button" className="informes-opcion informes-opcion-accion" onClick={op.alElegir}>
+              <span className="informes-opcion-flecha" aria-hidden="true">
+                ›
+              </span>
+              {op.label}
+            </button>
+          ) : (
+            <label key={op.id} className="informes-opcion">
+              <input type="radio" name="informeOpcion" checked={selectedId === op.id} onChange={() => onSelectId(op.id)} />
+              {op.label}
+            </label>
+          ),
+        )}
       </div>
 
       {opcionActual?.extra}
 
-      {!opcionActual?.hideIdioma && !opcionActual?.ocultarAjustes && (
+      {!opcionActual?.hideIdioma && (
         <fieldset className="informes-fieldset">
           <legend>{t("informes.idiomaLegend")}</legend>
           <div className="radio-row">
@@ -119,21 +129,19 @@ export function InformesModal({
         </fieldset>
       )}
 
-      {!opcionActual?.ocultarAjustes && (
-        <fieldset className="informes-fieldset">
-          <legend>{t("informes.logoLegend")}</legend>
-          <div className="radio-row">
-            <label>
-              <input type="radio" name="informeLogo" checked={incluirLogo} onChange={() => onIncluirLogoChange(true)} />
-              {t("informes.logoConLogo")}
-            </label>
-            <label>
-              <input type="radio" name="informeLogo" checked={!incluirLogo} onChange={() => onIncluirLogoChange(false)} />
-              {t("informes.logoSinLogo")}
-            </label>
-          </div>
-        </fieldset>
-      )}
+      <fieldset className="informes-fieldset">
+        <legend>{t("informes.logoLegend")}</legend>
+        <div className="radio-row">
+          <label>
+            <input type="radio" name="informeLogo" checked={incluirLogo} onChange={() => onIncluirLogoChange(true)} />
+            {t("informes.logoConLogo")}
+          </label>
+          <label>
+            <input type="radio" name="informeLogo" checked={!incluirLogo} onChange={() => onIncluirLogoChange(false)} />
+            {t("informes.logoSinLogo")}
+          </label>
+        </div>
+      </fieldset>
 
       {onIncluirFechaChange && (
         <fieldset className="informes-fieldset">
@@ -213,36 +221,34 @@ export function InformesModal({
         </fieldset>
       )}
 
-      {!opcionActual?.ocultarAjustes && (
-        <fieldset className="informes-fieldset">
-          <legend>{t("informes.firmaLegend")}</legend>
-          <div className="radio-row">
-            <label>
-              <input type="radio" name="informeFirma" checked={firma === "ninguna"} onChange={() => onFirmaChange("ninguna")} />
-              {t("informes.firmaNinguna")}
-            </label>
-            <label>
-              <input
-                type="radio"
-                name="informeFirma"
-                checked={firma === "digital"}
-                disabled={!firmaDigitalDisponible}
-                onChange={() => onFirmaChange("digital")}
-              />
-              {t("informes.firmaDigital")}
-            </label>
-            <label>
-              <input
-                type="radio"
-                name="informeFirma"
-                checked={firma === "manuscrita"}
-                onChange={() => onFirmaChange("manuscrita")}
-              />
-              {t("informes.firmaManuscrita")}
-            </label>
-          </div>
-        </fieldset>
-      )}
+      <fieldset className="informes-fieldset">
+        <legend>{t("informes.firmaLegend")}</legend>
+        <div className="radio-row">
+          <label>
+            <input type="radio" name="informeFirma" checked={firma === "ninguna"} onChange={() => onFirmaChange("ninguna")} />
+            {t("informes.firmaNinguna")}
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="informeFirma"
+              checked={firma === "digital"}
+              disabled={!firmaDigitalDisponible}
+              onChange={() => onFirmaChange("digital")}
+            />
+            {t("informes.firmaDigital")}
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="informeFirma"
+              checked={firma === "manuscrita"}
+              onChange={() => onFirmaChange("manuscrita")}
+            />
+            {t("informes.firmaManuscrita")}
+          </label>
+        </div>
+      </fieldset>
 
       {mensaje && (
         <p className="success" role="status">
@@ -252,7 +258,7 @@ export function InformesModal({
 
       <div className="obra-form-saved-actions">
         <button type="button" onClick={onGenerar} disabled={generando || disabled}>
-          {generando ? t("common.saving") : (opcionActual?.accionLabel ?? t("common.generarInformeAccion"))}
+          {generando ? t("common.saving") : t("common.generarInformeAccion")}
         </button>
         <button type="button" onClick={onClose} disabled={generando}>
           {t("common.back")}

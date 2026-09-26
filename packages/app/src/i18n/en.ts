@@ -742,6 +742,8 @@ export const en: Record<keyof typeof es, string> = {
   "ventaForm.criterioPrecioLabel": "Price-matching criterion",
   "ventaForm.informeGenerado": "Report generated successfully.",
   "certificado.opcionAccion": "Prepare",
+  "certificado.confirmarTexto":
+    "Opens the screen to prepare this copy's certificate, with the details of the artwork, the copy and the sale.",
   "certificado.titulo": "Certificate of authenticity",
   "certificado.seccionFormato": "Layout",
   "certificado.modelo": "Design",

@@ -809,6 +809,8 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
   const [ventaInformeMensaje, setVentaInformeMensaje] = useState<string | null>(null);
   useEscapeToDismiss(ventaInformeMensaje, setVentaInformeMensaje);
   // Pantalla del certificado de autenticidad (ver CertificadoEditor): tiene su propia ventana, aparte de "Informes".
+  // Ventanita "Preparar / Volver" que aparece al elegir el certificado en Informes, antes de abrir su pantalla.
+  const [certificadoConfirmar, setCertificadoConfirmar] = useState(false);
   const [certificadoTarget, setCertificadoTarget] = useState<{
     ejemplar: EjemplarRow;
     venta: VentaRow | undefined;
@@ -1221,7 +1223,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
     const defaultId = !presupuestoBloqueadoPara(ejemplar.estado)
       ? "presupuesto"
       : venta?.tipo === "donacion"
-        ? "certificado"
+        ? "remito"
         : "comprobante";
     setVentaInformeSeleccionId(defaultId);
     setVentaInformeIdioma(idioma);
@@ -1279,6 +1281,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       };
       setVentaInformeTarget(null);
       setVentaInformeMensaje(null);
+      setCertificadoConfirmar(false);
       setCertificadoTarget({ ejemplar, venta, datos });
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -1293,10 +1296,6 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
   async function handleGenerarInformeVenta() {
     if (!obra || !context || !ventaInformeTarget) return;
     const { ejemplar, venta } = ventaInformeTarget;
-    if (ventaInformeSeleccionId === "certificado") {
-      await handleAbrirCertificado(ejemplar, venta);
-      return;
-    }
     setGenerandoVentaInforme(true);
     setError(null);
     setVentaInformeMensaje(null);
@@ -2470,6 +2469,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
       )}
 
       {ventaInformeTarget &&
+        !certificadoConfirmar &&
         (() => {
           const { ejemplar, venta } = ventaInformeTarget;
           const opciones = [
@@ -2482,8 +2482,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
                   {
                     id: "certificado",
                     label: t("ventaForm.informeOpcionCoa"),
-                    ocultarAjustes: true,
-                    accionLabel: t("certificado.opcionAccion"),
+                    alElegir: () => setCertificadoConfirmar(true),
                   },
                 ]
               : []),
@@ -2556,6 +2555,25 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
             />
           );
         })()}
+
+      {ventaInformeTarget && certificadoConfirmar && (
+        <Modal onClose={() => setCertificadoConfirmar(false)}>
+          <h2>{t("certificado.titulo")}</h2>
+          <p>{t("certificado.confirmarTexto")}</p>
+          <div className="obra-form-saved-actions">
+            <button
+              type="button"
+              onClick={() => handleAbrirCertificado(ventaInformeTarget.ejemplar, ventaInformeTarget.venta)}
+              disabled={generandoVentaInforme}
+            >
+              {generandoVentaInforme ? t("common.saving") : t("certificado.opcionAccion")}
+            </button>
+            <button type="button" onClick={() => setCertificadoConfirmar(false)} disabled={generandoVentaInforme}>
+              {t("common.back")}
+            </button>
+          </div>
+        </Modal>
+      )}
 
       {certificadoTarget && obra && (
         <CertificadoEditor

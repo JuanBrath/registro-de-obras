@@ -740,6 +740,8 @@ export const es = {
   "ventaForm.criterioPrecioLabel": "Criterio de precio de igualación",
   "ventaForm.informeGenerado": "Informe generado correctamente.",
   "certificado.opcionAccion": "Preparar",
+  "certificado.confirmarTexto":
+    "Se abre la pantalla para preparar el certificado de esta copia, con los datos de la obra, la copia y la venta.",
   "certificado.titulo": "Certificado de autenticidad",
   "certificado.seccionFormato": "Formato",
   "certificado.modelo": "Modelo",

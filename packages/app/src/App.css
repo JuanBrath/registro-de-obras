@@ -1669,6 +1669,23 @@ input[type="date"] {
   flex-wrap: nowrap !important;
 }
 
+/* Opcion que no se "elige" sino que abre su propia ventana (ej. el certificado). */
+.informes-opcion-accion {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+}
+
+.informes-opcion-flecha {
+  flex: 0 0 auto;
+  width: 1rem;
+  text-align: center;
+  font-weight: 700;
+}
+
 .informes-opcion input[type="radio"] {
   flex: 0 0 auto !important;
   margin-top: 0.2rem;
