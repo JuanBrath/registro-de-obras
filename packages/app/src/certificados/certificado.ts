@@ -2,9 +2,9 @@
 // de Galeris Cert (github.com/JuanBrath/galeris-cert, carpeta src/). Si se
 // corrige o mejora un diseño en un programa, hay que hacer lo mismo en el
 // otro para que los dos sigan sacando el mismo certificado.
-// Diferencias conocidas (existen solo aca; Galeris Cert todavia no las tiene):
-// `sinFirmaGaleria` (ficha sin la linea de firma de la galeria) y
-// `sinCopyright` (leyenda SIN COPYRIGHT al pie de las sintografias).
+// Diferencias conocidas: Galeris Cert arranca `anioEdicion` con el año actual y
+// `captura` con "Captura digital" (aca arrancan vacios, porque los datos salen
+// del registro).
 
 export type Modelo = "clasico" | "ficha" | "simple";
 export type TamanoHoja = "a4" | "carta" | "a5";

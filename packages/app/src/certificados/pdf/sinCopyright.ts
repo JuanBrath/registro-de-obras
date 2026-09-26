@@ -5,8 +5,8 @@ import { rotulo } from "./base.js";
 /**
  * Leyenda al pie de los certificados de sintografia (obra generada por
  * inteligencia artificial): en lugar del copyright, aclara en mayusculas que
- * no lo tiene. Solo existe en Galeris Studio (ver certificado.ts). `x` es el
- * centro del texto e `y` su linea de base, ya escalados a la hoja elegida.
+ * no lo tiene. `x` es el centro del texto e `y` su linea de base, ya escalados
+ * a la hoja elegida.
  */
 export function dibujarSinCopyright(doc: jsPDF, c: Pick<Certificado, "idioma">, x: number, y: number, k: number) {
   doc.setFont("Inter", "normal");
