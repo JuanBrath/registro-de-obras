@@ -22,7 +22,7 @@ When you click **Generate report** a window opens where you choose what to produ
 2. If that option has data of its own (for example, a date range), fill it in.
 3. Choose the common options (below).
 4. Click **Generate**.
-5. The box to choose where to save the PDF opens. When it finishes, the program asks whether you want to open it to see it now, with the choices **Abrir PDF** ("Open PDF") or **Cerrar** ("Close"). This prompt is shown in Spanish.
+5. The box to choose where to save the PDF opens. When it finishes, the program asks **Do you want to open it to view it now?**, with **Open PDF** or **Close**.
 
 ### Common options
 

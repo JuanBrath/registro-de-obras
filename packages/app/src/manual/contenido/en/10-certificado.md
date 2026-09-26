@@ -90,7 +90,7 @@ The rest (copy number, artist's proofs, subtype, artist, gallery data and images
 
 ## Saving the PDF
 
-Click **Save PDF**, choose where to save it and, if you want to see it right away, **Open PDF** (the save prompt is shown in Spanish; its buttons are **Abrir PDF** and **Cerrar**). The file is named, for example, `coa_The_Sky_in_the_Water_3_10.pdf`.
+Click **Save PDF**, choose where to save it and, if you want to see it right away, **Open PDF**. The file is named, for example, `coa_The_Sky_in_the_Water_3_10.pdf`.
 
 ## Frequently asked questions
 

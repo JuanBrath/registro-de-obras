@@ -7,6 +7,7 @@ import { createTauriDatabaseAdapter } from "./TauriDatabaseAdapter.js";
 import { TauriFileSystemAdapter, pickTauriRootDirectory } from "./TauriFileSystemAdapter.js";
 import { detectarProveedorNubeEnRuta } from "./detectCloudSyncFolder.js";
 import { leerMiniaturasEnParalelo } from "../../utils/imageObjectUrl.js";
+import { getTraductor } from "../../i18n/getTraductor.js";
 
 const STORE_FILE = "workspace-roots.json";
 
@@ -35,15 +36,13 @@ async function pickFolderAvoidingCloud(mensajeSiCancela: string): Promise<string
 
     const proveedorNube = detectarProveedorNubeEnRuta(picked);
     if (proveedorNube) {
-      const usarIgual = await ask(
-        `La carpeta elegida está dentro de ${proveedorNube}. Si esa carpeta sigue sincronizándose mientras la app escribe datos, el archivo de la base de datos se puede corromper y perder información.\n\nSe recomienda elegir una carpeta local que no sincronice con ningún servicio de nube.`,
-        {
-          title: "Carpeta sincronizada con la nube",
-          kind: "warning",
-          okLabel: "Usar igual esta carpeta",
-          cancelLabel: "Elegir otra carpeta",
-        },
-      );
+      const t = await getTraductor();
+      const usarIgual = await ask(t("dialogo.carpetaNubeMensaje", { proveedor: proveedorNube }), {
+        title: t("dialogo.carpetaNubeTitulo"),
+        kind: "warning",
+        okLabel: t("dialogo.carpetaNubeUsarIgual"),
+        cancelLabel: t("dialogo.carpetaNubeElegirOtra"),
+      });
       if (!usarIgual) continue;
     }
 
@@ -76,23 +75,23 @@ async function getOrPickRoot(store: Store, workspace: WorkspaceId): Promise<stri
   // externo desconectado, o que la carpeta se haya movido o renombrado.
   // Se ofrece buscarla de nuevo o, como ultimo recurso, generar una carpeta
   // nueva (los datos viejos no se borran, solo se deja de apuntar a ellos).
-  const buscarla = await ask(
-    `No encontramos la carpeta donde estaban guardados los datos de este registro (última ubicación conocida: ${existing}). Puede que un disco externo no esté conectado, o que la carpeta se haya movido o renombrado.`,
-    {
-      title: "No se encontró la carpeta de datos",
-      kind: "warning",
-      okLabel: "Buscarla",
-      cancelLabel: "Generar una carpeta nueva",
-    },
-  );
+  const t = await getTraductor();
+  const buscarla = await ask(t("dialogo.carpetaNoEncontradaMensaje", { ruta: existing }), {
+    title: t("dialogo.carpetaNoEncontradaTitulo"),
+    kind: "warning",
+    okLabel: t("dialogo.carpetaNoEncontradaBuscarla"),
+    cancelLabel: t("dialogo.carpetaNoEncontradaGenerarNueva"),
+  });
   if (buscarla) {
     return pickAndSaveRoot(store, workspace);
   }
 
-  const confirmaNueva = await ask(
-    "Vas a generar una carpeta nueva y vacía. Los datos que tenías antes no se borran de donde estaban, pero Galeris va a dejar de mostrarlos hasta que vuelvas a apuntar a esa carpeta (podés hacerlo más adelante desde Ajustes, con \"Cambiar carpeta\").\n\n¿Confirmás que querés generar una carpeta nueva?",
-    { title: "Generar carpeta nueva", kind: "warning", okLabel: "Sí, generar nueva", cancelLabel: "Cancelar" },
-  );
+  const confirmaNueva = await ask(t("dialogo.carpetaNuevaMensaje"), {
+    title: t("dialogo.carpetaNuevaTitulo"),
+    kind: "warning",
+    okLabel: t("dialogo.carpetaNuevaConfirmar"),
+    cancelLabel: t("common.cancel"),
+  });
   if (!confirmaNueva) {
     throw new Error(`No se encontró la carpeta del registro "${workspace}".`);
   }

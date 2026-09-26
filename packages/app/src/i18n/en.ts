@@ -233,6 +233,25 @@ export const en: Record<keyof typeof es, string> = {
   "settings.resetearNumeradoresConfirmar": "Yes, reset",
   "settings.resetearNumeradoresExito": "Numbering counters reset.",
 
+  // Native dialogs (shown outside React components: savePdfDialog.ts and tauriAdapterFactory.ts)
+  "dialogo.pdfGuardadoTitulo": "Report generated",
+  "dialogo.pdfGuardadoMensaje": "The PDF report was saved successfully. Do you want to open it to view it now?",
+  "dialogo.pdfGuardadoAbrir": "Open PDF",
+  "dialogo.carpetaNubeTitulo": "Folder synced with the cloud",
+  "dialogo.carpetaNubeMensaje":
+    "The folder you picked is inside {{proveedor}}. If that folder keeps syncing while the app writes data, the database file can get corrupted and information can be lost.\n\nWe recommend picking a local folder that isn't synced with any cloud service.",
+  "dialogo.carpetaNubeUsarIgual": "Use this folder anyway",
+  "dialogo.carpetaNubeElegirOtra": "Pick another folder",
+  "dialogo.carpetaNoEncontradaTitulo": "Data folder not found",
+  "dialogo.carpetaNoEncontradaMensaje":
+    "We couldn't find the folder where this registry's data was saved (last known location: {{ruta}}). An external drive may not be connected, or the folder may have been moved or renamed.",
+  "dialogo.carpetaNoEncontradaBuscarla": "Find it",
+  "dialogo.carpetaNoEncontradaGenerarNueva": "Create a new folder",
+  "dialogo.carpetaNuevaTitulo": "Create new folder",
+  "dialogo.carpetaNuevaMensaje":
+    "You're about to create a new, empty folder. The data you had before isn't deleted from where it was, but Galeris will stop showing it until you point back to that folder (you can do that later from Settings, with \"Change folder\").\n\nDo you confirm you want to create a new folder?",
+  "dialogo.carpetaNuevaConfirmar": "Yes, create new",
+
   // ObraForm
   "obraForm.tituloNueva": "New artwork",
   "obraForm.cancelarVolver": "Cancel and go back",

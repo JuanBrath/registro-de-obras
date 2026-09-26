@@ -28,10 +28,10 @@ In that folder Galeris saves the database with all your information, the photos 
 
 ## If the program can't find the folder
 
-This can happen if you saved your data on an external drive that isn't connected, or if you moved or renamed the folder. When you open your records, a notice appears with two options. The notice is shown in Spanish: **No se encontró la carpeta de datos** ("the data folder was not found"), with the buttons **Buscarla** and **Generar una carpeta nueva**.
+This can happen if you saved your data on an external drive that isn't connected, or if you moved or renamed the folder. When you open your records, the notice **Data folder not found** appears with two options:
 
-- **Buscarla** ("Find it"): you choose again the folder where your data is. This is the right choice in almost every case.
-- **Generar una carpeta nueva** ("Create a new folder"): starts an empty record. Your previous data is not deleted, but the program stops showing it until you point it back to that folder (done from **Settings**, with **Change folder…**). It asks you to confirm before doing this.
+- **Find it**: you choose again the folder where your data is. This is the right choice in almost every case.
+- **Create a new folder**: starts an empty record. Your previous data is not deleted, but the program stops showing it until you point it back to that folder (done from **Settings**, with **Change folder…**). It asks you to confirm before doing this.
 
 ## Changing or moving the folder later
 

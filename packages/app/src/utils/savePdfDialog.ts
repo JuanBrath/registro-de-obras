@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { save, ask } from "@tauri-apps/plugin-dialog";
 import { isTauri } from "../adapters/detectPlatform.js";
 import { openLocalFile } from "./openExternalUrl.js";
+import { getTraductor } from "../i18n/getTraductor.js";
 
 /**
  * Guarda bytes ya generados eligiendo el destino con el diálogo nativo
@@ -41,11 +42,12 @@ async function saveBytesWithDialog(
 export async function savePdfWithDialog(bytes: Uint8Array, defaultFileName: string): Promise<boolean> {
   const { saved, path } = await saveBytesWithDialog(bytes, defaultFileName, "application/pdf", "PDF", ["pdf"]);
   if (saved && path) {
-    const verlo = await ask("El informe en PDF se guardó correctamente. ¿Querés abrirlo para verlo ahora?", {
-      title: "Informe generado",
+    const t = await getTraductor();
+    const verlo = await ask(t("dialogo.pdfGuardadoMensaje"), {
+      title: t("dialogo.pdfGuardadoTitulo"),
       kind: "info",
-      okLabel: "Abrir PDF",
-      cancelLabel: "Cerrar",
+      okLabel: t("dialogo.pdfGuardadoAbrir"),
+      cancelLabel: t("common.close"),
     });
     if (verlo) await openLocalFile(path);
   }

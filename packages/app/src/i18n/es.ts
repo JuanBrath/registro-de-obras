@@ -231,6 +231,25 @@ export const es = {
   "settings.resetearNumeradoresConfirmar": "Sí, resetear",
   "settings.resetearNumeradoresExito": "Numeradores reseteados.",
 
+  // Diálogos nativos (se muestran fuera de los componentes React: savePdfDialog.ts y tauriAdapterFactory.ts)
+  "dialogo.pdfGuardadoTitulo": "Informe generado",
+  "dialogo.pdfGuardadoMensaje": "El informe en PDF se guardó correctamente. ¿Querés abrirlo para verlo ahora?",
+  "dialogo.pdfGuardadoAbrir": "Abrir PDF",
+  "dialogo.carpetaNubeTitulo": "Carpeta sincronizada con la nube",
+  "dialogo.carpetaNubeMensaje":
+    "La carpeta elegida está dentro de {{proveedor}}. Si esa carpeta sigue sincronizándose mientras la app escribe datos, el archivo de la base de datos se puede corromper y perder información.\n\nSe recomienda elegir una carpeta local que no sincronice con ningún servicio de nube.",
+  "dialogo.carpetaNubeUsarIgual": "Usar igual esta carpeta",
+  "dialogo.carpetaNubeElegirOtra": "Elegir otra carpeta",
+  "dialogo.carpetaNoEncontradaTitulo": "No se encontró la carpeta de datos",
+  "dialogo.carpetaNoEncontradaMensaje":
+    "No encontramos la carpeta donde estaban guardados los datos de este registro (última ubicación conocida: {{ruta}}). Puede que un disco externo no esté conectado, o que la carpeta se haya movido o renombrado.",
+  "dialogo.carpetaNoEncontradaBuscarla": "Buscarla",
+  "dialogo.carpetaNoEncontradaGenerarNueva": "Generar una carpeta nueva",
+  "dialogo.carpetaNuevaTitulo": "Generar carpeta nueva",
+  "dialogo.carpetaNuevaMensaje":
+    "Vas a generar una carpeta nueva y vacía. Los datos que tenías antes no se borran de donde estaban, pero Galeris va a dejar de mostrarlos hasta que vuelvas a apuntar a esa carpeta (podés hacerlo más adelante desde Configuración, con \"Cambiar carpeta\").\n\n¿Confirmás que querés generar una carpeta nueva?",
+  "dialogo.carpetaNuevaConfirmar": "Sí, generar nueva",
+
   // ObraForm
   "obraForm.tituloNueva": "Nueva obra",
   "obraForm.cancelarVolver": "Cancelar y volver",
