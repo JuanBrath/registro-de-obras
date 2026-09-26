@@ -2080,6 +2080,48 @@ input[type="date"] {
   cursor: pointer;
 }
 
+/* "Corregir datos del registro": avisos y campos que se guardan en el registro. */
+.certificado-boton-corregir {
+  border-color: var(--galeris-gold);
+}
+
+.certificado-aviso {
+  margin: 0.75rem 0;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--galeris-gold);
+  border-left-width: 4px;
+  border-radius: 6px;
+  background: var(--bg-panel);
+}
+
+.certificado-aviso p {
+  margin: 0.35rem 0;
+}
+
+.certificado-aviso .error {
+  margin: 0.35rem 0;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.85rem;
+}
+
+/* Mientras se corrige, el aviso queda a la vista aunque se recorra el formulario. */
+.certificado-aviso-editando {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.certificado-campo-registro input,
+.certificado-campo-registro textarea {
+  border-color: var(--galeris-gold);
+  box-shadow: inset 0 0 0 1px var(--galeris-gold);
+}
+
+.certificado-destino {
+  font-size: 0.75rem;
+  color: var(--galeris-gold);
+}
+
 .certificado-imagen-fila {
   display: flex;
   align-items: center;

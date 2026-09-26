@@ -29,7 +29,9 @@ export interface DatosStudioCertificado {
   categoriaLabel: string;
   /** Solo el subtipo, ej. "Digital Fine Art". */
   subtipoLabel: string;
-  impresion: string;
+  /** Tipo de impresion y soporte/papel, cada uno en su propia columna de la copia. */
+  tipoImpresion: string;
+  soporteImpresion: string;
   serieProyecto: string;
   ubicacionFirma: string;
   /** Firma y logo del perfil activo (del artista en registro personal, de la galeria en galeria). */
@@ -65,7 +67,7 @@ export function valoresDeStudio(d: DatosStudioCertificado, modelo: Modelo): Part
     copia: d.copia,
     medidas: d.medidas,
     captura: esFicha ? d.categoriaLabel : d.subtipoLabel,
-    impresion: d.impresion,
+    impresion: [d.tipoImpresion, d.soporteImpresion].filter(Boolean).join(" — "),
     serieProyecto: d.serieProyecto,
     ubicacionFirma: d.ubicacionFirma,
     firmaArtista: esFicha ? d.firmaArtistaObra : d.firmaPerfil,

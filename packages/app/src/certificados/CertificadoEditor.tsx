@@ -1,4 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  DESTINO_CORRECCION,
+  camposConCambios,
+  validarCorrecciones,
+  type CampoCorregible,
+  type CorreccionesRegistro,
+  type ErrorCorreccion,
+} from "@registro/core";
 import { Modal } from "../components/Modal.js";
 import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
 import { detectImageFormat } from "../utils/detectImageFormat.js";
@@ -21,7 +29,34 @@ type CampoImagen = "imagen" | "firmaArtista" | "logo" | "galeriaFirma";
  * copia" y "Editar la venta". Solo quedan habilitados los datos que están
  * vacíos en Studio, que se completan para este certificado sin tocar el
  * registro.
+ *
+ * "Corregir datos del registro" es la excepción: con un aviso previo, deja
+ * cambiar en la misma pantalla los datos que corresponden a una sola columna
+ * (título, medidas, fecha de la venta...), y al guardar los escribe en el
+ * registro donde se cargaron (ver guardarCorrecciones en @registro/core).
  */
+
+/** Nombre con que se muestra cada dato corregible en los avisos. */
+const ETIQUETA_CORREGIBLE: Record<CampoCorregible, TranslationKey> = {
+  titulo: "certificado.tituloObra",
+  serieProyecto: "certificado.serie",
+  anioPeriodo: "certificado.anioToma",
+  anioCaptura: "certificado.anioToma",
+  anioEdicion: "certificado.anioEdicion",
+  medidas: "certificado.medidas",
+  tipoImpresion: "obraDetail.tipoImpresionLabel",
+  soporteImpresion: "obraDetail.soporteImpresion",
+  ubicacionFirma: "certificado.ubicacionFirma",
+  lugar: "certificado.lugar",
+  fecha: "certificado.fecha",
+};
+const DESTINO_TEXTO = {
+  obra: { guarda: "certificado.seGuardaEnObra", corto: "certificado.destinoObra" },
+  copia: { guarda: "certificado.seGuardaEnCopia", corto: "certificado.destinoCopia" },
+  venta: { guarda: "certificado.seGuardaEnVenta", corto: "certificado.destinoVenta" },
+} as const satisfies Record<string, { guarda: TranslationKey; corto: TranslationKey }>;
+/** Los datos del registro que se pueden corregir desde el certificado, por campo del certificado. */
+const CLAVES_CORREGIBLES = Object.keys(DESTINO_CORRECCION) as CampoCorregible[];
 export function CertificadoEditor({
   datos,
   modelosDisponibles,
@@ -30,6 +65,7 @@ export function CertificadoEditor({
   onEditarObra,
   onEditarCopia,
   onEditarVenta,
+  guardarCorrecciones,
   onClose,
 }: {
   datos: DatosStudioCertificado;
@@ -40,6 +76,8 @@ export function CertificadoEditor({
   onEditarObra: () => void;
   onEditarCopia: () => void;
   onEditarVenta: () => void;
+  /** Guarda las correcciones en el registro (obra, copia y venta) y recarga la pantalla de atras. */
+  guardarCorrecciones: (correcciones: CorreccionesRegistro) => Promise<void>;
   onClose: () => void;
 }) {
   const { t } = useLanguage();
@@ -56,11 +94,34 @@ export function CertificadoEditor({
   const [guardando, setGuardando] = useState(false);
   const urlAnterior = useRef<string | null>(null);
 
+  // Datos del registro tal como estan guardados (cambian al guardar correcciones), y correcciones aun sin guardar.
+  const [datosBase, setDatosBase] = useState(datos);
+  const [correcciones, setCorrecciones] = useState<CorreccionesRegistro>({});
+  const [modoRegistro, setModoRegistro] = useState<"cerrado" | "aviso" | "editando">("cerrado");
+  const [guardandoRegistro, setGuardandoRegistro] = useState(false);
+  const [errorRegistro, setErrorRegistro] = useState<string | null>(null);
+  const [confirmandoSalida, setConfirmandoSalida] = useState(false);
+
   const modelo: Modelo = formato === "fichaSinGaleria" ? "ficha" : formato;
   const sinFirmaGaleria = formato === "fichaSinGaleria";
   const esFicha = modelo === "ficha";
   const esClasico = modelo === "clasico";
-  const deStudio = useMemo(() => valoresDeStudio(datos, modelo), [datos, modelo]);
+  // Con las correcciones sin guardar la vista previa ya muestra el dato corregido; pero que un campo salga
+  // en gris o habilitado depende de lo que esta guardado en el registro, no de lo que se este tipeando.
+  const datosVigentes = useMemo(() => ({ ...datosBase, ...correcciones }), [datosBase, correcciones]);
+  const deStudio = useMemo(() => valoresDeStudio(datosVigentes, modelo), [datosVigentes, modelo]);
+  const deRegistro = useMemo(() => valoresDeStudio(datosBase, modelo), [datosBase, modelo]);
+
+  // Solo lo que realmente cambio respecto de lo guardado (sin espacios de mas).
+  const cambios = useMemo(() => {
+    const c: CorreccionesRegistro = {};
+    for (const clave of CLAVES_CORREGIBLES) {
+      const nuevo = correcciones[clave]?.trim();
+      if (nuevo !== undefined && nuevo !== datosBase[clave].trim()) c[clave] = nuevo;
+    }
+    return c;
+  }, [correcciones, datosBase]);
+  const clavesConCambios = camposConCambios(cambios);
 
   const cert = useMemo<Certificado>(() => {
     const c: Certificado = { ...certificadoVacio(idioma), ...manual, ...deStudio, modelo, sinFirmaGaleria, tamanoHoja, idioma, guiasCorte };
@@ -106,6 +167,71 @@ export function CertificadoEditor({
     setManual((m) => ({ ...m, [campo]: valor }));
   }
 
+  function corregir(clave: CampoCorregible, valor: string) {
+    setCorrecciones((c) => ({ ...c, [clave]: valor }));
+    setErrorRegistro(null);
+  }
+
+  function descartarCorrecciones() {
+    setCorrecciones({});
+    setErrorRegistro(null);
+    setModoRegistro("cerrado");
+  }
+
+  function textoDeError(e: ErrorCorreccion): string {
+    const clave = e.motivo === "obligatorio" ? "certificado.errorObligatorio" : e.motivo === "anio" ? "certificado.errorAnio" : "certificado.errorFecha";
+    return t(clave, { campo: t(ETIQUETA_CORREGIBLE[e.campo]) });
+  }
+
+  /** Escribe las correcciones en el registro. Devuelve true si se guardaron. */
+  async function guardarRegistro(): Promise<boolean> {
+    const errores = validarCorrecciones(cambios);
+    if (errores.length > 0) {
+      setErrorRegistro(textoDeError(errores[0]));
+      return false;
+    }
+    setGuardandoRegistro(true);
+    setErrorRegistro(null);
+    try {
+      await guardarCorrecciones(cambios);
+      setDatosBase((d) => ({ ...d, ...cambios }));
+      setCorrecciones({});
+      setModoRegistro("cerrado");
+      setMensaje({ tipo: "ok", texto: t("certificado.registroActualizado") });
+      return true;
+    } catch (e) {
+      setErrorRegistro(e instanceof Error ? e.message : String(e));
+      return false;
+    } finally {
+      setGuardandoRegistro(false);
+    }
+  }
+
+  /** Cierra la pantalla; si hay correcciones sin guardar, antes pregunta que hacer con ellas. */
+  function salir() {
+    if (clavesConCambios.length > 0) setConfirmandoSalida(true);
+    else onClose();
+  }
+
+  /** A que dato del registro corresponde un campo del certificado (null si no se puede corregir desde aca). */
+  function claveCorregible(campo: CampoTexto): CampoCorregible | null {
+    switch (campo) {
+      case "titulo":
+      case "serieProyecto":
+      case "anioEdicion":
+      case "medidas":
+      case "ubicacionFirma":
+      case "lugar":
+      case "fecha":
+        return campo;
+      // La ficha muestra el año de la obra si lo tiene; si no, el de la toma (igual que valoresDeStudio).
+      case "anioToma":
+        return esFicha && datosBase.anioPeriodo ? "anioPeriodo" : "anioCaptura";
+      default:
+        return null;
+    }
+  }
+
   async function guardar() {
     setMensaje(null);
     setGuardando(true);
@@ -126,23 +252,49 @@ export function CertificadoEditor({
     opciones: { renglones?: number; medio?: boolean; fecha?: boolean } = {},
   ) {
     // Gris si Studio tiene el dato; habilitado si esta vacio en Studio.
-    const bloqueado = campo in deStudio;
-    const propiedades = {
-      value: cert[campo] as string,
-      disabled: bloqueado,
-      title: bloqueado ? t("certificado.campoDeRegistro") : undefined,
-      onChange: (e: { target: { value: string } }) => completar(campo, e.target.value),
-    };
+    const bloqueado = campo in deRegistro;
+    const clave = claveCorregible(campo);
+    // En "Corregir datos del registro" los datos corregibles se habilitan y se marcan con donde se guardan.
+    const corrigiendo = bloqueado && modoRegistro === "editando" && clave !== null;
+    const propiedades = corrigiendo
+      ? {
+          value: correcciones[clave] ?? datosBase[clave],
+          disabled: false,
+          title: undefined,
+          onChange: (e: { target: { value: string } }) => corregir(clave, e.target.value),
+        }
+      : {
+          value: cert[campo] as string,
+          disabled: bloqueado,
+          title: bloqueado ? t(clave ? "certificado.campoCorregible" : "certificado.campoDeRegistro") : undefined,
+          onChange: (e: { target: { value: string } }) => completar(campo, e.target.value),
+        };
     return (
-      <label className={`certificado-campo${opciones.medio ? " certificado-campo-medio" : ""}`}>
+      <label className={`certificado-campo${opciones.medio ? " certificado-campo-medio" : ""}${corrigiendo ? " certificado-campo-registro" : ""}`}>
         <span className="certificado-etiqueta">{t(etiqueta)}</span>
         {opciones.renglones ? (
           <textarea rows={opciones.renglones} {...propiedades} />
         ) : (
           <input type={opciones.fecha ? "date" : "text"} {...propiedades} />
         )}
+        {corrigiendo && <span className="certificado-destino">{t(DESTINO_TEXTO[DESTINO_CORRECCION[clave]].guarda)}</span>}
       </label>
     );
+  }
+
+  /** Al corregir el registro, la impresion se corrige en sus dos partes (tipo y soporte), cada una en su columna de la copia. */
+  function impresionCorregible() {
+    const partes: { clave: "tipoImpresion" | "soporteImpresion"; etiqueta: TranslationKey }[] = [
+      { clave: "tipoImpresion", etiqueta: "obraDetail.tipoImpresionLabel" },
+      { clave: "soporteImpresion", etiqueta: "obraDetail.soporteImpresion" },
+    ];
+    return partes.map(({ clave, etiqueta }) => (
+      <label key={clave} className="certificado-campo certificado-campo-registro">
+        <span className="certificado-etiqueta">{t(etiqueta)}</span>
+        <input type="text" value={correcciones[clave] ?? datosBase[clave]} onChange={(e) => corregir(clave, e.target.value)} />
+        <span className="certificado-destino">{t(DESTINO_TEXTO.copia.guarda)}</span>
+      </label>
+    ));
   }
 
   function imagen(campo: CampoImagen, etiqueta: TranslationKey, tipo: "foto" | "grafico") {
@@ -195,7 +347,7 @@ export function CertificadoEditor({
   ];
 
   return (
-    <Modal onClose={onClose} className="modal-content-certificado">
+    <Modal onClose={salir} className="modal-content-certificado">
       <div className="certificado-editor">
         <section className="certificado-formulario">
           <h2>{t("certificado.titulo")}</h2>
@@ -228,16 +380,75 @@ export function CertificadoEditor({
           <Seccion titulo={t("certificado.seccionDatos")}>
             <p className="certificado-ayuda">{t("certificado.datosAyuda")}</p>
             <div className="certificado-acciones-registro">
-              <button type="button" className="certificado-boton" onClick={onEditarObra}>
-                {t("certificado.editarEnObra")}
-              </button>
-              <button type="button" className="certificado-boton" onClick={onEditarCopia}>
-                {t("certificado.editarEnCopia")}
-              </button>
-              <button type="button" className="certificado-boton" onClick={onEditarVenta}>
-                {t("certificado.editarEnVenta")}
-              </button>
+              {(
+                [
+                  ["certificado.editarEnObra", onEditarObra],
+                  ["certificado.editarEnCopia", onEditarCopia],
+                  ["certificado.editarEnVenta", onEditarVenta],
+                ] as const
+              ).map(([texto, accion]) => (
+                <button
+                  key={texto}
+                  type="button"
+                  className="certificado-boton"
+                  onClick={accion}
+                  disabled={modoRegistro === "editando"}
+                  title={modoRegistro === "editando" ? t("certificado.botonesBloqueados") : undefined}
+                >
+                  {t(texto)}
+                </button>
+              ))}
+              {modoRegistro === "cerrado" && (
+                <button type="button" className="certificado-boton certificado-boton-corregir" onClick={() => setModoRegistro("aviso")}>
+                  {t("certificado.corregirDatos")}
+                </button>
+              )}
             </div>
+
+            {modoRegistro === "aviso" && (
+              <div className="certificado-aviso" role="alert">
+                <strong>{t("certificado.avisoTitulo")}</strong>
+                <p>{t("certificado.avisoTexto")}</p>
+                <div className="certificado-acciones-registro">
+                  <button type="button" className="certificado-boton certificado-boton-corregir" onClick={() => setModoRegistro("editando")}>
+                    {t("certificado.avisoConfirmar")}
+                  </button>
+                  <button type="button" className="certificado-boton" onClick={() => setModoRegistro("cerrado")}>
+                    {t("common.cancel")}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {modoRegistro === "editando" && (
+              <div className="certificado-aviso certificado-aviso-editando" role="status">
+                <strong>{t("certificado.editandoTitulo")}</strong>
+                <p>{t("certificado.editandoTexto")}</p>
+                <p>
+                  {clavesConCambios.length === 0
+                    ? t("certificado.sinCambios")
+                    : t("certificado.cambiosPendientes", {
+                        lista: clavesConCambios
+                          .map((c) => `${t(ETIQUETA_CORREGIBLE[c])} (${t(DESTINO_TEXTO[DESTINO_CORRECCION[c]].corto)})`)
+                          .join(", "),
+                      })}
+                </p>
+                {errorRegistro && <p className="error">{errorRegistro}</p>}
+                <div className="certificado-acciones-registro">
+                  <button
+                    type="button"
+                    className="certificado-boton certificado-boton-corregir"
+                    onClick={guardarRegistro}
+                    disabled={guardandoRegistro || clavesConCambios.length === 0}
+                  >
+                    {guardandoRegistro ? t("common.saving") : t("certificado.guardarCambiosRegistro")}
+                  </button>
+                  <button type="button" className="certificado-boton" onClick={descartarCorrecciones} disabled={guardandoRegistro}>
+                    {t("certificado.descartarCambios")}
+                  </button>
+                </div>
+              </div>
+            )}
 
             <Subseccion titulo={t("certificado.seccionObra")}>
               {imagen("imagen", "certificado.imagenObra", "foto")}
@@ -261,7 +472,9 @@ export function CertificadoEditor({
 
             <Subseccion titulo={t("certificado.seccionDetalles")}>
               {texto("captura", esFicha ? "certificado.disciplina" : "certificado.captura")}
-              {texto("impresion", esFicha ? "certificado.materiales" : "certificado.impresion", { renglones: 2 })}
+              {modoRegistro === "editando" && "impresion" in deRegistro
+                ? impresionCorregible()
+                : texto("impresion", esFicha ? "certificado.materiales" : "certificado.impresion", { renglones: 2 })}
               {esFicha && texto("ubicacionFirma", "certificado.ubicacionFirma")}
             </Subseccion>
 
@@ -315,6 +528,38 @@ export function CertificadoEditor({
           ) : (
             <p className="certificado-ayuda">{t("certificado.armandoVistaPrevia")}</p>
           )}
+          {confirmandoSalida && (
+            <div className="certificado-aviso" role="alert">
+              <strong>{t("certificado.salirSinGuardar")}</strong>
+              <p>
+                {t("certificado.cambiosPendientes", {
+                  lista: clavesConCambios
+                    .map((c) => `${t(ETIQUETA_CORREGIBLE[c])} (${t(DESTINO_TEXTO[DESTINO_CORRECCION[c]].corto)})`)
+                    .join(", "),
+                })}
+              </p>
+              {errorRegistro && <p className="error">{errorRegistro}</p>}
+              <div className="certificado-acciones-registro">
+                <button
+                  type="button"
+                  className="certificado-boton certificado-boton-corregir"
+                  disabled={guardandoRegistro}
+                  onClick={async () => {
+                    if (await guardarRegistro()) onClose();
+                    else setConfirmandoSalida(false);
+                  }}
+                >
+                  {guardandoRegistro ? t("common.saving") : t("certificado.guardarYSalir")}
+                </button>
+                <button type="button" className="certificado-boton" disabled={guardandoRegistro} onClick={onClose}>
+                  {t("certificado.descartarYSalir")}
+                </button>
+                <button type="button" className="certificado-boton" disabled={guardandoRegistro} onClick={() => setConfirmandoSalida(false)}>
+                  {t("obraDetail.seguirEditando")}
+                </button>
+              </div>
+            </div>
+          )}
           <div className="certificado-pie">
             {mensaje && (
               <p className={mensaje.tipo === "ok" ? "success" : "error"} role="status">
@@ -325,7 +570,7 @@ export function CertificadoEditor({
             <button type="button" onClick={guardar} disabled={guardando}>
               {guardando ? t("common.saving") : t("certificado.guardarPdf")}
             </button>
-            <button type="button" onClick={onClose} disabled={guardando}>
+            <button type="button" onClick={salir} disabled={guardando}>
               {t("common.back")}
             </button>
           </div>

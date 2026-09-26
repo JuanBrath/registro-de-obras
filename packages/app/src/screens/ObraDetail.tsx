@@ -19,6 +19,7 @@ import {
   type Moneda,
   type SubtipoObraGrafica,
   type TipoVenta,
+  guardarCorrecciones as guardarCorreccionesRegistro,
 } from "@registro/core";
 import {
   ObraDetalleFields,
@@ -1266,7 +1267,8 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
         medidas: ejemplar.dimensiones ?? "",
         categoriaLabel: [tInforme("es", `categoria.${obra.categoria_obra}` as TranslationKey), subtipoLabel].filter(Boolean).join(" — "),
         subtipoLabel,
-        impresion: [ejemplar.tipo_impresion, ejemplar.soporte_impresion].filter(Boolean).join(" — "),
+        tipoImpresion: ejemplar.tipo_impresion ?? "",
+        soporteImpresion: ejemplar.soporte_impresion ?? "",
         serieProyecto: ext?.serie_proyecto ?? "",
         ubicacionFirma: ejemplar.ubicacion_firma ?? "",
         firmaPerfil: await resolveFirmaBytes(context, personalArtista, galeriaPerfil),
@@ -2589,6 +2591,16 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
           onEditarCopia={() => {
             setEditingEjemplarId(certificadoTarget.ejemplar.id);
             setCertificadoTarget(null);
+          }}
+          guardarCorrecciones={async (correcciones) => {
+            if (!context) return;
+            await guardarCorreccionesRegistro(
+              context.db,
+              { obraId, ejemplarId: certificadoTarget.ejemplar.id, ventaId: certificadoTarget.venta?.id ?? null },
+              correcciones,
+            );
+            // La pantalla de atras (obra, copias, venta) se actualiza sin cerrar el certificado.
+            await reload();
           }}
           onEditarVenta={() => {
             const { ejemplar, venta } = certificadoTarget;

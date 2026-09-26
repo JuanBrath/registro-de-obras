@@ -25,3 +25,4 @@ export * from "./business/paths.js";
 export * from "./business/fechas.js";
 export * from "./business/tags.js";
 export * from "./business/edicion.js";
+export * from "./business/correccionesRegistro.js";
