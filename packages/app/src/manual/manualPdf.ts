@@ -1,4 +1,4 @@
-import { parsearInline, textoParaPdf, type BloqueManual, type CapituloManual } from "@registro/core";
+import { parsearInline, textoParaPdf, type BloqueManual, type CapituloManual, type IdiomaManual } from "@registro/core";
 import { GALERIS_GOLD, dibujarLogo, registerBrandFonts } from "../utils/pdfBranding.js";
 
 // Hoja A4 vertical, medidas en mm.
@@ -32,11 +32,40 @@ interface Linea {
 export interface OpcionesManualPdf {
   /** Solo este capitulo. Si no se indica, sale el manual completo (con portada e indice). */
   capituloId?: string;
+  /** Idioma de los textos propios del PDF (portada, indice, pie); el de los capitulos lo define el contenido. */
+  idioma?: IdiomaManual;
 }
 
-/** La fecha de hoy en la computadora (no en UTC), como DD/MM/AAAA. */
-function fechaDeHoy(): string {
+const TEXTOS: Record<
+  IdiomaManual,
+  { titulo: string; subtitulo: string; generado: (fecha: string) => string; indice: string; cap: string; pie: string; pagina: (n: number, total: number) => string }
+> = {
+  es: {
+    titulo: "Manual del usuario",
+    subtitulo: "Guía paso a paso, ordenada por pantallas",
+    generado: (fecha) => `Generado el ${fecha}`,
+    indice: "Índice",
+    cap: "cap.",
+    pie: "Galeris · Manual del usuario",
+    pagina: (n, total) => `Página ${n} de ${total}`,
+  },
+  en: {
+    titulo: "User manual",
+    subtitulo: "Step-by-step guide, organized by screen",
+    generado: (fecha) => `Generated on ${fecha}`,
+    indice: "Contents",
+    cap: "ch.",
+    pie: "Galeris · User manual",
+    pagina: (n, total) => `Page ${n} of ${total}`,
+  },
+};
+
+const MESES_EN = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+/** La fecha de hoy en la computadora (no en UTC): DD/MM/AAAA en español, "September 26, 2026" en inglés. */
+function fechaDeHoy(idioma: IdiomaManual): string {
   const d = new Date();
+  if (idioma === "en") return `${MESES_EN[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
   return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
 }
 
@@ -44,9 +73,11 @@ function fechaDeHoy(): string {
  * Arma el PDF del manual para imprimirlo: portada, indice con el numero de
  * pagina de cada capitulo, los capitulos (titulos, pasos, listas y notas) y
  * el numero de pagina al pie. Los enlaces entre capitulos, que en papel no se
- * pueden tocar, llevan al lado el numero del capitulo: "Mi perfil (cap. 4)".
+ * pueden tocar, llevan al lado el numero del capitulo: "Mi perfil (cap. 4)" / "My profile (ch. 4)".
  */
 export async function generarManualPdf(capitulos: CapituloManual[], opciones: OpcionesManualPdf = {}): Promise<Uint8Array> {
+  const idioma = opciones.idioma ?? "es";
+  const textos = TEXTOS[idioma];
   const { default: JsPdf } = await import("jspdf");
   const doc = new JsPdf({ unit: "mm", format: "a4" });
   await registerBrandFonts(doc);
@@ -97,7 +128,7 @@ export async function generarManualPdf(capitulos: CapituloManual[], opciones: Op
         const numero = numeroDe.get(segmento.capitulo);
         if (numero !== undefined) {
           hayEspacio = true;
-          agregar(`(cap. ${numero})`, "normal");
+          agregar(`(${textos.cap} ${numero})`, "normal");
         }
       }
     }
@@ -260,15 +291,15 @@ export async function generarManualPdf(capitulos: CapituloManual[], opciones: Op
     doc.setFont("Montserrat", "bold");
     doc.setFontSize(30);
     doc.setTextColor(...GALERIS_GOLD);
-    doc.text("Manual del usuario", ANCHO_HOJA / 2, 115, { align: "center" });
+    doc.text(textos.titulo, ANCHO_HOJA / 2, 115, { align: "center" });
     doc.setFont("helvetica", "normal");
     doc.setFontSize(15);
     doc.setTextColor(70, 70, 70);
     doc.text("Galeris Studio", ANCHO_HOJA / 2, 127, { align: "center" });
     doc.setFontSize(10.5);
     doc.setTextColor(120, 120, 120);
-    doc.text("Guía paso a paso, ordenada por pantallas", ANCHO_HOJA / 2, 136, { align: "center" });
-    doc.text(`Generado el ${fechaDeHoy()}`, ANCHO_HOJA / 2, ALTO_HOJA - 30, { align: "center" });
+    doc.text(textos.subtitulo, ANCHO_HOJA / 2, 136, { align: "center" });
+    doc.text(textos.generado(fechaDeHoy(idioma)), ANCHO_HOJA / 2, ALTO_HOJA - 30, { align: "center" });
     doc.addPage(); // pagina del indice; se completa al final, cuando se sabe en que pagina empieza cada capitulo
   }
 
@@ -293,7 +324,7 @@ export async function generarManualPdf(capitulos: CapituloManual[], opciones: Op
     doc.setFont("Montserrat", "bold");
     doc.setFontSize(19);
     doc.setTextColor(...GALERIS_GOLD);
-    doc.text("Índice", MARGEN_X, yi);
+    doc.text(textos.indice, MARGEN_X, yi);
     doc.setDrawColor(...GALERIS_GOLD);
     doc.setLineWidth(0.6);
     doc.line(MARGEN_X, yi + 3, MARGEN_X + ANCHO_TEXTO, yi + 3);
@@ -327,8 +358,8 @@ export async function generarManualPdf(capitulos: CapituloManual[], opciones: Op
     doc.line(MARGEN_X, ALTO_HOJA - 15, MARGEN_X + ANCHO_TEXTO, ALTO_HOJA - 15);
     fuente("normal", 8.5);
     doc.setTextColor(130, 130, 130);
-    doc.text("Galeris · Manual del usuario", MARGEN_X, ALTO_HOJA - 10);
-    doc.text(`Página ${pagina} de ${total}`, MARGEN_X + ANCHO_TEXTO, ALTO_HOJA - 10, { align: "right" });
+    doc.text(textos.pie, MARGEN_X, ALTO_HOJA - 10);
+    doc.text(textos.pagina(pagina, total), MARGEN_X + ANCHO_TEXTO, ALTO_HOJA - 10, { align: "right" });
   }
 
   return new Uint8Array(doc.output("arraybuffer"));

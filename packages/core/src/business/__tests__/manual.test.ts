@@ -1,4 +1,5 @@
 import { readdirSync, readFileSync } from "node:fs";
+import type { IdiomaManual } from "../manual.js";
 import { describe, expect, it } from "vitest";
 import {
   buscarEnManual,
@@ -161,6 +162,41 @@ describe("buscador", () => {
   });
 });
 
+describe("buscador en ingles", () => {
+  const capitulos = [
+    parsearCapitulo(
+      "sales",
+      "# Sales\n\nSelling your artworks.\n\n## Register a sale\n\nOpen the artwork and tap **Sale / Reservation**.\n\n## Cancel a sale\n\nUse **Cancel sale** if the buyer changes their mind.\n",
+    ),
+    parsearCapitulo(
+      "clients",
+      "# Clients\n\nYour buyers.\n\n## Add a new client\n\nTap **New client**.\n\n## Delete a client\n\nA client with sales cannot be deleted.\n",
+    ),
+  ];
+
+  it("ignora las palabras de relleno y saca plurales y terminaciones", () => {
+    expect(terminosDeBusqueda("how do I cancel a sale", "en")).toEqual(["cance", "sale"]);
+    expect(terminosDeBusqueda("cancelled sales", "en")).toEqual(["cancel", "sal"]);
+    expect(terminosDeBusqueda("registering clients", "en")).toEqual(["regist", "clien"]);
+    expect(terminosDeBusqueda("what is the", "en")).toEqual([]);
+  });
+
+  it("entiende una pregunta escrita como se habla", () => {
+    const r = buscarEnManual(capitulos, "how can I cancel a sale?", 30, "en");
+    expect(r[0].seccionId).toBe("cancel-a-sale");
+    expect(r[0].completo).toBe(true);
+  });
+
+  it("encuentra sin importar mayusculas ni plurales", () => {
+    const r = buscarEnManual(capitulos, "Clients", 30, "en");
+    expect(r.map((x) => x.seccionId)).toContain("add-a-new-client");
+  });
+
+  it("no devuelve nada si no hay coincidencias", () => {
+    expect(buscarEnManual(capitulos, "zzzzzz", 30, "en")).toEqual([]);
+  });
+});
+
 describe("resaltar", () => {
   it("marca las coincidencias sin tildes ni mayusculas", () => {
     expect(resaltar("La Impresión y la impresora", ["impresion"])).toEqual([
@@ -192,15 +228,22 @@ describe("textoParaPdf", () => {
   });
 });
 
-// El manual de verdad: que este bien armado y que no tenga enlaces rotos.
-describe("el manual del usuario", () => {
-  const carpeta = new URL("../../../../app/src/manual/contenido/", import.meta.url);
+// El manual de verdad, en cada idioma: que este bien armado y que no tenga enlaces rotos.
+const RAIZ_MANUAL = new URL("../../../../app/src/manual/contenido/", import.meta.url);
+const IDIOMAS: IdiomaManual[] = ["es", "en"];
+
+function leerManual(idioma: IdiomaManual) {
+  const carpeta = new URL(`${idioma}/`, RAIZ_MANUAL);
   const archivos = readdirSync(carpeta)
     .filter((f) => f.endsWith(".md"))
     .sort();
-  const capitulos = archivos.map((f) =>
-    parsearCapitulo(f.replace(/^\d+-/, "").replace(/\.md$/, ""), readFileSync(new URL(f, carpeta), "utf-8")),
-  );
+  const markdown = archivos.map((f) => readFileSync(new URL(f, carpeta), "utf-8"));
+  const capitulos = archivos.map((f, i) => parsearCapitulo(f.replace(/^\d+-/, "").replace(/\.md$/, ""), markdown[i]));
+  return { archivos, markdown, capitulos };
+}
+
+describe.each(IDIOMAS)("el manual del usuario (%s)", (idioma) => {
+  const { archivos, markdown, capitulos } = leerManual(idioma);
 
   it("tiene capitulos, y cada uno con titulo, resumen y secciones", () => {
     expect(capitulos.length).toBeGreaterThanOrEqual(10);
@@ -215,12 +258,11 @@ describe("el manual del usuario", () => {
   it("todos los enlaces entre capitulos apuntan a un capitulo que existe", () => {
     const ids = new Set(capitulos.map((c) => c.id));
     const rotos: string[] = [];
-    for (const archivo of archivos) {
-      const md = readFileSync(new URL(archivo, carpeta), "utf-8");
-      for (const m of md.matchAll(/\]\(cap:([a-z0-9-]+)\)/g)) {
+    archivos.forEach((archivo, i) => {
+      for (const m of markdown[i].matchAll(/\]\(cap:([a-z0-9-]+)\)/g)) {
         if (!ids.has(m[1])) rotos.push(`${archivo} -> ${m[1]}`);
       }
-    }
+    });
     expect(rotos).toEqual([]);
   });
 
@@ -228,8 +270,19 @@ describe("el manual del usuario", () => {
     expect(new Set(capitulos.map((c) => c.id)).size).toBe(capitulos.length);
   });
 
-  it("el buscador encuentra los temas principales", () => {
-    const primero = (consulta: string) => buscarEnManual(capitulos, consulta)[0];
+  it("todo su texto se puede imprimir en PDF (no queda ningun simbolo sin tipografia)", () => {
+    const permitido = /^[\u0020-\u007E\u00A0-\u00FF\u2013\u2014\u2018\u2019\u201C\u201D\u2022\u2026\u20AC\u2039\u203A\u2122\n]*$/;
+    archivos.forEach((archivo, i) => {
+      const raros = Array.from(textoParaPdf(markdown[i])).filter((c) => !permitido.test(c));
+      expect(raros, archivo).toEqual([]);
+    });
+  });
+});
+
+describe("el buscador con el manual de verdad", () => {
+  it("en espanol encuentra los temas principales", () => {
+    const { capitulos } = leerManual("es");
+    const primero = (consulta: string) => buscarEnManual(capitulos, consulta, 30, "es")[0];
     expect(primero("certificado")).toBeDefined();
     expect(primero("como cambio la carpeta de datos")?.capituloId).toBe("configuracion");
     expect(primero("firma digital")).toBeDefined();
@@ -237,13 +290,41 @@ describe("el manual del usuario", () => {
     expect(primero("prueba de autor")).toBeDefined();
   });
 
-  it("todo su texto se puede imprimir en PDF (no queda ningun simbolo sin tipografia)", () => {
-    const permitido = /^[\u0020-\u007E\u00A0-\u00FF\u2013\u2014\u2018\u2019\u201C\u201D\u2022\u2026\u20AC\u2039\u203A\u2122\n]*$/;
-    for (const archivo of archivos) {
-      const original = readFileSync(new URL(archivo, carpeta), "utf-8");
-      const paraPdf = textoParaPdf(original);
-      const raros = Array.from(paraPdf).filter((c) => !permitido.test(c));
-      expect(raros, archivo).toEqual([]);
-    }
+  it("en ingles encuentra los temas principales", () => {
+    const { capitulos } = leerManual("en");
+    const primero = (consulta: string) => buscarEnManual(capitulos, consulta, 30, "en")[0];
+    expect(primero("certificate")).toBeDefined();
+    expect(primero("how do I change the data folder")?.capituloId).toBe("configuracion");
+    expect(primero("digital signature")).toBeDefined();
+    expect(primero("cancel sale")?.capituloId).toBe("ventas");
+    expect(primero("artist's proof")).toBeDefined();
+  });
+});
+
+describe("el manual en espanol y en ingles", () => {
+  const es = leerManual("es");
+  const en = leerManual("en");
+
+  it("tienen los mismos archivos, en el mismo orden", () => {
+    expect(en.archivos).toEqual(es.archivos);
+  });
+
+  it("cada capitulo tiene las mismas secciones y los mismos enlaces en los dos idiomas", () => {
+    es.capitulos.forEach((c, i) => {
+      const otro = en.capitulos[i];
+      expect(otro.id).toBe(c.id);
+      expect(otro.secciones.length, `secciones de ${c.id}`).toBe(c.secciones.length);
+      const enlaces = (md: string) => Array.from(md.matchAll(/\]\(cap:([a-z0-9-]+)\)/g), (m) => m[1]);
+      expect(enlaces(en.markdown[i]), `enlaces de ${c.id}`).toEqual(enlaces(es.markdown[i]));
+    });
+  });
+
+  it("cada capitulo tiene la misma cantidad de pasos y notas en los dos idiomas", () => {
+    const conteo = (md: string) => ({
+      pasos: (md.match(/^\d+\. /gm) ?? []).length,
+      notas: (md.match(/^> /gm) ?? []).length,
+      subtitulos: (md.match(/^### /gm) ?? []).length,
+    });
+    es.markdown.forEach((md, i) => expect(conteo(en.markdown[i]), es.archivos[i]).toEqual(conteo(md)));
   });
 });

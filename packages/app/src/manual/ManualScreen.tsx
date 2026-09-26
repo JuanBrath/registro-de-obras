@@ -11,7 +11,7 @@ import {
 import { Modal } from "../components/Modal.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
 import { savePdfWithDialog } from "../utils/savePdfDialog.js";
-import { CAPITULOS } from "./cargarManual.js";
+import { capitulosDe } from "./cargarManual.js";
 import { generarManualPdf } from "./manualPdf.js";
 
 /** Texto con las palabras buscadas marcadas. */
@@ -84,6 +84,9 @@ const idSeccion = (capituloId: string, seccionId: string) => `manual-${capituloI
  */
 export function ManualScreen({ onBack }: { onBack: () => void }) {
   const { t, idioma } = useLanguage();
+  // Los capitulos de los dos idiomas tienen los mismos ids y el mismo orden, asi que al cambiar
+  // el idioma del programa se sigue en el mismo capitulo.
+  const CAPITULOS = useMemo(() => capitulosDe(idioma), [idioma]);
   const [capituloId, setCapituloId] = useState(CAPITULOS[0]?.id ?? "");
   const [consulta, setConsulta] = useState("");
   // Palabras que se marcan en el capitulo abierto (las de la busqueda desde la que se llego).
@@ -96,9 +99,9 @@ export function ManualScreen({ onBack }: { onBack: () => void }) {
   const [generandoPdf, setGenerandoPdf] = useState(false);
   const [pdfMensaje, setPdfMensaje] = useState<{ tipo: "ok" | "error"; texto: string } | null>(null);
 
-  const terminos = useMemo(() => terminosDeBusqueda(consulta), [consulta]);
+  const terminos = useMemo(() => terminosDeBusqueda(consulta, idioma), [consulta, idioma]);
   const buscando = terminos.length > 0;
-  const resultados = useMemo(() => buscarEnManual(CAPITULOS, consulta), [consulta]);
+  const resultados = useMemo(() => buscarEnManual(CAPITULOS, consulta, undefined, idioma), [CAPITULOS, consulta, idioma]);
   const indice = CAPITULOS.findIndex((c) => c.id === capituloId);
   const capitulo: CapituloManual | undefined = CAPITULOS[indice];
 
@@ -144,8 +147,9 @@ export function ManualScreen({ onBack }: { onBack: () => void }) {
     setPdfMensaje(null);
     try {
       const soloCapitulo = pdfAlcance === "capitulo" && capitulo ? capitulo : null;
-      const bytes = await generarManualPdf(CAPITULOS, { capituloId: soloCapitulo?.id });
-      const nombre = soloCapitulo ? `manual_galeris_${soloCapitulo.id.replace(/-/g, "_")}.pdf` : "manual_del_usuario_galeris.pdf";
+      const bytes = await generarManualPdf(CAPITULOS, { capituloId: soloCapitulo?.id, idioma });
+      const base = idioma === "en" ? "galeris_user_manual" : "manual_del_usuario_galeris";
+      const nombre = soloCapitulo ? `${base}_${soloCapitulo.id.replace(/-/g, "_")}.pdf` : `${base}.pdf`;
       const guardado = await savePdfWithDialog(bytes, nombre);
       if (guardado) setPdfMensaje({ tipo: "ok", texto: t("manual.pdfGenerado") });
     } catch (e) {
@@ -170,8 +174,6 @@ export function ManualScreen({ onBack }: { onBack: () => void }) {
           ✕
         </button>
       </div>
-
-      {idioma !== "es" && <p className="field-note">{t("manual.soloEspanol")}</p>}
 
       <div className="manual-buscador">
         <input

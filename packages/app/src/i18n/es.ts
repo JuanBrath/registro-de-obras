@@ -140,7 +140,6 @@ export const es = {
   "manual.quitarResaltado": "Quitar el resaltado",
   "manual.capituloAnterior": "← Capítulo anterior",
   "manual.capituloSiguiente": "Capítulo siguiente →",
-  "manual.soloEspanol": "El manual está disponible solo en español por ahora.",
   "manual.pdfBoton": "Generar PDF",
   "manual.pdfAyuda": "Guardar el manual en PDF, para imprimirlo",
   "manual.pdfTitulo": "Generar PDF del manual",

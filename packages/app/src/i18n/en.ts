@@ -142,7 +142,6 @@ export const en: Record<keyof typeof es, string> = {
   "manual.quitarResaltado": "Remove highlighting",
   "manual.capituloAnterior": "← Previous chapter",
   "manual.capituloSiguiente": "Next chapter →",
-  "manual.soloEspanol": "The manual is only available in Spanish for now.",
   "manual.pdfBoton": "Generate PDF",
   "manual.pdfAyuda": "Save the manual as a PDF, to print it",
   "manual.pdfTitulo": "Generate the manual as a PDF",

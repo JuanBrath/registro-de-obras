@@ -228,26 +228,44 @@ export function normalizar(texto: string): string {
   return salida;
 }
 
+export type IdiomaManual = "es" | "en";
+
 // Palabras que no ayudan a encontrar nada ("como cambio la carpeta" busca "cambio" y "carpeta").
-const PALABRAS_VACIAS = new Set(
-  (
-    "a al algo ante como con cual cuales cuando cuanto de del desde donde el ella ellos en entre es esta estas este esto " +
-    "hace hacen hacer hago la las le les lo los me mi mis muy no nos o para pero podes puede pueden puedo por que quiero " +
-    "quiere se si sin sobre son su sus te tiene tienen tengo ti tu tus un una uno unos unas usar uso y ya"
-  ).split(" "),
-);
+const PALABRAS_VACIAS: Record<IdiomaManual, Set<string>> = {
+  es: new Set(
+    (
+      "a al algo ante como con cual cuales cuando cuanto de del desde donde el ella ellos en entre es esta estas este esto " +
+      "hace hacen hacer hago la las le les lo los me mi mis muy no nos o para pero podes puede pueden puedo por que quiero " +
+      "quiere se si sin sobre son su sus te tiene tienen tengo ti tu tus un una uno unos unas usar uso y ya"
+    ).split(" "),
+  ),
+  en: new Set(
+    (
+      "a about after again all also am an and any are as at be been before but by can could did do does don down for from " +
+      "get had has have how i if in into is it its just may me might more my need no not of on or our out over please " +
+      "should so than that the their them then there these they this those to too under up use very want was we were what " +
+      "when where which who why will with would you your"
+    ).split(" "),
+  ),
+};
 
 /**
  * Las palabras de una busqueda, normalizadas, sin las palabras vacias y
  * reducidas a su raiz: "copias" busca "copia", "certificados" busca
- * "certifica", "cambio" busca "cambi" (asi encuentra tambien "cambiar").
+ * "certifica", "cambio" busca "cambi" (asi encuentra tambien "cambiar"). En
+ * ingles tambien se quitan "-ing" y "-ed" ("changing" busca "chang").
  */
-export function terminosDeBusqueda(consulta: string): string[] {
+export function terminosDeBusqueda(consulta: string, idioma: IdiomaManual = "es"): string[] {
+  const vacias = PALABRAS_VACIAS[idioma];
   const terminos = normalizar(consulta)
     .split(/[^a-z0-9]+/)
-    .filter((t) => t.length >= 2 && !PALABRAS_VACIAS.has(t))
+    .filter((t) => t.length >= 2 && !vacias.has(t))
     .map((t) => {
       let raiz = t;
+      if (idioma === "en") {
+        if (raiz.length > 5 && raiz.endsWith("ing")) raiz = raiz.slice(0, -3);
+        else if (raiz.length > 4 && raiz.endsWith("ed")) raiz = raiz.slice(0, -2);
+      }
       if (raiz.length >= 5 && raiz.endsWith("es")) raiz = raiz.slice(0, -2);
       else if (raiz.length >= 4 && raiz.endsWith("s")) raiz = raiz.slice(0, -1);
       if (raiz.length >= 8) return raiz.slice(0, -2);
@@ -298,8 +316,13 @@ function fragmentoAlrededor(textoOriginal: string, textoNormalizado: string, ter
  * las palabras (marcadas como `completo: false`). Van primero las que tienen
  * las palabras en el titulo.
  */
-export function buscarEnManual(capitulos: CapituloManual[], consulta: string, limite = 30): ResultadoBusqueda[] {
-  const terminos = terminosDeBusqueda(consulta);
+export function buscarEnManual(
+  capitulos: CapituloManual[],
+  consulta: string,
+  limite = 30,
+  idioma: IdiomaManual = "es",
+): ResultadoBusqueda[] {
+  const terminos = terminosDeBusqueda(consulta, idioma);
   if (terminos.length === 0) return [];
 
   const candidatos: (ResultadoBusqueda & { orden: number; presentes: number })[] = [];

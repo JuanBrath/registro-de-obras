@@ -8,9 +8,7 @@ Tocá el engranaje **⚙** de arriba a la derecha. Se abre la ventana **Configur
 
 ## Idioma
 
-En **Idioma** elegís **Español** o **Inglés**. Cambia los textos del programa. También podés cambiarlo desde el menú **Idioma** de la barra superior de la computadora.
-
-> Este manual está escrito solo en español.
+En **Idioma** elegís **Español** o **Inglés**. Cambia los textos del programa y también el idioma de este manual. También podés cambiarlo desde el menú **Idioma** de la barra superior de la computadora.
 
 Aparte del idioma del programa, cada documento que generás (fichas, presupuestos, certificados…) tiene su propio selector de idioma. Ver [Informes y documentos en PDF](cap:informes).
 
