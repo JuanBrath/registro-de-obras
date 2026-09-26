@@ -1,5 +1,6 @@
 import { copiaConPA, type Certificado } from "../certificado.js";
 import { altoRenglon, formatoImagen, medidaAjustada, nuevoDocumento, rotulo } from "./base.js";
+import { dibujarSinCopyright } from "./sinCopyright.js";
 
 /**
  * Certificado "simple": titulo con una linea debajo, la foto, y los datos
@@ -9,7 +10,7 @@ import { altoRenglon, formatoImagen, medidaAjustada, nuevoDocumento, rotulo } fr
  * mm sobre A4 y se multiplican por `k` para adaptarse a la hoja elegida.
  */
 export async function generarSimple(c: Certificado): Promise<Uint8Array> {
-  const { doc, W, k } = await nuevoDocumento(c);
+  const { doc, W, H, k } = await nuevoDocumento(c);
   const centro = W / 2;
   const r = (es: string, en: string) => rotulo(c.idioma, es, en);
 
@@ -94,6 +95,8 @@ export async function generarSimple(c: Certificado): Promise<Uint8Array> {
     doc.setTextColor(50, 50, 50);
     doc.text(c.artista, columnaFirma, firmaY + 7 * k, { align: "center" });
   }
+
+  if (c.sinCopyright) dibujarSinCopyright(doc, c, centro, H - 12 * k, k);
 
   return new Uint8Array(doc.output("arraybuffer"));
 }

@@ -1256,6 +1256,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
         : "";
       const fechaVenta = venta?.fecha_venta?.slice(0, 10) ?? "";
       const datos: DatosStudioCertificado = {
+        sintografia: ext?.subtipo_fotografia === "Sintografia",
         imagen: imagenResuelta?.bytes ?? null,
         titulo: obra.titulo,
         artista: obra.nombre_completo,

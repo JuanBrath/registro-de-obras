@@ -10,6 +10,18 @@ Revisá estas causas:
 - La copia está **Descartada**, **Destruida** o en la **Colección del autor**: no se puede vender.
 - La copia ya tiene una venta, reserva o donación: en ese caso ves **Editar venta** en lugar de **Venta / Reserva**.
 
+## ¿Puedo vender una prueba de autor?
+
+El programa te deja: en una prueba de autor el botón se llama **Venta / Reserva / Donación**. Por convención, las pruebas de autor no se venden (se conservan, se donan o se usan para difusión), pero si decidís venderla, se registra como cualquier otra venta. Ver [Copias y estados](cap:copias).
+
+## Elegí varias etiquetas y veo obras que no tienen todas
+
+Es lo esperado: con varias etiquetas, el filtro muestra las obras que tienen **al menos una** de ellas. Cada etiqueta que agregás amplía lo que ves. Ver [Obras](cap:obras).
+
+## El certificado dice SIN COPYRIGHT
+
+Pasa con las obras de subtipo **Sintografía** (arte generado por inteligencia artificial): en lugar del copyright del artista, el certificado aclara que no lo tiene. Ver [Certificado de autenticidad](cap:certificado).
+
 ## No puedo cambiar el estado de una copia
 
 Si la copia tiene una venta, reserva o donación, el estado se maneja desde ahí: modificá o anulá esa operación. **Vendida** y **Reservada** no se eligen a mano. Ver [Ventas, reservas y donaciones](cap:ventas).

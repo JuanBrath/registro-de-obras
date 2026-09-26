@@ -19,7 +19,7 @@ Tocando una tarjeta abrís la ficha de esa obra. Ver [Ficha de la obra](cap:fich
 
 ## Buscar
 
-El cuadro de búsqueda de arriba busca mientras escribís. En Galeris Studio busca en el **título**, en el **número** de la obra y en el **código de inventario**. Si no aparece nada, ves el mensaje "No se encontraron obras con esos filtros."
+El cuadro de búsqueda de arriba busca mientras escribís. En Galeris Studio busca en el **título**, en el **número** de la obra y en el **código de inventario**. No busca dentro de las etiquetas: para eso está el filtro de etiquetas (ver más abajo). Si no aparece nada, ves el mensaje "No se encontraron obras con esos filtros."
 
 ## Filtrar y ordenar
 
@@ -29,9 +29,30 @@ Debajo de los botones hay varios controles que se combinan entre sí:
 - **Categoría**: muestra solo las obras de una categoría.
 - **Subtipo**: aparece cuando hay obras con subtipo, y se ajusta a la categoría elegida.
 - **Estrellas**: tocá una estrella para ver solo las obras con esa calificación; si tocás la misma estrella otra vez, se quita el filtro. Si dejás apretada una estrella un momento, el programa te pregunta si querés quitar la calificación a todas las obras.
-- **Etiquetas**: elegí una o varias etiquetas para ver las obras que las tengan.
+- **Etiquetas**: elegí una o varias etiquetas para ver las obras que las tengan. Ver [Filtrar por etiquetas](cap:obras).
 
 Los filtros no borran nada: solo cambian lo que ves. Para volver a ver todo, elegí en cada uno la primera opción (**Todas las categorías**, **Todos**) y sacá las estrellas y las etiquetas.
+
+## Filtrar por etiquetas
+
+Las **etiquetas** son palabras que le ponés a cada obra para clasificarla (por ejemplo "paisaje", "blanco y negro", "serie 2024"). Se cargan en el campo **Etiquetas** del formulario de la obra. Ver [Cargar una obra nueva](cap:nueva-obra).
+
+Cómo se usa el filtro:
+
+1. En **Etiquetas**, abrí el desplegable **Agregar etiqueta…**. Ahí aparecen todas las etiquetas que ya usan tus obras.
+2. Elegí una. Aparece como una pastillita a la derecha del desplegable y el listado se reduce a las obras que tienen esa etiqueta.
+3. Si querés sumar otra, volvé a abrir el desplegable y elegí la siguiente. Cada pastillita se agrega sin reemplazar a las anteriores.
+4. Para sacar una etiqueta del filtro, tocá la **×** de su pastillita. Cuando no queda ninguna, ves todas las obras otra vez.
+
+**Con varias etiquetas, se muestran las obras que tengan al menos una de ellas**; no hace falta que las tengan todas. Por ejemplo, si elegís "paisaje" y "blanco y negro", ves las obras que tienen "paisaje", las que tienen "blanco y negro" y las que tienen las dos. Dicho de otro modo: cada etiqueta que sumás **amplía** lo que ves.
+
+Algunas cosas para tener en cuenta:
+
+- El filtro de etiquetas se combina con los demás filtros (categoría, subtipo, estrellas y el cuadro de búsqueda), y ahí sí se restringe: una obra tiene que cumplir todos esos filtros a la vez y, además, tener alguna de las etiquetas elegidas.
+- Hoy no existe una opción para pedir "solo las obras que tengan todas las etiquetas". Si necesitás ver las que tienen dos etiquetas a la vez, elegí una de las dos y buscá la otra a ojo en la ficha, o usá una etiqueta más específica.
+- Las etiquetas son propias de Galeris: sirven para clasificar y buscar dentro del programa, pero no se graban en el archivo original. Si el archivo trae palabras clave (por ejemplo, cargadas en Lightroom), se leen solas la primera vez que indicás su ubicación; desde ahí viven solo en Galeris: cambiarlas acá no modifica el archivo, ni al revés.
+- La **Galería de obras** usa exactamente el mismo filtro y la misma regla. Ver [Galería de obras](cap:galeria-de-obras).
+- En Galeris Space, el cuadro de búsqueda además busca dentro de las etiquetas.
 
 ## Cambiar el tamaño de las miniaturas
 

@@ -293,7 +293,7 @@ export const en: Record<keyof typeof es, string> = {
   "fields.fotografia.diafragmaLabel": "Aperture",
   "fields.fotografia.distanciaFocalLabel": "Focal length",
   "fields.fotografia.notaSintografia":
-    "No EXIF or AI tool data. The certificate will include the \"no copyright\" note.",
+    "No EXIF or AI tool data. The footer of the certificate reads \"NO COPYRIGHT\" instead of the copyright.",
   "fields.fotografia.serieProyectoLabel": "Series or project",
   "fields.fotografia.rigurosaAnalogicaLegend": "Rigorous record — Classic analog photography",
   "fields.fotografia.clasificacionPositivadoLabel": "Temporal classification of the print",
@@ -787,6 +787,8 @@ export const en: Record<keyof typeof es, string> = {
   "certificado.descartarYSalir": "Discard and leave",
   "certificado.titulo": "Certificate of authenticity",
   "certificado.seccionFormato": "Layout",
+  "certificado.sinCopyrightAyuda":
+    "This artwork is a synthography (AI-generated art): the certificate footer reads NO COPYRIGHT instead of the artist's copyright.",
   "certificado.modelo": "Design",
   "certificado.modeloClasico": "Classic",
   "certificado.modeloClasicoDetalle": "Framed, large photo",

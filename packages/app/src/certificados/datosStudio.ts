@@ -13,6 +13,8 @@ export type FormatoCertificado = Modelo | "fichaSinGaleria";
  * depende del modelo elegido (ver valoresDeStudio).
  */
 export interface DatosStudioCertificado {
+  /** La obra es una sintografia (fotografia generada por IA): el certificado lleva la leyenda SIN COPYRIGHT. */
+  sintografia: boolean;
   imagen: Uint8Array | null;
   titulo: string;
   artista: string;

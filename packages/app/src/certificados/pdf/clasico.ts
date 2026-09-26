@@ -1,5 +1,6 @@
 import { copiaConPA, type Certificado } from "../certificado.js";
 import { altoRenglon, fechaLarga, formatoImagen, medidaAjustada, nuevoDocumento, rotulo } from "./base.js";
+import { dibujarSinCopyright } from "./sinCopyright.js";
 
 /**
  * Certificado de autenticidad clasico, en una sola hoja: marco de doble
@@ -162,7 +163,10 @@ export async function generarClasico(c: Certificado): Promise<Uint8Array> {
     }
   }
 
-  if (c.artista) {
+  if (c.sinCopyright) {
+    // Sintografia: en lugar del copyright del artista, la aclaracion de que no lo tiene.
+    dibujarSinCopyright(doc, c, W / 2, H - outerMargin - 8 * k, k);
+  } else if (c.artista) {
     doc.setFont("Inter", "normal");
     doc.setFontSize(8 * k);
     doc.setTextColor(120, 120, 120);

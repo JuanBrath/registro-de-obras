@@ -44,7 +44,8 @@ Cada categoría tiene sus **subtipos** (por ejemplo, en Fotografía: analógica 
 - **Fecha de captura** (en la sintografía se llama **Fecha de creación**), **Año de edición**, **Serie o proyecto** y **Técnica**.
 - **Escala por tamaños**: si la serie se divide en distintos tamaños, se deja constancia acá. Si elegís **No**, hay que completar el **Tamaño de la imagen (mm)**.
 - **Datos de captura**: cámara, ISO, velocidad de obturación, diafragma y distancia focal. No aparecen en la sintografía (que no tiene esos datos).
-- **Ubicación del archivo original**: en las fotografías digitales elegí el archivo con el que se imprime la obra. Si el archivo trae datos, el programa los completa solo: la fecha de captura, el software de edición, los datos de la cámara, las **palabras clave** (que pasan a ser etiquetas) y la **calificación** en estrellas. Después de eso, esos datos viven en Galeris: cambiarlos acá no modifica el archivo, ni al revés. En los otros subtipos, este campo es un texto libre llamado **Ubicación del negativo**.
+- **Ubicación del archivo original**: en las fotografías digitales elegí el archivo con el que se imprime la obra. Si el archivo es **JPEG, TIFF, HEIC, PSD/PSB o RAW de cámara (CR2, NEF, ARW, ORF, DNG)**, el programa completa solo la fecha de captura, el software de edición, los datos de la cámara y las **palabras clave** (que pasan a ser etiquetas). En una obra nueva toma además la **calificación en estrellas** que el archivo ya tenga (por ejemplo, puesta desde Lightroom o Bridge). Con otros formatos RAW (como CR3 o RAF) esos datos todavía no se leen solos, pero se pueden completar a mano. Después de eso, los datos viven en Galeris: cambiarlos acá no modifica el archivo, ni al revés. En los otros subtipos, este campo es un texto libre llamado **Ubicación del negativo**.
+- **Sintografía** (arte generado íntegramente por inteligencia artificial): no lleva datos de cámara. Los certificados de estas obras llevan al pie la leyenda **SIN COPYRIGHT**, en lugar del copyright del artista. Ver [Certificado de autenticidad](cap:certificado).
 - En Galeris Studio ves además el campo **Software de edición**.
 
 ## Paso 4: etiquetas
@@ -55,7 +56,7 @@ En **Etiquetas** elegí una existente o escribí una nueva. Las etiquetas son pr
 
 1. En **Es seriada** elegí **Obra única** o **Obra seriada**. (En Obra Gráfica esto se decide solo según el subtipo: por ejemplo, el monotipo es único y las demás técnicas son seriadas.)
 2. Si es seriada, completá la **Cantidad total de ediciones**. El programa crea automáticamente las copias numeradas 1/N, 2/N… N/N.
-3. Tildá **¿Hay prueba de autor?** si corresponde y poné la **Cantidad de pruebas de autor**. Las pruebas de autor (PA) van fuera de la numeración comercial. Conviene que no superen el 10 % de la serie: si te pasás, el programa muestra una advertencia.
+3. Tildá **¿Hay prueba de autor?** si corresponde y poné la **Cantidad de pruebas de autor**. Las pruebas de autor (PA) van fuera de la numeración comercial. La regla habitual es el 10 % de la edición, redondeado hacia arriba: para 7 obras corresponde 1 PA y para 25 obras, 3 PA. Si ponés más que eso, el programa muestra una advertencia. Por convención las PA no se venden. Ver [Copias y estados](cap:copias).
 
 Una obra única es, por dentro, una serie de una sola copia.
 

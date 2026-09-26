@@ -34,6 +34,14 @@ En **Datos del certificado**:
 
 Un campo que no completes no aparece en el certificado.
 
+## Obras de sintografía: la leyenda SIN COPYRIGHT
+
+Si la obra es una **sintografía** (arte generado íntegramente por inteligencia artificial), el certificado lleva al pie la leyenda **SIN COPYRIGHT**, en mayúsculas, en lugar del copyright del artista. Pasa en los tres modelos (**Clásico**, **Simple** y **Ficha**) y no hay que hacer nada: el programa lo pone solo según el subtipo de la obra. En la pantalla del certificado aparece un aviso que lo indica.
+
+- En el certificado **Clásico**, la leyenda reemplaza la línea "© Artista - Todos los derechos reservados".
+- Según el **Idioma de los títulos**, dice **SIN COPYRIGHT**, **NO COPYRIGHT** o las dos: **SIN COPYRIGHT · NO COPYRIGHT**.
+- Las demás obras siguen llevando el copyright del artista en el modelo Clásico.
+
 ## Las pruebas de autor y el número de copia
 
 El número de copia sale como **3/10**. Si la obra tiene pruebas de autor, el certificado suma la cantidad: **3/10 + 2 PA**. Si la copia es en sí una prueba de autor (**PA 1/2**), no se suma nada más.

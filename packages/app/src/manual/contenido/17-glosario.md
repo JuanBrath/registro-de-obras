@@ -20,11 +20,11 @@ Cada unidad física numerada de una obra. El programa las llama **ejemplares** y
 
 ## Prueba de autor (PA)
 
-Copias adicionales que se reservan para el artista, fuera de la numeración comercial. Se numeran **PA 1/2**, **PA 2/2**. Conviene que no superen el 10 % de la edición. No tienen valor comercial de mercado y pueden donarse.
+Copias adicionales que se reservan para el artista, fuera de la numeración comercial. Se numeran **PA 1/2**, **PA 2/2**. La regla habitual es el 10 % de la edición, redondeado hacia arriba (7 obras → 1 PA; 25 obras → 3 PA). Por convención no se venden: se conservan, se donan o se usan para difusión. El programa igualmente permite registrar su venta.
 
 ## Estado de una copia
 
-Situación de la copia: disponible, en stock, en producción, en exhibición, en consignación, reservada, vendida, colección del autor, descartada o destruida. Ver [Copias y estados](cap:copias).
+Situación de la copia: disponible (el número está libre pero todavía no se imprimió), en stock (impresa y lista para la venta), en producción, en exhibición, en consignación, reservada, vendida, colección del autor, descartada o destruida. Ver [Copias y estados](cap:copias).
 
 ## Consignación
 
@@ -56,7 +56,11 @@ La parte del formulario de una obra con los datos técnicos específicos de su c
 
 ## Etiqueta
 
-Una palabra que le ponés a una obra para clasificarla y buscarla dentro del programa. No se graba en el archivo original.
+Una palabra que le ponés a una obra para clasificarla y buscarla dentro del programa. No se graba en el archivo original. Al filtrar por varias etiquetas, se muestran las obras que tienen al menos una. Ver [Filtrar por etiquetas](cap:obras).
+
+## Sintografía
+
+Fotografía generada íntegramente por inteligencia artificial. No lleva datos de cámara, y su certificado lleva al pie la leyenda **SIN COPYRIGHT**.
 
 ## SKU o código de inventario
 

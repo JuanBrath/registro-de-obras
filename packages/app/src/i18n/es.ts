@@ -291,7 +291,7 @@ export const es = {
   "fields.fotografia.diafragmaLabel": "Diafragma",
   "fields.fotografia.distanciaFocalLabel": "Distancia focal",
   "fields.fotografia.notaSintografia":
-    "Sin EXIF ni datos de herramienta de IA. El certificado incluirá la nota de \"sin copyright\".",
+    "Sin EXIF ni datos de herramienta de IA. Al pie del certificado va la leyenda \"SIN COPYRIGHT\", en lugar del copyright.",
   "fields.fotografia.serieProyectoLabel": "Serie o proyecto",
   "fields.fotografia.rigurosaAnalogicaLegend": "Ficha rigurosa — Fotografía analógica clásica",
   "fields.fotografia.clasificacionPositivadoLabel": "Clasificación temporal del positivado",
@@ -785,6 +785,8 @@ export const es = {
   "certificado.descartarYSalir": "Descartar y salir",
   "certificado.titulo": "Certificado de autenticidad",
   "certificado.seccionFormato": "Formato",
+  "certificado.sinCopyrightAyuda":
+    "Esta obra es una sintografía (arte generado por IA): el certificado lleva al pie la leyenda SIN COPYRIGHT, en lugar del copyright del artista.",
   "certificado.modelo": "Modelo",
   "certificado.modeloClasico": "Clásico",
   "certificado.modeloClasicoDetalle": "Con marco y foto grande",

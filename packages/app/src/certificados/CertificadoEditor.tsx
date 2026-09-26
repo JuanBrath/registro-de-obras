@@ -124,14 +124,24 @@ export function CertificadoEditor({
   const clavesConCambios = camposConCambios(cambios);
 
   const cert = useMemo<Certificado>(() => {
-    const c: Certificado = { ...certificadoVacio(idioma), ...manual, ...deStudio, modelo, sinFirmaGaleria, tamanoHoja, idioma, guiasCorte };
+    const c: Certificado = {
+      ...certificadoVacio(idioma),
+      ...manual,
+      ...deStudio,
+      modelo,
+      sinFirmaGaleria,
+      sinCopyright: datosBase.sintografia,
+      tamanoHoja,
+      idioma,
+      guiasCorte,
+    };
     if (!incluirFirma) {
       if (deStudio.firmaArtista) c.firmaArtista = null;
       if (deStudio.galeriaFirma) c.galeriaFirma = null;
     }
     if (!incluirLogo && deStudio.logo) c.logo = null;
     return c;
-  }, [manual, deStudio, modelo, sinFirmaGaleria, tamanoHoja, idioma, guiasCorte, incluirFirma, incluirLogo]);
+  }, [manual, deStudio, modelo, sinFirmaGaleria, datosBase.sintografia, tamanoHoja, idioma, guiasCorte, incluirFirma, incluirLogo]);
 
   // La vista previa se regenera medio segundo despues de dejar de tocar algo.
   useEffect(() => {
@@ -353,6 +363,7 @@ export function CertificadoEditor({
           <h2>{t("certificado.titulo")}</h2>
 
           <Seccion titulo={t("certificado.seccionFormato")}>
+            {datosBase.sintografia && <p className="certificado-ayuda">{t("certificado.sinCopyrightAyuda")}</p>}
             <Opciones etiqueta={t("certificado.modelo")}>
               {modelos
                 .filter((m) => modelosDisponibles.includes(m.valor))

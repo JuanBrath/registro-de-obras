@@ -10,6 +10,8 @@ Cada obra tiene una o más copias, que en el programa aparecen como **Ejemplares
 - Una **obra seriada** tiene tantas copias como ediciones: la número **1/10**, la **2/10**… hasta la **10/10**.
 - Las **pruebas de autor** (**PA**) son copias adicionales que van fuera de la numeración comercial: **PA 1/2**, **PA 2/2**. Aparecen en una lista aparte, **Pruebas de autor**.
 
+Por convención, las pruebas de autor **no se venden**: se conservan, se donan o se usan para difusión. De todos modos, el programa te deja registrar su venta si decidís venderlas; es una decisión tuya. Por eso, en una prueba de autor el botón se llama **Venta / Reserva / Donación**.
+
 Cada copia tiene su propio estado, sus propios datos de impresión y, si se vende, su propia venta. Todo lo que pasa con una copia (vender, reservar, donar, certificar) se hace desde ahí.
 
 ## La lista de copias en la ficha
@@ -28,10 +30,10 @@ Cada copia muestra su número, su estado, sus datos (fecha de impresión, soport
 
 ## Los estados de una copia
 
-- **Disponible**: está lista para vender.
-- **En stock**: la tenés guardada.
+- **Disponible**: el número de serie está libre, pero esa copia todavía no se imprimió.
+- **En stock**: la copia ya está impresa y lista para la venta.
 - **En producción**: todavía se está imprimiendo o produciendo, no está terminada.
-- **En exhibición**: está expuesta. Se puede indicar una **Fecha límite**.
+- **En exhibición**: la copia está expuesta en una muestra o exposición. Se puede indicar una **Fecha límite**.
 - **Consignación**: está en manos de un tercero (galería, feria, depósito) para su eventual venta, pero todavía no se vendió. También admite **Fecha límite**.
 - **Reservada**: tiene una reserva registrada.
 - **Vendida**: tiene una venta registrada.

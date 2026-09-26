@@ -205,7 +205,20 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
       "0080_ayuda_ubicacion_archivo_calificacion_solo_nueva",
       "0081_ayuda_ubicacion_archivo_calificacion_sidecar",
       "0082_ayuda_calificacion_jpeg_embebida",
+      "0083_ayuda_prueba_artista_venta",
     ]);
+  });
+
+  it("la ayuda de las pruebas de artista aclara que por convencion no se venden pero el programa permite registrar su venta", async () => {
+    const db = adaptNodeSqlite(new DatabaseSync(":memory:"));
+    await applyMigrations(db, ALL_MIGRATIONS);
+    const [fila] = await db.query<{ texto_es: string; texto_en: string }>(
+      "SELECT texto_es, texto_en FROM texto_ayuda WHERE field_key = 'prueba_artista_info'",
+    );
+    expect(fila.texto_es).toContain("por convención no se venden");
+    expect(fila.texto_es).toContain("registrar su venta");
+    expect(fila.texto_es).not.toContain("no tienen valor comercial de mercado: no se venden");
+    expect(fila.texto_en).toContain("by convention they are not sold");
   });
 
   it("0004 allows multiple artists without a numero_artista, but rejects duplicates", async () => {

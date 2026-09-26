@@ -1,5 +1,6 @@
 import { copiaConPA, type Certificado } from "../certificado.js";
 import { altoRenglon, formatoImagen, medidaAjustada, nuevoDocumento, rotulo } from "./base.js";
+import { dibujarSinCopyright } from "./sinCopyright.js";
 
 /**
  * Certificado "tipo ficha": grilla con los datos
@@ -157,6 +158,8 @@ export async function generarFicha(c: Certificado): Promise<Uint8Array> {
       doc.addImage(c.imagen, formato, tableX + tableWidth - width, footerY - caja + 2 * k, width, height);
     }
   }
+
+  if (c.sinCopyright) dibujarSinCopyright(doc, c, W / 2, H - outerMargin - 6 * k, k);
 
   return new Uint8Array(doc.output("arraybuffer"));
 }

@@ -2,8 +2,9 @@
 // de Galeris Cert (github.com/JuanBrath/galeris-cert, carpeta src/). Si se
 // corrige o mejora un diseño en un programa, hay que hacer lo mismo en el
 // otro para que los dos sigan sacando el mismo certificado.
-// Diferencia conocida: `sinFirmaGaleria` (ficha sin la linea de firma de la
-// galeria) existe solo aca; Galeris Cert todavia no la tiene.
+// Diferencias conocidas (existen solo aca; Galeris Cert todavia no las tiene):
+// `sinFirmaGaleria` (ficha sin la linea de firma de la galeria) y
+// `sinCopyright` (leyenda SIN COPYRIGHT al pie de las sintografias).
 
 export type Modelo = "clasico" | "ficha" | "simple";
 export type TamanoHoja = "a4" | "carta" | "a5";
@@ -57,6 +58,8 @@ export interface Certificado {
   galeriaFirma: Uint8Array | null;
   /** Solo ficha: sin la segunda linea de firma (la de la galeria); el resto del pie queda igual. */
   sinFirmaGaleria: boolean;
+  /** Sintografia (obra generada por IA): al pie va la leyenda SIN COPYRIGHT, en lugar del copyright. */
+  sinCopyright: boolean;
 
   lugar: string;
   /** Fecha de emision, AAAA-MM-DD. */
@@ -97,6 +100,7 @@ export function certificadoVacio(idioma: Idioma = "es"): Certificado {
     galeriaEmail: "",
     galeriaFirma: null,
     sinFirmaGaleria: false,
+    sinCopyright: false,
     lugar: "",
     fecha: hoyISO(),
   };
