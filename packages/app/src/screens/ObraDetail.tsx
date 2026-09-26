@@ -2473,10 +2473,6 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
         (() => {
           const { ejemplar, venta } = ventaInformeTarget;
           const opciones = [
-            ...(!presupuestoBloqueadoPara(ejemplar.estado)
-              ? [{ id: "presupuesto", label: t("obraDetail.generarPresupuesto") }]
-              : []),
-            ...(venta && venta.tipo !== "donacion" ? [{ id: "comprobante", label: t("ventaForm.informeOpcionComprobante") }] : []),
             ...(venta
               ? [
                   {
@@ -2486,6 +2482,10 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
                   },
                 ]
               : []),
+            ...(!presupuestoBloqueadoPara(ejemplar.estado)
+              ? [{ id: "presupuesto", label: t("obraDetail.generarPresupuesto") }]
+              : []),
+            ...(venta && venta.tipo !== "donacion" ? [{ id: "comprobante", label: t("ventaForm.informeOpcionComprobante") }] : []),
             ...(venta ? [{ id: "remito", label: t("ventaForm.informeOpcionRemito") }] : []),
             ...(venta && venta.tipo === "venta"
               ? [{ id: "contratoEstandar", label: t("ventaForm.informeOpcionContratoEstandar"), hideIdioma: true }]

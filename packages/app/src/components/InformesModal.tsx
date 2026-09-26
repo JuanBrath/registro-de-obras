@@ -12,8 +12,8 @@ export interface InformeOpcion {
   /** Oculta el selector de idioma para documentos legales que solo se generan en espanol (ej. contratos). */
   hideIdioma?: boolean;
   /**
-   * Para documentos que tienen su propia pantalla (ej. el certificado): la opcion no se elige
-   * con el punto sino que es un boton que ejecuta esto al tocarlo.
+   * Para documentos que tienen su propia pantalla (ej. el certificado): al tocar la opcion se
+   * ejecuta esto en vez de dejarla elegida (el punto no queda marcado).
    */
   alElegir?: () => void;
 }
@@ -85,21 +85,17 @@ export function InformesModal({
       <h2>{titulo}</h2>
 
       <div className="informes-lista">
-        {opciones.map((op) =>
-          op.alElegir ? (
-            <button key={op.id} type="button" className="informes-opcion informes-opcion-accion" onClick={op.alElegir}>
-              <span className="informes-opcion-flecha" aria-hidden="true">
-                ›
-              </span>
-              {op.label}
-            </button>
-          ) : (
-            <label key={op.id} className="informes-opcion">
-              <input type="radio" name="informeOpcion" checked={selectedId === op.id} onChange={() => onSelectId(op.id)} />
-              {op.label}
-            </label>
-          ),
-        )}
+        {opciones.map((op) => (
+          <label key={op.id} className="informes-opcion">
+            <input
+              type="radio"
+              name="informeOpcion"
+              checked={!op.alElegir && selectedId === op.id}
+              onChange={() => (op.alElegir ? op.alElegir() : onSelectId(op.id))}
+            />
+            {op.label}
+          </label>
+        ))}
       </div>
 
       {opcionActual?.extra}
