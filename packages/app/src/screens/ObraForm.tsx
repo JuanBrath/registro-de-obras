@@ -34,17 +34,21 @@ import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
 import { focusNextOnEnter } from "../utils/focusNextOnEnter.js";
 import { generarMiniatura } from "../utils/generarMiniatura.js";
 import type { ArchivoMetadata } from "../utils/readImageMetadata.js";
+import type { RecibidoDeLightroom } from "../lightroom/lightroom.js";
 
 export function ObraForm({
   onEditProfile,
   onCancel,
   onViewObra,
   onVerObras,
+  precarga,
 }: {
   onEditProfile?: () => void;
   onCancel: () => void;
   onViewObra: (obraId: number) => void;
   onVerObras: () => void;
+  /** Una obra que llego desde Lightroom Classic: el formulario arranca con esos datos. */
+  precarga?: RecibidoDeLightroom;
 }) {
   const { context, personalArtista } = useWorkspace();
   const { t } = useLanguage();
@@ -139,6 +143,31 @@ export function ObraForm({
       setImagePreviewUrl(null);
     }
   }
+
+  // Obra que llego desde Lightroom Classic (ver lightroom/lightroom.ts): se carga una sola vez, al abrir el formulario.
+  useEffect(() => {
+    if (!precarga) return;
+    const { envio, imagen } = precarga;
+    if (envio.titulo) setTitulo(envio.titulo);
+    if (envio.fechaCaptura) setAnioPeriodo(envio.fechaCaptura.slice(0, 4));
+    setCategoria("Fotografia");
+    setFotografia((prev) => ({
+      ...prev,
+      fechaCaptura: envio.fechaCaptura || prev.fechaCaptura,
+      softwareEdicion: "Adobe Lightroom Classic",
+      camara: envio.camara || prev.camara,
+      iso: envio.iso || prev.iso,
+      velocidadObturador: envio.velocidadObturador || prev.velocidadObturador,
+      diafragma: envio.diafragma || prev.diafragma,
+      distanciaFocal: envio.distanciaFocal || prev.distanciaFocal,
+    }));
+    if (envio.rutaOriginal && esRegistroPersonal) setUbicacion(envio.rutaOriginal);
+    if (envio.palabrasClave.length > 0) setTags(envio.palabrasClave);
+    if (envio.calificacion !== null) setCalificacionDesdeArchivo(envio.calificacion);
+    if (imagen) handleImageChange(imagen);
+    // Solo al abrir: el formulario se vuelve a montar con otra "key" cuando llega una obra nueva.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function resetForm() {
     setTitulo("");
@@ -543,6 +572,8 @@ export function ObraForm({
           ✕
         </button>
       </div>
+
+      {precarga && <p className="field-note">{t("obraForm.desdeLightroom")}</p>}
 
       {esRegistroPersonal && personalArtista && (
         <p className="field-note">

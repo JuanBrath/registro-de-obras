@@ -130,6 +130,24 @@ export const en: Record<keyof typeof es, string> = {
   "workspaceHome.manual": "User manual",
 
   // User manual
+  "lightroom.titulo": "Lightroom Classic",
+  "lightroom.ayuda":
+    "You can add an artwork from Lightroom Classic: in Lightroom, select the photo and use the menu Library › Plug-in Extras › Add artwork to Galeris Studio. “New artwork” opens with the image, title, keywords, rating, capture date, camera data and original file location already filled in. Galeris Studio works the same without this.",
+  "lightroom.instalado": "Plug-in installed.",
+  "lightroom.noInstalado": "Plug-in not installed.",
+  "lightroom.desactualizado": "There is a newer version of the plug-in: update it so it works properly.",
+  "lightroom.noEncontrado": "Lightroom Classic wasn't found on this computer.",
+  "lightroom.instalar": "Install plug-in",
+  "lightroom.reinstalar": "Reinstall plug-in",
+  "lightroom.actualizar": "Update plug-in",
+  "lightroom.quitar": "Remove plug-in",
+  "lightroom.instaladoOk": "Done. Quit and reopen Lightroom Classic for the menu to appear.",
+  "lightroom.quitadoOk": "Plug-in removed. Restart Lightroom Classic for the menu to disappear.",
+  "lightroom.error": "Couldn't complete: {{error}}",
+  "lightroom.confirmar":
+    "An artwork arrived from Lightroom Classic, but you have an artwork screen open that may have unsaved changes. Discard them and load the new artwork?",
+  "lightroom.cargarLaObra": "Load the artwork",
+  "obraForm.desdeLightroom": "This artwork comes from Lightroom Classic: check the details, choose whether it's unique or an edition, and save it.",
   "manual.titulo": "User manual",
   "manual.buscarPlaceholder": "Search the manual… (for example: digital signature)",
   "manual.indice": "Contents",

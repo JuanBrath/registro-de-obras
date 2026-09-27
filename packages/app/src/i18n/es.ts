@@ -128,6 +128,24 @@ export const es = {
   "workspaceHome.manual": "Manual del usuario",
 
   // Manual del usuario
+  "lightroom.titulo": "Lightroom Classic",
+  "lightroom.ayuda":
+    "Podés cargar una obra desde Lightroom Classic: en Lightroom, elegí la foto y usá el menú Biblioteca › Extras de plug-in › Cargar obra en Galeris Studio. Se abre «Nueva obra» con la imagen, el título, las palabras clave, la calificación, la fecha de captura, los datos de la cámara y la ubicación del archivo original ya cargados. Galeris Studio funciona igual sin esto.",
+  "lightroom.instalado": "Complemento instalado.",
+  "lightroom.noInstalado": "Complemento no instalado.",
+  "lightroom.desactualizado": "Hay una versión nueva del complemento: actualizalo para que funcione bien.",
+  "lightroom.noEncontrado": "No encontré Lightroom Classic en esta computadora.",
+  "lightroom.instalar": "Instalar complemento",
+  "lightroom.reinstalar": "Reinstalar complemento",
+  "lightroom.actualizar": "Actualizar complemento",
+  "lightroom.quitar": "Quitar complemento",
+  "lightroom.instaladoOk": "Listo. Cerrá y volvé a abrir Lightroom Classic para que aparezca el menú.",
+  "lightroom.quitadoOk": "Complemento quitado. Reiniciá Lightroom Classic para que desaparezca el menú.",
+  "lightroom.error": "No se pudo completar: {{error}}",
+  "lightroom.confirmar":
+    "Llegó una obra desde Lightroom Classic, pero tenés abierta una pantalla de obra que puede tener cambios sin guardar. ¿Descartarlos y cargar la obra nueva?",
+  "lightroom.cargarLaObra": "Cargar la obra",
+  "obraForm.desdeLightroom": "Esta obra viene de Lightroom Classic: revisá los datos, elegí si es única o seriada y guardala.",
   "manual.titulo": "Manual del usuario",
   "manual.buscarPlaceholder": "Buscar en el manual… (por ejemplo: firma digital)",
   "manual.indice": "Índice",

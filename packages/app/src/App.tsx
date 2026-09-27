@@ -1,4 +1,5 @@
-import { useEffect, useLayoutEffect, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { ask } from "@tauri-apps/plugin-dialog";
 import "./App.css";
 import { useWorkspace, WorkspaceProvider } from "./state/WorkspaceContext.js";
 import { EdicionProvider, useEdicion } from "./state/EdicionContext.js";
@@ -23,6 +24,8 @@ import { VentasReport } from "./screens/VentasReport.js";
 import { GaleriaProfileForm } from "./screens/GaleriaProfileForm.js";
 import { ClientesScreen } from "./screens/ClientesScreen.js";
 import { ManualScreen } from "./manual/ManualScreen.js";
+import { isTauri } from "./adapters/detectPlatform.js";
+import { borrarEnvioLightroom, leerEnvioLightroom, type RecibidoDeLightroom } from "./lightroom/lightroom.js";
 
 type Screen =
   | { name: "home" }
@@ -38,7 +41,57 @@ type Screen =
 
 function WorkspaceScreens({ onManual }: { onManual: () => void }) {
   const { context, personalArtista, close } = useWorkspace();
+  const { t } = useLanguage();
   const [screen, setScreen] = useState<Screen>({ name: "home" });
+  // Obra que llego desde Lightroom Classic y todavia no se guardo (ver lightroom/lightroom.ts).
+  const [precarga, setPrecarga] = useState<RecibidoDeLightroom | null>(null);
+  const pantallaActual = useRef(screen.name);
+  pantallaActual.current = screen.name;
+  const revisandoLightroom = useRef(false);
+
+  // Al salir de "Nueva obra" se olvida la precarga, para que no se vuelva a cargar al abrirla de nuevo a mano.
+  useEffect(() => {
+    if (screen.name !== "nueva-obra") setPrecarga(null);
+  }, [screen.name]);
+
+  // Vinculacion opcional con Lightroom Classic: al abrir el registro y cada vez que la ventana vuelve a primer
+  // plano (el complemento abre Galeris Studio justo despues de dejar la foto), se revisa si llego una obra.
+  // Si todavia falta el perfil, se espera: la obra queda en la carpeta hasta que se pueda cargar.
+  const faltaPerfil = context?.workspace === "personal" && !personalArtista;
+  useEffect(() => {
+    if (!isTauri() || !context || faltaPerfil) return;
+    async function revisarLightroom() {
+      if (revisandoLightroom.current) return;
+      revisandoLightroom.current = true;
+      try {
+        const recibido = await leerEnvioLightroom();
+        if (!recibido) return;
+        const abiertaConCambios = pantallaActual.current === "nueva-obra" || pantallaActual.current === "obra-detail";
+        if (
+          abiertaConCambios &&
+          !(await ask(t("lightroom.confirmar"), {
+            title: "Lightroom Classic",
+            kind: "warning",
+            okLabel: t("lightroom.cargarLaObra"),
+            cancelLabel: t("common.cancel"),
+          }))
+        ) {
+          await borrarEnvioLightroom();
+          return;
+        }
+        await borrarEnvioLightroom();
+        setPrecarga(recibido);
+        setScreen({ name: "nueva-obra" });
+      } catch {
+        // Si no se pudo leer lo que mando Lightroom, no pasa nada: se puede volver a mandar.
+      } finally {
+        revisandoLightroom.current = false;
+      }
+    }
+    void revisarLightroom();
+    window.addEventListener("focus", revisarLightroom);
+    return () => window.removeEventListener("focus", revisarLightroom);
+  }, [context, faltaPerfil, t]);
 
   // Sin esto, cambiar de pantalla arrastra el scroll de la pantalla
   // anterior a la nueva: entre dos pantallas largas como Obras y Galeria de
@@ -81,6 +134,8 @@ function WorkspaceScreens({ onManual }: { onManual: () => void }) {
     case "nueva-obra":
       content = (
         <ObraForm
+          key={precarga?.envio.id || "nueva"}
+          precarga={precarga ?? undefined}
           onCancel={() => setScreen({ name: "obras" })}
           onViewObra={(obraId) => setScreen({ name: "obra-detail", obraId })}
           onVerObras={() => setScreen({ name: "obras" })}

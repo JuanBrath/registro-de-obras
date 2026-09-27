@@ -64,6 +64,10 @@ Una obra única es, por dentro, una serie de una sola copia.
 
 Al elegir única o seriada aparece una fila por cada copia y por cada prueba de autor, con la nota "Completá los datos que ya tengas de cada copia — podés dejarlos en blanco y completarlos después". Se completan igual que cuando se edita una copia. Ver [Copias y estados](cap:copias).
 
+## Otra forma: cargar la obra desde Lightroom Classic
+
+Si usás Lightroom Classic, podés mandar la foto directamente y que este formulario se abra con la imagen y los datos ya cargados. Es opcional. Ver [Lightroom Classic](cap:lightroom-classic).
+
 ## Paso 7: guardar
 
 Tocá **Guardar obra**. Si falta algo obligatorio, el programa te dice qué: elegir la categoría, elegir si la obra es única o seriada, o escribir el título.

@@ -64,6 +64,10 @@ A unique artwork is, internally, an edition of a single copy.
 
 When you choose unique or edition, a row appears for each copy and for each artist's proof, with the note "Fill in whatever you already know about each copy — you can leave fields blank and complete them later". They are filled in the same way as when you edit a copy. See [Copies and statuses](cap:copias).
 
+## Another way: adding the artwork from Lightroom Classic
+
+If you use Lightroom Classic, you can send the photo directly and this form opens with the image and the details already loaded. It's optional. See [Lightroom Classic](cap:lightroom-classic).
+
 ## Step 7: save
 
 Click **Save artwork**. If something required is missing, the program tells you what: choose the category, choose whether the artwork is unique or an edition, or type the title.

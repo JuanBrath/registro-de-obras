@@ -1,5 +1,6 @@
 mod db_commands;
 mod fs_commands;
+mod lightroom;
 mod menu;
 
 use tauri::{Emitter, Manager};
@@ -32,6 +33,12 @@ pub fn run() {
       menu::set_app_menu_language,
       menu::set_app_menu_edicion,
       menu::set_app_menu_tema,
+      lightroom::estado_lightroom,
+      lightroom::instalar_complemento_lightroom,
+      lightroom::quitar_complemento_lightroom,
+      lightroom::leer_envio_lightroom,
+      lightroom::leer_imagen_envio_lightroom,
+      lightroom::borrar_envio_lightroom,
     ])
     .setup(|app| {
       if cfg!(debug_assertions) {

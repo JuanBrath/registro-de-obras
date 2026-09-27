@@ -1,0 +1,7 @@
+"$$$/GalerisStudio/Menu=Cargar obra en Galeris Studio…"
+"$$$/GalerisStudio/Titulo=Galeris Studio"
+"$$$/GalerisStudio/SoloMac=Este complemento solo funciona en macOS."
+"$$$/GalerisStudio/SinFoto=Primero elegí una foto."
+"$$$/GalerisStudio/ErrorExportar=No se pudo preparar la foto: ^1"
+"$$$/GalerisStudio/ErrorGeneral=No se pudo mandar la foto a Galeris Studio: ^1"
+"$$$/GalerisStudio/NoAbrio=La foto y sus datos quedaron listos, pero no se pudo abrir Galeris Studio. Abrilo a mano y se cargan solos."

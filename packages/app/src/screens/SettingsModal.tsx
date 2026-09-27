@@ -6,6 +6,7 @@ import { useFontSize } from "../state/FontSizeContext.js";
 import { useMiniaturasModo } from "../state/MiniaturasModoContext.js";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { isTauri } from "../adapters/detectPlatform.js";
+import { LightroomSettings } from "../components/LightroomSettings.js";
 
 /**
  * En macOS, copiar a un disco externo (o a otras carpetas protegidas) puede
@@ -242,6 +243,8 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
           </button>
         )}
       </fieldset>
+
+      {isTauri() && <LightroomSettings />}
 
       {isTauri() && (
         <fieldset className="settings-idioma-fieldset">
