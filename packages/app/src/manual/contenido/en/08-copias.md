@@ -59,7 +59,7 @@ The **Reserved** and **Sold** statuses are not chosen by hand: they appear on th
    - In graphic work and sculpture, artist's proofs also have a **Special proof classification** (P/E, B.A.T., H/C, P/I, F/C).
 3. Click **Save changes**.
 
-The **?** tips explain each item. None of them is required, except what's needed to sell (see below).
+The ⓘ tips explain each item. None of them is required, except what's needed to sell (see below).
 
 > In Galeris Space, the copy also has gallery-specific data: the **Certificate of Authenticity (COA) number**, the **COA issuer**, the **COA issue date**, the **COA security system**, the **Insurance value (nail-to-nail)** and the **Condition report**.
 

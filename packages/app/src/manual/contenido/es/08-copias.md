@@ -59,7 +59,7 @@ Los estados **Reservada** y **Vendida** no se eligen a mano: aparecen solos cuan
    - En obra gráfica y escultura, las pruebas de autor además tienen **Clasificación de prueba especial** (P/E, B.A.T., H/C, P/I, F/C).
 3. Tocá **Guardar cambios**.
 
-Los cartelitos **?** explican cada dato. Ninguno es obligatorio, salvo lo necesario para vender (ver abajo).
+Los cartelitos ⓘ explican cada dato. Ninguno es obligatorio, salvo lo necesario para vender (ver abajo).
 
 > En Galeris Space, la copia tiene además datos propios de galería: el **Número**, el **Emisor** y la **Fecha de emisión del COA**, el **Sistema de seguridad del COA**, el **Valor de seguro** y el **Informe de conservación**.
 

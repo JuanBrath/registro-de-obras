@@ -30,7 +30,7 @@ Both do the same thing. If you're entering data and you leave without saving, so
 
 ## Help on each field
 
-Many fields have a small help icon **?** next to them. Click it and a tip appears with a short explanation of what goes in that field and, sometimes, examples. It closes with the Esc key or by clicking elsewhere.
+Many fields have a small help icon ⓘ next to them. Click it and a tip appears with a short explanation of what goes in that field and, sometimes, examples. It closes with the Esc key or by clicking elsewhere.
 
 ## Enter and Tab in forms
 

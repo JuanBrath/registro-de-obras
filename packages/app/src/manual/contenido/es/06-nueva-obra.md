@@ -36,7 +36,7 @@ Elegí la **Categoría**. Al elegirla aparecen los campos propios de esa categor
 - **Arte Textil y Cerámica de Autor**
 - **Nuevos Medios, Videoarte e Instalaciones**
 
-Cada categoría tiene sus **subtipos** (por ejemplo, en Fotografía: analógica clásica, digital Fine Art, procesos históricos del siglo XIX, fotolibros y porfolios, sintografía) y una **ficha rigurosa** con datos técnicos específicos. Todos son opcionales salvo los que el programa marca como obligatorios. Los cartelitos **?** explican cada uno.
+Cada categoría tiene sus **subtipos** (por ejemplo, en Fotografía: analógica clásica, digital Fine Art, procesos históricos del siglo XIX, fotolibros y porfolios, sintografía) y una **ficha rigurosa** con datos técnicos específicos. Todos son opcionales salvo los que el programa marca como obligatorios. Los cartelitos ⓘ explican cada uno.
 
 ### Si la obra es una fotografía
 

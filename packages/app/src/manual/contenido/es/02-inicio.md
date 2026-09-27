@@ -30,7 +30,7 @@ Las dos hacen lo mismo. Si estás cargando datos y salís sin guardar, en alguna
 
 ## La ayuda de cada campo
 
-Muchos campos tienen al lado un pequeño ícono de ayuda **?**. Tocándolo aparece un cartel con una explicación corta de qué va en ese campo y, a veces, ejemplos. Se cierra con la tecla Esc o tocando en otro lado.
+Muchos campos tienen al lado un pequeño ícono de ayuda ⓘ. Tocándolo aparece un cartel con una explicación corta de qué va en ese campo y, a veces, ejemplos. Se cierra con la tecla Esc o tocando en otro lado.
 
 ## Enter y Tab en los formularios
 

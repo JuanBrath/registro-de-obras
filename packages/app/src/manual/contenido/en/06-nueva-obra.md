@@ -36,7 +36,7 @@ Choose the **Category**. When you choose it, the fields specific to that categor
 - **Textile Art and Ceramics**
 - **New Media, Video Art and Installations**
 
-Each category has its **subtypes** (for example, in Photography: classic analog, digital Fine Art, 19th-century historical processes, photobooks and portfolios, synthography) and a **rigorous record** with specific technical details. They are all optional except those the program marks as required. The **?** tips explain each one.
+Each category has its **subtypes** (for example, in Photography: classic analog, digital Fine Art, 19th-century historical processes, photobooks and portfolios, synthography) and a **rigorous record** with specific technical details. They are all optional except those the program marks as required. The ⓘ tips explain each one.
 
 ### If the artwork is a photograph
 
