@@ -7,6 +7,7 @@ import { useLanguage } from "../i18n/LanguageContext.js";
 import { BrandHeader } from "../components/BrandHeader.js";
 import { isTauri } from "../adapters/detectPlatform.js";
 import { useAutoHoverCollage } from "../utils/useAutoHoverCollage.js";
+import { hayEnvioLightroom } from "../lightroom/lightroom.js";
 
 const CANTIDAD_MINIATURAS_COLLAGE = 10;
 
@@ -18,6 +19,33 @@ export function WorkspacePicker({ onManual }: { onManual: () => void }) {
   const [miniaturas, setMiniaturas] = useState<string[]>([]);
   const miniaturasRef = useRef<string[]>([]);
   const indiceAutoAbierto = useAutoHoverCollage(miniaturas.length, miniaturasModo === "dinamicas");
+
+  // Si Lightroom Classic dejo una obra esperando (ver lightroom/lightroom.ts), se entra solo al registro
+  // personal: alli se abre "Nueva obra" con esos datos, sin tener que elegir nada. Se intenta una sola vez por
+  // envio: si abrir el registro falla, se muestra el error como siempre, sin reintentar en bucle.
+  const abrirRegistro = useRef(open);
+  abrirRegistro.current = open;
+  const cargandoRef = useRef(loading);
+  cargandoRef.current = loading;
+  const yaIntentoAbrir = useRef(false);
+  const mostrarPersonalRef = edicion !== null && edicionIncluyePersonal(edicion);
+  useEffect(() => {
+    if (!isTauri() || !mostrarPersonalRef) return;
+    async function revisar() {
+      if (cargandoRef.current) return;
+      const hay = await hayEnvioLightroom().catch(() => false);
+      if (!hay) {
+        yaIntentoAbrir.current = false;
+        return;
+      }
+      if (yaIntentoAbrir.current) return;
+      yaIntentoAbrir.current = true;
+      void abrirRegistro.current("personal");
+    }
+    void revisar();
+    window.addEventListener("focus", revisar);
+    return () => window.removeEventListener("focus", revisar);
+  }, [mostrarPersonalRef]);
 
   const cargandoEdicion = edicion === null;
   const mostrarPersonal = edicion !== null && edicionIncluyePersonal(edicion);

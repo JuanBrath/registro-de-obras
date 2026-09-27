@@ -34,6 +34,11 @@ export async function leerEnvioLightroom(): Promise<RecibidoDeLightroom | null> 
   return { envio, imagen };
 }
 
+/** Si Lightroom dejo una obra esperando (sin leerla ni vaciar la carpeta). */
+export async function hayEnvioLightroom(): Promise<boolean> {
+  return (await invoke<string | null>("leer_envio_lightroom")) !== null;
+}
+
 /** Vacia la carpeta de entrada, para que el mismo envio no se cargue dos veces. */
 export const borrarEnvioLightroom = () => invoke<void>("borrar_envio_lightroom");
 
