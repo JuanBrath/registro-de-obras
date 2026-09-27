@@ -1,9 +1,10 @@
-const MAX_DIMENSION_4K = 3840;
+import { LADO_MAXIMO_IMAGEN_OBRA } from "./convertirImagen.js";
 
-// Redimensiona (lado mas largo) cualquier imagen subida que exceda 4K, para
-// no acumular archivos innecesariamente pesados de camaras que ya superan
-// esa resolucion. Si la imagen ya entra en el limite, la devuelve sin tocar.
-export async function limitImageResolution(file: File, maxDimension = MAX_DIMENSION_4K): Promise<File> {
+// Redimensiona (lado mas largo) cualquier imagen subida que exceda el limite: alcanza para verla con calidad a
+// pantalla completa, y evita acumular archivos innecesariamente pesados de camaras que ya superan esa
+// resolucion (ver LADO_MAXIMO_IMAGEN_OBRA, el mismo limite que usa la conversion de PSD/PSB/TIFF). Si la imagen
+// ya entra en el limite, la devuelve sin tocar.
+export async function limitImageResolution(file: File, maxDimension = LADO_MAXIMO_IMAGEN_OBRA): Promise<File> {
   if (!file.type.startsWith("image/")) return file;
 
   let bitmap: ImageBitmap;

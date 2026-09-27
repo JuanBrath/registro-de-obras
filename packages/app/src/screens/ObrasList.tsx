@@ -20,7 +20,6 @@ import { StarRating } from "../components/StarRating.js";
 import { cargarColumnasGridInicial, guardarColumnasGrid } from "../utils/columnasGrid.js";
 import { marcarSiMiniaturaMuyVertical } from "../utils/miniaturaVertical.js";
 import { sincronizarCalificacionConArchivo } from "../utils/calificacionArchivo.js";
-import { useMasonryGrid } from "../utils/useMasonryGrid.js";
 
 const COLUMNAS_OBRAS_POR_DEFECTO = 4;
 const COLUMNAS_OBRAS_STORAGE_KEY = "obrasListColumnasGrid";
@@ -107,8 +106,6 @@ export function ObrasList({
     cargarColumnasGridInicial(COLUMNAS_OBRAS_STORAGE_KEY, COLUMNAS_OBRAS_POR_DEFECTO),
   );
   const objectUrlsRef = useRef<string[]>([]);
-  const gridRef = useRef<HTMLDivElement>(null);
-  useMasonryGrid(gridRef);
 
   const [informesMenuAbierto, setInformesMenuAbierto] = useState(false);
   const [informeSeleccionId, setInformeSeleccionId] = useState("resumido");
@@ -553,7 +550,7 @@ export function ObrasList({
 
       {!loading && obras.length > 0 && filteredObras.length === 0 && <p>{t("obrasList.sinResultados")}</p>}
 
-      <div className="obras-grid" ref={gridRef} style={{ gridTemplateColumns: `repeat(${columnasGrid}, 1fr)` }}>
+      <div className="obras-grid" style={{ gridTemplateColumns: `repeat(${columnasGrid}, 1fr)` }}>
         {filteredObras.map((obra) => (
           <div className="obra-card-wrapper" key={obra.id}>
             <button type="button" className="obra-card" onClick={() => onOpenObra(obra.id)}>

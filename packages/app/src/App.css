@@ -716,14 +716,12 @@ input[type="date"] {
 .obras-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  /* Filas finas para el efecto "masonry" (ver useMasonryGrid.ts): cada tarjeta ocupa tantas filas de este alto
-     como haga falta para llegar a su alto real, en vez de que toda la fila quede tan alta como la tarjeta más
-     alta (lo que dejaba un hueco debajo de una foto horizontal al lado de una vertical). El valor en sí no
-     importa (es solo la granularidad del cálculo); useMasonryGrid.ts lo lee con getComputedStyle.
-     */
-  --masonry-row: 8px;
-  grid-auto-rows: var(--masonry-row);
-  align-items: start;
+  /* Cada fila queda tan alta como la tarjeta mas alta de esa fila (comportamiento por defecto de la grilla), y
+     las demas tarjetas de la fila se estiran para llenarla (ver .obra-card-wrapper / .obra-card mas abajo): asi
+     una foto vertical no deja un hueco de fondo al lado de una horizontal, sin que las tarjetas salten de
+     posicion entre si (a diferencia de la grilla "masonry" de Galeria de obras: ahi las tarjetas no llevan
+     texto variable debajo, asi que el salto no se nota, pero en Obras con SKU/categoria/estado de largo
+     variable quedaba muy irregular). */
   gap: 1rem;
   margin-top: 1.5rem;
   background: var(--bg-panel);
@@ -744,6 +742,10 @@ input[type="date"] {
      <button>) en vez de ocupar toda la columna de la grilla — se nota al
      combinar el "max-height" de la miniatura con fotos angostas. */
   width: 100%;
+  /* Se estira para llenar el alto de .obra-card-wrapper (la celda de la grilla, ver mas abajo): asi, si la fila
+     es mas alta por otra tarjeta con una foto vertical o mas etiquetas de estado, el espacio de mas queda
+     DENTRO del marco de esta tarjeta (mismo fondo oscuro) en vez de un hueco vacio despues. */
+  flex: 1 1 auto;
   gap: 0.5rem;
   padding: 0;
   border: 1px solid var(--border);
@@ -768,6 +770,14 @@ input[type="date"] {
 
 .galeria-fotos-grid {
   grid-template-columns: repeat(4, 1fr);
+  /* Filas finas para el efecto "masonry" (ver useMasonryGrid.ts): cada foto ocupa tantas filas de este alto
+     como haga falta para llegar a su alto real, en vez de que toda la fila quede tan alta como la mas alta.
+     Solo en Galeria de obras: sus tarjetas son solo foto + estrellas (sin texto de largo variable), asi que el
+     efecto "escalera" no se nota como pasaria en Obras. El valor en si no importa (es la granularidad del
+     calculo); useMasonryGrid.ts lo lee con getComputedStyle. */
+  --masonry-row: 8px;
+  grid-auto-rows: var(--masonry-row);
+  align-items: start;
 }
 
 @media (min-width: 1400px) {
@@ -820,6 +830,12 @@ input[type="date"] {
      .galeria-foto-thumb-button img): en el boton mismo colapsa su ancho, por
      eso se pone aca en el contenedor. */
   container-type: inline-size;
+}
+
+.obra-card-wrapper {
+  /* La celda de la grilla (ver .obras-grid): permite que .obra-card (flex: 1 1 auto) se estire para llenarla. */
+  display: flex;
+  flex-direction: column;
 }
 
 /* Fila de 5 estrellas para calificar una obra (ver StarRating.tsx): va

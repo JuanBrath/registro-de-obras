@@ -10,7 +10,7 @@ En **Obras**, tocá **Nueva obra**. Para salir sin guardar, tocá la **✕** o *
 
 1. En **Imagen de la obra** tocá **Elegir imagen…** y elegí un archivo.
 2. Formatos aceptados: **JPG, PNG, GIF, WEBP, PSD, PSB y TIFF**.
-3. Un JPG, PNG, GIF o WEBP se usa tal cual (si es muy grande, el programa lo reduce solo hasta un máximo de 3840 píxeles). No hace falta subir el original en máxima resolución.
+3. Un JPG, PNG, GIF o WEBP se usa tal cual (si es muy grande, el programa lo reduce solo hasta un máximo de 2400 píxeles en el lado más largo, que alcanza para verlo con calidad a pantalla completa). No hace falta subir el original en máxima resolución.
 
 Si elegís un **PSD, PSB o TIFF**, el programa genera solo un JPG con la imagen real del archivo, de hasta 2400 píxeles en el lado más largo y con los colores pasados a sRGB, para que se vea bien a pantalla completa. Lo guarda en tu registro; el archivo original no se toca ni se copia. Es rápido incluso con archivos de varios gigas. Aparece un aviso con las medidas del JPG generado.
 

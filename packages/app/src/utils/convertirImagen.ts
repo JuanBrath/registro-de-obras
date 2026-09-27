@@ -6,8 +6,12 @@ import { invoke } from "@tauri-apps/api/core";
  * pesar varios GB y no se puede cargar entero en el navegador.
  */
 
-/** El lado mas largo de la imagen convertida (en pixeles). Alcanza para una pantalla completa sin pesar de mas. */
-export const LADO_MAXIMO_CONVERSION = 2400;
+/**
+ * El lado mas largo que puede tener la "imagen de la obra" guardada en el registro, en pixeles: alcanza para
+ * verla con calidad a pantalla completa sin pesar de mas (el mismo valor lo usa limitImageResolution.ts para
+ * los formatos que no pasan por esta conversion, como JPG o PNG).
+ */
+export const LADO_MAXIMO_IMAGEN_OBRA = 2400;
 
 /** Los formatos que se convierten solos a JPEG al elegirlos. */
 export const EXTENSIONES_A_CONVERTIR = ["psd", "psb", "tif", "tiff"];
@@ -32,7 +36,7 @@ export function nombreDe(ruta: string): string {
 }
 
 /** El JPEG generado a partir de la imagen del archivo. Falla con un texto si el archivo no se pudo leer o usa algo no soportado. */
-export async function convertirImagenAJpeg(ruta: string, ladoMaximo: number = LADO_MAXIMO_CONVERSION): Promise<Uint8Array> {
+export async function convertirImagenAJpeg(ruta: string, ladoMaximo: number = LADO_MAXIMO_IMAGEN_OBRA): Promise<Uint8Array> {
   const bytes = await invoke<ArrayBuffer>("convertir_imagen_a_jpeg", { ruta, ladoMaximo });
   return new Uint8Array(bytes);
 }

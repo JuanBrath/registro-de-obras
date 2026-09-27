@@ -10,7 +10,7 @@ In **Artworks**, click **New artwork**. To leave without saving, click the **✕
 
 1. Under **Artwork image** click **Choose image…** and pick a file.
 2. Accepted formats: **JPG, PNG, GIF, WEBP, PSD, PSB and TIFF**.
-3. A JPG, PNG, GIF or WEBP is used as it is (if it's very large, the program shrinks it on its own to a maximum of 3840 pixels). You don't need to upload the original at full resolution.
+3. A JPG, PNG, GIF or WEBP is used as it is (if it's very large, the program shrinks it on its own to a maximum of 2400 pixels on the longest side, which is enough to view it with quality full screen). You don't need to upload the original at full resolution.
 
 If you choose a **PSD, PSB or TIFF**, the program generates a JPG on its own from the file's real image, up to 2400 pixels on the longest side and with the colors converted to sRGB, so it looks good full screen. It stores it in your records; the original file is not touched or copied. It's fast even with multi-gigabyte files. A notice shows the size of the generated JPG.
 

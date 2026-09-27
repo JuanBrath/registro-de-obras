@@ -80,6 +80,7 @@ import { migration0080AyudaUbicacionArchivoCalificacionSoloNueva } from "./0080_
 import { migration0081AyudaUbicacionArchivoCalificacionSidecar } from "./0081_ayuda_ubicacion_archivo_calificacion_sidecar.js";
 import { migration0082AyudaCalificacionJpegEmbebida } from "./0082_ayuda_calificacion_jpeg_embebida.js";
 import { migration0083AyudaPruebaArtistaVenta } from "./0083_ayuda_prueba_artista_venta.js";
+import { migration0084AyudaImagenObra2400 } from "./0084_ayuda_imagen_obra_2400.js";
 
 export interface Migration {
   name: string;
@@ -291,4 +292,5 @@ export const ALL_MIGRATIONS: Migration[] = [
   migration0081AyudaUbicacionArchivoCalificacionSidecar,
   migration0082AyudaCalificacionJpegEmbebida,
   migration0083AyudaPruebaArtistaVenta,
+  migration0084AyudaImagenObra2400,
 ];

@@ -206,6 +206,7 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
       "0081_ayuda_ubicacion_archivo_calificacion_sidecar",
       "0082_ayuda_calificacion_jpeg_embebida",
       "0083_ayuda_prueba_artista_venta",
+      "0084_ayuda_imagen_obra_2400",
     ]);
   });
 
