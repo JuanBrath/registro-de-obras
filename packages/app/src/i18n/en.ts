@@ -688,6 +688,7 @@ export const en: Record<keyof typeof es, string> = {
   "galeria.anterior": "Previous",
   "galeria.siguiente": "Next",
   "galeria.verInfo": "View artwork info",
+  "galeria.verEstaObra": "View this artwork",
   "galeria.primeraSerieDisponibleTitulo": "First available copy",
   "galeria.sinSerieDisponible": "There is no available copy right now.",
   "galeria.todosArtistas": "All artists",
@@ -919,6 +920,7 @@ export const en: Record<keyof typeof es, string> = {
   // ObraDetail
   "obraDetail.fallbackTitulo": "Artwork",
   "obraDetail.volverAObras": "Back to artworks",
+  "obraDetail.volverAGaleria": "Back to the gallery",
   "obraDetail.artista": "Artist: {{nombre}}",
   "obraDetail.categoria": "Category: {{categoria}}",
   "obraDetail.obraSeriada": "Edition artwork",

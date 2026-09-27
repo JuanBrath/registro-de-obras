@@ -4,7 +4,7 @@ Todo lo que ves y podés hacer al abrir una obra: verla, editarla, sacar informe
 
 ## Abrir una obra
 
-En **Obras**, tocá la tarjeta de la obra. Arriba está el título; para volver al listado usá la **✕** o **Volver a obras**.
+En **Obras**, tocá la tarjeta de la obra. Arriba está el título; para volver usá la **✕** o el botón de abajo, que vuelve al lugar de donde abriste la obra: **Volver a obras** desde el listado, o **Volver a la galería** (a la misma foto) si la abriste con **Ver esta obra** desde [Galería de obras](cap:galeria-de-obras).
 
 ## Qué muestra la ficha
 

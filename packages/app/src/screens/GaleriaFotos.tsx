@@ -110,9 +110,15 @@ const FRAGMENTOS_ESTADO: { estado: string; key: TranslationKey; campo: keyof Fot
 export function GaleriaFotos({
   onBack,
   filtrosIniciales,
+  fotoIdInicial,
+  onOpenObra,
 }: {
   onBack: () => void;
   filtrosIniciales?: ObrasListFiltros;
+  /** Si se vuelve desde la ficha de una obra (ver onOpenObra), la foto que hay que volver a mostrar en grande. */
+  fotoIdInicial?: number;
+  /** Abrir la ficha completa de la obra de la foto que se esta viendo, para volver despues a esta misma foto. */
+  onOpenObra: (obraId: number, filtros: ObrasListFiltros) => void;
 }) {
   const { context } = useWorkspace();
   const { t } = useLanguage();
@@ -280,6 +286,16 @@ export function GaleriaFotos({
     esGaleria,
     ordenPor,
   ]);
+
+  // Se vuelve desde la ficha completa de una obra (ver onOpenObra): reabre la foto grande de la que se salio, en
+  // vez de dejar ver la grilla. Solo una vez: si despues el usuario cierra esa foto, no se tiene que reabrir sola.
+  const fotoInicialAplicada = useRef(false);
+  useEffect(() => {
+    if (fotoIdInicial === undefined || fotoInicialAplicada.current || filteredFotos.length === 0) return;
+    fotoInicialAplicada.current = true;
+    const indice = filteredFotos.findIndex((f) => f.id === fotoIdInicial);
+    if (indice !== -1) setLightboxIndex(indice);
+  }, [fotoIdInicial, filteredFotos]);
 
   async function handleSetCalificacion(fotoId: number, nuevaCalificacion: number) {
     const fotoActual = fotos.find((f) => f.id === fotoId);
@@ -653,6 +669,23 @@ export function GaleriaFotos({
                 {t(`estado.${filteredFotos[lightboxIndex].estado}` as TranslationKey)}
               </span>
             )}
+          </div>
+
+          <div className="obra-form-saved-actions">
+            <button
+              type="button"
+              onClick={() =>
+                onOpenObra(filteredFotos[lightboxIndex].id, {
+                  selectedTags,
+                  selectedArtistaId,
+                  selectedCategoria,
+                  selectedSubtipo,
+                  calificacionFiltro,
+                })
+              }
+            >
+              {t("galeria.verEstaObra")}
+            </button>
           </div>
 
           {Number(filteredFotos[lightboxIndex].es_seriada) === 1 && (

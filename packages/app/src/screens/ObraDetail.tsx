@@ -758,7 +758,17 @@ function buildObraDescripcionLineas(
 const MODELOS_CERTIFICADO_PERSONAL: FormatoCertificado[] = ["clasico", "simple", "fichaSinGaleria"];
 const MODELOS_CERTIFICADO_GALERIA: FormatoCertificado[] = ["clasico", "simple", "ficha", "fichaSinGaleria"];
 
-export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => void }) {
+export function ObraDetail({
+  obraId,
+  onBack,
+  volverALabel,
+}: {
+  obraId: number;
+  onBack: () => void;
+  /** Texto del boton de volver, cuando no corresponde el de por defecto ("Volver a obras") — por ejemplo, si se
+   * llego desde Galeria de obras y "Volver" regresa ahi en vez de al listado. */
+  volverALabel?: string;
+}) {
   const { context, personalArtista, galeriaPerfil } = useWorkspace();
   const { t, idioma } = useLanguage();
   const esRegistroPersonal = context?.workspace === "personal";
@@ -2168,8 +2178,8 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
           type="button"
           className="header-close-button"
           onClick={onBack}
-          aria-label={t("obraDetail.volverAObras")}
-          title={t("obraDetail.volverAObras")}
+          aria-label={volverALabel ?? t("obraDetail.volverAObras")}
+          title={volverALabel ?? t("obraDetail.volverAObras")}
         >
           ✕
         </button>
@@ -2390,7 +2400,7 @@ export function ObraDetail({ obraId, onBack }: { obraId: number; onBack: () => v
 
       <div className="screen-footer-back">
         <button type="button" onClick={onBack}>
-          {t("obraDetail.volverAObras")}
+          {volverALabel ?? t("obraDetail.volverAObras")}
         </button>
       </div>
 

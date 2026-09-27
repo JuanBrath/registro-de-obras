@@ -25,4 +25,4 @@ Con la foto abierta, tocá el botón **ⓘ** (**Ver información de la obra**). 
 - La disponibilidad ("3/10 disponibles") y cuántas copias hay en cada estado.
 - Si la obra es seriada, la **Primera serie disponible**: su **Número de serie**, **Fecha de impresión**, **Soporte**, **Tamaño** y **Ubicación actual de esta copia**. Si no queda ninguna, dice "No hay ninguna serie disponible en este momento."
 
-Es una consulta rápida: para editar, abrí la obra desde el listado. Ver [Ficha de la obra](cap:ficha-de-obra).
+Es una consulta rápida. Si necesitás más (editarla, generar informes, registrar una venta), tocá **Ver esta obra**: se abre su ficha completa. Ahí el botón de volver dice **Volver a la galería** y te devuelve a esta misma foto ampliada, no al listado. Ver [Ficha de la obra](cap:ficha-de-obra).

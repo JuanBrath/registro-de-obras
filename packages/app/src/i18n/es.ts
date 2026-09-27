@@ -686,6 +686,7 @@ export const es = {
   "galeria.anterior": "Anterior",
   "galeria.siguiente": "Siguiente",
   "galeria.verInfo": "Ver información de la obra",
+  "galeria.verEstaObra": "Ver esta obra",
   "galeria.primeraSerieDisponibleTitulo": "Primera serie disponible",
   "galeria.sinSerieDisponible": "No hay ninguna serie disponible en este momento.",
   "galeria.todosArtistas": "Todos los artistas",
@@ -917,6 +918,7 @@ export const es = {
   // ObraDetail
   "obraDetail.fallbackTitulo": "Obra",
   "obraDetail.volverAObras": "Volver a obras",
+  "obraDetail.volverAGaleria": "Volver a la galería",
   "obraDetail.artista": "Artista: {{nombre}}",
   "obraDetail.categoria": "Categoría: {{categoria}}",
   "obraDetail.obraSeriada": "Obra seriada",

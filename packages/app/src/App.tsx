@@ -32,9 +32,11 @@ type Screen =
   | { name: "profile" }
   | { name: "nueva-obra" }
   | { name: "obras" }
-  | { name: "obra-detail"; obraId: number }
+  // `volverA`: a que pantalla vuelve el boton "Volver" (por defecto, "obras") — permite abrir la ficha
+  // desde Galeria de obras y que el boton de volver regrese ahi, a la misma foto, en vez de a Obras.
+  | { name: "obra-detail"; obraId: number; volverA?: Screen }
   | { name: "artistas" }
-  | { name: "galeria-fotos"; filtros?: ObrasListFiltros }
+  | { name: "galeria-fotos"; filtros?: ObrasListFiltros; fotoIdInicial?: number }
   | { name: "ventas" }
   | { name: "galeria-perfil" }
   | { name: "clientes" };
@@ -154,14 +156,27 @@ function WorkspaceScreens({ onManual }: { onManual: () => void }) {
       );
       break;
     case "obra-detail":
-      content = <ObraDetail obraId={activeScreen.obraId} onBack={() => setScreen({ name: "obras" })} />;
+      content = (
+        <ObraDetail
+          obraId={activeScreen.obraId}
+          onBack={() => setScreen(activeScreen.volverA ?? { name: "obras" })}
+          volverALabel={activeScreen.volverA?.name === "galeria-fotos" ? t("obraDetail.volverAGaleria") : undefined}
+        />
+      );
       break;
     case "artistas":
       content = <ArtistasScreen onBack={goHome} />;
       break;
     case "galeria-fotos":
       content = (
-        <GaleriaFotos onBack={() => setScreen({ name: "obras" })} filtrosIniciales={activeScreen.filtros} />
+        <GaleriaFotos
+          onBack={() => setScreen({ name: "obras" })}
+          filtrosIniciales={activeScreen.filtros}
+          fotoIdInicial={activeScreen.fotoIdInicial}
+          onOpenObra={(obraId, filtros) =>
+            setScreen({ name: "obra-detail", obraId, volverA: { name: "galeria-fotos", filtros, fotoIdInicial: obraId } })
+          }
+        />
       );
       break;
     case "ventas":

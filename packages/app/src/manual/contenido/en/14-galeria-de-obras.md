@@ -25,4 +25,4 @@ With the photo open, click the **ⓘ** button (**View artwork info**). A small w
 - The availability ("3/10 available") and how many copies there are in each status.
 - If the artwork is an edition, the **First available copy**: its **Copy number**, **Print date**, **Medium**, **Size (mm)** and **Current location of this copy**. If none is left, it says "There is no available copy right now."
 
-It's a quick look-up: to edit, open the artwork from the list. See [Artwork sheet](cap:ficha-de-obra).
+It's a quick look-up. If you need more (to edit it, generate reports, record a sale), click **View this artwork**: its full sheet opens. There the back button reads **Back to the gallery** and takes you back to this same enlarged photo, not to the list. See [Artwork sheet](cap:ficha-de-obra).
