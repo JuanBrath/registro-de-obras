@@ -716,6 +716,14 @@ input[type="date"] {
 .obras-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
+  /* Filas finas para el efecto "masonry" (ver useMasonryGrid.ts): cada tarjeta ocupa tantas filas de este alto
+     como haga falta para llegar a su alto real, en vez de que toda la fila quede tan alta como la tarjeta más
+     alta (lo que dejaba un hueco debajo de una foto horizontal al lado de una vertical). El valor en sí no
+     importa (es solo la granularidad del cálculo); useMasonryGrid.ts lo lee con getComputedStyle.
+     */
+  --masonry-row: 8px;
+  grid-auto-rows: var(--masonry-row);
+  align-items: start;
   gap: 1rem;
   margin-top: 1.5rem;
   background: var(--bg-panel);

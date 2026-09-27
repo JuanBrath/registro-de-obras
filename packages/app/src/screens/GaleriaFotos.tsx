@@ -17,6 +17,7 @@ import { HelpIcon } from "../components/HelpIcon.js";
 import { cargarColumnasGridInicial, guardarColumnasGrid } from "../utils/columnasGrid.js";
 import { marcarSiMiniaturaMuyVertical } from "../utils/miniaturaVertical.js";
 import { sincronizarCalificacionConArchivo } from "../utils/calificacionArchivo.js";
+import { useMasonryGrid } from "../utils/useMasonryGrid.js";
 
 const COLUMNAS_GALERIA_POR_DEFECTO = 4;
 const COLUMNAS_GALERIA_STORAGE_KEY = "galeriaFotosColumnasGrid";
@@ -149,6 +150,8 @@ export function GaleriaFotos({
   const [loadingLightbox, setLoadingLightbox] = useState(false);
   const objectUrlsRef = useRef<string[]>([]);
   const lightboxUrlRef = useRef<string | null>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
+  useMasonryGrid(gridRef);
 
   useEffect(() => {
     if (!context) return;
@@ -530,7 +533,7 @@ export function GaleriaFotos({
       )}
       {!loading && fotos.length === 0 && <p>{t("galeria.sinFotos")}</p>}
 
-      <div className="obras-grid galeria-fotos-grid" style={{ gridTemplateColumns: `repeat(${columnasGrid}, 1fr)` }}>
+      <div className="obras-grid galeria-fotos-grid" ref={gridRef} style={{ gridTemplateColumns: `repeat(${columnasGrid}, 1fr)` }}>
         {filteredFotos.map(
           (foto, i) =>
             thumbnails[foto.id] && (
