@@ -9,10 +9,12 @@ In **Artworks**, click **New artwork**. To leave without saving, click the **✕
 ## Step 1: the image
 
 1. Under **Artwork image** click **Choose image…** and pick a file.
-2. Accepted formats: **JPG, PNG, GIF, WEBP, PSD and PSB**.
-3. A light JPG of about 1500 to 2000 pixels on the longest side works best. You don't need to upload the original at full resolution. If the image is bigger, the program shrinks it on its own to a maximum of 3840 pixels.
+2. Accepted formats: **JPG, PNG, GIF, WEBP, PSD, PSB and TIFF**.
+3. A JPG, PNG, GIF or WEBP is used as it is (if it's very large, the program shrinks it on its own to a maximum of 3840 pixels). You don't need to upload the original at full resolution.
 
-> If you choose a PSD or PSB, the program uses the preview saved inside it. If the file doesn't have one, it can't be used: open it in Photoshop, turn on **Image Previews** in the preferences and save it again, or choose a JPG or PNG. Also, that preview may look different from the final artwork.
+If you choose a **PSD, PSB or TIFF**, the program generates a JPG on its own from the file's real image, up to 2400 pixels on the longest side and with the colors converted to sRGB, so it looks good full screen. It stores it in your records; the original file is not touched or copied. It's fast even with multi-gigabyte files. A notice shows the size of the generated JPG.
+
+> A PSD or PSB must contain the composite image, which Photoshop saves with the **Maximize Compatibility** option. If the program can't generate it, it uses the small preview stored inside the file and warns you that it may look different from the final artwork; if the file doesn't have one either, turn on **Image Previews** in Photoshop's preferences and save it again, or choose a JPG.
 
 ## Step 2: the general details
 

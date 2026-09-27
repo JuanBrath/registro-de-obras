@@ -6,7 +6,7 @@ authors = ["you"]
 license = ""
 repository = ""
 edition = "2021"
-rust-version = "1.77.2"
+rust-version = "1.89"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -29,7 +29,13 @@ tauri-plugin-opener = "2"
 tauri-plugin-sql = { version = "2", features = ["sqlite"] }
 sqlx = { version = "0.8.6", features = ["sqlite", "runtime-tokio"] }
 tokio = { version = "1.53.1", features = ["sync"] }
+tiff = "0.11.3"
+flate2 = "1.1.10"
+moxcms = "0.9.1"
+jpeg-encoder = "0.7.1"
 
 [dev-dependencies]
 tokio = { version = "1.53.1", features = ["macros", "rt"] }
 tauri = { version = "2.11.3", features = ["test"] }
+zune-jpeg = "0.5"
+zune-core = "0.5"

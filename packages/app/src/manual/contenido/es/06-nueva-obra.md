@@ -9,10 +9,12 @@ En **Obras**, tocá **Nueva obra**. Para salir sin guardar, tocá la **✕** o *
 ## Paso 1: la imagen
 
 1. En **Imagen de la obra** tocá **Elegir imagen…** y elegí un archivo.
-2. Formatos aceptados: **JPG, PNG, GIF, WEBP, PSD y PSB**.
-3. Conviene un JPG liviano de unos 1500 a 2000 píxeles en el lado más largo. No hace falta subir el original en máxima resolución. Si la imagen es más grande, el programa la reduce solo hasta un máximo de 3840 píxeles.
+2. Formatos aceptados: **JPG, PNG, GIF, WEBP, PSD, PSB y TIFF**.
+3. Un JPG, PNG, GIF o WEBP se usa tal cual (si es muy grande, el programa lo reduce solo hasta un máximo de 3840 píxeles). No hace falta subir el original en máxima resolución.
 
-> Si elegís un PSD o PSB, el programa usa la vista previa que trae guardada adentro. Si el archivo no la tiene, no se puede usar: abrilo en Photoshop, activá **Vistas previas de imagen** en las preferencias y guardalo de nuevo, o elegí un JPG o PNG. Además, esa vista puede verse distinta de la obra final.
+Si elegís un **PSD, PSB o TIFF**, el programa genera solo un JPG con la imagen real del archivo, de hasta 2400 píxeles en el lado más largo y con los colores pasados a sRGB, para que se vea bien a pantalla completa. Lo guarda en tu registro; el archivo original no se toca ni se copia. Es rápido incluso con archivos de varios gigas. Aparece un aviso con las medidas del JPG generado.
+
+> Un PSD o PSB tiene que tener la imagen compuesta, que Photoshop guarda con la opción **Maximizar compatibilidad**. Si el programa no puede generarla, usa la vista previa chica que trae el archivo adentro y te avisa que puede verse distinta de la obra final; si tampoco la tiene, activá **Vistas previas de imagen** en las preferencias de Photoshop y guardalo de nuevo, o elegí un JPG.
 
 ## Paso 2: los datos generales
 

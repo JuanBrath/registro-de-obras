@@ -1,6 +1,17 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { open } from "@tauri-apps/plugin-dialog";
+import { isTauri } from "../adapters/detectPlatform.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
 import { limitImageResolution } from "../utils/limitImageResolution.js";
+import {
+  convertirImagenAJpeg,
+  EXTENSIONES_A_CONVERTIR,
+  EXTENSIONES_DE_IMAGEN,
+  extensionDe,
+  leerArchivoCrudo,
+  nombreDe,
+  TIPO_MIME_POR_EXTENSION,
+} from "../utils/convertirImagen.js";
 import {
   decodificarImageDataPsd,
   extraerMiniaturaJpegDePsd,
@@ -128,17 +139,90 @@ export function ImageFileField({
   // real, asi que conviene avisar aunque la conversion haya funcionado bien.
   const [avisoPsd, setAvisoPsd] = useState(false);
   useEscapeToDismiss(avisoPsd, () => setAvisoPsd(false));
+  // Aviso (no es un error) de que se genero un JPG a partir de un PSD/PSB/TIFF.
+  const [avisoConversion, setAvisoConversion] = useState<string | null>(null);
 
   useEffect(() => {
     if (value === null && inputRef.current) {
       inputRef.current.value = "";
       setAvisoPsd(false);
+      setAvisoConversion(null);
     }
   }, [value]);
+
+  /**
+   * En el programa de escritorio la imagen se elige con el dialogo del sistema, que da la RUTA del archivo: asi
+   * un PSD, PSB o TIFF (que puede pesar varios GB) lo convierte a JPEG el lado de Rust, sin cargarlo entero en el
+   * navegador, y da lo mismo en macOS que en Windows (ver utils/convertirImagen.ts).
+   */
+  async function elegirConDialogo() {
+    setError(null);
+    const ruta = await open({
+      multiple: false,
+      directory: false,
+      filters: [{ name: t("imageFileField.filtroImagenes"), extensions: EXTENSIONES_DE_IMAGEN }],
+    });
+    if (typeof ruta !== "string") return;
+    setProcesando(true);
+    try {
+      await procesarRuta(ruta);
+    } catch (e) {
+      setAvisoPsd(false);
+      setAvisoConversion(null);
+      setError(t("imageFileField.errorConversion", { motivo: e instanceof Error ? e.message : String(e) }));
+    } finally {
+      setProcesando(false);
+    }
+  }
+
+  async function procesarRuta(ruta: string) {
+    const extension = extensionDe(ruta);
+    const nombre = nombreDe(ruta);
+    setAvisoPsd(false);
+    setAvisoConversion(null);
+
+    if (EXTENSIONES_A_CONVERTIR.includes(extension)) {
+      const nombreJpg = nombre.replace(/\.[^.]+$/, ".jpg");
+      let motivo = "";
+      try {
+        const jpeg = await convertirImagenAJpeg(ruta);
+        const archivo = await limitImageResolution(new File([jpeg as BlobPart], nombreJpg, { type: "image/jpeg" }));
+        onChange(archivo);
+        const bitmap = await createImageBitmap(archivo);
+        setAvisoConversion(t("imageFileField.convertida", { ancho: bitmap.width, alto: bitmap.height }));
+        bitmap.close();
+        return;
+      } catch (e) {
+        motivo = e instanceof Error ? e.message : String(e);
+      }
+      // No se pudo generar la imagen completa: de un PSD/PSB todavia se puede sacar la miniatura que trae adentro.
+      if (extension === "psd" || extension === "psb") {
+        const miniatura = extraerMiniaturaJpegDePsd(await leerArchivoCrudo(ruta, PREFIJO_PSD_MAX_BYTES));
+        if (miniatura) {
+          setAvisoPsd(true);
+          onChange(await limitImageResolution(new File([new Uint8Array(miniatura)], nombreJpg, { type: "image/jpeg" })));
+        } else {
+          setError(t("imageFileField.errorPsdSinMiniatura"));
+        }
+        return;
+      }
+      setError(t("imageFileField.errorConversion", { motivo }));
+      return;
+    }
+
+    // JPG, PNG, GIF, WEBP: el navegador los abre solo.
+    const archivo = new File([(await leerArchivoCrudo(ruta)) as BlobPart], nombre, { type: TIPO_MIME_POR_EXTENSION[extension] ?? "" });
+    if (!(await esArchivoDeImagenValido(archivo))) {
+      setError(t("imageFileField.errorFormatoNoCompatible"));
+      return;
+    }
+    onChange(await limitImageResolution(archivo));
+  }
 
   async function handleChange(e: ChangeEvent<HTMLInputElement>) {
     const raw = e.target.files?.[0] ?? null;
     setError(null);
+    setAvisoConversion(null);
     if (!raw) {
       setAvisoPsd(false);
       onChange(null);
@@ -192,7 +276,11 @@ export function ImageFileField({
                   ? ""
                   : t("imageFileField.ningunoSeleccionado")}
         </span>
-        <button type="button" onClick={() => inputRef.current?.click()} disabled={procesando || disabled}>
+        <button
+          type="button"
+          onClick={() => (isTauri() ? void elegirConDialogo() : inputRef.current?.click())}
+          disabled={procesando || disabled}
+        >
           {value || hasImage ? t("imageFileField.cambiarImagen") : t("imageFileField.elegirImagen")}
         </button>
       </div>
@@ -201,6 +289,7 @@ export function ImageFileField({
           ⚠️ {error}
         </p>
       )}
+      {avisoConversion && !error && !avisoPsd && <p className="field-note image-file-field-error">{avisoConversion}</p>}
       {avisoPsd && !error && (
         <p className="error image-file-field-error" role="alert">
           ⚠️ {t("imageFileField.avisoPsd")}
