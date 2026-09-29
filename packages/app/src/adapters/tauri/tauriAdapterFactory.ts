@@ -187,20 +187,23 @@ export async function peekRandomThumbnails(workspace: WorkspaceId, cantidad: num
     const root = await store.get<string>(workspace);
     if (!root || !(await raizExiste(root))) return [];
 
+    // OJO: no se cierra esta conexion. tauri-plugin-sql identifica cada conexion solo por la
+    // ruta del archivo, sin contar cuantos la estan usando: si esta foto al azar (de paso, solo
+    // para decorar la pantalla) se abre justo cuando el mismo workspace se esta abriendo de
+    // verdad (por ejemplo porque llego algo de Lightroom), cerrarla aca cortaria tambien esa
+    // conexion real ("attempted to acquire a connection on a closed pool"), aunque nadie la haya
+    // mandado a cerrar. Dejarla abierta no molesta: la proxima vez que se abra este mismo archivo
+    // (esta miniatura de nuevo, o el workspace de verdad) se reemplaza sola.
     const db = await createTauriDatabaseAdapter(`${root}/registro.db`);
-    try {
-      const rows = await db.query<{ miniatura_path: string }>(
-        "SELECT miniatura_path FROM obra WHERE miniatura_path IS NOT NULL ORDER BY RANDOM() LIMIT ?",
-        [cantidad],
-      );
-      const fs = new TauriFileSystemAdapter(root);
-      return await leerMiniaturasEnParalelo(
-        fs,
-        rows.map((row) => row.miniatura_path),
-      );
-    } finally {
-      await db.close();
-    }
+    const rows = await db.query<{ miniatura_path: string }>(
+      "SELECT miniatura_path FROM obra WHERE miniatura_path IS NOT NULL ORDER BY RANDOM() LIMIT ?",
+      [cantidad],
+    );
+    const fs = new TauriFileSystemAdapter(root);
+    return await leerMiniaturasEnParalelo(
+      fs,
+      rows.map((row) => row.miniatura_path),
+    );
   } catch {
     return [];
   }
