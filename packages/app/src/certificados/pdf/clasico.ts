@@ -76,7 +76,10 @@ export async function generarClasico(c: Certificado): Promise<Uint8Array> {
     y += 4 * k;
   }
 
-  // Los campos que no se completaron no aparecen en el certificado.
+  // Los campos que no se completaron no aparecen en el certificado. El valor
+  // se corre debajo de las dos lineas del titulo (cuando hay dos idiomas)
+  // para que no se pisen: el titulo en ingles queda mas abajo que el
+  // español, y el valor usa una letra bastante mas grande.
   function fila(es: string, en: string, valor: string) {
     if (!valor) return;
     dibujarTitulos(titulos(es, en), contentX, y, 10, "left");
@@ -84,8 +87,8 @@ export async function generarClasico(c: Certificado): Promise<Uint8Array> {
     doc.setFontSize(15 * k);
     doc.setTextColor(20, 20, 20);
     const lineas = doc.splitTextToSize(valor, contentWidth) as string[];
-    doc.text(lineas, W / 2, y, { align: "center" });
-    y += Math.max(5 * k + (lineas.length - 1) * altoRenglon(15 * k), 5 * k + extraTitulos);
+    doc.text(lineas, W / 2, y + extraTitulos, { align: "center" });
+    y += extraTitulos + Math.max(5 * k + (lineas.length - 1) * altoRenglon(15 * k), 5 * k);
     doc.setDrawColor(150, 150, 150);
     doc.setLineWidth(0.15 * k);
     doc.line(contentX, y, contentX + contentWidth, y);
@@ -119,41 +122,35 @@ export async function generarClasico(c: Certificado): Promise<Uint8Array> {
     { es: "Copia n°", en: "Edition no.", valor: copiaConPA(c) },
     { es: "Medidas de Imagen", en: "Image size", valor: c.medidas },
     { es: "Fecha de Toma", en: "Date taken", valor: c.anioToma },
+    { es: "Editada por el autor", en: "Edited by the artist", valor: c.anioEdicion },
   ]);
 
   const detalles = [c.captura, c.impresion].filter(Boolean).join("\n");
   if (detalles) fila("Detalles técnicos", "Technical details", detalles);
 
-  // Fila final: año de edicion (si se completo) + firma del autor, con la
-  // imagen de firma si se cargo. Sin año, la firma queda sola y centrada.
-  const colWidth2 = contentWidth / 2;
-  const conAnio = Boolean(c.anioEdicion);
-  const col1Center = contentX + colWidth2 / 2;
-  const col2Center = conAnio ? contentX + colWidth2 + colWidth2 / 2 : W / 2;
-  if (conAnio) dibujarTitulos(titulos("Editada por el autor", "Edited by the artist"), col1Center, y, 9.5, "center");
-  dibujarTitulos(titulos("Firma del Autor", "Artist's signature"), col2Center, y, 9.5, "center");
-  y += extraTitulos;
-  doc.setFont("helvetica", "italic");
-  doc.setFontSize(12 * k);
-  doc.setTextColor(20, 20, 20);
-  if (conAnio) doc.text(c.anioEdicion, col1Center, y + 7 * k, { align: "center" });
-  if (c.firmaArtista) {
-    const formato = formatoImagen(c.firmaArtista);
-    if (formato) {
-      const { width, height } = await medidaAjustada(c.firmaArtista, 16 * k);
-      doc.addImage(c.firmaArtista, formato, col2Center - width / 2, y - 1 * k, width, height);
-    }
-  }
-  doc.setDrawColor(150, 150, 150);
-  doc.setLineWidth(0.15 * k);
-  if (conAnio) doc.line(contentX + 6 * k, y + 10 * k, contentX + colWidth2 - 6 * k, y + 10 * k);
-  doc.line(col2Center - colWidth2 / 2 + 6 * k, y + 10 * k, col2Center + colWidth2 / 2 - 6 * k, y + 10 * k);
-  y += 24 * k;
-
+  // Lugar y fecha, antes de la firma.
   doc.setFont("helvetica", "italic");
   doc.setFontSize(11 * k);
   doc.setTextColor(20, 20, 20);
   doc.text([c.lugar, fechaLarga(c.fecha, c.idioma)].filter(Boolean).join(", "), W / 2, y, { align: "center" });
+
+  // Firma del autor: como en un documento en papel, el espacio para firmar
+  // (la imagen de firma si se cargo, o el lugar en blanco para firmar a
+  // mano) va arriba de la linea, y el titulo "Firma del Autor" va debajo.
+  const anchoFirma = 80 * k;
+  y += 24 * k;
+  if (c.firmaArtista) {
+    const formato = formatoImagen(c.firmaArtista);
+    if (formato) {
+      const { width, height } = await medidaAjustada(c.firmaArtista, anchoFirma, 20 * k);
+      doc.addImage(c.firmaArtista, formato, W / 2 - width / 2, y - height - 1 * k, width, height);
+    }
+  }
+  doc.setDrawColor(150, 150, 150);
+  doc.setLineWidth(0.15 * k);
+  doc.line(W / 2 - anchoFirma / 2, y, W / 2 + anchoFirma / 2, y);
+  dibujarTitulos(titulos("Firma del Autor", "Artist's signature"), W / 2, y + 5 * k, 9.5, "center");
+  y += 5 * k + extraTitulos;
 
   if (c.logo) {
     const formato = formatoImagen(c.logo);
