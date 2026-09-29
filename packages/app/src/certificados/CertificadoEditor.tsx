@@ -304,8 +304,18 @@ export function CertificadoEditor({
         <span className="certificado-etiqueta">{t(etiqueta)}</span>
         {opciones.renglones ? (
           <textarea rows={opciones.renglones} {...propiedades} />
+        ) : opciones.fecha ? (
+          <input
+            type="date"
+            {...propiedades}
+            onKeyDown={(e) => {
+              // El calendario nativo de este campo no se cerraba con Enter ni Escape
+              // (solo clickeando en otro campo): soltarle el foco a mano lo cierra.
+              if (e.key === "Escape" || e.key === "Enter") e.currentTarget.blur();
+            }}
+          />
         ) : (
-          <input type={opciones.fecha ? "date" : "text"} {...propiedades} />
+          <input type="text" {...propiedades} />
         )}
         {corrigiendo && <span className="certificado-destino">{t(DESTINO_TEXTO[DESTINO_CORRECCION[clave]].guarda)}</span>}
       </label>
