@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import {
   DESTINO_CORRECCION,
   camposConCambios,
@@ -175,6 +175,26 @@ export function CertificadoEditor({
 
   function completar<K extends keyof Certificado>(campo: K, valor: Certificado[K]) {
     setManual((m) => ({ ...m, [campo]: valor }));
+  }
+
+  /**
+   * Al apretar Enter en un campo de texto, fecha o casilla, pasa al campo
+   * siguiente en vez de no hacer nada. En un renglon de texto (textarea)
+   * Enter sigue agregando un renglon, y en un boton hace su accion normal.
+   */
+  function alApretarEnterEnCampo(e: KeyboardEvent<HTMLElement>) {
+    if (e.key !== "Enter") return;
+    const objetivo = e.target as HTMLElement;
+    if (objetivo.tagName === "TEXTAREA" || objetivo.tagName === "BUTTON") return;
+    const formulario = objetivo.closest(".certificado-formulario");
+    if (!formulario) return;
+    const campos = Array.from(formulario.querySelectorAll<HTMLElement>("input:not([type=file]), textarea, select")).filter(
+      (el) => el.offsetParent !== null && !(el as HTMLInputElement).disabled,
+    );
+    const indice = campos.indexOf(objetivo);
+    if (indice === -1 || indice === campos.length - 1) return;
+    e.preventDefault();
+    campos[indice + 1].focus();
   }
 
   function corregir(clave: CampoCorregible, valor: string) {
@@ -359,7 +379,7 @@ export function CertificadoEditor({
   return (
     <Modal onClose={salir} className="modal-content-certificado">
       <div className="certificado-editor">
-        <section className="certificado-formulario">
+        <section className="certificado-formulario" onKeyDown={alApretarEnterEnCampo}>
           <h2>{t("certificado.titulo")}</h2>
 
           <Seccion titulo={t("certificado.seccionFormato")}>
