@@ -7,6 +7,7 @@ import {
   type CorreccionesRegistro,
   type ErrorCorreccion,
 } from "@registro/core";
+import { BotonCalendario, CampoFecha } from "../components/CampoFecha.js";
 import { Modal } from "../components/Modal.js";
 import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
 import { detectImageFormat } from "../utils/detectImageFormat.js";
@@ -299,21 +300,20 @@ export function CertificadoEditor({
           title: bloqueado ? t(clave ? "certificado.campoCorregible" : "certificado.campoDeRegistro") : undefined,
           onChange: (e: { target: { value: string } }) => completar(campo, e.target.value),
         };
+    const onChangeIso = (iso: string) => propiedades.onChange({ target: { value: iso } });
     return (
       <label className={`certificado-campo${opciones.medio ? " certificado-campo-medio" : ""}${corrigiendo ? " certificado-campo-registro" : ""}`}>
-        <span className="certificado-etiqueta">{t(etiqueta)}</span>
+        <span className="certificado-etiqueta">
+          {t(etiqueta)}
+          {/* input type="date" nativo: en Safari/WKWebView el calendario no se cerraba con
+              Enter ni Escape (solo clickeando en otro campo). BotonCalendario + CampoFecha
+              lo evitan del todo: ver su comentario en components/CampoFecha.tsx. */}
+          {opciones.fecha && <BotonCalendario valorIso={propiedades.value} onChangeIso={onChangeIso} disabled={propiedades.disabled} />}
+        </span>
         {opciones.renglones ? (
           <textarea rows={opciones.renglones} {...propiedades} />
         ) : opciones.fecha ? (
-          <input
-            type="date"
-            {...propiedades}
-            onKeyDown={(e) => {
-              // El calendario nativo de este campo no se cerraba con Enter ni Escape
-              // (solo clickeando en otro campo): soltarle el foco a mano lo cierra.
-              if (e.key === "Escape" || e.key === "Enter") e.currentTarget.blur();
-            }}
-          />
+          <CampoFecha valorIso={propiedades.value} onChangeIso={onChangeIso} disabled={propiedades.disabled} />
         ) : (
           <input type="text" {...propiedades} />
         )}
