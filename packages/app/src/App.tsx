@@ -82,6 +82,21 @@ function WorkspaceScreens({ onManual }: { onManual: () => void }) {
           return;
         }
         await borrarEnvioLightroom();
+
+        // Si el archivo original ya se habia cargado antes (misma ruta guardada en otra obra),
+        // se abre esa ficha en vez de armar una obra nueva y duplicada.
+        const ruta = recibido.envio.rutaOriginal;
+        if (ruta && context!.workspace === "personal") {
+          const existentes = await context!.db.query<{ id: number }>(
+            `SELECT id FROM obra WHERE ubicacion_fisica_actual = ? LIMIT 1`,
+            [ruta],
+          );
+          if (existentes.length > 0) {
+            setScreen({ name: "obra-detail", obraId: existentes[0].id });
+            return;
+          }
+        }
+
         setPrecarga(recibido);
         setScreen({ name: "nueva-obra" });
       } catch {
