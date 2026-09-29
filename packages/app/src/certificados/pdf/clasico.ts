@@ -82,7 +82,7 @@ export async function generarClasico(c: Certificado): Promise<Uint8Array> {
   // español, y el valor usa una letra bastante mas grande.
   function fila(es: string, en: string, valor: string) {
     if (!valor) return;
-    dibujarTitulos(titulos(es, en), contentX, y, 10, "left");
+    dibujarTitulos(titulos(es, en), contentX, y, 11, "left");
     doc.setFont("helvetica", "italic");
     doc.setFontSize(15 * k);
     doc.setTextColor(20, 20, 20);
@@ -101,7 +101,7 @@ export async function generarClasico(c: Certificado): Promise<Uint8Array> {
     const colWidth = contentWidth / columnas.length;
     columnas.forEach((col, i) => {
       const colCenter = contentX + colWidth * i + colWidth / 2;
-      dibujarTitulos(titulos(col.es, col.en), colCenter, y, 9.5, "center");
+      dibujarTitulos(titulos(col.es, col.en), colCenter, y, 10.5, "center");
       doc.setFont("helvetica", "italic");
       doc.setFontSize(12 * k);
       doc.setTextColor(20, 20, 20);
@@ -149,7 +149,7 @@ export async function generarClasico(c: Certificado): Promise<Uint8Array> {
   doc.setDrawColor(150, 150, 150);
   doc.setLineWidth(0.15 * k);
   doc.line(W / 2 - anchoFirma / 2, y, W / 2 + anchoFirma / 2, y);
-  dibujarTitulos(titulos("Firma del Autor", "Artist's signature"), W / 2, y + 5 * k, 9.5, "center");
+  dibujarTitulos(titulos("Firma del Autor", "Artist's signature"), W / 2, y + 5 * k, 10.5, "center");
   y += 5 * k + extraTitulos;
 
   if (c.logo) {

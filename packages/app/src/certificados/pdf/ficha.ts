@@ -49,12 +49,12 @@ export async function generarFicha(c: Certificado): Promise<Uint8Array> {
     const colX = celdas.map((_, i) => tableX + (tableWidth / celdas.length) * i);
     const colWidths = celdas.map(() => tableWidth / celdas.length - 4 * k);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(9 * k);
+    doc.setFontSize(10 * k);
     const labelLineas = celdas.map((cel, i) => doc.splitTextToSize(cel.label, colWidths[i]) as string[]);
     doc.setFont("times", "italic");
     doc.setFontSize(10.5 * k);
     const valorLineas = celdas.map((cel, i) => (cel.value ? (doc.splitTextToSize(cel.value, colWidths[i]) as string[]) : []));
-    const renglonLabel = altoRenglon(9 * k);
+    const renglonLabel = altoRenglon(10 * k);
     const renglonValor = altoRenglon(10.5 * k);
     const labelBlockHeight = Math.max(...labelLineas.map((l) => l.length)) * renglonLabel;
     const valorLineCount = Math.max(0, ...valorLineas.map((l) => l.length));
@@ -65,7 +65,7 @@ export async function generarFicha(c: Certificado): Promise<Uint8Array> {
     doc.line(tableX, y, tableX + tableWidth, y);
     celdas.forEach((_celda, i) => {
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(9 * k);
+      doc.setFontSize(10 * k);
       doc.text(labelLineas[i], colX[i] + 2 * k, y + 4.5 * k);
       if (valorLineas[i].length > 0) {
         doc.setFont("times", "italic");
@@ -130,7 +130,7 @@ export async function generarFicha(c: Certificado): Promise<Uint8Array> {
     doc.setLineWidth(0.2 * k);
     doc.line(x + 6 * k, y, x + firmaColWidth - 10 * k, y);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(10 * k);
+    doc.setFontSize(11 * k);
     doc.text(caption, x + 6 * k, y + 6 * k);
   }
 
