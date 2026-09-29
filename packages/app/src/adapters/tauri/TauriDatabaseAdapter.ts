@@ -55,8 +55,18 @@ class TauriDatabaseAdapter implements DatabaseAdapter {
     }
   }
 
+  // OJO: db.close() SIN argumento no cierra solo esta conexion — cierra
+  // TODOS los pools que el plugin tiene abiertos en ese momento, de
+  // cualquier archivo (asi esta hecho tauri-plugin-sql: "db" es opcional y,
+  // si falta, closea todo lo que haya cargado con Database.load() hasta
+  // ahora). Eso rompia workspaces recien abiertos en paralelo — por ejemplo
+  // peekRandomThumbnails (splash) cerraba su conexion de paso justo cuando
+  // el usuario ya habia tocado "Galeris Studio", y esa apertura real quedaba
+  // con el pool cerrado ("attempted to acquire a connection on a closed
+  // pool") aunque nunca se la mando a cerrar. Pasarle this.db.path lo acota
+  // a cerrar solo el pool de este archivo.
   async close(): Promise<void> {
-    await this.db.close();
+    await this.db.close(this.db.path);
   }
 }
 
