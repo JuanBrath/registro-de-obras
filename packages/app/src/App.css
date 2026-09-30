@@ -21,6 +21,13 @@ input[type="date"] {
   gap: 0.5rem;
 }
 
+.settings-backup-workspace {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
 .settings-gear-button {
   width: 2.5rem;
   height: 2.5rem;

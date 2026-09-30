@@ -182,18 +182,24 @@ function nombreCarpetaBackup(etiqueta: string): string {
 /**
  * Copia de seguridad completa del workspace (base de datos, obras,
  * certificados) en una subcarpeta nueva, con fecha y hora, dentro de la
- * carpeta que elija el usuario. El workspace actual no cambia de lugar: al
- * terminar se abre una conexion nueva a la MISMA carpeta de siempre (hace
- * falta porque, igual que en moverTauriWorkspaceRoot, hay que cerrar la
- * conexion antes de copiar el archivo .db, para no llevarse una foto a
- * mitad de una escritura).
+ * carpeta que elija el usuario. El workspace actual no cambia de lugar.
+ *
+ * `dbActual` es la conexion en uso, SI el workspace ya esta abierto en la
+ * sesion actual (null si se hace desde la pantalla de presentacion, antes
+ * de entrar a ningun registro — pensado para poder sacar una copia incluso
+ * si abrir el registro fallara por una base corrupta). Si se pasa, se
+ * cierra antes de copiar el archivo .db (para no llevarse una foto a mitad
+ * de una escritura, igual que en moverTauriWorkspaceRoot) y se abre una
+ * conexion nueva a la MISMA carpeta de siempre al terminar, que el llamador
+ * tiene que poner en el contexto (ver setDb en WorkspaceContext). Si no se
+ * pasa, no hay nada que cerrar ni reabrir.
  */
 export async function hacerBackupTauriWorkspace(
   workspace: WorkspaceId,
-  dbActual: DatabaseAdapter,
+  dbActual: DatabaseAdapter | null,
   etiqueta: string,
   onProgreso: (copiados: number, total: number) => void,
-): Promise<{ destino: string; dbNueva: DatabaseAdapter }> {
+): Promise<{ destino: string; dbNueva: DatabaseAdapter | null }> {
   const store = await Store.load(STORE_FILE);
   const raiz = await store.get<string>(workspace);
   if (!raiz) {
@@ -215,7 +221,7 @@ export async function hacerBackupTauriWorkspace(
   }
   const destino = `${carpetaElegida}/${nombreCarpetaBackup(etiqueta)}`;
 
-  await dbActual.close();
+  if (dbActual) await dbActual.close();
   const unlisten = await listen<{ copiados: number; total: number }>("carpeta-copiando-progreso", (event) => {
     onProgreso(event.payload.copiados, event.payload.total);
   });
@@ -225,21 +231,28 @@ export async function hacerBackupTauriWorkspace(
     unlisten();
   }
 
-  const dbNueva = await createTauriDatabaseAdapter(`${raiz}/registro.db`);
+  const dbNueva = dbActual ? await createTauriDatabaseAdapter(`${raiz}/registro.db`) : null;
   return { destino, dbNueva };
 }
 
 /**
- * Restaura el workspace actual desde una copia de seguridad elegida por el
- * usuario (ver hacerBackupTauriWorkspace): borra el contenido actual de la
- * carpeta del workspace y lo reemplaza por el de la copia. Accion
- * destructiva a proposito — el llamador tiene que confirmarla con el
- * usuario ANTES de invocar esto, dejando bien claro que se pierde todo lo
- * cargado despues de esa copia.
+ * Restaura un workspace desde una copia de seguridad elegida por el usuario
+ * (ver hacerBackupTauriWorkspace): borra el contenido actual de su carpeta y
+ * lo reemplaza por el de la copia. Accion destructiva a proposito — el
+ * llamador tiene que confirmarla con el usuario ANTES de invocar esto,
+ * dejando bien claro que se pierde todo lo cargado despues de esa copia.
+ *
+ * `dbActual` es la conexion en uso si este workspace esta abierto en la
+ * sesion actual (null si se hace desde la pantalla de presentacion, sin
+ * haber entrado — pensado justamente para el caso en que la base este tan
+ * corrompida que ni se pueda abrir el registro). Si se pasa, se cierra
+ * antes de tocar la carpeta; el llamador es quien decide que hacer despues
+ * (esta funcion no vuelve a abrir una conexion, ya que casi siempre conviene
+ * volver a la pantalla de inicio para que todo se recargue de cero).
  */
 export async function restaurarTauriWorkspaceDesdeBackup(
   workspace: WorkspaceId,
-  dbActual: DatabaseAdapter,
+  dbActual: DatabaseAdapter | null,
   onProgreso: (copiados: number, total: number) => void,
 ): Promise<void> {
   const store = await Store.load(STORE_FILE);
@@ -256,7 +269,7 @@ export async function restaurarTauriWorkspaceDesdeBackup(
     throw new Error("Esa carpeta no parece ser una copia de seguridad de Galeris (no tiene registro.db)");
   }
 
-  await dbActual.close();
+  if (dbActual) await dbActual.close();
 
   const unlisten = await listen<{ copiados: number; total: number }>("carpeta-copiando-progreso", (event) => {
     onProgreso(event.payload.copiados, event.payload.total);

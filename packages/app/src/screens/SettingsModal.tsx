@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { edicionIncluyeGaleria, edicionIncluyePersonal, type WorkspaceId } from "@registro/core";
 import { Modal } from "../components/Modal.js";
 import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
 import { useTheme } from "../state/ThemeContext.js";
 import { useFontSize } from "../state/FontSizeContext.js";
 import { useMiniaturasModo } from "../state/MiniaturasModoContext.js";
 import { useWorkspace } from "../state/WorkspaceContext.js";
+import { useEdicion } from "../state/EdicionContext.js";
 import { isTauri } from "../adapters/detectPlatform.js";
 import { LightroomSettings } from "../components/LightroomSettings.js";
 
@@ -30,6 +32,18 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
   const { tamanoFuente, setTamanoFuente } = useFontSize();
   const { miniaturasModo, setMiniaturasModo } = useMiniaturasModo();
   const { context, close, setDb } = useWorkspace();
+  const { edicion } = useEdicion();
+  // Copia de seguridad y restaurar: a que registro se le aplica. Se puede usar
+  // desde la pantalla de presentacion, sin haber entrado a ninguno todavia
+  // (pensado para el caso en que la base este tan corrompida que ni se pueda
+  // abrir el registro) — por eso no dependen de `context`, sino de la edicion
+  // (que registros existen) mas una eleccion aparte si hay mas de uno.
+  const workspacesDisponibles: WorkspaceId[] = [
+    ...(edicion !== null && edicionIncluyePersonal(edicion) ? (["personal"] as const) : []),
+    ...(edicion !== null && edicionIncluyeGaleria(edicion) ? (["galeria"] as const) : []),
+  ];
+  const [workspaceBackupElegido, setWorkspaceBackupElegido] = useState<WorkspaceId | null>(null);
+  const workspaceBackup = workspaceBackupElegido ?? context?.workspace ?? workspacesDisponibles[0] ?? null;
   const [confirmandoReset, setConfirmandoReset] = useState(false);
   const [reseteando, setReseteando] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
@@ -49,6 +63,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
   const [restaurando, setRestaurando] = useState(false);
   const [progresoRestaurar, setProgresoRestaurar] = useState<{ copiados: number; total: number } | null>(null);
   const [errorRestaurar, setErrorRestaurar] = useState<string | null>(null);
+  const [restaurado, setRestaurado] = useState(false);
 
   // Fuerza a elegir una carpeta nueva para este workspace (aunque la actual
   // siga siendo valida) y vuelve a la pantalla de inicio para reabrir el
@@ -114,23 +129,26 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
     onClose();
   }
 
-  // Copia completa del workspace (base, obras, certificados) a una carpeta
-  // nueva con fecha y hora, elegida por el usuario. No cambia la carpeta
-  // actual: al terminar sigue usandose la de siempre (con una conexion
-  // nueva, ver hacerBackupTauriWorkspace).
+  // Copia completa del workspace elegido (base, obras, certificados) a una
+  // carpeta nueva con fecha y hora, elegida por el usuario. No cambia la
+  // carpeta actual: si el workspace elegido es el que esta abierto ahora, al
+  // terminar sigue usandose (con una conexion nueva, ver
+  // hacerBackupTauriWorkspace); si se hizo desde la pantalla de presentacion
+  // (sin haber entrado a ningun registro), no hay ninguna conexion que tocar.
   async function handleHacerBackup() {
-    if (!context) return;
+    if (!workspaceBackup) return;
     setHaciendoBackup(true);
     setErrorBackup(null);
     setResultadoBackup(null);
     setProgresoBackup(null);
     try {
       const { hacerBackupTauriWorkspace } = await import("../adapters/tauri/tauriAdapterFactory.js");
-      const etiqueta = context.workspace === "personal" ? t("workspacePicker.personal") : t("workspacePicker.galeria");
-      const { destino, dbNueva } = await hacerBackupTauriWorkspace(context.workspace, context.db, etiqueta, (copiados, total) =>
+      const etiqueta = workspaceBackup === "personal" ? t("workspacePicker.personal") : t("workspacePicker.galeria");
+      const abierto = context && context.workspace === workspaceBackup ? context : null;
+      const { destino, dbNueva } = await hacerBackupTauriWorkspace(workspaceBackup, abierto?.db ?? null, etiqueta, (copiados, total) =>
         setProgresoBackup({ copiados, total }),
       );
-      setDb(dbNueva);
+      if (dbNueva) setDb(dbNueva);
       setResultadoBackup(destino);
     } catch (err) {
       setErrorBackup(describirErrorMudanza(err, t));
@@ -139,24 +157,34 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
     }
   }
 
-  // Reemplaza TODO el contenido actual del workspace por el de una copia de
-  // seguridad elegida por el usuario: se pierde lo cargado despues de esa
-  // copia, por eso pide confirmar antes. Termina volviendo a la pantalla de
-  // inicio (como "Mover carpeta"), para que todas las pantallas se recarguen
-  // de cero con los datos restaurados en vez de quedar con datos viejos en
-  // memoria.
+  // Reemplaza TODO el contenido actual del workspace elegido por el de una
+  // copia de seguridad elegida por el usuario: se pierde lo cargado despues
+  // de esa copia, por eso pide confirmar antes. Si ese workspace es el que
+  // esta abierto ahora, termina volviendo a la pantalla de inicio (como
+  // "Mover carpeta"), para que todas las pantallas se recarguen de cero con
+  // los datos restaurados en vez de quedar con datos viejos en memoria; si
+  // se hizo desde la pantalla de presentacion (sin haber entrado), no hay
+  // ninguna sesion que recargar.
   async function handleRestaurar() {
-    if (!context) return;
+    if (!workspaceBackup) return;
     setRestaurando(true);
     setErrorRestaurar(null);
     setProgresoRestaurar(null);
+    setRestaurado(false);
     try {
       const { restaurarTauriWorkspaceDesdeBackup } = await import("../adapters/tauri/tauriAdapterFactory.js");
-      await restaurarTauriWorkspaceDesdeBackup(context.workspace, context.db, (copiados, total) =>
+      const esElAbierto = context && context.workspace === workspaceBackup;
+      await restaurarTauriWorkspaceDesdeBackup(workspaceBackup, esElAbierto ? context.db : null, (copiados, total) =>
         setProgresoRestaurar({ copiados, total }),
       );
-      await close();
-      onClose();
+      if (esElAbierto) {
+        await close();
+        onClose();
+      } else {
+        setConfirmandoRestaurar(false);
+        setRestaurado(true);
+        setRestaurando(false);
+      }
     } catch (err) {
       setErrorRestaurar(describirErrorMudanza(err, t));
       setRestaurando(false);
@@ -352,9 +380,33 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
         </fieldset>
       )}
 
-      {isTauri() && context && (
+      {isTauri() && workspacesDisponibles.length > 0 && (
         <fieldset className="settings-idioma-fieldset">
           <legend>{t("settings.backupTitulo")}</legend>
+
+          {workspacesDisponibles.length > 1 && (
+            <div className="settings-backup-workspace">
+              <span className="field-note">{t("settings.backupWorkspaceLabel")}</span>
+              {workspacesDisponibles.map((ws) => (
+                <label key={ws}>
+                  <input
+                    type="radio"
+                    name="backupWorkspace"
+                    checked={workspaceBackup === ws}
+                    onChange={() => {
+                      setWorkspaceBackupElegido(ws);
+                      setResultadoBackup(null);
+                      setErrorBackup(null);
+                      setRestaurado(false);
+                      setErrorRestaurar(null);
+                      setConfirmandoRestaurar(false);
+                    }}
+                  />
+                  {ws === "personal" ? t("workspacePicker.personal") : t("workspacePicker.galeria")}
+                </label>
+              ))}
+            </div>
+          )}
 
           <p className="field-note">{t("settings.backupNota")}</p>
           {errorBackup && (
@@ -383,6 +435,11 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
           {errorRestaurar && (
             <p className="error" role="alert">
               ⚠️ {errorRestaurar}
+            </p>
+          )}
+          {restaurado && (
+            <p className="success" role="status">
+              ✅ {t("settings.restaurarExito")}
             </p>
           )}
           {confirmandoRestaurar ? (

@@ -247,6 +247,7 @@ export const es = {
   "settings.moverCarpetaErrorPermisos":
     "macOS bloqueó el acceso a una de las dos carpetas (la de origen o la de destino) — pasa seguido con discos externos, sobre todo mientras esta app todavía no está firmada con una cuenta de desarrollador de Apple. Si tus datos están hoy en un disco externo, este permiso hace falta incluso para mover los datos DE ahí hacia el disco interno, no solo al revés. Para solucionarlo: abrí Ajustes del Sistema → Privacidad y Seguridad → Archivos y Carpetas, buscá Galeris y activá el permiso para \"Volúmenes extraíbles\" (si no aparece esa opción, probá dándole Acceso total al disco). Si preferís no tocar esos permisos, también podés copiar la carpeta vos mismo desde el Finder (que no tiene esta restricción) y después usar \"Cambiar carpeta\" para apuntar a esa copia.",
   "settings.backupTitulo": "Copia de seguridad",
+  "settings.backupWorkspaceLabel": "¿De qué registro?",
   "settings.backupNota":
     "Guarda una copia completa de este registro (base de datos, fotos y certificados) en una carpeta nueva, con la fecha y la hora, dentro de donde elijas. Podés guardarla en un disco externo o en una carpeta de Dropbox/iCloud/Google Drive: a diferencia de usar esa carpeta para el registro en uso, una copia de seguridad no tiene ese riesgo. El registro que estás usando ahora sigue igual, sin cambios.",
   "settings.backupBoton": "Hacer copia de seguridad ahora…",
@@ -257,6 +258,7 @@ export const es = {
   "settings.restaurarAdvertencia":
     "Esto va a borrar todos los datos actuales de este registro (obras, artistas, ventas, certificados) y los va a reemplazar por los de la copia de seguridad que elijas a continuación. Lo que se cargó después de esa copia se pierde para siempre. Esta acción no se puede deshacer. ¿Confirmás?",
   "settings.restaurarConfirmar": "Sí, elegir la copia y restaurar",
+  "settings.restaurarExito": "Listo: se restauró ese registro desde la copia de seguridad elegida.",
   "settings.numeradoresAutomaticos": "Numeradores automáticos",
   "settings.resetearNumeradoresBoton": "Resetear numeradores automáticos",
   "settings.resetearNumeradoresAdvertencia": "Todos los numeradores automáticos (número de artista y número de certificado de venta) volverán a empezar desde el principio. Esto puede generar duplicidad con la numeración interna ya asignada a artistas o certificados existentes. Esta acción no se puede deshacer. ¿Confirmás?",

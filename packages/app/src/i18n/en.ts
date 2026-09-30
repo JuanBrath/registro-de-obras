@@ -249,6 +249,7 @@ export const en: Record<keyof typeof es, string> = {
   "settings.moverCarpetaErrorPermisos":
     "macOS blocked access to one of the two folders (the source or the destination) — this happens often with external drives, especially while this app isn't yet signed with an Apple Developer account. If your data is currently on an external drive, this permission is needed even to move it FROM there to the internal disk, not just the other way around. To fix it: open System Settings → Privacy & Security → Files and Folders, find Galeris, and enable the permission for \"Removable Volumes\" (if that option isn't listed, try granting Full Disk Access instead). If you'd rather not touch those settings, you can also copy the folder yourself using Finder (which doesn't have this restriction), then use \"Change folder\" to point to that copy.",
   "settings.backupTitulo": "Backup",
+  "settings.backupWorkspaceLabel": "Which record?",
   "settings.backupNota":
     "Saves a full copy of this record (database, photos and certificates) into a new folder, with the date and time, inside wherever you choose. You can save it to an external drive or to a Dropbox/iCloud/Google Drive folder: unlike using that kind of folder for the record you're actively working in, a backup doesn't carry that risk. The record you're using now stays exactly as it was.",
   "settings.backupBoton": "Back up now…",
@@ -259,6 +260,7 @@ export const en: Record<keyof typeof es, string> = {
   "settings.restaurarAdvertencia":
     "This will delete all the current data in this record (artworks, artists, sales, certificates) and replace it with the data from the backup you choose next. Anything loaded after that backup is lost for good. This cannot be undone. Are you sure?",
   "settings.restaurarConfirmar": "Yes, choose the backup and restore",
+  "settings.restaurarExito": "Done: that record was restored from the chosen backup.",
   "settings.numeradoresAutomaticos": "Automatic numbering",
   "settings.resetearNumeradoresBoton": "Reset automatic numbering",
   "settings.resetearNumeradoresAdvertencia": "All automatic numbering counters (artist number and sale certificate number) will start over from the beginning. This can cause duplicate internal numbering with artists or certificates that already exist. This action cannot be undone. Confirm?",
