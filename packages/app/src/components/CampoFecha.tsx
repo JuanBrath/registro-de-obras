@@ -79,6 +79,11 @@ export function BotonCalendario({
             // al navegar sin confirmar) y se le saca el foco para cerrarlo.
             e.currentTarget.value = valorIso;
             e.currentTarget.blur();
+          } else if (e.key === "Enter") {
+            // Confirmar la fecha elegida: a diferencia de Escape, no se
+            // restaura el valor, para que quede la que se estaba mostrando.
+            e.preventDefault();
+            e.currentTarget.blur();
           }
         }}
       />
