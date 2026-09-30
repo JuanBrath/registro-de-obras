@@ -303,7 +303,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
 
       {isTauri() && <LightroomSettings />}
 
-      {isTauri() && (
+      {isTauri() && context && (
         <fieldset className="settings-idioma-fieldset">
           <legend>{t("settings.carpetaDatos")}</legend>
 
@@ -352,7 +352,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
         </fieldset>
       )}
 
-      {isTauri() && (
+      {isTauri() && context && (
         <fieldset className="settings-idioma-fieldset">
           <legend>{t("settings.backupTitulo")}</legend>
 
