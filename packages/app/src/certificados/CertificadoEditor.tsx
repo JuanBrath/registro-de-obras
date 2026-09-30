@@ -303,17 +303,23 @@ export function CertificadoEditor({
     const onChangeIso = (iso: string) => propiedades.onChange({ target: { value: iso } });
     return (
       <label className={`certificado-campo${opciones.medio ? " certificado-campo-medio" : ""}${corrigiendo ? " certificado-campo-registro" : ""}`}>
-        <span className="certificado-etiqueta">
-          {t(etiqueta)}
-          {/* input type="date" nativo: en Safari/WKWebView el calendario no se cerraba con
-              Enter ni Escape (solo clickeando en otro campo). BotonCalendario + CampoFecha
-              lo evitan del todo: ver su comentario en components/CampoFecha.tsx. */}
-          {opciones.fecha && <BotonCalendario valorIso={propiedades.value} onChangeIso={onChangeIso} disabled={propiedades.disabled} />}
-        </span>
+        <span className="certificado-etiqueta">{t(etiqueta)}</span>
         {opciones.renglones ? (
           <textarea rows={opciones.renglones} {...propiedades} />
         ) : opciones.fecha ? (
-          <CampoFecha valorIso={propiedades.value} onChangeIso={onChangeIso} disabled={propiedades.disabled} />
+          // input type="date" nativo: en Safari/WKWebView el calendario no se cerraba con Enter
+          // ni Escape (solo clickeando en otro campo). BotonCalendario + CampoFecha lo evitan del
+          // todo (ver su comentario en components/CampoFecha.tsx); angosto y con el boton al lado,
+          // a la derecha, en el mismo renglon: sobra ancho de la columna para los dos juntos.
+          <span className="certificado-campo-fecha-con-boton">
+            <CampoFecha
+              valorIso={propiedades.value}
+              onChangeIso={onChangeIso}
+              disabled={propiedades.disabled}
+              className="certificado-campo-fecha-angosto"
+            />
+            <BotonCalendario valorIso={propiedades.value} onChangeIso={onChangeIso} disabled={propiedades.disabled} />
+          </span>
         ) : (
           <input type="text" {...propiedades} />
         )}

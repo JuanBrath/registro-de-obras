@@ -2023,6 +2023,17 @@ input[type="date"] {
   opacity: 0.85;
 }
 
+.certificado-campo-fecha-con-boton {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.certificado-campo-fecha-angosto {
+  width: 7rem;
+  flex: none;
+}
+
 .certificado-campo input[type="text"],
 .certificado-campo input[type="date"],
 .certificado-campo textarea {
