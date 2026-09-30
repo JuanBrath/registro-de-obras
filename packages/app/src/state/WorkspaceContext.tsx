@@ -2,6 +2,7 @@ import { createContext, useContext, useState, type ReactNode } from "react";
 import {
   openWorkspace,
   type Artista,
+  type DatabaseAdapter,
   type GaleriaPerfil,
   type WorkspaceContext as CoreWorkspaceContext,
   type WorkspaceId,
@@ -24,6 +25,8 @@ interface WorkspaceState {
   close: () => Promise<void>;
   reloadPersonalArtista: () => Promise<void>;
   reloadGaleriaPerfil: () => Promise<void>;
+  /** Reemplaza la conexion a la base del contexto actual (ver hacerBackupTauriWorkspace / restaurarTauriWorkspaceDesdeBackup): el resto del contexto (fs, workspace) no cambia. */
+  setDb: (db: DatabaseAdapter) => void;
 }
 
 const WorkspaceReactContext = createContext<WorkspaceState | null>(null);
@@ -222,6 +225,10 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     setGaleriaPerfil(await loadGaleriaPerfil(context));
   };
 
+  const setDb = (db: DatabaseAdapter) => {
+    setContext((prev) => (prev ? { ...prev, db } : prev));
+  };
+
   const value: WorkspaceState = {
     context,
     helpTexts,
@@ -230,6 +237,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     loading,
     error,
     open,
+    setDb,
     close,
     reloadPersonalArtista,
     reloadGaleriaPerfil,

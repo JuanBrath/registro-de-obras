@@ -171,6 +171,113 @@ export async function borrarCarpetaViejaTauri(rutaVieja: string): Promise<void> 
   await invoke("fs_remove_workspace_root", { path: rutaVieja });
 }
 
+/** Nombre de la subcarpeta de una copia de seguridad: "<etiqueta> - copia de seguridad AAAA-MM-DD HHhMM". */
+function nombreCarpetaBackup(etiqueta: string): string {
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const fecha = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}h${pad(d.getMinutes())}`;
+  return `${etiqueta} - copia de seguridad ${fecha}`;
+}
+
+/**
+ * Copia de seguridad completa del workspace (base de datos, obras,
+ * certificados) en una subcarpeta nueva, con fecha y hora, dentro de la
+ * carpeta que elija el usuario. El workspace actual no cambia de lugar: al
+ * terminar se abre una conexion nueva a la MISMA carpeta de siempre (hace
+ * falta porque, igual que en moverTauriWorkspaceRoot, hay que cerrar la
+ * conexion antes de copiar el archivo .db, para no llevarse una foto a
+ * mitad de una escritura).
+ */
+export async function hacerBackupTauriWorkspace(
+  workspace: WorkspaceId,
+  dbActual: DatabaseAdapter,
+  etiqueta: string,
+  onProgreso: (copiados: number, total: number) => void,
+): Promise<{ destino: string; dbNueva: DatabaseAdapter }> {
+  const store = await Store.load(STORE_FILE);
+  const raiz = await store.get<string>(workspace);
+  if (!raiz) {
+    throw new Error(`No hay una carpeta actual para el registro "${workspace}"`);
+  }
+
+  const carpetaElegida = await pickTauriRootDirectory();
+  if (!carpetaElegida) {
+    throw new Error("Se necesita elegir una carpeta donde guardar la copia de seguridad");
+  }
+  // Si la carpeta elegida fuera la actual (o estuviera adentro de ella), la
+  // copia terminaria adentro de si misma: fs_copiar_carpeta solo rechaza que
+  // el destino sea EXACTAMENTE el origen, y encima ese chequeo no aplica
+  // aca porque el destino (una subcarpeta nueva, con fecha) todavia no
+  // existe cuando se hace. Se corta antes de intentarlo.
+  const raizNormalizada = raiz.replace(/\/+$/, "");
+  if (carpetaElegida === raizNormalizada || carpetaElegida.startsWith(`${raizNormalizada}/`)) {
+    throw new Error("Elegí una carpeta distinta a la del registro actual (o una de sus subcarpetas) para guardar la copia de seguridad.");
+  }
+  const destino = `${carpetaElegida}/${nombreCarpetaBackup(etiqueta)}`;
+
+  await dbActual.close();
+  const unlisten = await listen<{ copiados: number; total: number }>("carpeta-copiando-progreso", (event) => {
+    onProgreso(event.payload.copiados, event.payload.total);
+  });
+  try {
+    await invoke("fs_copiar_carpeta", { origen: raiz, destino });
+  } finally {
+    unlisten();
+  }
+
+  const dbNueva = await createTauriDatabaseAdapter(`${raiz}/registro.db`);
+  return { destino, dbNueva };
+}
+
+/**
+ * Restaura el workspace actual desde una copia de seguridad elegida por el
+ * usuario (ver hacerBackupTauriWorkspace): borra el contenido actual de la
+ * carpeta del workspace y lo reemplaza por el de la copia. Accion
+ * destructiva a proposito — el llamador tiene que confirmarla con el
+ * usuario ANTES de invocar esto, dejando bien claro que se pierde todo lo
+ * cargado despues de esa copia.
+ */
+export async function restaurarTauriWorkspaceDesdeBackup(
+  workspace: WorkspaceId,
+  dbActual: DatabaseAdapter,
+  onProgreso: (copiados: number, total: number) => void,
+): Promise<void> {
+  const store = await Store.load(STORE_FILE);
+  const raiz = await store.get<string>(workspace);
+  if (!raiz) {
+    throw new Error(`No hay una carpeta actual para el registro "${workspace}"`);
+  }
+
+  const origen = await pickTauriRootDirectory();
+  if (!origen) {
+    throw new Error("Se necesita elegir la carpeta de la copia de seguridad");
+  }
+  if (!(await invoke<boolean>("fs_exists", { root: origen, relativePath: "registro.db" }))) {
+    throw new Error("Esa carpeta no parece ser una copia de seguridad de Galeris (no tiene registro.db)");
+  }
+
+  await dbActual.close();
+
+  const unlisten = await listen<{ copiados: number; total: number }>("carpeta-copiando-progreso", (event) => {
+    onProgreso(event.payload.copiados, event.payload.total);
+  });
+  // Primero se copia la copia de seguridad elegida a una carpeta temporal (al
+  // lado de la actual, nunca ENCIMA de la actual): asi, si por error se
+  // elige la carpeta actual como "copia de seguridad" (o cualquier otro
+  // problema a mitad de camino), este primer paso nunca llega a borrar nada
+  // — recien se borra la carpeta actual una vez que la copia ya esta a
+  // salvo en la temporal, y de ahi se trae de vuelta a su lugar.
+  const temporal = `${raiz}.restaurando-tmp-${Date.now()}`;
+  try {
+    await invoke("fs_copiar_carpeta", { origen, destino: temporal });
+    await invoke("fs_remove_workspace_root", { path: raiz });
+    await invoke("fs_copiar_carpeta", { origen: temporal, destino: raiz });
+  } finally {
+    unlisten();
+    await invoke("fs_remove_workspace_root", { path: temporal }).catch(() => {});
+  }
+}
+
 /**
  * Trae hasta `cantidad` miniaturas al azar de un workspace YA CONFIGURADO,
  * para decorar la pantalla de seleccion de modulo con fotos de las obras

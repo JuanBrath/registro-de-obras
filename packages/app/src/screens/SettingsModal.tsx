@@ -29,7 +29,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
   const { tema, setTema } = useTheme();
   const { tamanoFuente, setTamanoFuente } = useFontSize();
   const { miniaturasModo, setMiniaturasModo } = useMiniaturasModo();
-  const { context, close } = useWorkspace();
+  const { context, close, setDb } = useWorkspace();
   const [confirmandoReset, setConfirmandoReset] = useState(false);
   const [reseteando, setReseteando] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
@@ -41,6 +41,14 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
   const [resultadoMudanza, setResultadoMudanza] = useState<{ nuevaRuta: string; rutaVieja: string } | null>(null);
   const [borrandoCarpetaVieja, setBorrandoCarpetaVieja] = useState(false);
   const [errorMudanza, setErrorMudanza] = useState<string | null>(null);
+  const [haciendoBackup, setHaciendoBackup] = useState(false);
+  const [progresoBackup, setProgresoBackup] = useState<{ copiados: number; total: number } | null>(null);
+  const [resultadoBackup, setResultadoBackup] = useState<string | null>(null);
+  const [errorBackup, setErrorBackup] = useState<string | null>(null);
+  const [confirmandoRestaurar, setConfirmandoRestaurar] = useState(false);
+  const [restaurando, setRestaurando] = useState(false);
+  const [progresoRestaurar, setProgresoRestaurar] = useState<{ copiados: number; total: number } | null>(null);
+  const [errorRestaurar, setErrorRestaurar] = useState<string | null>(null);
 
   // Fuerza a elegir una carpeta nueva para este workspace (aunque la actual
   // siga siendo valida) y vuelve a la pantalla de inicio para reabrir el
@@ -106,6 +114,55 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
     onClose();
   }
 
+  // Copia completa del workspace (base, obras, certificados) a una carpeta
+  // nueva con fecha y hora, elegida por el usuario. No cambia la carpeta
+  // actual: al terminar sigue usandose la de siempre (con una conexion
+  // nueva, ver hacerBackupTauriWorkspace).
+  async function handleHacerBackup() {
+    if (!context) return;
+    setHaciendoBackup(true);
+    setErrorBackup(null);
+    setResultadoBackup(null);
+    setProgresoBackup(null);
+    try {
+      const { hacerBackupTauriWorkspace } = await import("../adapters/tauri/tauriAdapterFactory.js");
+      const etiqueta = context.workspace === "personal" ? t("workspacePicker.personal") : t("workspacePicker.galeria");
+      const { destino, dbNueva } = await hacerBackupTauriWorkspace(context.workspace, context.db, etiqueta, (copiados, total) =>
+        setProgresoBackup({ copiados, total }),
+      );
+      setDb(dbNueva);
+      setResultadoBackup(destino);
+    } catch (err) {
+      setErrorBackup(describirErrorMudanza(err, t));
+    } finally {
+      setHaciendoBackup(false);
+    }
+  }
+
+  // Reemplaza TODO el contenido actual del workspace por el de una copia de
+  // seguridad elegida por el usuario: se pierde lo cargado despues de esa
+  // copia, por eso pide confirmar antes. Termina volviendo a la pantalla de
+  // inicio (como "Mover carpeta"), para que todas las pantallas se recarguen
+  // de cero con los datos restaurados en vez de quedar con datos viejos en
+  // memoria.
+  async function handleRestaurar() {
+    if (!context) return;
+    setRestaurando(true);
+    setErrorRestaurar(null);
+    setProgresoRestaurar(null);
+    try {
+      const { restaurarTauriWorkspaceDesdeBackup } = await import("../adapters/tauri/tauriAdapterFactory.js");
+      await restaurarTauriWorkspaceDesdeBackup(context.workspace, context.db, (copiados, total) =>
+        setProgresoRestaurar({ copiados, total }),
+      );
+      await close();
+      onClose();
+    } catch (err) {
+      setErrorRestaurar(describirErrorMudanza(err, t));
+      setRestaurando(false);
+    }
+  }
+
   async function handleResetearNumeradores() {
     if (!context) return;
     setReseteando(true);
@@ -128,7 +185,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
   // modal: la conexion actual ya esta cerrada para poder copiar el archivo
   // .db sin riesgo, asi que salir a mitad de camino dejaria pantallas de
   // fondo intentando usar una conexion que ya no existe.
-  const bloqueaCierre = moviendoCarpeta || borrandoCarpetaVieja;
+  const bloqueaCierre = moviendoCarpeta || borrandoCarpetaVieja || haciendoBackup || restaurando;
 
   return (
     <Modal onClose={bloqueaCierre ? () => {} : onClose}>
@@ -290,6 +347,63 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
           ) : (
             <button type="button" onClick={handleMoverCarpeta} disabled={cambiandoCarpeta}>
               {t("settings.moverCarpetaBoton")}
+            </button>
+          )}
+        </fieldset>
+      )}
+
+      {isTauri() && (
+        <fieldset className="settings-idioma-fieldset">
+          <legend>{t("settings.backupTitulo")}</legend>
+
+          <p className="field-note">{t("settings.backupNota")}</p>
+          {errorBackup && (
+            <p className="error" role="alert">
+              ⚠️ {errorBackup}
+            </p>
+          )}
+          {resultadoBackup && (
+            <p className="success" role="status">
+              ✅ {t("settings.backupExito", { destino: resultadoBackup })}
+            </p>
+          )}
+          {haciendoBackup ? (
+            <p role="status">
+              {progresoBackup
+                ? t("settings.moverCarpetaProgreso", { copiados: progresoBackup.copiados, total: progresoBackup.total })
+                : t("common.loading")}
+            </p>
+          ) : (
+            <button type="button" onClick={handleHacerBackup} disabled={restaurando}>
+              {t("settings.backupBoton")}
+            </button>
+          )}
+
+          <p className="field-note">{t("settings.restaurarNota")}</p>
+          {errorRestaurar && (
+            <p className="error" role="alert">
+              ⚠️ {errorRestaurar}
+            </p>
+          )}
+          {confirmandoRestaurar ? (
+            <div className="confirm-box">
+              <p>{t("settings.restaurarAdvertencia")}</p>
+              <div className="obra-form-saved-actions">
+                <button type="button" onClick={handleRestaurar} disabled={restaurando}>
+                  {restaurando
+                    ? progresoRestaurar
+                      ? t("settings.moverCarpetaProgreso", { copiados: progresoRestaurar.copiados, total: progresoRestaurar.total })
+                      : t("common.loading")
+                    : t("settings.restaurarConfirmar")}
+                </button>
+                <button type="button" onClick={() => setConfirmandoRestaurar(false)} disabled={restaurando}>
+                  {t("common.cancel")}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button type="button" onClick={() => setConfirmandoRestaurar(true)} disabled={haciendoBackup}>
+              {t("settings.restaurarBoton")}
             </button>
           )}
         </fieldset>
