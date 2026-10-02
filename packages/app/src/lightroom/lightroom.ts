@@ -52,3 +52,12 @@ export interface EstadoLightroom {
 export const estadoLightroom = () => invoke<EstadoLightroom>("estado_lightroom");
 export const instalarComplementoLightroom = () => invoke<void>("instalar_complemento_lightroom");
 export const quitarComplementoLightroom = () => invoke<void>("quitar_complemento_lightroom");
+
+/**
+ * Direccion opuesta a leerEnvioLightroom: pide abrir una foto en Lightroom Classic a partir de la
+ * ruta del archivo original guardada en una obra ("ubicación del archivo original"). Si Lightroom no
+ * esta corriendo, lo abre. El complemento (VigilarPedidos.lua, ya corriendo dentro de Lightroom
+ * mientras este abierto) es quien busca la foto y avisa con un cartel propio si no la encuentra —
+ * Galeris Studio no se entera del resultado, asi que esto no tira error si la foto no estaba.
+ */
+export const pedirAbrirEnLightroom = (ruta: string) => invoke<void>("pedir_abrir_en_lightroom", { ruta });

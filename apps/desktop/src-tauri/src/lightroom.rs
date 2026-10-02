@@ -9,9 +9,13 @@ use tauri::{AppHandle, Manager, Runtime};
 // dentro del programa y se copia a la carpeta donde Lightroom busca sus complementos; deja la foto y
 // sus datos en la carpeta "lightroom-entrada" de los datos del programa, que se lee de aca. Galeris
 // Studio funciona igual sin todo esto.
-const ARCHIVOS: [(&str, &str); 3] = [
+const ARCHIVOS: [(&str, &str); 4] = [
     ("Info.lua", include_str!("../../../../lightroom/GalerisStudio.lrplugin/Info.lua")),
     ("CargarObra.lua", include_str!("../../../../lightroom/GalerisStudio.lrplugin/CargarObra.lua")),
+    (
+        "VigilarPedidos.lua",
+        include_str!("../../../../lightroom/GalerisStudio.lrplugin/VigilarPedidos.lua"),
+    ),
     (
         "TranslatedStrings_es.txt",
         include_str!("../../../../lightroom/GalerisStudio.lrplugin/TranslatedStrings_es.txt"),
@@ -20,6 +24,7 @@ const ARCHIVOS: [(&str, &str); 3] = [
 
 const NOMBRE_CARPETA: &str = "GalerisStudio.lrplugin";
 const CARPETA_ENTRADA: &str = "lightroom-entrada";
+const CARPETA_PEDIDO: &str = "lightroom-pedido";
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -42,6 +47,10 @@ fn carpeta_complemento() -> Result<PathBuf, String> {
 
 fn carpeta_entrada<R: Runtime>(app: &AppHandle<R>) -> Result<PathBuf, String> {
     Ok(app.path().app_data_dir().map_err(|e| e.to_string())?.join(CARPETA_ENTRADA))
+}
+
+fn carpeta_pedido<R: Runtime>(app: &AppHandle<R>) -> Result<PathBuf, String> {
+    Ok(app.path().app_data_dir().map_err(|e| e.to_string())?.join(CARPETA_PEDIDO))
 }
 
 #[tauri::command]
@@ -109,5 +118,22 @@ pub fn borrar_envio_lightroom<R: Runtime>(app: AppHandle<R>) -> Result<(), Strin
     if carpeta.exists() {
         fs::remove_dir_all(carpeta).map_err(|e| e.to_string())?;
     }
+    Ok(())
+}
+
+/// Pide abrir una foto en Lightroom Classic (boton "Abrir en Lightroom" de una obra, direccion
+/// opuesta a leer_envio_lightroom): deja la ruta en un archivo que el complemento, ya corriendo
+/// dentro de Lightroom (VigilarPedidos.lua), revisa cada tanto, y trae Lightroom al frente. Si
+/// Lightroom no esta corriendo, lo abre — el pedido espera en el archivo hasta que el complemento
+/// termine de cargar y lo revise.
+#[tauri::command]
+pub fn pedir_abrir_en_lightroom<R: Runtime>(app: AppHandle<R>, ruta: String) -> Result<(), String> {
+    let carpeta = carpeta_pedido(&app)?;
+    fs::create_dir_all(&carpeta).map_err(|e| e.to_string())?;
+    fs::write(carpeta.join("pedido.txt"), ruta).map_err(|e| e.to_string())?;
+    std::process::Command::new("open")
+        .args(["-a", "Adobe Lightroom Classic"])
+        .spawn()
+        .map_err(|e| e.to_string())?;
     Ok(())
 }

@@ -8,6 +8,13 @@ return {
   LrToolkitIdentifier = 'com.galeris.studio',
   LrPluginName = 'Galeris Studio',
 
+  -- Tarea en segundo plano que revisa pedidos de "Abrir en Lightroom" desde una obra (ver
+  -- VigilarPedidos.lua). LrForceInitPlugin hace que arranque apenas Lightroom carga el complemento, en
+  -- vez de esperar a que el usuario use el menu por primera vez (alcanza con que el complemento ya
+  -- aporte un item de menu, como este).
+  LrInitPlugin = 'VigilarPedidos.lua',
+  LrForceInitPlugin = true,
+
   LrLibraryMenuItems = {
     {
       title = LOC "$$$/GalerisStudio/Menu=Add artwork to Galeris Studio…",

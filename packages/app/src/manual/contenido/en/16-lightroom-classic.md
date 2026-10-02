@@ -38,6 +38,14 @@ Galeris Studio works on its own, without Lightroom. If you use Lightroom Classic
 
 Whatever Lightroom doesn't have stays empty. It's best to fill in the title and the keywords in Lightroom (Library module, Metadata panel).
 
+## Opening a photo in Lightroom from Galeris Studio
+
+It also works the other way: if an artwork has its **Original file location** filled in (personal records only, digital photography), a 📷 **Open in Lightroom Classic** button appears next to the field. Clicking it brings Lightroom to the front (opening it if it wasn't running) and, if the plug-in is installed, searches for that photo in whichever catalog you have open and selects it in the Library.
+
+- If Lightroom can't find it (it was moved to another folder, or it belongs to a different catalog), the notice appears as a dialog inside Lightroom.
+- If you just opened Lightroom, it may take a few seconds to check the request: wait a moment before trying again.
+- It needs the plug-in installed and up to date (see below); if you just installed or updated it, quit and reopen Lightroom Classic once for it to start working.
+
 ## If nothing is loaded
 
 - Check that the plug-in is up to date: in Galeris Studio, gear ⚙ › **Lightroom Classic**. If it says there is a newer version, click **Update plug-in** and restart Lightroom Classic.

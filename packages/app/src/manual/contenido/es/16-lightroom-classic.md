@@ -38,6 +38,14 @@ Galeris Studio funciona solo, sin Lightroom. Si usás Lightroom Classic, podés 
 
 Lo que Lightroom no tenga cargado queda vacío. Conviene completar el título y las palabras clave en Lightroom (módulo Biblioteca, panel Metadatos).
 
+## Abrir una foto en Lightroom desde Galeris Studio
+
+También funciona al revés: si una obra tiene cargada su **Ubicación del archivo original** (solo registro personal, fotografía digital), al lado del campo aparece el botón 📷 **Abrir en Lightroom Classic**. Al tocarlo, Lightroom pasa a primer plano (se abre solo si no estaba abierto) y, si el complemento está instalado, busca esa foto en el catálogo que tengas abierto y la selecciona en la Biblioteca.
+
+- Si Lightroom no la encuentra (se movió de carpeta, o pertenece a otro catálogo), el aviso aparece como un cartel dentro de Lightroom.
+- Si acabás de abrir Lightroom, puede tardar unos segundos en revisar el pedido: esperá un momento antes de probar de nuevo.
+- Necesita el complemento instalado y actualizado (ver más abajo); si lo instalaste o actualizaste recién, cerrá y volvé a abrir Lightroom Classic una vez para que empiece a funcionar.
+
 ## Si no se carga nada
 
 - Revisá que el complemento esté al día: en Galeris Studio, engranaje ⚙ › **Lightroom Classic**. Si dice que hay una versión nueva, tocá **Actualizar complemento** y reiniciá Lightroom Classic.

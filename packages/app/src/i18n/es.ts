@@ -106,7 +106,6 @@ export const es = {
   // Campos comunes de categoría
   "field.subtipo": "Subtipo",
   "field.tecnica": "Técnica",
-  "field.dimensiones": "Dimensiones",
   "field.peso": "Peso",
   "field.fechaCreacion": "Fecha de creación",
   "field.esSeriada": "Es seriada",
@@ -342,8 +341,6 @@ export const es = {
   "fields.fotografia.fechaCaptura": "Fecha de captura",
   "fields.fotografia.anioEdicion": "Año de edición",
   "fields.fotografia.softwareEdicion": "Software de edición",
-  "fields.fotografia.dimensiones": "Tamaño de la imagen (mm)",
-  "fields.fotografia.escalaPorTamanosLabel": "Escala por tamaños",
   "fields.fotografia.datosCapturaLegend": "Datos de captura",
   "fields.fotografia.camaraLabel": "Cámara",
   "fields.fotografia.isoLabel": "ISO",
@@ -720,6 +717,8 @@ export const es = {
   "filePathField.elegirArchivo": "Elegir archivo…",
   "filePathField.ningunoSeleccionado": "Ningún archivo seleccionado",
   "filePathField.mostrarEnExplorador": "Mostrar en el explorador de archivos",
+  "filePathField.abrirEnLightroom":
+    "Abrir en Lightroom Classic (trae Lightroom al frente y, si está instalado el complemento, busca y selecciona esta foto en el catálogo abierto)",
   "filePathField.errorNoSePudoAbrir":
     "No se pudo mostrar ese archivo en el explorador. Puede que se haya movido, renombrado o que la carpeta ya no esté disponible.",
 
@@ -941,8 +940,6 @@ export const es = {
   "obraDetail.subtipoNoEditable": "Subtipo: {{subtipo}} (no editable)",
   "obraDetail.tecnica": "Técnica: {{valor}}",
   "obraDetail.soporte": "Soporte: {{valor}}",
-  "obraDetail.dimensiones": "Dimensiones: {{valor}}",
-  "obraDetail.escalaPorTamanos": "Escala por tamaños",
   "obraDetail.peso": "Peso: {{valor}}",
   "obraDetail.codigoInventario": "Código de inventario / SKU: {{valor}}",
   "obraDetail.editarObra": "Editar obra",

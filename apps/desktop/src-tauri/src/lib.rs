@@ -40,6 +40,7 @@ pub fn run() {
       lightroom::leer_envio_lightroom,
       lightroom::leer_imagen_envio_lightroom,
       lightroom::borrar_envio_lightroom,
+      lightroom::pedir_abrir_en_lightroom,
       imagen::convertir_imagen_a_jpeg,
       imagen::leer_archivo_crudo,
     ])

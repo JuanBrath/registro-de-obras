@@ -5,3 +5,4 @@
 "$$$/GalerisStudio/ErrorExportar=No se pudo preparar la foto: ^1"
 "$$$/GalerisStudio/ErrorGeneral=No se pudo mandar la foto a Galeris Studio: ^1"
 "$$$/GalerisStudio/NoAbrio=La foto y sus datos quedaron listos, pero no se pudo abrir Galeris Studio. Abrilo a mano y se cargan solos."
+"$$$/GalerisStudio/FotoNoEncontrada=No se encontró esa foto en el catálogo actual de Lightroom. Puede que se haya movido de carpeta, o que pertenezca a otro catálogo.\n\n^1"

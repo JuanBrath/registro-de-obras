@@ -3,6 +3,7 @@ import { isTauri } from "../adapters/detectPlatform.js";
 import { pickTauriFilePath, readAbsoluteFileBytes } from "../adapters/tauri/TauriFileSystemAdapter.js";
 import { revealInFileManager } from "../utils/openExternalUrl.js";
 import { readImageMetadata, type ArchivoMetadata } from "../utils/readImageMetadata.js";
+import { pedirAbrirEnLightroom } from "../lightroom/lightroom.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
 
@@ -99,6 +100,20 @@ export function FilePathField({
     }
   }
 
+  // Trae Lightroom al frente (lo abre si no estaba corriendo) y le pide que
+  // busque y seleccione esta foto en su catalogo actual. Si Lightroom no la
+  // encuentra (se movio de carpeta, o es de otro catalogo), el aviso sale
+  // como un cartel DENTRO de Lightroom (VigilarPedidos.lua) — aca solo puede
+  // fallar el pedido en si (por ejemplo, si no se pudo abrir Lightroom).
+  async function handleAbrirEnLightroom() {
+    setError(null);
+    try {
+      await pedirAbrirEnLightroom(value);
+    } catch {
+      setError(t("filePathField.errorNoSePudoAbrir"));
+    }
+  }
+
   return (
     <div className="file-path-field">
       <input type="text" value={value} readOnly placeholder={t("filePathField.ningunoSeleccionado")} />
@@ -119,6 +134,17 @@ export function FilePathField({
           title={t("filePathField.mostrarEnExplorador")}
         >
           📁
+        </button>
+      )}
+      {value && (
+        <button
+          type="button"
+          className="link-icon-button"
+          onClick={handleAbrirEnLightroom}
+          aria-label={t("filePathField.abrirEnLightroom")}
+          title={t("filePathField.abrirEnLightroom")}
+        >
+          📷
         </button>
       )}
       {error && (

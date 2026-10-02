@@ -108,7 +108,6 @@ export const en: Record<keyof typeof es, string> = {
   // Shared category fields
   "field.subtipo": "Subtype",
   "field.tecnica": "Technique",
-  "field.dimensiones": "Dimensions",
   "field.peso": "Weight",
   "field.fechaCreacion": "Creation date",
   "field.esSeriada": "Is an edition",
@@ -344,8 +343,6 @@ export const en: Record<keyof typeof es, string> = {
   "fields.fotografia.fechaCaptura": "Capture date",
   "fields.fotografia.anioEdicion": "Edit year",
   "fields.fotografia.softwareEdicion": "Editing software",
-  "fields.fotografia.dimensiones": "Image size (mm)",
-  "fields.fotografia.escalaPorTamanosLabel": "Size scale",
   "fields.fotografia.datosCapturaLegend": "Capture data",
   "fields.fotografia.camaraLabel": "Camera",
   "fields.fotografia.isoLabel": "ISO",
@@ -722,6 +719,8 @@ export const en: Record<keyof typeof es, string> = {
   "filePathField.elegirArchivo": "Choose file…",
   "filePathField.ningunoSeleccionado": "No file selected",
   "filePathField.mostrarEnExplorador": "Show in file browser",
+  "filePathField.abrirEnLightroom":
+    "Open in Lightroom Classic (brings Lightroom to the front and, if the plug-in is installed, finds and selects this photo in the open catalog)",
   "filePathField.errorNoSePudoAbrir":
     "Couldn't show that file in the file browser. It may have been moved, renamed, or its folder may no longer be available.",
 
@@ -943,8 +942,6 @@ export const en: Record<keyof typeof es, string> = {
   "obraDetail.subtipoNoEditable": "Subtype: {{subtipo}} (not editable)",
   "obraDetail.tecnica": "Technique: {{valor}}",
   "obraDetail.soporte": "Support: {{valor}}",
-  "obraDetail.dimensiones": "Dimensions: {{valor}}",
-  "obraDetail.escalaPorTamanos": "Scales by size",
   "obraDetail.peso": "Weight: {{valor}}",
   "obraDetail.codigoInventario": "Inventory code / SKU: {{valor}}",
   "obraDetail.editarObra": "Edit artwork",
