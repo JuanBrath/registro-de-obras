@@ -17,9 +17,7 @@ export interface FotografiaFieldsState {
   fechaCaptura: string;
   anioEdicion: string;
   softwareEdicion: string;
-  dimensiones: string;
   tecnica: string;
-  escalaPorTamanos: string;
   esSeriada: boolean | null;
   serieProyecto: string;
   // Solo Analogica Clasica
@@ -65,9 +63,7 @@ export const initialFotografiaFieldsState: FotografiaFieldsState = {
   fechaCaptura: "",
   anioEdicion: "",
   softwareEdicion: "",
-  dimensiones: "",
   tecnica: "",
-  escalaPorTamanos: "",
   esSeriada: null,
   serieProyecto: "",
   clasificacionPositivado: "",
@@ -244,28 +240,6 @@ export function FotografiaFields({
           </div>
         </fieldset>
       )}
-
-      <label>
-        {t("fields.fotografia.dimensiones")} <HelpIcon fieldKey="dimensiones_fotografia" />
-        <input
-          type="text"
-          required={value.escalaPorTamanos === "No"}
-          value={value.dimensiones}
-          onChange={(e) => onChange({ ...value, dimensiones: e.target.value })}
-        />
-      </label>
-
-      <label>
-        {t("fields.fotografia.escalaPorTamanosLabel")} <HelpIcon fieldKey="escala_por_tamanos" />
-        <select
-          value={value.escalaPorTamanos}
-          onChange={(e) => onChange({ ...value, escalaPorTamanos: e.target.value })}
-        >
-          <option value="">—</option>
-          <option value="Si">{t("common.yes")}</option>
-          <option value="No">{t("common.no")}</option>
-        </select>
-      </label>
 
       <label>
         {t("field.tecnica")} <HelpIcon fieldKey="tecnica_fotografia" />

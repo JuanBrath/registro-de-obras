@@ -91,7 +91,6 @@ interface ObraExtRow {
   fecha_captura?: string | null;
   anio_edicion?: string | null;
   software_edicion?: string | null;
-  escala_por_tamanos?: string | null;
   serie_proyecto?: string | null;
   clasificacion_positivado?: string | null;
   proceso_quimico_analogica?: string | null;
@@ -127,7 +126,6 @@ interface ObraExtRow {
   tecnica_material?: string | null;
   soporte?: string | null;
   tecnica?: string | null;
-  dimensiones?: string | null;
   peso?: string | null;
   fecha_creacion?: string | null;
   materiales_mixtura?: string | null;
@@ -428,11 +426,6 @@ function buildObraDescripcionLineas(
     // captura/edicion, escala por tamaños, y todos los campos propios de
     // cada categoria: materiales, matriz, papel, etc.).
     incluirDetalleTecnico = true,
-    // Las dimensiones de la obra en general (ext.dimensiones) son un dato de
-    // referencia de la pieza; para el comprobante de venta lo que importa es
-    // el tamaño puntual de la copia vendida (obra.serie.dimensiones), asi
-    // que este se omite y el llamador agrega el de la serie aparte.
-    incluirDimensionesObra = true,
   } = {},
 ): string[] {
   // Los valores cargados en el sistema (categoria, subtipo, tecnica, estado,
@@ -466,7 +459,6 @@ function buildObraDescripcionLineas(
     lineas.push(t("obraDetail.soporte", { valor: tEs(`fields.pintura.soporte${ext.soporte}` as TranslationKey) }));
   }
   if (ext?.tecnica) lineas.push(t("obraDetail.tecnica", { valor: ext.tecnica }));
-  if (incluirDimensionesObra && ext?.dimensiones) lineas.push(t("obraDetail.dimensiones", { valor: ext.dimensiones }));
   if (ext?.peso) lineas.push(t("obraDetail.peso", { valor: ext.peso }));
   if (incluirDetalleTecnico && ext?.fecha_captura) {
     lineas.push(`${t("fields.fotografia.fechaCaptura")}: ${formatFechaDDMMYYYY(ext.fecha_captura)}`);
@@ -642,11 +634,6 @@ function buildObraDescripcionLineas(
   }
   if (incluirDetalleTecnico && obra.categoria_obra === "Fotografia") {
     if (ext?.serie_proyecto) lineas.push(`${t("fields.fotografia.serieProyectoLabel")}: ${ext.serie_proyecto}`);
-    if (ext?.escala_por_tamanos) {
-      lineas.push(
-        `${t("fields.fotografia.escalaPorTamanosLabel")}: ${ext.escala_por_tamanos === "Si" ? tEs("common.yes") : tEs("common.no")}`,
-      );
-    }
     if (ext?.subtipo_fotografia === "AnalogicaClasica") {
       if (ext?.clasificacion_positivado) {
         lineas.push(
@@ -874,8 +861,8 @@ export function ObraDetail({
       if (obraRow) {
         if (obraRow.categoria_obra === "Fotografia") {
           const rows = await context.db.query<ObraExtRow>(
-            `SELECT subtipo_fotografia, fecha_captura, anio_edicion, software_edicion, dimensiones, tecnica,
-                    escala_por_tamanos, serie_proyecto, clasificacion_positivado, proceso_quimico_analogica,
+            `SELECT subtipo_fotografia, fecha_captura, anio_edicion, software_edicion, tecnica,
+                    serie_proyecto, clasificacion_positivado, proceso_quimico_analogica,
                     viraje_conservacion, formato_negativo, estado_negativo, formato_archivo_maestro, espacio_color,
                     condiciones_custodia_archivo, proceso_quimico_historicos, preparacion_soporte, metales_sales,
                     pieza_unica_o_matriz, estructura_objeto, contenedor_estuche, incluye_copia_coleccionista,
@@ -888,7 +875,7 @@ export function ObraDetail({
           setExt(rows[0] ?? null);
         } else {
           const rows = await context.db.query<ObraExtRow>(
-            `SELECT subtipo, tecnica_material, soporte, tecnica, dimensiones, peso, fecha_creacion,
+            `SELECT subtipo, tecnica_material, soporte, tecnica, peso, fecha_creacion,
                     materiales_mixtura, tipo_bastidor, imprimacion_base, profundidad_relieve, configuracion_panel,
                     estabilidad_capas, barniz_proteccion, sensibilidad_ambiental, estado_cantos,
                     matriz_material, matriz_estado, papel_marca, papel_gramaje, papel_caracteristicas, editor_publicador,
@@ -1334,7 +1321,7 @@ export function ObraDetail({
           // los datos basicos de identificacion: sin fechas/detalle tecnico
           // de produccion ni etiquetas internas.
           ...(ventaInformeSeleccionId === "comprobante"
-            ? { incluirDetalleTecnico: false, incluirDatosTecnicosArchivo: false, incluirTags: false, incluirDimensionesObra: false }
+            ? { incluirDetalleTecnico: false, incluirDatosTecnicosArchivo: false, incluirTags: false }
             : {}),
         }),
         serie: {
@@ -1784,18 +1771,18 @@ export function ObraDetail({
       if (fields.categoria === "Fotografia") {
         const upsert = cambiaCategoria
           ? `INSERT INTO obra_fotografia (
-               obra_id, subtipo_fotografia, fecha_captura, anio_toma, anio_edicion, software_edicion, dimensiones,
-               tecnica, escala_por_tamanos, serie_proyecto, clasificacion_positivado, proceso_quimico_analogica,
+               obra_id, subtipo_fotografia, fecha_captura, anio_toma, anio_edicion, software_edicion,
+               tecnica, serie_proyecto, clasificacion_positivado, proceso_quimico_analogica,
                viraje_conservacion, formato_negativo, estado_negativo, formato_archivo_maestro, espacio_color,
                condiciones_custodia_archivo, proceso_quimico_historicos, preparacion_soporte, metales_sales,
                pieza_unica_o_matriz, estructura_objeto, contenedor_estuche, incluye_copia_coleccionista,
                detalle_copia_coleccionista, creditos_editoriales, isbn, colofon, camara, iso, velocidad_obturador,
                diafragma, distancia_focal, motor_ia, prompt_parametros,
                flujo_generativo, intervencion_postproduccion, soporte_salida, declaracion_derechos_ia
-             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
           : `UPDATE obra_fotografia SET
                subtipo_fotografia = ?, fecha_captura = ?, anio_toma = ?, anio_edicion = ?, software_edicion = ?,
-               dimensiones = ?, tecnica = ?, escala_por_tamanos = ?, serie_proyecto = ?,
+               tecnica = ?, serie_proyecto = ?,
                clasificacion_positivado = ?, proceso_quimico_analogica = ?, viraje_conservacion = ?,
                formato_negativo = ?, estado_negativo = ?, formato_archivo_maestro = ?, espacio_color = ?,
                condiciones_custodia_archivo = ?, proceso_quimico_historicos = ?, preparacion_soporte = ?,
@@ -1808,9 +1795,7 @@ export function ObraDetail({
         const softwareEdicion = esRegistroPersonal ? fields.ext.software_edicion || null : null;
         const anioToma = derivarAnioDesdeFecha(fields.ext.fecha_captura);
         const camposComunes = [
-          fields.ext.dimensiones || null,
           fields.ext.tecnica || null,
-          fields.ext.escala_por_tamanos || null,
           fields.ext.serie_proyecto || null,
           fields.ext.clasificacion_positivado || null,
           fields.ext.proceso_quimico_analogica || null,
@@ -1866,7 +1851,7 @@ export function ObraDetail({
       } else {
         const upsert = cambiaCategoria
           ? `INSERT INTO obra_detalle (
-               obra_id, subtipo, tecnica_material, soporte, tecnica, dimensiones, peso, fecha_creacion,
+               obra_id, subtipo, tecnica_material, soporte, tecnica, peso, fecha_creacion,
                materiales_mixtura, tipo_bastidor, imprimacion_base, profundidad_relieve, configuracion_panel,
                estabilidad_capas, barniz_proteccion, sensibilidad_ambiental, estado_cantos,
                matriz_material, matriz_estado, papel_marca, papel_gramaje, papel_caracteristicas, editor_publicador,
@@ -1878,9 +1863,9 @@ export function ObraDetail({
                derechos_exhibicion, duracion_loop, especificaciones_video, audio_canales,
                entorno_lenguaje, hardware_requerido, conectividad,
                dimensiones_espaciales, condiciones_iluminacion, acondicionamiento_acustico, equipamiento_exhibicion
-             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
           : `UPDATE obra_detalle SET
-               subtipo = ?, tecnica_material = ?, soporte = ?, tecnica = ?, dimensiones = ?, peso = ?,
+               subtipo = ?, tecnica_material = ?, soporte = ?, tecnica = ?, peso = ?,
                fecha_creacion = ?, materiales_mixtura = ?, tipo_bastidor = ?, imprimacion_base = ?,
                profundidad_relieve = ?, configuracion_panel = ?, estabilidad_capas = ?, barniz_proteccion = ?,
                sensibilidad_ambiental = ?, estado_cantos = ?, matriz_material = ?, matriz_estado = ?,
@@ -1902,7 +1887,6 @@ export function ObraDetail({
               fields.ext.tecnica_material || null,
               fields.ext.soporte || null,
               fields.ext.tecnica || null,
-              fields.ext.dimensiones || null,
               fields.ext.peso || null,
               fields.ext.fecha_creacion || null,
               fields.ext.materiales_mixtura || null,
@@ -1955,7 +1939,6 @@ export function ObraDetail({
               fields.ext.tecnica_material || null,
               fields.ext.soporte || null,
               fields.ext.tecnica || null,
-              fields.ext.dimensiones || null,
               fields.ext.peso || null,
               fields.ext.fecha_creacion || null,
               fields.ext.materiales_mixtura || null,
@@ -2232,7 +2215,6 @@ export function ObraDetail({
               <p>{t("obraDetail.soporte", { valor: t(`fields.pintura.soporte${ext.soporte}` as TranslationKey) })}</p>
             )}
             {ext?.tecnica && <p>{t("obraDetail.tecnica", { valor: ext.tecnica })}</p>}
-            {ext?.dimensiones && <p>{t("obraDetail.dimensiones", { valor: ext.dimensiones })}</p>}
             {ext?.peso && <p>{t("obraDetail.peso", { valor: ext.peso })}</p>}
             {obra.statement &&
               (() => {
@@ -2693,8 +2675,6 @@ function ObraEditForm({
     anioEdicion: ext?.anio_edicion ?? "",
     softwareEdicion: ext?.software_edicion ?? "",
     tecnica: ext?.tecnica ?? "",
-    dimensiones: ext?.dimensiones ?? "",
-    escalaPorTamanos: ext?.escala_por_tamanos ?? "",
     serieProyecto: ext?.serie_proyecto ?? "",
     clasificacionPositivado: (ext?.clasificacion_positivado ??
       "") as FotografiaFieldsState["clasificacionPositivado"],
@@ -2733,7 +2713,6 @@ function ObraEditForm({
     tecnicaMaterial: ext?.tecnica_material ?? "",
     soporte: ext?.soporte ?? "",
     tecnica: ext?.tecnica ?? "",
-    dimensiones: ext?.dimensiones ?? "",
     peso: ext?.peso ?? "",
     fechaCreacion: ext?.fecha_creacion ?? "",
     esSeriada: false,
@@ -3038,8 +3017,6 @@ function ObraEditForm({
                 anio_edicion: fotografia.anioEdicion,
                 software_edicion: fotografia.softwareEdicion,
                 tecnica: fotografia.tecnica,
-                dimensiones: fotografia.dimensiones,
-                escala_por_tamanos: fotografia.escalaPorTamanos,
                 serie_proyecto: fotografia.serieProyecto,
                 clasificacion_positivado: fotografia.clasificacionPositivado,
                 proceso_quimico_analogica: fotografia.procesoQuimicoAnalogica,
@@ -3077,7 +3054,6 @@ function ObraEditForm({
                 tecnica_material: obraDetalle.tecnicaMaterial,
                 soporte: obraDetalle.soporte,
                 tecnica: obraDetalle.tecnica,
-                dimensiones: obraDetalle.dimensiones,
                 peso: obraDetalle.peso,
                 fecha_creacion: obraDetalle.fechaCreacion,
                 materiales_mixtura: obraDetalle.materialesMixtura,

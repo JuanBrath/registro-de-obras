@@ -29,7 +29,6 @@ export interface ObraDetalle {
   /** Solo aplica a Pintura/TecnicasTradicionales: Lienzo, Lino, Tabla, Cobre o Aluminio. */
   soporte: string | null;
   tecnica: string | null;
-  dimensiones: string | null;
   peso: string | null;
   fechaCreacion: string | null;
   /** Los siguientes campos solo se muestran en la UI para categoria Pintura. */
@@ -93,7 +92,6 @@ export interface NuevaObraDetalle {
   tecnicaMaterial?: string | null;
   soporte?: string | null;
   tecnica?: string | null;
-  dimensiones?: string | null;
   peso?: string | null;
   fechaCreacion?: string | null;
   materialesMixtura?: string | null;

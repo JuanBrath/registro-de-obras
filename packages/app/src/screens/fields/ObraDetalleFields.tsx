@@ -13,7 +13,6 @@ export interface ObraDetalleFieldsState {
   /** Solo aplica a Pintura/TecnicasTradicionales: Lienzo, Lino, Tabla, Cobre o Aluminio. */
   soporte: string;
   tecnica: string;
-  dimensiones: string;
   peso: string;
   fechaCreacion: string;
   esSeriada: boolean | null;
@@ -78,7 +77,6 @@ export const initialObraDetalleFieldsState: ObraDetalleFieldsState = {
   tecnicaMaterial: "",
   soporte: "",
   tecnica: "",
-  dimensiones: "",
   peso: "",
   fechaCreacion: "",
   esSeriada: null,
@@ -292,15 +290,6 @@ export function ObraDetalleFields({
           />
         </label>
       )}
-
-      <label>
-        {t("field.dimensiones")}
-        <input
-          type="text"
-          value={value.dimensiones}
-          onChange={(e) => onChange({ ...value, dimensiones: e.target.value })}
-        />
-      </label>
 
       <label>
         {t("field.peso")}

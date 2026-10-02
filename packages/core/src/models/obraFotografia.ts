@@ -30,12 +30,8 @@ export interface ObraFotografia {
   velocidadObturador: string | null;
   diafragma: string | null;
   distanciaFocal: string | null;
-  /** Tamano de la imagen impresa, en milimetros (ej. "300 x 450 mm"). */
-  dimensiones: string | null;
   /** Tecnica utilizada (ej. "toma directa", "intervenida"). */
   tecnica: string | null;
-  /** Si la serie se divide en diferentes dimensiones ("Si"/"No"). */
-  escalaPorTamanos: string | null;
   /** Comun a todos los subtipos. */
   serieProyecto: string | null;
   /** Solo AnalogicaClasica. */
@@ -82,9 +78,7 @@ export interface NuevaObraFotografia {
   velocidadObturador?: string | null;
   diafragma?: string | null;
   distanciaFocal?: string | null;
-  dimensiones?: string | null;
   tecnica?: string | null;
-  escalaPorTamanos?: string | null;
   esSeriada: boolean;
   serieProyecto?: string | null;
   clasificacionPositivado?: ClasificacionPositivado | null;

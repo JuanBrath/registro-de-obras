@@ -207,6 +207,7 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
       "0082_ayuda_calificacion_jpeg_embebida",
       "0083_ayuda_prueba_artista_venta",
       "0084_ayuda_imagen_obra_2400",
+      "0085_dimensiones_solo_por_ejemplar",
     ]);
   });
 
@@ -324,7 +325,7 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
     expect(rows[0].texto_en).not.toContain("Personal Registry");
   });
 
-  it("0014 adds obra_fotografia.dimensiones without losing existing rows", async () => {
+  it("0014 adds obra_fotografia rows without losing existing rows (dimensiones, agregada por 0014, se saca de nuevo en 0085: ver ese test)", async () => {
     const db = adaptNodeSqlite(new DatabaseSync(":memory:"));
     await applyMigrations(db, ALL_MIGRATIONS.slice(0, 13)); // up to 0013_texto_ayuda_comision
 
@@ -340,20 +341,64 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
 
     await applyMigrations(db, ALL_MIGRATIONS);
 
-    const rows = await db.query<{ subtipo_fotografia: string; dimensiones: string | null }>(
-      "SELECT subtipo_fotografia, dimensiones FROM obra_fotografia",
-    );
-    expect(rows).toEqual([{ subtipo_fotografia: "DigitalFineArt", dimensiones: null }]);
+    const rows = await db.query<{ subtipo_fotografia: string }>("SELECT subtipo_fotografia FROM obra_fotografia");
+    expect(rows).toEqual([{ subtipo_fotografia: "DigitalFineArt" }]);
+  });
 
-    await db.execute("UPDATE obra_fotografia SET dimensiones = ? WHERE obra_id = ?", [
-      "300 x 450 mm",
-      obra.lastInsertId,
-    ]);
-    const updated = await db.query<{ dimensiones: string | null }>(
-      "SELECT dimensiones FROM obra_fotografia WHERE obra_id = ?",
-      [obra.lastInsertId],
+  it("0085 copia dimensiones (obra_fotografia/obra_detalle) al ejemplar si este todavia no tiene nada, y saca las columnas de arriba", async () => {
+    const db = adaptNodeSqlite(new DatabaseSync(":memory:"));
+    await applyMigrations(db, ALL_MIGRATIONS.slice(0, 84)); // up to 0084_ayuda_imagen_obra_2400
+
+    await db.execute("INSERT INTO artista (nombre_completo, es_propio) VALUES (?, ?)", ["Juan Brath", 1]);
+
+    // Fotografia unica: dimensiones puesta arriba (obra_fotografia), el ejemplar (backfill de 0015) todavia vacio.
+    const obraFoto = await db.execute(
+      `INSERT INTO obra (titulo, categoria_obra, artista_id, es_seriada) VALUES (?, ?, ?, ?)`,
+      ["Camino al cielo", "Fotografia", 1, 0],
     );
-    expect(updated).toEqual([{ dimensiones: "300 x 450 mm" }]);
+    await db.execute(`INSERT INTO obra_fotografia (obra_id, subtipo_fotografia, dimensiones) VALUES (?, ?, ?)`, [
+      obraFoto.lastInsertId,
+      "DigitalFineArt",
+      "300 x 450 mm",
+    ]);
+    // El backfill de ejemplares (0015) ya corrio para las obras que existian EN ESE momento: una obra
+    // insertada ahora (a mano, por el test) necesita su propio ejemplar, igual que haria la app.
+    await db.execute(
+      `INSERT INTO ejemplar (obra_id, tipo, indice, total_ediciones, numero) VALUES (?, 'edicion', 1, 1, '1/1')`,
+      [obraFoto.lastInsertId],
+    );
+
+    // Escultura: dimensiones puesta arriba (obra_detalle), pero el ejemplar YA tiene la suya propia -> no se pisa.
+    const obraEsc = await db.execute(
+      `INSERT INTO obra (titulo, categoria_obra, artista_id, es_seriada) VALUES (?, ?, ?, ?)`,
+      ["Figura en bronce", "Escultura", 1, 0],
+    );
+    await db.execute(`INSERT INTO obra_detalle (obra_id, dimensiones) VALUES (?, ?)`, [
+      obraEsc.lastInsertId,
+      "40 x 20 x 20 cm",
+    ]);
+    await db.execute(
+      `INSERT INTO ejemplar (obra_id, tipo, indice, total_ediciones, numero, dimensiones) VALUES (?, 'edicion', 1, 1, '1/1', ?)`,
+      [obraEsc.lastInsertId, "ya cargado a mano"],
+    );
+
+    await applyMigrations(db, ALL_MIGRATIONS);
+
+    const ejemplarFoto = await db.query<{ dimensiones: string | null }>(
+      "SELECT dimensiones FROM ejemplar WHERE obra_id = ?",
+      [obraFoto.lastInsertId],
+    );
+    expect(ejemplarFoto).toEqual([{ dimensiones: "300 x 450 mm" }]);
+
+    const ejemplarEsc = await db.query<{ dimensiones: string | null }>(
+      "SELECT dimensiones FROM ejemplar WHERE obra_id = ?",
+      [obraEsc.lastInsertId],
+    );
+    expect(ejemplarEsc).toEqual([{ dimensiones: "ya cargado a mano" }]);
+
+    await expect(db.query("SELECT dimensiones FROM obra_fotografia")).rejects.toThrow();
+    await expect(db.query("SELECT dimensiones FROM obra_detalle")).rejects.toThrow();
+    await expect(db.query("SELECT escala_por_tamanos FROM obra_fotografia")).rejects.toThrow();
   });
 
   it("0015 backfills a 1/1 ejemplar for existing non-seriada obras and re-points their direct venta", async () => {
