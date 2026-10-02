@@ -1,7 +1,8 @@
 -- Tarea en segundo plano: mientras Lightroom Classic esta abierto, revisa cada tanto si Galeris
 -- Studio dejo un pedido de abrir una foto (boton "Abrir en Lightroom" de una obra) y, si la encuentra
--- en el catalogo actual, la selecciona y pasa a la Biblioteca. Si no la encuentra (se movio de
--- carpeta, o es de otro catalogo), avisa con un cartel en vez de quedarse sin hacer nada.
+-- en el catalogo actual, pasa a la Biblioteca, cambia a la carpeta de esa foto (si no, la seleccion
+-- no se ve aunque se haya hecho) y la selecciona. Si no la encuentra (se movio de carpeta, o es de
+-- otro catalogo), avisa con un cartel en vez de quedarse sin hacer nada.
 --
 -- Arranca solo: Info.lua lo registra como LrInitPlugin (mas LrForceInitPlugin, ya que el complemento
 -- aporta un item de menu), asi que Lightroom lo ejecuta al cargar el complemento — al abrir Lightroom,
@@ -36,8 +37,12 @@ local function revisarPedido(carpeta)
     return
   end
 
-  catalogo:setSelectedPhotos(foto, {})
+  -- No alcanza con seleccionarla: Lightroom solo muestra la seleccion si la foto es parte de lo que
+  -- ya esta mostrando la grilla (carpeta, coleccion o filtro actual). Por eso primero se cambia la
+  -- fuente a la carpeta de la foto, asi queda visible sin importar que se estuviera mirando antes.
   LrApplicationView.switchToModule('library')
+  catalogo:setActiveSources(foto:getRawMetadata('folder'))
+  catalogo:setSelectedPhotos(foto, {})
 end
 
 LrTasks.startAsyncTask(function()
