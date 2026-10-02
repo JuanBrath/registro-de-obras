@@ -209,6 +209,7 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
       "0084_ayuda_imagen_obra_2400",
       "0085_dimensiones_solo_por_ejemplar",
       "0086_dimensiones_obra_vuelve_si_es_seriada",
+      "0087_limpiar_dimensiones_ejemplar_series",
     ]);
   });
 
@@ -436,6 +437,52 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
       [obra.lastInsertId],
     );
     expect(updated).toEqual([{ dimensiones: "300 x 450 mm", escala_por_tamanos: "No" }]);
+  });
+
+  it("0087 borra dimensiones de cada ejemplar en obras SERIADAS (quedo repetida en todas por 0085), pero no en obras unicas", async () => {
+    const db = adaptNodeSqlite(new DatabaseSync(":memory:"));
+    await applyMigrations(db, ALL_MIGRATIONS.slice(0, 86)); // up to 0086_dimensiones_obra_vuelve_si_es_seriada
+
+    await db.execute("INSERT INTO artista (nombre_completo, es_propio) VALUES (?, ?)", ["Juan Brath", 1]);
+
+    // Obra seriada: dos ejemplares con el MISMO valor (asi quedaba despues de 0085, heredado del
+    // tamano general de la obra) -> se tienen que borrar los dos.
+    const obraSeriada = await db.execute(
+      `INSERT INTO obra (titulo, categoria_obra, artista_id, es_seriada) VALUES (?, ?, ?, ?)`,
+      ["Edicion de 2", "Fotografia", 1, 1],
+    );
+    await db.execute(
+      `INSERT INTO ejemplar (obra_id, tipo, indice, total_ediciones, numero, dimensiones) VALUES (?, 'edicion', 1, 2, '1/2', ?)`,
+      [obraSeriada.lastInsertId, "300 x 450 mm"],
+    );
+    await db.execute(
+      `INSERT INTO ejemplar (obra_id, tipo, indice, total_ediciones, numero, dimensiones) VALUES (?, 'edicion', 2, 2, '2/2', ?)`,
+      [obraSeriada.lastInsertId, "300 x 450 mm"],
+    );
+
+    // Obra unica: su unico ejemplar SI tiene que conservar el dato (ahi es el unico lugar donde vive).
+    const obraUnica = await db.execute(
+      `INSERT INTO obra (titulo, categoria_obra, artista_id, es_seriada) VALUES (?, ?, ?, ?)`,
+      ["Pieza unica", "Fotografia", 1, 0],
+    );
+    await db.execute(
+      `INSERT INTO ejemplar (obra_id, tipo, indice, total_ediciones, numero, dimensiones) VALUES (?, 'edicion', 1, 1, '1/1', ?)`,
+      [obraUnica.lastInsertId, "40 x 60 cm"],
+    );
+
+    await applyMigrations(db, ALL_MIGRATIONS);
+
+    const ejemplaresSeriada = await db.query<{ dimensiones: string | null }>(
+      "SELECT dimensiones FROM ejemplar WHERE obra_id = ? ORDER BY indice",
+      [obraSeriada.lastInsertId],
+    );
+    expect(ejemplaresSeriada).toEqual([{ dimensiones: null }, { dimensiones: null }]);
+
+    const ejemplarUnico = await db.query<{ dimensiones: string | null }>(
+      "SELECT dimensiones FROM ejemplar WHERE obra_id = ?",
+      [obraUnica.lastInsertId],
+    );
+    expect(ejemplarUnico).toEqual([{ dimensiones: "40 x 60 cm" }]);
   });
 
   it("0015 backfills a 1/1 ejemplar for existing non-seriada obras and re-points their direct venta", async () => {
