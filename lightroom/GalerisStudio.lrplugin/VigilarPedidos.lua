@@ -40,8 +40,13 @@ local function revisarPedido(carpeta)
   -- No alcanza con seleccionarla: Lightroom solo muestra la seleccion si la foto es parte de lo que
   -- ya esta mostrando la grilla (carpeta, coleccion o filtro actual). Por eso primero se cambia la
   -- fuente a la carpeta de la foto, asi queda visible sin importar que se estuviera mirando antes.
+  -- LrPhoto no tiene una clave de metadata 'folder' (eso fallaba en silencio, atajado por el pcall de
+  -- mas abajo); la carpeta se consigue a partir de la ruta con getFolderByPath, como documenta el SDK.
   LrApplicationView.switchToModule('library')
-  catalogo:setActiveSources(foto:getRawMetadata('folder'))
+  local fotoCarpeta = catalogo:getFolderByPath(LrPathUtils.parent(ruta))
+  if fotoCarpeta then
+    catalogo:setActiveSources({ fotoCarpeta })
+  end
   catalogo:setSelectedPhotos(foto, {})
 end
 
