@@ -106,6 +106,7 @@ export const es = {
   // Campos comunes de categoría
   "field.subtipo": "Subtipo",
   "field.tecnica": "Técnica",
+  "field.dimensiones": "Dimensiones",
   "field.peso": "Peso",
   "field.fechaCreacion": "Fecha de creación",
   "field.esSeriada": "Es seriada",
@@ -350,6 +351,8 @@ export const es = {
   "fields.fotografia.notaSintografia":
     "Sin EXIF ni datos de herramienta de IA. Al pie del certificado va la leyenda \"SIN COPYRIGHT\", en lugar del copyright.",
   "fields.fotografia.serieProyectoLabel": "Serie o proyecto",
+  "fields.fotografia.dimensiones": "Tamaño de la imagen (mm)",
+  "fields.fotografia.escalaPorTamanosLabel": "Escala por tamaños",
   "fields.fotografia.rigurosaAnalogicaLegend": "Ficha rigurosa — Fotografía analógica clásica",
   "fields.fotografia.clasificacionPositivadoLabel": "Clasificación temporal del positivado",
   "fields.fotografia.clasificacionPositivadoVintage": "Vintage print",
@@ -940,6 +943,8 @@ export const es = {
   "obraDetail.subtipoNoEditable": "Subtipo: {{subtipo}} (no editable)",
   "obraDetail.tecnica": "Técnica: {{valor}}",
   "obraDetail.soporte": "Soporte: {{valor}}",
+  "obraDetail.dimensiones": "Dimensiones: {{valor}}",
+  "obraDetail.escalaPorTamanos": "Escala por tamaños",
   "obraDetail.peso": "Peso: {{valor}}",
   "obraDetail.codigoInventario": "Código de inventario / SKU: {{valor}}",
   "obraDetail.editarObra": "Editar obra",

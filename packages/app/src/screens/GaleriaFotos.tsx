@@ -47,6 +47,8 @@ interface FotoRow {
   subtipo_fotografia: string | null;
   subtipo: string | null;
   fecha_captura: string | null;
+  dimensiones: string | null;
+  escala_por_tamanos: string | null;
   calificacion: number;
   ubicacion_fisica_actual: string | null;
   estado: string;
@@ -72,6 +74,7 @@ const FOTOS_QUERY_SELECT = `
          obra.categoria_obra, obra.calificacion, obra.ubicacion_fisica_actual, obra.estado, obra.es_seriada, artista.nombre_completo,
          obra_fotografia.subtipo_fotografia, obra_detalle.subtipo,
          obra_fotografia.fecha_captura,
+         obra_fotografia.dimensiones, obra_fotografia.escala_por_tamanos,
          COUNT(CASE WHEN ejemplar.tipo = 'edicion' THEN ejemplar.id END) as total_ejemplares,
          SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'disponible' THEN 1 ELSE 0 END) as ejemplares_disponible,
          SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'en_stock' THEN 1 ELSE 0 END) as ejemplares_en_stock,
@@ -632,6 +635,14 @@ export function GaleriaFotos({
               {" — "}
               {Number(filteredFotos[lightboxIndex].es_seriada) === 1 ? t("obrasList.seriada") : t("obrasList.unica")}
             </span>
+            {Number(filteredFotos[lightboxIndex].es_seriada) === 1 && filteredFotos[lightboxIndex].escala_por_tamanos === "Si" && (
+              <span>{t("obraDetail.escalaPorTamanos")}</span>
+            )}
+            {Number(filteredFotos[lightboxIndex].es_seriada) === 1 &&
+              filteredFotos[lightboxIndex].escala_por_tamanos !== "Si" &&
+              filteredFotos[lightboxIndex].dimensiones && (
+                <span>{t("obraDetail.dimensiones", { valor: filteredFotos[lightboxIndex].dimensiones! })}</span>
+              )}
             {Number(filteredFotos[lightboxIndex].es_seriada) === 1 ? (
               (() => {
                 const foto = filteredFotos[lightboxIndex];

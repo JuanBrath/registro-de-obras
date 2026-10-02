@@ -316,7 +316,7 @@ export function ObraForm({
           await tx.execute(
             `INSERT INTO obra_fotografia (
                obra_id, subtipo_fotografia, fecha_captura, anio_toma, anio_edicion, software_edicion,
-               tecnica, serie_proyecto, clasificacion_positivado, proceso_quimico_analogica,
+               tecnica, dimensiones, escala_por_tamanos, serie_proyecto, clasificacion_positivado, proceso_quimico_analogica,
                viraje_conservacion, formato_negativo, estado_negativo, formato_archivo_maestro, espacio_color,
                condiciones_custodia_archivo, proceso_quimico_historicos, preparacion_soporte, metales_sales,
                pieza_unica_o_matriz, estructura_objeto, contenedor_estuche, incluye_copia_coleccionista,
@@ -324,7 +324,7 @@ export function ObraForm({
                diafragma, distancia_focal, motor_ia, prompt_parametros,
                flujo_generativo, intervencion_postproduccion, soporte_salida, declaracion_derechos_ia
              )
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               id,
               fotografia.subtipoFotografia,
@@ -333,6 +333,8 @@ export function ObraForm({
               fotografia.anioEdicion || null,
               fotografia.softwareEdicion || null,
               fotografia.tecnica || null,
+              fotografia.dimensiones || null,
+              fotografia.escalaPorTamanos || null,
               fotografia.serieProyecto || null,
               fotografia.clasificacionPositivado || null,
               fotografia.procesoQuimicoAnalogica || null,
@@ -369,7 +371,7 @@ export function ObraForm({
         } else {
           await tx.execute(
             `INSERT INTO obra_detalle (
-               obra_id, subtipo, tecnica_material, soporte, tecnica, peso, fecha_creacion,
+               obra_id, subtipo, tecnica_material, soporte, tecnica, dimensiones, peso, fecha_creacion,
                materiales_mixtura, tipo_bastidor, imprimacion_base, profundidad_relieve, configuracion_panel,
                estabilidad_capas, barniz_proteccion, sensibilidad_ambiental, estado_cantos,
                matriz_material, matriz_estado, papel_marca, papel_gramaje, papel_caracteristicas, editor_publicador,
@@ -382,13 +384,14 @@ export function ObraForm({
                entorno_lenguaje, hardware_requerido, conectividad,
                dimensiones_espaciales, condiciones_iluminacion, acondicionamiento_acustico, equipamiento_exhibicion
              )
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               id,
               obraDetalle.subtipo || null,
               obraDetalle.tecnicaMaterial || null,
               obraDetalle.soporte || null,
               obraDetalle.tecnica || null,
+              obraDetalle.dimensiones || null,
               obraDetalle.peso || null,
               obraDetalle.fechaCreacion || null,
               obraDetalle.materialesMixtura || null,
@@ -755,6 +758,43 @@ export function ObraForm({
                 min={1}
                 value={cantidadTotalEdiciones}
                 onChange={(e) => setCantidadTotalEdiciones(e.target.value)}
+              />
+            </label>
+          )}
+
+          {/* Tamaño de referencia de la edicion: solo tiene sentido si es seriada (una obra unica ya
+              tiene el tamaño de su unico ejemplar, mas abajo). En Fotografia se pregunta antes si la
+              edicion es uniforme en tamaño. */}
+          {esSeriada === true && categoria === "Fotografia" && (
+            <label>
+              {t("fields.fotografia.escalaPorTamanosLabel")} <HelpIcon fieldKey="escala_por_tamanos" />
+              <select
+                value={fotografia.escalaPorTamanos}
+                onChange={(e) => setFotografia((prev) => ({ ...prev, escalaPorTamanos: e.target.value }))}
+              >
+                <option value="">—</option>
+                <option value="Si">{t("common.yes")}</option>
+                <option value="No">{t("common.no")}</option>
+              </select>
+            </label>
+          )}
+          {esSeriada === true && categoria === "Fotografia" && fotografia.escalaPorTamanos === "No" && (
+            <label>
+              {t("fields.fotografia.dimensiones")} <HelpIcon fieldKey="dimensiones_fotografia" />
+              <input
+                type="text"
+                value={fotografia.dimensiones}
+                onChange={(e) => setFotografia((prev) => ({ ...prev, dimensiones: e.target.value }))}
+              />
+            </label>
+          )}
+          {esSeriada === true && categoria && categoria !== "Fotografia" && (
+            <label>
+              {t("field.dimensiones")}
+              <input
+                type="text"
+                value={obraDetalle.dimensiones}
+                onChange={(e) => setObraDetalle((prev) => ({ ...prev, dimensiones: e.target.value }))}
               />
             </label>
           )}

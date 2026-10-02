@@ -18,6 +18,9 @@ export interface FotografiaFieldsState {
   anioEdicion: string;
   softwareEdicion: string;
   tecnica: string;
+  /** Tamano de referencia de la edicion. Solo se muestra/pregunta cuando esSeriada es true (ver ObraForm/ObraDetail, despues de la pregunta "Es seriada"). */
+  dimensiones: string;
+  escalaPorTamanos: string;
   esSeriada: boolean | null;
   serieProyecto: string;
   // Solo Analogica Clasica
@@ -64,6 +67,8 @@ export const initialFotografiaFieldsState: FotografiaFieldsState = {
   anioEdicion: "",
   softwareEdicion: "",
   tecnica: "",
+  dimensiones: "",
+  escalaPorTamanos: "",
   esSeriada: null,
   serieProyecto: "",
   clasificacionPositivado: "",

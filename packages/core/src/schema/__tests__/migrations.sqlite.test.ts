@@ -208,6 +208,7 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
       "0083_ayuda_prueba_artista_venta",
       "0084_ayuda_imagen_obra_2400",
       "0085_dimensiones_solo_por_ejemplar",
+      "0086_dimensiones_obra_vuelve_si_es_seriada",
     ]);
   });
 
@@ -382,7 +383,9 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
       [obraEsc.lastInsertId, "ya cargado a mano"],
     );
 
-    await applyMigrations(db, ALL_MIGRATIONS);
+    // Solo 0085 (no toda ALL_MIGRATIONS): 0086 vuelve a agregar las columnas despues, y eso se
+    // prueba aparte mas abajo — aca interesa el estado justo depues de sacarlas.
+    await applyMigrations(db, ALL_MIGRATIONS.slice(0, 85));
 
     const ejemplarFoto = await db.query<{ dimensiones: string | null }>(
       "SELECT dimensiones FROM ejemplar WHERE obra_id = ?",
@@ -399,6 +402,40 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
     await expect(db.query("SELECT dimensiones FROM obra_fotografia")).rejects.toThrow();
     await expect(db.query("SELECT dimensiones FROM obra_detalle")).rejects.toThrow();
     await expect(db.query("SELECT escala_por_tamanos FROM obra_fotografia")).rejects.toThrow();
+  });
+
+  it("0086 vuelve a agregar dimensiones/escala_por_tamanos a nivel obra, vacias (sin restaurar nada)", async () => {
+    const db = adaptNodeSqlite(new DatabaseSync(":memory:"));
+    await applyMigrations(db, ALL_MIGRATIONS.slice(0, 85)); // up to 0085_dimensiones_solo_por_ejemplar
+
+    await db.execute("INSERT INTO artista (nombre_completo, es_propio) VALUES (?, ?)", ["Juan Brath", 1]);
+    const obra = await db.execute(
+      `INSERT INTO obra (titulo, categoria_obra, artista_id, es_seriada) VALUES (?, ?, ?, ?)`,
+      ["Camino al cielo", "Fotografia", 1, 1],
+    );
+    await db.execute(`INSERT INTO obra_fotografia (obra_id, subtipo_fotografia) VALUES (?, ?)`, [
+      obra.lastInsertId,
+      "DigitalFineArt",
+    ]);
+
+    await applyMigrations(db, ALL_MIGRATIONS);
+
+    const rows = await db.query<{ dimensiones: string | null; escala_por_tamanos: string | null }>(
+      "SELECT dimensiones, escala_por_tamanos FROM obra_fotografia WHERE obra_id = ?",
+      [obra.lastInsertId],
+    );
+    expect(rows).toEqual([{ dimensiones: null, escala_por_tamanos: null }]);
+
+    await db.execute("UPDATE obra_fotografia SET dimensiones = ?, escala_por_tamanos = ? WHERE obra_id = ?", [
+      "300 x 450 mm",
+      "No",
+      obra.lastInsertId,
+    ]);
+    const updated = await db.query<{ dimensiones: string | null; escala_por_tamanos: string | null }>(
+      "SELECT dimensiones, escala_por_tamanos FROM obra_fotografia WHERE obra_id = ?",
+      [obra.lastInsertId],
+    );
+    expect(updated).toEqual([{ dimensiones: "300 x 450 mm", escala_por_tamanos: "No" }]);
   });
 
   it("0015 backfills a 1/1 ejemplar for existing non-seriada obras and re-points their direct venta", async () => {

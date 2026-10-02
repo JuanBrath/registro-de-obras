@@ -82,6 +82,7 @@ import { migration0082AyudaCalificacionJpegEmbebida } from "./0082_ayuda_calific
 import { migration0083AyudaPruebaArtistaVenta } from "./0083_ayuda_prueba_artista_venta.js";
 import { migration0084AyudaImagenObra2400 } from "./0084_ayuda_imagen_obra_2400.js";
 import { migration0085DimensionesSoloPorEjemplar } from "./0085_dimensiones_solo_por_ejemplar.js";
+import { migration0086DimensionesObraVuelveSiEsSeriada } from "./0086_dimensiones_obra_vuelve_si_es_seriada.js";
 
 export interface Migration {
   name: string;
@@ -295,4 +296,5 @@ export const ALL_MIGRATIONS: Migration[] = [
   migration0083AyudaPruebaArtistaVenta,
   migration0084AyudaImagenObra2400,
   migration0085DimensionesSoloPorEjemplar,
+  migration0086DimensionesObraVuelveSiEsSeriada,
 ];

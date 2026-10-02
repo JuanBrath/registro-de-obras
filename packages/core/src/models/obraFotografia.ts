@@ -32,6 +32,10 @@ export interface ObraFotografia {
   distanciaFocal: string | null;
   /** Tecnica utilizada (ej. "toma directa", "intervenida"). */
   tecnica: string | null;
+  /** Tamano de referencia de la edicion, en milimetros (ej. "300 x 450 mm"). Solo tiene sentido si la obra es seriada: para una obra unica alcanza con el tamano de su unico ejemplar. */
+  dimensiones: string | null;
+  /** Si la edicion se divide en diferentes dimensiones ("Si"/"No"). Solo aplica si la obra es seriada. */
+  escalaPorTamanos: string | null;
   /** Comun a todos los subtipos. */
   serieProyecto: string | null;
   /** Solo AnalogicaClasica. */
@@ -79,6 +83,8 @@ export interface NuevaObraFotografia {
   diafragma?: string | null;
   distanciaFocal?: string | null;
   tecnica?: string | null;
+  dimensiones?: string | null;
+  escalaPorTamanos?: string | null;
   esSeriada: boolean;
   serieProyecto?: string | null;
   clasificacionPositivado?: ClasificacionPositivado | null;

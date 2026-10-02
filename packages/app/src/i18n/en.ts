@@ -108,6 +108,7 @@ export const en: Record<keyof typeof es, string> = {
   // Shared category fields
   "field.subtipo": "Subtype",
   "field.tecnica": "Technique",
+  "field.dimensiones": "Dimensions",
   "field.peso": "Weight",
   "field.fechaCreacion": "Creation date",
   "field.esSeriada": "Is an edition",
@@ -352,6 +353,8 @@ export const en: Record<keyof typeof es, string> = {
   "fields.fotografia.notaSintografia":
     "No EXIF or AI tool data. The footer of the certificate reads \"NO COPYRIGHT\" instead of the copyright.",
   "fields.fotografia.serieProyectoLabel": "Series or project",
+  "fields.fotografia.dimensiones": "Image size (mm)",
+  "fields.fotografia.escalaPorTamanosLabel": "Size scale",
   "fields.fotografia.rigurosaAnalogicaLegend": "Rigorous record — Classic analog photography",
   "fields.fotografia.clasificacionPositivadoLabel": "Temporal classification of the print",
   "fields.fotografia.clasificacionPositivadoVintage": "Vintage print",
@@ -942,6 +945,8 @@ export const en: Record<keyof typeof es, string> = {
   "obraDetail.subtipoNoEditable": "Subtype: {{subtipo}} (not editable)",
   "obraDetail.tecnica": "Technique: {{valor}}",
   "obraDetail.soporte": "Support: {{valor}}",
+  "obraDetail.dimensiones": "Dimensions: {{valor}}",
+  "obraDetail.escalaPorTamanos": "Scales by size",
   "obraDetail.peso": "Weight: {{valor}}",
   "obraDetail.codigoInventario": "Inventory code / SKU: {{valor}}",
   "obraDetail.editarObra": "Edit artwork",

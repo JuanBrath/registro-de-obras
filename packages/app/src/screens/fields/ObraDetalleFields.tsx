@@ -13,6 +13,8 @@ export interface ObraDetalleFieldsState {
   /** Solo aplica a Pintura/TecnicasTradicionales: Lienzo, Lino, Tabla, Cobre o Aluminio. */
   soporte: string;
   tecnica: string;
+  /** Tamano de referencia de la edicion. Solo se muestra/pregunta cuando esSeriada es true (ver ObraForm/ObraDetail, despues de la pregunta "Es seriada"). */
+  dimensiones: string;
   peso: string;
   fechaCreacion: string;
   esSeriada: boolean | null;
@@ -77,6 +79,7 @@ export const initialObraDetalleFieldsState: ObraDetalleFieldsState = {
   tecnicaMaterial: "",
   soporte: "",
   tecnica: "",
+  dimensiones: "",
   peso: "",
   fechaCreacion: "",
   esSeriada: null,

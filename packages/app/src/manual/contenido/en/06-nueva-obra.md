@@ -57,7 +57,8 @@ In **Tags** choose an existing one or type a new one. Tags belong to Galeris: th
 
 1. Under **Is an edition** choose **Unique artwork** or **Edition artwork**. (In Graphic Work this is decided automatically by the subtype: for example, the monotype is unique and the other techniques are editions.)
 2. If it's an edition, fill in the **Total edition size**. The program automatically creates the numbered copies 1/N, 2/N… N/N.
-3. Tick **Any artist's proofs?** if it applies and enter the **Number of artist's proofs**. Artist's proofs (AP) sit outside the commercial numbering. The usual rule is 10% of the edition, rounded up: for 7 pieces that's 1 AP and for 25 pieces, 3 AP. If you enter more than that, the program shows a warning. By convention APs are not sold. See [Copies and statuses](cap:copias).
+3. Only for editions, the edition's reference size appears: in Photography, first **Size scale** (if the edition is split into different sizes, it is recorded here; if you choose **No**, fill in the **Image size (mm)**); in the other categories, **Dimensions** directly. A unique artwork doesn't need this: the size of its single copy, filled in on the next step, is enough.
+4. Tick **Any artist's proofs?** if it applies and enter the **Number of artist's proofs**. Artist's proofs (AP) sit outside the commercial numbering. The usual rule is 10% of the edition, rounded up: for 7 pieces that's 1 AP and for 25 pieces, 3 AP. If you enter more than that, the program shows a warning. By convention APs are not sold. See [Copies and statuses](cap:copias).
 
 A unique artwork is, internally, an edition of a single copy.
 

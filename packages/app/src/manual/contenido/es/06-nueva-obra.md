@@ -57,7 +57,8 @@ En **Etiquetas** elegí una existente o escribí una nueva. Las etiquetas son pr
 
 1. En **Es seriada** elegí **Obra única** o **Obra seriada**. (En Obra Gráfica esto se decide solo según el subtipo: por ejemplo, el monotipo es único y las demás técnicas son seriadas.)
 2. Si es seriada, completá la **Cantidad total de ediciones**. El programa crea automáticamente las copias numeradas 1/N, 2/N… N/N.
-3. Tildá **¿Hay prueba de autor?** si corresponde y poné la **Cantidad de pruebas de autor**. Las pruebas de autor (PA) van fuera de la numeración comercial. La regla habitual es el 10 % de la edición, redondeado hacia arriba: para 7 obras corresponde 1 PA y para 25 obras, 3 PA. Si ponés más que eso, el programa muestra una advertencia. Por convención las PA no se venden. Ver [Copias y estados](cap:copias).
+3. Solo si es seriada aparece el tamaño de referencia de la edición: en Fotografía, primero **Escala por tamaños** (si la edición se divide en distintos tamaños, se deja constancia acá; si elegís **No**, completá el **Tamaño de la imagen (mm)**); en las demás categorías, directamente **Dimensiones**. Para una obra única no hace falta: alcanza con el tamaño de su única copia, que se completa en el paso siguiente.
+4. Tildá **¿Hay prueba de autor?** si corresponde y poné la **Cantidad de pruebas de autor**. Las pruebas de autor (PA) van fuera de la numeración comercial. La regla habitual es el 10 % de la edición, redondeado hacia arriba: para 7 obras corresponde 1 PA y para 25 obras, 3 PA. Si ponés más que eso, el programa muestra una advertencia. Por convención las PA no se venden. Ver [Copias y estados](cap:copias).
 
 Una obra única es, por dentro, una serie de una sola copia.
 
