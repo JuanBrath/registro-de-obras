@@ -1,6 +1,7 @@
 mod db_commands;
 mod fs_commands;
 pub mod imagen;
+mod licencia;
 mod lightroom;
 mod menu;
 
@@ -41,6 +42,7 @@ pub fn run() {
       lightroom::leer_imagen_envio_lightroom,
       lightroom::borrar_envio_lightroom,
       lightroom::pedir_abrir_en_lightroom,
+      licencia::validar_licencia,
       imagen::convertir_imagen_a_jpeg,
       imagen::leer_archivo_crudo,
     ])

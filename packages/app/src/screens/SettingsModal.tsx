@@ -9,6 +9,7 @@ import { useWorkspace } from "../state/WorkspaceContext.js";
 import { useEdicion } from "../state/EdicionContext.js";
 import { isTauri } from "../adapters/detectPlatform.js";
 import { LightroomSettings } from "../components/LightroomSettings.js";
+import { LicenciaSettings } from "../components/LicenciaSettings.js";
 
 /**
  * En macOS, copiar a un disco externo (o a otras carpetas protegidas) puede
@@ -218,6 +219,8 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
   return (
     <Modal onClose={bloqueaCierre ? () => {} : onClose}>
       <h2>{t("settings.title")}</h2>
+      <LicenciaSettings />
+
       <fieldset className="settings-idioma-fieldset">
         <legend>{t("settings.idioma")}</legend>
         <label>

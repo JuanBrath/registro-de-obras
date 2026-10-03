@@ -24,6 +24,8 @@ export const es = {
   "common.consultar": "Consultar",
   "common.close": "Cerrar",
   "common.verCompleto": "Ver completo",
+  "common.maximizar": "Maximizar",
+  "common.restaurarTamano": "Restaurar tamaño",
   "common.remove": "Quitar",
   "common.abrirEnlace": "Abrir enlace",
   "common.settings": "Configuración",
@@ -116,6 +118,10 @@ export const es = {
   "workspacePicker.galeria": "Galeris Space",
   "workspacePicker.opening": "Abriendo registro…",
 
+  // ActivarLicencia
+  "activarLicencia.titulo": "Activar licencia",
+  "activarLicencia.ayuda": "Para usar Galeris hace falta una licencia activa. Elegí el archivo de licencia que recibiste al comprarla.",
+
   // WorkspaceHome
   "workspaceHome.titular": "Titular: {{nombre}}",
   "workspaceHome.miPerfil": "Mi perfil (titular)",
@@ -202,6 +208,10 @@ export const es = {
   "ventasReport.margenLabel": "Margen",
   "ventasReport.resumenPorArtistaTitulo": "Resumen por artista",
   "ventasReport.resumenPorTecnicaTitulo": "Resumen por técnica",
+  "ventasReport.todosLosEstadosLiquidacion": "Todos",
+  "ventasReport.resumenLiquidacionPorArtistaTitulo": "Liquidación a artistas",
+  "ventasReport.pendienteLiquidarLabel": "Pendiente de liquidar",
+  "ventasReport.yaLiquidadoLabel": "Ya liquidado",
   "ventasReport.antiguedadInventarioTitulo": "Antigüedad promedio de inventario",
   "ventasReport.antiguedadInventarioValor": "{{dias}} días en promedio (obras disponibles/en stock)",
   "ventasReport.antiguedadInventarioSinDatos": "No hay obras en stock actualmente.",
@@ -217,6 +227,16 @@ export const es = {
 
   // Configuración
   "settings.title": "Configuración",
+  "settings.licenciaTitulo": "Licencia",
+  "settings.licenciaNinguna": "Sin licencia activa.",
+  "settings.licenciaTitular": "A nombre de {{titular}}",
+  "settings.licenciaVence": "Vence el {{vence}}",
+  "settings.licenciaSinVencimiento": "Sin vencimiento",
+  "settings.licenciaEdicionSuite": "Suite (Studio + Space)",
+  "settings.licenciaBoton": "Cargar licencia…",
+  "settings.licenciaActivadaOk": "Licencia activada correctamente.",
+  "settings.licenciaErrorPermisos":
+    "macOS bloqueó el acceso a ese archivo — pasa seguido con las carpetas Escritorio, Documentos o Descargas mientras esta app todavía no está firmada con una cuenta de desarrollador de Apple. Para solucionarlo: abrí Ajustes del Sistema → Privacidad y Seguridad → Archivos y Carpetas, buscá Galeris y activá el permiso para esa carpeta. Si preferís no tocar ese permiso, también podés mover el archivo de licencia a otra carpeta (por ejemplo, tu carpeta de Usuario) y elegirlo desde ahí.",
   "settings.idioma": "Idioma",
   "settings.espanol": "Español",
   "settings.ingles": "Inglés",

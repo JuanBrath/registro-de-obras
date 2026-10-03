@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useLanguage } from "../i18n/LanguageContext.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
@@ -9,13 +9,19 @@ export function Modal({
   onClose,
   wide,
   className,
+  maximizable,
 }: {
   children: ReactNode;
   onClose: () => void;
   wide?: boolean;
   className?: string;
+  /** Agrega un botón para agrandar la ventana a (casi) toda la pantalla, sin
+   * tener que arrastrar el angulo inferior derecho a mano. Pensado para
+   * contenido que puede crecer mucho (notas, statement). */
+  maximizable?: boolean;
 }) {
   const { t } = useLanguage();
+  const [maximizada, setMaximizada] = useState(false);
   // "true" en vez de algun estado propio: este modal esta "abierto" en todo
   // momento mientras esta montado (no tiene un estado interno de
   // abierto/cerrado aparte, es el padre el que lo monta o no), asi que la
@@ -51,9 +57,24 @@ export function Modal({
       }}
     >
       <div
-        className={`modal-content${wide ? " modal-content-wide" : ""}${className ? ` ${className}` : ""}`}
+        className={`modal-content${wide ? " modal-content-wide" : ""}${maximizada ? " modal-content-maximizada" : ""}${className ? ` ${className}` : ""}`}
         onClick={(e) => e.stopPropagation()}
       >
+        {maximizable && (
+          <button
+            type="button"
+            className="modal-maximizar"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setMaximizada((m) => !m);
+            }}
+            aria-label={maximizada ? t("common.restaurarTamano") : t("common.maximizar")}
+            title={maximizada ? t("common.restaurarTamano") : t("common.maximizar")}
+          >
+            {maximizada ? "⤡" : "⤢"}
+          </button>
+        )}
         <button
           type="button"
           className="modal-close"

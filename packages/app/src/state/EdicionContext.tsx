@@ -1,8 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { EdicionId } from "@registro/core";
 import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
-import { getEdicion, setEdicion as persistEdicion } from "../data/edicion.js";
+import { cargarEstadoLicencia, activarLicenciaDesdeArchivo, type EstadoLicencia } from "../data/licencia.js";
 import { isTauri } from "../adapters/detectPlatform.js";
 
 function syncNativeMenuEdicion(edicion: EdicionId): void {
@@ -11,40 +10,38 @@ function syncNativeMenuEdicion(edicion: EdicionId): void {
 }
 
 interface EdicionContextValue {
+  /** Derivado de estadoLicencia: la edición solo existe si hay una licencia válida. */
   edicion: EdicionId | null;
-  setEdicion: (edicion: EdicionId) => void;
+  estadoLicencia: EstadoLicencia;
+  activarLicencia: (ruta: string) => Promise<EstadoLicencia>;
 }
 
 const EdicionReactContext = createContext<EdicionContextValue | null>(null);
 
 export function EdicionProvider({ children }: { children: ReactNode }) {
-  const [edicion, setEdicionState] = useState<EdicionId | null>(null);
+  const [estadoLicencia, setEstadoLicencia] = useState<EstadoLicencia>({ estado: "cargando" });
 
   useEffect(() => {
-    getEdicion().then((loaded) => {
-      setEdicionState(loaded);
-      syncNativeMenuEdicion(loaded);
+    cargarEstadoLicencia().then((estado) => {
+      setEstadoLicencia(estado);
+      if (estado.estado === "valida") syncNativeMenuEdicion(estado.edicion);
     });
   }, []);
 
-  function setEdicion(next: EdicionId) {
-    setEdicionState(next);
-    persistEdicion(next);
-    syncNativeMenuEdicion(next);
+  async function activarLicencia(ruta: string): Promise<EstadoLicencia> {
+    const estado = await activarLicenciaDesdeArchivo(ruta);
+    setEstadoLicencia(estado);
+    if (estado.estado === "valida") syncNativeMenuEdicion(estado.edicion);
+    return estado;
   }
 
-  // Elegir una edición desde el menú nativo (Edición (prueba)) emite este
-  // evento desde Rust en vez de renderizar UI propia.
-  useEffect(() => {
-    if (!isTauri()) return;
-    const unlistenPromise = listen<EdicionId>("set-edicion", (event) => setEdicion(event.payload));
-    return () => {
-      unlistenPromise.then((unlisten) => unlisten());
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const edicion = estadoLicencia.estado === "valida" ? estadoLicencia.edicion : null;
 
-  return <EdicionReactContext.Provider value={{ edicion, setEdicion }}>{children}</EdicionReactContext.Provider>;
+  return (
+    <EdicionReactContext.Provider value={{ edicion, estadoLicencia, activarLicencia }}>
+      {children}
+    </EdicionReactContext.Provider>
+  );
 }
 
 export function useEdicion(): EdicionContextValue {

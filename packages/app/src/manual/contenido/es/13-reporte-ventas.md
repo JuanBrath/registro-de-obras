@@ -10,7 +10,8 @@ En la pantalla de inicio, tocá **Ventas**.
 
 1. **Desde** y **Hasta**: las fechas vienen precargadas con el mes actual. Cambialas por el rango que quieras. La fecha "Hasta" no puede ser anterior a "Desde".
 2. Si querés, filtrá por **Cliente**, **Artista**, **Técnica** o **Asesor de venta**. En cada uno, **Todos** (o **Todas**) no filtra.
-3. Tocá **Buscar**.
+3. En Galeris Space, además podés filtrar por **Estado de liquidación** (**Pendiente de liquidación**, **Liquidado** o **Comprobante de pago emitido**).
+4. Tocá **Buscar**.
 
 El reporte cuenta solo las **ventas**: no incluye reservas ni donaciones. Si no hay ninguna en el rango, aparece "No hay ventas registradas en ese rango de fechas."
 
@@ -19,6 +20,7 @@ El reporte cuenta solo las **ventas**: no incluye reservas ni donaciones. Si no 
 - Una tabla con cada venta: **Fecha**, **Artista**, **Obra**, **Serie**, **Técnica**, **Asesor**, **Moneda**, **Valor de venta**, **Valor de comisión**, **Neto** y **Margen**.
 - **Total**, con el **Bruto**, el **Neto** y el **Margen**.
 - **Resumen por artista** y **Resumen por técnica**.
+- En Galeris Space, **Liquidación a artistas**: cuánto se le debe a cada artista (**Pendiente de liquidar**) y cuánto ya se le pagó (**Ya liquidado**), sumando el neto de la venta y el derecho de participación (droit de suite) de las ventas que lo tengan. Para marcar una venta como liquidada seguís entrando a esa venta puntual, como siempre.
 - **Antigüedad promedio de inventario**: cuántos días llevan en promedio las obras disponibles o en stock ("… días en promedio").
 - **Reservas en el período**: cuántas quedaron **Cumplidas** (se convirtieron en venta) y cuántas **Caídas** (se anularon).
 

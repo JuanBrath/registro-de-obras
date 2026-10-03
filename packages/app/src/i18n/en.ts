@@ -26,6 +26,8 @@ export const en: Record<keyof typeof es, string> = {
   "common.consultar": "View",
   "common.close": "Close",
   "common.verCompleto": "View full",
+  "common.maximizar": "Maximize",
+  "common.restaurarTamano": "Restore size",
   "common.remove": "Remove",
   "common.abrirEnlace": "Open link",
   "common.settings": "Settings",
@@ -118,6 +120,10 @@ export const en: Record<keyof typeof es, string> = {
   "workspacePicker.galeria": "Galeris Space",
   "workspacePicker.opening": "Opening registry…",
 
+  // ActivarLicencia
+  "activarLicencia.titulo": "Activate license",
+  "activarLicencia.ayuda": "Galeris needs an active license to run. Choose the license file you received when you purchased it.",
+
   // WorkspaceHome
   "workspaceHome.titular": "Owner: {{nombre}}",
   "workspaceHome.miPerfil": "My profile (owner)",
@@ -204,6 +210,10 @@ export const en: Record<keyof typeof es, string> = {
   "ventasReport.margenLabel": "Margin",
   "ventasReport.resumenPorArtistaTitulo": "Summary by artist",
   "ventasReport.resumenPorTecnicaTitulo": "Summary by technique",
+  "ventasReport.todosLosEstadosLiquidacion": "All",
+  "ventasReport.resumenLiquidacionPorArtistaTitulo": "Settlement to artists",
+  "ventasReport.pendienteLiquidarLabel": "Pending settlement",
+  "ventasReport.yaLiquidadoLabel": "Already settled",
   "ventasReport.antiguedadInventarioTitulo": "Average inventory age",
   "ventasReport.antiguedadInventarioValor": "{{dias}} days on average (available/in-stock pieces)",
   "ventasReport.antiguedadInventarioSinDatos": "No pieces currently in stock.",
@@ -219,6 +229,16 @@ export const en: Record<keyof typeof es, string> = {
 
   // Settings
   "settings.title": "Settings",
+  "settings.licenciaTitulo": "License",
+  "settings.licenciaNinguna": "No active license.",
+  "settings.licenciaTitular": "Licensed to {{titular}}",
+  "settings.licenciaVence": "Expires on {{vence}}",
+  "settings.licenciaSinVencimiento": "No expiration",
+  "settings.licenciaEdicionSuite": "Suite (Studio + Space)",
+  "settings.licenciaBoton": "Load license…",
+  "settings.licenciaActivadaOk": "License activated successfully.",
+  "settings.licenciaErrorPermisos":
+    "macOS blocked access to that file — this happens often with the Desktop, Documents or Downloads folders while this app isn't yet signed with an Apple Developer account. To fix it: open System Settings → Privacy & Security → Files and Folders, find Galeris and enable access for that folder. If you'd rather not change that permission, you can also move the license file to a different folder (e.g. your user folder) and pick it from there.",
   "settings.idioma": "Language",
   "settings.espanol": "Spanish",
   "settings.ingles": "English",

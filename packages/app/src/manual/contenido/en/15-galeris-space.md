@@ -37,6 +37,8 @@ The whole commercial block for galleries is added:
 
 In Studio, on the other hand, the artist receives the full amount and those fields don't appear.
 
+The **Sales report** also totals how much is owed to each artist (net commission plus droit de suite) and lets you filter by settlement status. See [Sales report](cap:reporte-ventas).
+
 ## In certificates
 
 Besides **Classic**, **Simple** and **Data sheet, no gallery signature**, Galeris Space offers the **Data sheet** design, with the signature line of the gallery owner and the gallery's contact details at the bottom. See [Certificate of authenticity](cap:certificado).

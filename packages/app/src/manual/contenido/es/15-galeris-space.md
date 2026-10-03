@@ -37,6 +37,8 @@ Se agrega todo el bloque comercial de galería:
 
 En Studio, en cambio, el artista recibe el valor total y esos campos no aparecen.
 
+El **Reporte de ventas**, además, totaliza cuánto se le debe a cada artista (comisión neta más droit de suite) y permite filtrar por estado de liquidación. Ver [Reporte de ventas](cap:reporte-ventas).
+
 ## En los certificados
 
 Además de **Clásico**, **Simple** y **Ficha sin firma de galería**, Galeris Space ofrece el modelo **Ficha**, con la línea de firma del titular de la galería y los datos de contacto de la galería al pie. Ver [Certificado de autenticidad](cap:certificado).

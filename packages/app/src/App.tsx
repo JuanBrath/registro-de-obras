@@ -11,6 +11,7 @@ import { useForceReflowOnResize } from "./utils/useForceReflowOnResize.js";
 import { forzarReflowDelRoot } from "./utils/forzarReflowDelRoot.js";
 import { useAutoScrollToAlerts } from "./utils/useAutoScrollToAlerts.js";
 import { BrandHeader } from "./components/BrandHeader.js";
+import { ActivarLicencia } from "./screens/ActivarLicencia.js";
 import { WorkspacePicker } from "./screens/WorkspacePicker.js";
 import { WorkspaceHome } from "./screens/WorkspaceHome.js";
 import { ObraForm } from "./screens/ObraForm.js";
@@ -223,7 +224,7 @@ function WorkspaceScreens({ onManual }: { onManual: () => void }) {
 
 function AppShell() {
   const { context, close } = useWorkspace();
-  const { edicion } = useEdicion();
+  const { edicion, estadoLicencia } = useEdicion();
   const { t } = useLanguage();
   const [showSettings, setShowSettings] = useState(false);
   // El manual se lee tanto desde la pantalla de presentacion como desde el
@@ -232,10 +233,11 @@ function AppShell() {
   useForceReflowOnResize();
   useAutoScrollToAlerts();
 
-  // El menú "Edición (prueba)" es solo para previsualizar que mostraría cada
-  // nivel de suscripción — cambiarlo mientras hay un workspace abierto tiene
-  // que devolver a la pantalla de selección para ver el efecto ahí mismo, ya
-  // que ningún otro lugar de la app lee "edicion".
+  // La edicion depende de la licencia activa (ver EdicionContext.tsx): si
+  // cambia mientras hay un workspace abierto (por ejemplo, se cargo una
+  // licencia distinta desde Configuracion al renovar o cambiar de plan),
+  // conviene volver a la pantalla de seleccion en vez de dejar abierto un
+  // workspace que la nueva licencia podria ya no habilitar.
   useEffect(() => {
     if (context) close();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -256,6 +258,8 @@ function AppShell() {
       </div>
       {showManual ? (
         <ManualScreen onBack={() => setShowManual(false)} />
+      ) : estadoLicencia.estado === "cargando" ? null : estadoLicencia.estado !== "valida" ? (
+        <ActivarLicencia />
       ) : context ? (
         <WorkspaceScreens key={context.workspace} onManual={() => setShowManual(true)} />
       ) : (

@@ -33,6 +33,7 @@ import {
   type FotografiaFieldsState,
 } from "./fields/FotografiaFields.js";
 import { useWorkspace } from "../state/WorkspaceContext.js";
+import { pedirAbrirEnLightroom } from "../lightroom/lightroom.js";
 import { bytesToObjectUrl } from "../utils/imageObjectUrl.js";
 import { VentaForm, type VentaExistente } from "../components/VentaForm.js";
 import { Modal } from "../components/Modal.js";
@@ -970,6 +971,19 @@ export function ObraDetail({
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoadingFullImage(false);
+    }
+  }
+
+  // Mismo pedido que el boton "Lr" de FilePathField.tsx (en el formulario de
+  // edicion), pero disponible tambien desde la vista de solo lectura: asi no
+  // hace falta entrar a "Editar" para mandar la foto a Lightroom.
+  async function handleAbrirEnLightroomDesdeVista() {
+    if (!obra?.ubicacion_fisica_actual) return;
+    setError(null);
+    try {
+      await pedirAbrirEnLightroom(obra.ubicacion_fisica_actual);
+    } catch {
+      setError(t("filePathField.errorNoSePudoAbrir"));
     }
   }
 
@@ -2173,6 +2187,16 @@ export function ObraDetail({
   const pruebasNoDisponibles = pruebasEjemplares.filter((ej) => ej.estado !== "disponible");
   const pruebasColapsadas = pruebasNoDisponibles.length > 0 ? pruebasNoDisponibles : pruebasEjemplares.slice(0, 1);
 
+  // Mismas condiciones que habilitan el campo "Ubicacion del archivo
+  // original" en el formulario de edicion (ver FotografiaFields.tsx,
+  // mostrarUbicacion): solo tiene sentido ir a Lightroom si hay un archivo
+  // cargado y es una foto digital (no una analogica o un negativo escaneado
+  // sin master digital propio).
+  const mostrarBotonLightroomVista =
+    esRegistroPersonal &&
+    !!obra?.ubicacion_fisica_actual &&
+    (ext?.subtipo_fotografia === "DigitalFineArt" || ext?.subtipo_fotografia === "Sintografia");
+
   return (
     <div className="obra-detail">
       <div className="obras-list-header">
@@ -2278,6 +2302,17 @@ export function ObraDetail({
               <button type="button" onClick={() => setConfirmingDelete(true)}>
                 {t("obraDetail.eliminarObra")}
               </button>
+              {mostrarBotonLightroomVista && (
+                <button
+                  type="button"
+                  className="link-icon-button link-icon-button-lightroom"
+                  onClick={handleAbrirEnLightroomDesdeVista}
+                  aria-label={t("filePathField.abrirEnLightroom")}
+                  title={t("filePathField.abrirEnLightroom")}
+                >
+                  Lr
+                </button>
+              )}
             </div>
             {fichaPdfMensaje && (
               <p className="success" role="status">

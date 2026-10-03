@@ -148,6 +148,19 @@ input[type="date"] {
   margin-top: 1.5rem;
 }
 
+/* Pantalla de activacion de licencia (ActivarLicencia.tsx, vía
+   LicenciaSettings.tsx variant="pantalla"): mismo marco que
+   .workspace-picker, pero el contenido (texto + boton + estado) va apilado
+   en columna, a diferencia de .workspace-picker-options que es una fila
+   pensada solo para los dos botones Studio/Space. */
+.activar-licencia-contenido {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
 /* Collage de fotos al azar de las obras ya cargadas (ver WorkspacePicker.tsx
    / peekRandomThumbnails) — solo decorativo, no aparece si todavia no hay
    ninguna obra con imagen. Va debajo del boton de entrar (no arriba), asi
@@ -392,6 +405,7 @@ input[type="date"] {
   display: flex;
   gap: 1rem;
   justify-content: center;
+  align-items: center;
   margin-top: 1.5rem;
 }
 
@@ -932,6 +946,21 @@ input[type="date"] {
   justify-content: center;
   font-size: 1rem;
   line-height: 1;
+}
+
+/* Placa "Lr" (en vez de un emoji generico) para que el boton de "Abrir en
+   Lightroom" se identifique mejor que con una camara, que no se asociaba
+   claramente con Lightroom. Azul oscuro + texto blanco: el color con el que
+   Adobe identifica Lightroom Classic (no cambia con el tema claro/oscuro de
+   la app, es un color de marca fijo). */
+.link-icon-button-lightroom {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-style: italic;
+  background: #001e36;
+  border-color: #001e36;
+  color: #fff;
 }
 
 .lightbox-content {
@@ -1836,6 +1865,48 @@ input[type="date"] {
 
 .modal-content-wide {
   max-width: 90vw;
+}
+
+/* Boton para agrandar el modal a (casi) toda la pantalla sin tener que
+   arrastrar el angulo (ver Modal.tsx, prop "maximizable"). Mismo estilo y
+   tamano que .modal-close, pero corrido a la izquierda para no superponerse. */
+.modal-maximizar {
+  position: absolute;
+  top: 0.75rem;
+  right: 2.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.modal-content-maximizada {
+  max-width: 96vw;
+  width: 96vw;
+  height: 92vh;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Dentro del modal maximizado, el texto/textarea de notas o statement pasan
+   a ocupar todo el espacio disponible en vez de quedarse en su tamano fijo
+   chico (480px x 220px), que es lo que esta pantalla grande esta pensada
+   para aprovechar. */
+.modal-content-maximizada .notas-ampliadas-texto,
+.modal-content-maximizada .notas-ampliadas-textarea {
+  flex: 1;
+  width: 100%;
+  max-width: none;
+  min-height: 0;
+  resize: none;
 }
 
 /* Panel lateral: se pega al borde derecho de la pantalla en vez de quedar

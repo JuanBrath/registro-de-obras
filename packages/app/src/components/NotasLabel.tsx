@@ -44,7 +44,7 @@ export function NotasLabel({
       </button>
       {abierta &&
         (onChange ? (
-          <Modal onClose={() => setAbierta(false)}>
+          <Modal onClose={() => setAbierta(false)} maximizable>
             <textarea
               className="notas-ampliadas-textarea"
               value={texto}
@@ -53,7 +53,7 @@ export function NotasLabel({
             />
           </Modal>
         ) : (
-          <Modal onClose={() => setAbierta(false)}>
+          <Modal onClose={() => setAbierta(false)} maximizable>
             <p className="notas-ampliadas-texto">{texto}</p>
           </Modal>
         ))}

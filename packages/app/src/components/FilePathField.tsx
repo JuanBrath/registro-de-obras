@@ -139,12 +139,12 @@ export function FilePathField({
       {value && (
         <button
           type="button"
-          className="link-icon-button"
+          className="link-icon-button link-icon-button-lightroom"
           onClick={handleAbrirEnLightroom}
           aria-label={t("filePathField.abrirEnLightroom")}
           title={t("filePathField.abrirEnLightroom")}
         >
-          📷
+          Lr
         </button>
       )}
       {error && (

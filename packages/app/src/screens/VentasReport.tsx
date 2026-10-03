@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { Moneda } from "@registro/core";
+import type { Moneda, EstadoLiquidacion } from "@registro/core";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
 import { savePdfWithDialog, saveXlsxWithDialog } from "../utils/savePdfDialog.js";
@@ -25,6 +25,8 @@ interface VentaReportRow {
   asesor_venta: string | null;
   tecnica: string | null;
   costos_asociados: number;
+  estado_liquidacion: EstadoLiquidacion | null;
+  droit_suite_monto: number | null;
 }
 
 interface ClienteOption {
@@ -74,8 +76,43 @@ function acumularResumen(map: Map<string, Resumen>, etiqueta: string, moneda: Mo
   map.set(clave, actual);
 }
 
+/** Lo que se le debe al artista por esa venta: su neto (o el total si no hay
+    comision) mas el droit de suite si aplica — un solo total, porque hoy una
+    venta tiene un unico estado de liquidacion que cubre todo su pago. */
+function montoAdeudadoArtista(v: VentaReportRow): number {
+  return (v.monto_neto_artista ?? v.valor_venta) + (v.droit_suite_monto ?? 0);
+}
+
+interface ResumenLiquidacionArtista {
+  etiqueta: string;
+  moneda: Moneda;
+  pendienteLiquidar: number;
+  yaLiquidado: number;
+}
+
+/** Sin estado_liquidacion elegido (NULL) cuenta como "pendiente": el <select>
+    de VentaForm.tsx arranca vacio, que es el mismo estado de una venta recien
+    cargada a la que todavia no se le pago nada. */
+function acumularResumenLiquidacion(
+  map: Map<string, ResumenLiquidacionArtista>,
+  etiqueta: string,
+  moneda: Moneda,
+  v: VentaReportRow,
+) {
+  const clave = claveResumen(etiqueta, moneda);
+  const actual = map.get(clave) ?? { etiqueta, moneda, pendienteLiquidar: 0, yaLiquidado: 0 };
+  const monto = montoAdeudadoArtista(v);
+  if (v.estado_liquidacion === "liquidado" || v.estado_liquidacion === "comprobante_emitido") {
+    actual.yaLiquidado += monto;
+  } else {
+    actual.pendienteLiquidar += monto;
+  }
+  map.set(clave, actual);
+}
+
 export function VentasReport({ onBack }: { onBack: () => void }) {
   const { context } = useWorkspace();
+  const esGaleria = context?.workspace === "galeria";
   const { t } = useLanguage();
   // Las fechas arrancan precargadas (mes actual) pero atenuadas: son solo una
   // sugerencia, no una eleccion del usuario. En cuanto toca cualquiera de los
@@ -92,6 +129,7 @@ export function VentasReport({ onBack }: { onBack: () => void }) {
   const [tecnica, setTecnica] = useState("");
   const [asesores, setAsesores] = useState<string[]>([]);
   const [asesor, setAsesor] = useState("");
+  const [estadoLiquidacionFiltro, setEstadoLiquidacionFiltro] = useState<EstadoLiquidacion | "">("");
   const [ventas, setVentas] = useState<VentaReportRow[]>([]);
   const [antiguedadPromedioDias, setAntiguedadPromedioDias] = useState<number | null>(null);
   const [reservasCumplidas, setReservasCumplidas] = useState(0);
@@ -173,10 +211,19 @@ export function VentasReport({ onBack }: { onBack: () => void }) {
         filtros += " AND venta.asesor_venta = ?";
         params.push(asesor);
       }
+      if (esGaleria && estadoLiquidacionFiltro) {
+        if (estadoLiquidacionFiltro === "pendiente") {
+          filtros += " AND (venta.estado_liquidacion IS NULL OR venta.estado_liquidacion = 'pendiente')";
+        } else {
+          filtros += " AND venta.estado_liquidacion = ?";
+          params.push(estadoLiquidacionFiltro);
+        }
+      }
       const rows = await context.db.query<VentaReportRow>(
         `SELECT venta.id, venta.fecha_venta, artista.id as artista_id, artista.nombre_completo as artista,
                 obra.titulo as obra, ejemplar.numero as serie, venta.valor_venta, venta.moneda,
                 venta.monto_comision, venta.monto_neto_artista, venta.asesor_venta,
+                venta.estado_liquidacion, venta.droit_suite_monto,
                 COALESCE(obra_fotografia.tecnica, obra_detalle.tecnica) as tecnica,
                 COALESCE(venta.costo_enmarcado,0) + COALESCE(venta.costo_peana,0) + COALESCE(venta.costo_embalaje,0)
                   + COALESCE(venta.costo_transporte,0) + COALESCE(venta.costo_seguro,0) as costos_asociados
@@ -235,6 +282,13 @@ export function VentasReport({ onBack }: { onBack: () => void }) {
     for (const v of ventas) acumularResumen(map, v.tecnica ?? "—", v.moneda, v);
     return Array.from(map.values());
   }, [ventas]);
+
+  const resumenLiquidacionPorArtista = useMemo(() => {
+    if (!esGaleria) return [];
+    const map = new Map<string, ResumenLiquidacionArtista>();
+    for (const v of ventas) acumularResumenLiquidacion(map, v.artista, v.moneda, v);
+    return Array.from(map.values());
+  }, [ventas, esGaleria]);
 
   async function handleGenerarPdf() {
     setGenerandoPdf(true);
@@ -338,7 +392,23 @@ export function VentasReport({ onBack }: { onBack: () => void }) {
         });
       }
 
-      const finalY3 = (doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? finalY2;
+      const finalY2b = (doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? finalY2;
+      if (esGaleria && resumenLiquidacionPorArtista.length > 0) {
+        doc.text(t("ventasReport.resumenLiquidacionPorArtistaTitulo"), marginLeft, finalY2b + 10);
+        autoTable(doc, {
+          startY: finalY2b + 14,
+          styles: { font: "Inter" },
+          headStyles: { fontStyle: "normal" },
+          head: [[t("ventasReport.colArtista"), t("ventasReport.pendienteLiquidarLabel"), t("ventasReport.yaLiquidadoLabel")]],
+          body: resumenLiquidacionPorArtista.map((r) => [
+            r.etiqueta,
+            formatMonto(r.moneda, r.pendienteLiquidar),
+            formatMonto(r.moneda, r.yaLiquidado),
+          ]),
+        });
+      }
+
+      const finalY3 = (doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? finalY2b;
       let cursorY = finalY3 + 10;
       doc.text(
         antiguedadPromedioDias != null
@@ -437,6 +507,17 @@ export function VentasReport({ onBack }: { onBack: () => void }) {
           ...resumenPorTecnica.map((r) => [r.etiqueta, r.moneda, r.bruto, r.neto, r.margen]),
         ];
         XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(aoaTecnica), t("ventasReport.resumenPorTecnicaTitulo").slice(0, 31));
+      }
+      if (esGaleria && resumenLiquidacionPorArtista.length > 0) {
+        const aoaLiquidacion = [
+          [t("ventasReport.colArtista"), t("ventasReport.colMoneda"), t("ventasReport.pendienteLiquidarLabel"), t("ventasReport.yaLiquidadoLabel")],
+          ...resumenLiquidacionPorArtista.map((r) => [r.etiqueta, r.moneda, r.pendienteLiquidar, r.yaLiquidado]),
+        ];
+        XLSX.utils.book_append_sheet(
+          workbook,
+          XLSX.utils.aoa_to_sheet(aoaLiquidacion),
+          t("ventasReport.resumenLiquidacionPorArtistaTitulo").slice(0, 31),
+        );
       }
 
       const output = XLSX.write(workbook, { bookType: "xlsx", type: "array" }) as ArrayBuffer;
@@ -566,6 +647,20 @@ export function VentasReport({ onBack }: { onBack: () => void }) {
             </select>
           </label>
         )}
+        {esGaleria && (
+          <label>
+            {t("ventaForm.estadoLiquidacionLabel")} <HelpIcon fieldKey="estado_liquidacion" />
+            <select
+              value={estadoLiquidacionFiltro}
+              onChange={(e) => setEstadoLiquidacionFiltro(e.target.value as EstadoLiquidacion | "")}
+            >
+              <option value="">{t("ventasReport.todosLosEstadosLiquidacion")}</option>
+              <option value="pendiente">{t("ventaForm.estadoLiquidacionPendiente")}</option>
+              <option value="liquidado">{t("ventaForm.estadoLiquidacionLiquidado")}</option>
+              <option value="comprobante_emitido">{t("ventaForm.estadoLiquidacionComprobanteEmitido")}</option>
+            </select>
+          </label>
+        )}
         <button type="submit" disabled={loading || !fechaDesde || !fechaHasta}>
           {loading ? t("common.loading") : t("ventasReport.buscar")}
         </button>
@@ -692,6 +787,32 @@ export function VentasReport({ onBack }: { onBack: () => void }) {
                       <td>{formatMonto(r.moneda, r.bruto)}</td>
                       <td>{formatMonto(r.moneda, r.neto)}</td>
                       <td>{formatMonto(r.moneda, r.margen)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {esGaleria && resumenLiquidacionPorArtista.length > 0 && (
+            <div className="ventas-report-tabla-wrapper">
+              <h2>
+                {t("ventasReport.resumenLiquidacionPorArtistaTitulo")} <HelpIcon fieldKey="droit_suite" />
+              </h2>
+              <table className="ventas-report-tabla">
+                <thead>
+                  <tr>
+                    <th>{t("ventasReport.colArtista")}</th>
+                    <th>{t("ventasReport.pendienteLiquidarLabel")}</th>
+                    <th>{t("ventasReport.yaLiquidadoLabel")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {resumenLiquidacionPorArtista.map((r) => (
+                    <tr key={claveResumen(r.etiqueta, r.moneda)}>
+                      <td>{r.etiqueta}</td>
+                      <td>{formatMonto(r.moneda, r.pendienteLiquidar)}</td>
+                      <td>{formatMonto(r.moneda, r.yaLiquidado)}</td>
                     </tr>
                   ))}
                 </tbody>
