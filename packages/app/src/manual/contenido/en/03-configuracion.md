@@ -29,15 +29,15 @@ Controls how the decorative thumbnails on the welcome and home screens behave:
 
 ## Data folder
 
-This is the folder where Galeris keeps your database and your photos. There are two ways to change it:
+This is the folder where Recer keeps your database and your photos. There are two ways to change it:
 
 ### Change folder…
 
-Tells Galeris to use a different folder to read and save the data. It's useful, for example, if you moved the original folder to an external drive with the Finder.
+Tells Recer to use a different folder to read and save the data. It's useful, for example, if you moved the original folder to an external drive with the Finder.
 
 1. Click **Change folder…**.
 2. Choose the folder.
-3. If that folder already has Galeris data, that data is used. If it's empty, you start from scratch.
+3. If that folder already has Recer data, that data is used. If it's empty, you start from scratch.
 4. Then you go back to the welcome screen to reopen your records.
 
 ### Move folder automatically…
@@ -45,16 +45,16 @@ Tells Galeris to use a different folder to read and save the data. It's useful, 
 This is for those who prefer the program to move everything on its own.
 
 1. Click **Move folder automatically…** and choose the new folder.
-2. Galeris copies the database, the photos and the files, showing the progress ("Copying file 12 of 340…").
+2. Recer copies the database, the photos and the files, showing the progress ("Copying file 12 of 340…").
 3. It checks that everything works in the new folder and updates the program to use it.
 4. **The previous folder is never deleted on its own.** At the end it asks whether you want to **Delete the previous folder now** or **Leave it, I'll delete it later**.
 
 ### If macOS blocks access to a folder
 
-This happens often with external drives. To fix it: open **System Settings → Privacy & Security → Files and Folders**, find Galeris and enable the permission for **Removable Volumes** (if that option isn't listed, try granting it **Full Disk Access**). Another way out is to copy the folder yourself in the Finder and then use **Change folder…** to point to the copy.
+This happens often with external drives. To fix it: open **System Settings → Privacy & Security → Files and Folders**, find Recer and enable the permission for **Removable Volumes** (if that option isn't listed, try granting it **Full Disk Access**). Another way out is to copy the folder yourself in the Finder and then use **Change folder…** to point to the copy.
 
 ## Automatic numbering
 
-Galeris numbers a few things on its own: the artist number and the sale certificate number. The **Reset automatic numbering** button makes those numbers start over from the beginning.
+Recer numbers a few things on its own: the artist number and the sale certificate number. The **Reset automatic numbering** button makes those numbers start over from the beginning.
 
 > Warning: it can produce duplicate numbers with those already used by existing artists or certificates, and it cannot be undone. That's why it asks you to confirm with **Yes, reset**. Use it only if you know exactly why you need it.

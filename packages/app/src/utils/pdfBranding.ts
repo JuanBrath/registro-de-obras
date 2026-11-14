@@ -2,14 +2,14 @@ import type { jsPDF } from "jspdf";
 import montserratBoldUrl from "../assets/fonts/Montserrat-Bold.ttf?url";
 import interRegularUrl from "../assets/fonts/Inter-Regular.ttf?url";
 import interMediumUrl from "../assets/fonts/Inter-Medium.ttf?url";
-import gsMonogramaUrl from "../assets/brand/gs-monograma.png?url";
+import gsMonogramaUrl from "../assets/brand/rs-monograma.png?url";
 import { detectImageFormat } from "./detectImageFormat.js";
 import { tInforme, type InformeIdioma } from "../reports/informeIdioma.js";
 import type { TranslationKey } from "../i18n/LanguageContext.js";
 import { todayISO } from "./today.js";
 import { formatFechaDDMMYYYY } from "./formatFecha.js";
 
-export const GALERIS_GOLD: [number, number, number] = [201, 162, 71]; // #C9A247
+export const RECER_GOLD: [number, number, number] = [201, 162, 71]; // #C9A247
 
 async function fetchBytes(url: string): Promise<Uint8Array> {
   const res = await fetch(url);
@@ -142,14 +142,14 @@ export async function drawPdfHeader(
   }
 
   const dividerY = logoY + logoSize + 4;
-  doc.setDrawColor(...GALERIS_GOLD);
+  doc.setDrawColor(...RECER_GOLD);
   doc.setLineWidth((0.5 * 25.4) / 72); // 0.5pt en mm (unidad por defecto de jsPDF)
   doc.line(marginLeft, dividerY, pageWidth - marginRight, dividerY);
 
   const tituloY = dividerY + 10;
   doc.setFont("Montserrat", "bold");
   doc.setFontSize(17);
-  doc.setTextColor(...GALERIS_GOLD);
+  doc.setTextColor(...RECER_GOLD);
   doc.text(title, marginLeft, tituloY);
 
   doc.setFont("Inter", "normal");
@@ -281,7 +281,7 @@ export async function drawSignatureBlock(
     }
   }
 
-  doc.setDrawColor(...GALERIS_GOLD);
+  doc.setDrawColor(...RECER_GOLD);
   doc.setLineWidth((0.5 * 25.4) / 72);
   doc.line(marginLeft, cursorY, marginLeft + 70, cursorY);
   doc.text(tInforme(idioma, "informes.firmaManuscritaLinea"), marginLeft, cursorY + 5);

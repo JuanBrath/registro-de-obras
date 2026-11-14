@@ -6,7 +6,7 @@ import { dibujarSinCopyright } from "./sinCopyright.js";
  * Certificado "tipo ficha": grilla con los datos
  * basicos de la obra, firma del artista (y de la galeria, si se cargo) una
  * al lado de la otra, y logo + contacto junto a una foto de la obra al pie.
- * Tomado de buildCoaFichaPdfBytes de Galeris Studio; todas las medidas van
+ * Tomado de buildCoaFichaPdfBytes de Recer Studio; todas las medidas van
  * multiplicadas por `k` para adaptarse a la hoja elegida.
  */
 export async function generarFicha(c: Certificado): Promise<Uint8Array> {

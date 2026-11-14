@@ -1,9 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { parseTags, type CategoriaObra } from "@registro/core";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { bytesToObjectUrl, leerMiniaturasPorIdEnParalelo } from "../utils/imageObjectUrl.js";
 import { Modal } from "../components/Modal.js";
 import { VentaForm } from "../components/VentaForm.js";
+import { MenuContextual } from "../components/MenuContextual.js";
+import { ExportarImagenModal } from "../components/ExportarImagenModal.js";
+import { abrirEnPhotoshop } from "../utils/photoshop.js";
+import { pedirAbrirEnLightroom } from "../lightroom/lightroom.js";
 import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
 import { formatFechaDDMMYYYY } from "../utils/formatFecha.js";
@@ -154,6 +158,8 @@ export function GaleriaFotos({
   );
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [loadingLightbox, setLoadingLightbox] = useState(false);
+  const [menuImagen, setMenuImagen] = useState<{ x: number; y: number; foto: FotoRow } | null>(null);
+  const [exportarImagenFoto, setExportarImagenFoto] = useState<FotoRow | null>(null);
   const objectUrlsRef = useRef<string[]>([]);
   const lightboxUrlRef = useRef<string | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
@@ -308,9 +314,9 @@ export function GaleriaFotos({
       setError(err instanceof Error ? err.message : String(err));
       return;
     }
-    // La calificacion en Galeris ya quedo guardada (arriba); esto es aparte,
+    // La calificacion en Recer ya quedo guardada (arriba); esto es aparte,
     // una sincronizacion "mejor esfuerzo" hacia el sidecar XMP del archivo
-    // original, que si falla no debe deshacer lo que ya se guardo en Galeris.
+    // original, que si falla no debe deshacer lo que ya se guardo en Recer.
     if (fotoActual?.ubicacion_fisica_actual) {
       try {
         await sincronizarCalificacionConArchivo(fotoActual.ubicacion_fisica_actual, nuevaCalificacion);
@@ -398,6 +404,46 @@ export function GaleriaFotos({
     setInfoAbierta(false);
   }
 
+  function handleAbrirMenuImagen(e: ReactMouseEvent, foto: FotoRow) {
+    e.preventDefault();
+    setMenuImagen({ x: e.clientX, y: e.clientY, foto });
+  }
+
+  function handleExportarImagenClick(foto: FotoRow) {
+    if (!foto.ubicacion_fisica_actual) {
+      setError(t("obraDetail.errorExportarSinArchivo"));
+      return;
+    }
+    setError(null);
+    setExportarImagenFoto(foto);
+  }
+
+  async function handleAbrirEnPhotoshopClick(foto: FotoRow) {
+    if (!foto.ubicacion_fisica_actual) {
+      setError(t("obraDetail.errorAbrirPhotoshopSinArchivo"));
+      return;
+    }
+    setError(null);
+    try {
+      await abrirEnPhotoshop(foto.ubicacion_fisica_actual);
+    } catch {
+      setError(t("obraDetail.errorAbrirPhotoshop"));
+    }
+  }
+
+  async function handleAbrirEnLightroomClick(foto: FotoRow) {
+    if (!foto.ubicacion_fisica_actual) {
+      setError(t("obraDetail.errorAbrirLightroomSinArchivo"));
+      return;
+    }
+    setError(null);
+    try {
+      await pedirAbrirEnLightroom(foto.ubicacion_fisica_actual);
+    } catch {
+      setError(t("filePathField.errorNoSePudoAbrir"));
+    }
+  }
+
   function showNext() {
     setLightboxIndex((i) => (i === null || filteredFotos.length === 0 ? null : (i + 1) % filteredFotos.length));
     setInfoAbierta(false);
@@ -450,6 +496,7 @@ export function GaleriaFotos({
 
   return (
     <div className="obras-list obras-list-grid-ancho">
+      <div className="obras-encabezado-fijo">
       <div className="obras-list-header">
         <h1>{t("galeria.title")}</h1>
         <div className="header-actions">
@@ -540,6 +587,7 @@ export function GaleriaFotos({
           )}
         </div>
       </div>
+      </div>
 
       {loading && <p>{t("common.loading")}</p>}
       {error && (
@@ -554,7 +602,12 @@ export function GaleriaFotos({
           (foto, i) =>
             thumbnails[foto.id] && (
               <div className="galeria-foto-thumb-wrapper" key={foto.id}>
-                <button type="button" className="galeria-foto-thumb-button" onClick={() => setLightboxIndex(i)}>
+                <button
+                  type="button"
+                  className="galeria-foto-thumb-button"
+                  onClick={() => setLightboxIndex(i)}
+                  onContextMenu={(e) => handleAbrirMenuImagen(e, foto)}
+                >
                   <img
                     src={thumbnails[foto.id]}
                     alt={foto.titulo}
@@ -597,9 +650,22 @@ export function GaleriaFotos({
             </button>
           )}
           <div className="lightbox-content">
+            {error && (
+              <p className="error" role="alert">
+                ⚠️ {error}
+              </p>
+            )}
             {loadingLightbox && !lightboxUrl && <p>{t("common.loading")}</p>}
             {lightboxUrl && (
-              <img src={lightboxUrl} alt={filteredFotos[lightboxIndex]?.titulo} className="obra-full-image" />
+              <img
+                src={lightboxUrl}
+                alt={filteredFotos[lightboxIndex]?.titulo}
+                className="obra-full-image"
+                onContextMenu={(e) => {
+                  const foto = filteredFotos[lightboxIndex];
+                  if (foto) handleAbrirMenuImagen(e, foto);
+                }}
+              />
             )}
             <p className="lightbox-caption">
               {filteredFotos[lightboxIndex] && (
@@ -770,6 +836,28 @@ export function GaleriaFotos({
             onCancel={() => setVentaTarget(null)}
           />
         </Modal>
+      )}
+
+      {menuImagen && (
+        <MenuContextual
+          x={menuImagen.x}
+          y={menuImagen.y}
+          onClose={() => setMenuImagen(null)}
+          items={[
+            { label: t("obraDetail.exportarImagen"), onClick: () => handleExportarImagenClick(menuImagen.foto) },
+            { label: t("obraDetail.abrirEnPhotoshop"), onClick: () => handleAbrirEnPhotoshopClick(menuImagen.foto) },
+            { label: t("obraDetail.abrirEnLightroom"), onClick: () => handleAbrirEnLightroomClick(menuImagen.foto) },
+          ]}
+        />
+      )}
+
+      {exportarImagenFoto && exportarImagenFoto.ubicacion_fisica_actual && (
+        <ExportarImagenModal
+          titulo={exportarImagenFoto.titulo}
+          nombreArtista={exportarImagenFoto.nombre_completo ?? ""}
+          rutaOriginal={exportarImagenFoto.ubicacion_fisica_actual}
+          onClose={() => setExportarImagenFoto(null)}
+        />
       )}
     </div>
   );

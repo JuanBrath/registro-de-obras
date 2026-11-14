@@ -1,9 +1,11 @@
 mod db_commands;
+mod exportar_imagen;
 mod fs_commands;
 pub mod imagen;
 mod licencia;
 mod lightroom;
 mod menu;
+mod photoshop;
 
 use tauri::{Emitter, Manager};
 
@@ -45,6 +47,8 @@ pub fn run() {
       licencia::validar_licencia,
       imagen::convertir_imagen_a_jpeg,
       imagen::leer_archivo_crudo,
+      exportar_imagen::exportar_imagen_obra,
+      photoshop::abrir_en_photoshop,
     ])
     .setup(|app| {
       if cfg!(debug_assertions) {

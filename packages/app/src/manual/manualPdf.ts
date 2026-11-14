@@ -1,5 +1,5 @@
 import { parsearInline, textoParaPdf, type BloqueManual, type CapituloManual, type IdiomaManual } from "@registro/core";
-import { GALERIS_GOLD, dibujarLogo, registerBrandFonts } from "../utils/pdfBranding.js";
+import { RECER_GOLD, dibujarLogo, registerBrandFonts } from "../utils/pdfBranding.js";
 
 // Hoja A4 vertical, medidas en mm.
 const ANCHO_HOJA = 210;
@@ -46,7 +46,7 @@ const TEXTOS: Record<
     generado: (fecha) => `Generado el ${fecha}`,
     indice: "Índice",
     cap: "cap.",
-    pie: "Galeris · Manual del usuario",
+    pie: "Recer · Manual del usuario",
     pagina: (n, total) => `Página ${n} de ${total}`,
   },
   en: {
@@ -55,7 +55,7 @@ const TEXTOS: Record<
     generado: (fecha) => `Generated on ${fecha}`,
     indice: "Contents",
     cap: "ch.",
-    pie: "Galeris · User manual",
+    pie: "Recer · User manual",
     pagina: (n, total) => `Page ${n} of ${total}`,
   },
 };
@@ -220,7 +220,7 @@ export async function generarManualPdf(capitulos: CapituloManual[], opciones: Op
     asegurarEspacio(alto);
     doc.setFillColor(246, 243, 233);
     doc.rect(MARGEN_X, y - 3.6, ANCHO_TEXTO, alto, "F");
-    doc.setFillColor(...GALERIS_GOLD);
+    doc.setFillColor(...RECER_GOLD);
     doc.rect(MARGEN_X, y - 3.6, 1.2, alto, "F");
     doc.setTextColor(30, 30, 30);
     for (const linea of lineas) {
@@ -249,11 +249,11 @@ export async function generarManualPdf(capitulos: CapituloManual[], opciones: Op
   function tituloCapitulo(numero: number, capitulo: CapituloManual) {
     doc.setFont("Montserrat", "bold");
     doc.setFontSize(19);
-    doc.setTextColor(...GALERIS_GOLD);
+    doc.setTextColor(...RECER_GOLD);
     const lineas = doc.splitTextToSize(`${numero}. ${textoParaPdf(capitulo.titulo)}`, ANCHO_TEXTO) as string[];
     doc.text(lineas, MARGEN_X, y);
     y += lineas.length * 8;
-    doc.setDrawColor(...GALERIS_GOLD);
+    doc.setDrawColor(...RECER_GOLD);
     doc.setLineWidth(0.6);
     doc.line(MARGEN_X, y - 3, MARGEN_X + ANCHO_TEXTO, y - 3);
     y += 3;
@@ -290,12 +290,12 @@ export async function generarManualPdf(capitulos: CapituloManual[], opciones: Op
     await dibujarLogo(doc, null, (ANCHO_HOJA - 30) / 2, 60, 30);
     doc.setFont("Montserrat", "bold");
     doc.setFontSize(30);
-    doc.setTextColor(...GALERIS_GOLD);
+    doc.setTextColor(...RECER_GOLD);
     doc.text(textos.titulo, ANCHO_HOJA / 2, 115, { align: "center" });
     doc.setFont("helvetica", "normal");
     doc.setFontSize(15);
     doc.setTextColor(70, 70, 70);
-    doc.text("Galeris Studio", ANCHO_HOJA / 2, 127, { align: "center" });
+    doc.text("Recer Studio", ANCHO_HOJA / 2, 127, { align: "center" });
     doc.setFontSize(10.5);
     doc.setTextColor(120, 120, 120);
     doc.text(textos.subtitulo, ANCHO_HOJA / 2, 136, { align: "center" });
@@ -323,9 +323,9 @@ export async function generarManualPdf(capitulos: CapituloManual[], opciones: Op
     let yi = MARGEN_SUPERIOR;
     doc.setFont("Montserrat", "bold");
     doc.setFontSize(19);
-    doc.setTextColor(...GALERIS_GOLD);
+    doc.setTextColor(...RECER_GOLD);
     doc.text(textos.indice, MARGEN_X, yi);
-    doc.setDrawColor(...GALERIS_GOLD);
+    doc.setDrawColor(...RECER_GOLD);
     doc.setLineWidth(0.6);
     doc.line(MARGEN_X, yi + 3, MARGEN_X + ANCHO_TEXTO, yi + 3);
     yi += 14;

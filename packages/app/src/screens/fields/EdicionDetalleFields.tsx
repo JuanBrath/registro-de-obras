@@ -239,8 +239,8 @@ export function EdicionDetalleRow({
           <>
             <label>
               {t("obraDetail.tipoEnmarcadoLabel")} <HelpIcon fieldKey="tipo_enmarcado" />
-              <input
-                type="text"
+              <textarea
+                rows={2}
                 value={value.tipoEnmarcado}
                 onChange={(e) => onChange({ ...value, tipoEnmarcado: e.target.value })}
               />

@@ -1,12 +1,12 @@
--- Complemento opcional de Lightroom Classic para cargar la foto elegida como una obra nueva en Galeris Studio.
--- Galeris Studio funciona igual sin este complemento. Para quitarlo: Galeris Studio > Configuracion
+-- Complemento opcional de Lightroom Classic para cargar la foto elegida como una obra nueva en Recer Studio.
+-- Recer Studio funciona igual sin este complemento. Para quitarlo: Recer Studio > Configuracion
 -- > Lightroom Classic > Quitar complemento (o borrar esta carpeta de
 -- ~/Library/Application Support/Adobe/Lightroom/Modules/).
 return {
   LrSdkVersion = 6.0,
   LrSdkMinimumVersion = 5.0,
-  LrToolkitIdentifier = 'com.galeris.studio',
-  LrPluginName = 'Galeris Studio',
+  LrToolkitIdentifier = 'com.recer.studio',
+  LrPluginName = 'Recer Studio',
 
   -- Tarea en segundo plano que revisa pedidos de "Abrir en Lightroom" desde una obra (ver
   -- VigilarPedidos.lua). LrForceInitPlugin hace que arranque apenas Lightroom carga el complemento, en
@@ -17,7 +17,7 @@ return {
 
   LrLibraryMenuItems = {
     {
-      title = LOC "$$$/GalerisStudio/Menu=Add artwork to Galeris Studio…",
+      title = LOC "$$$/RecerStudio/Menu=Add artwork to Recer Studio…",
       file = 'CargarObra.lua',
       enabledWhen = 'photosSelected',
     },
@@ -25,7 +25,7 @@ return {
 
   LrExportMenuItems = {
     {
-      title = LOC "$$$/GalerisStudio/Menu=Add artwork to Galeris Studio…",
+      title = LOC "$$$/RecerStudio/Menu=Add artwork to Recer Studio…",
       file = 'CargarObra.lua',
       enabledWhen = 'photosSelected',
     },

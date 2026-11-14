@@ -1,12 +1,12 @@
--- Manda la foto activa de Lightroom Classic a Galeris Studio, para cargarla como una obra nueva.
+-- Manda la foto activa de Lightroom Classic a Recer Studio, para cargarla como una obra nueva.
 --
 -- Como funciona: prepara una copia de la foto en JPG y un archivo de datos (titulo, palabras clave,
 -- calificacion, fecha de captura, camara, ruta del original...) en la carpeta "lightroom-entrada" de
--- Galeris Studio, y abre Galeris Studio. Galeris Studio lee esa carpeta al abrirse (o al volver a primer
+-- Recer Studio, y abre Recer Studio. Recer Studio lee esa carpeta al abrirse (o al volver a primer
 -- plano), abre "Nueva obra" con eso ya cargado y la vacia. No se cambia nada en la foto ni en el catalogo.
 --
 -- Los datos se escriben en JSON a mano (Lightroom no trae una libreria para eso): ver
--- packages/core/src/business/lightroom.ts en Galeris Studio, que es quien los interpreta.
+-- packages/core/src/business/lightroom.ts en Recer Studio, que es quien los interpreta.
 
 local LrApplication = import 'LrApplication'
 local LrDialogs = import 'LrDialogs'
@@ -35,7 +35,7 @@ local function escribirArchivo(ruta, contenido)
 end
 
 local function mostrar(mensaje)
-  LrDialogs.message(LOC "$$$/GalerisStudio/Titulo=Galeris Studio", mensaje, 'info')
+  LrDialogs.message(LOC "$$$/RecerStudio/Titulo=Recer Studio", mensaje, 'info')
 end
 
 -- Los valores de Lightroom pueden venir vacios (nil): en el archivo de datos quedan como "".
@@ -45,17 +45,17 @@ end
 
 local function mandarFoto()
   if WIN_ENV then
-    mostrar(LOC "$$$/GalerisStudio/SoloMac=This plug-in only works on macOS.")
+    mostrar(LOC "$$$/RecerStudio/SoloMac=This plug-in only works on macOS.")
     return
   end
 
   local foto = LrApplication.activeCatalog():getTargetPhoto()
   if not foto then
-    mostrar(LOC "$$$/GalerisStudio/SinFoto=Select a photo first.")
+    mostrar(LOC "$$$/RecerStudio/SinFoto=Select a photo first.")
     return
   end
 
-  -- La carpeta de datos de Galeris Studio: ~/Library/Application Support/com.registrodeobras.app.
+  -- La carpeta de datos de Recer Studio: ~/Library/Application Support/com.registrodeobras.app.
   -- No sirve getStandardFilePath('appData'): en Lightroom eso es SU propia carpeta.
   local casa = LrPathUtils.getStandardFilePath('home')
   local buzon = LrPathUtils.child(
@@ -65,7 +65,7 @@ local function mandarFoto()
   LrFileUtils.createAllDirectories(buzon)
   local rutaDatos = LrPathUtils.child(buzon, 'entrada.json')
   local rutaImagen = LrPathUtils.child(buzon, 'imagen.jpg')
-  -- Se borra lo anterior primero: Galeris Studio solo actua cuando aparece el archivo de datos, y ese va al final.
+  -- Se borra lo anterior primero: Recer Studio solo actua cuando aparece el archivo de datos, y ese va al final.
   LrFileUtils.delete(rutaDatos)
   LrFileUtils.delete(rutaImagen)
 
@@ -95,12 +95,12 @@ local function mandarFoto()
     if ok then exportada = rutaOMensaje else fallo = rutaOMensaje end
   end
   if not exportada then
-    mostrar(LOC("$$$/GalerisStudio/ErrorExportar=The photo could not be prepared: ^1", tostring(fallo)))
+    mostrar(LOC("$$$/RecerStudio/ErrorExportar=The photo could not be prepared: ^1", tostring(fallo)))
     return
   end
   if exportada ~= rutaImagen then
     if not LrFileUtils.move(exportada, rutaImagen) then
-      mostrar(LOC("$$$/GalerisStudio/ErrorExportar=The photo could not be prepared: ^1", exportada))
+      mostrar(LOC("$$$/RecerStudio/ErrorExportar=The photo could not be prepared: ^1", exportada))
       return
     end
   end
@@ -134,13 +134,13 @@ local function mandarFoto()
   escribirArchivo(rutaDatos, datos)
 
   if LrTasks.execute('open -b com.registrodeobras.app') ~= 0 then
-    mostrar(LOC "$$$/GalerisStudio/NoAbrio=The photo and its details are ready, but Galeris Studio could not be opened. Open it by hand and they will load by themselves.")
+    mostrar(LOC "$$$/RecerStudio/NoAbrio=The photo and its details are ready, but Recer Studio could not be opened. Open it by hand and they will load by themselves.")
   end
 end
 
 LrTasks.startAsyncTask(function()
   local ok, problema = LrTasks.pcall(mandarFoto)
   if not ok then
-    mostrar(LOC("$$$/GalerisStudio/ErrorGeneral=The photo could not be sent to Galeris Studio: ^1", tostring(problema)))
+    mostrar(LOC("$$$/RecerStudio/ErrorGeneral=The photo could not be sent to Recer Studio: ^1", tostring(problema)))
   end
 end)

@@ -201,13 +201,13 @@ pub fn fs_copiar_carpeta<R: tauri::Runtime>(app: AppHandle<R>, origen: String, d
 /// Borra una carpeta de workspace vieja despues de una mudanza confirmada
 /// (ver fs_copiar_carpeta). Solo borra si la carpeta todavia tiene un
 /// registro.db adentro — evita borrar por error una carpeta que en realidad
-/// no es (o ya dejo de ser) una carpeta de datos de Galeris.
+/// no es (o ya dejo de ser) una carpeta de datos de Recer.
 #[tauri::command]
 pub fn fs_remove_workspace_root(path: String) -> Result<(), String> {
     let root = PathBuf::from(&path);
     if !root.join("registro.db").exists() {
         return Err(
-            "La carpeta no parece ser una carpeta de datos de Galeris (no tiene registro.db) — no se borra por seguridad."
+            "La carpeta no parece ser una carpeta de datos de Recer (no tiene registro.db) — no se borra por seguridad."
                 .into(),
         );
     }

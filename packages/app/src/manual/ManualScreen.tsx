@@ -148,7 +148,7 @@ export function ManualScreen({ onBack }: { onBack: () => void }) {
     try {
       const soloCapitulo = pdfAlcance === "capitulo" && capitulo ? capitulo : null;
       const bytes = await generarManualPdf(CAPITULOS, { capituloId: soloCapitulo?.id, idioma });
-      const base = idioma === "en" ? "galeris_user_manual" : "manual_del_usuario_galeris";
+      const base = idioma === "en" ? "recer_user_manual" : "manual_del_usuario_recer";
       const nombre = soloCapitulo ? `${base}_${soloCapitulo.id.replace(/-/g, "_")}.pdf` : `${base}.pdf`;
       const guardado = await savePdfWithDialog(bytes, nombre);
       if (guardado) setPdfMensaje({ tipo: "ok", texto: t("manual.pdfGenerado") });

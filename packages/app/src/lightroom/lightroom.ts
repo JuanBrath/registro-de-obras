@@ -2,7 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { interpretarEnvioLightroom, type EnvioLightroom } from "@registro/core";
 
 /**
- * Vinculacion opcional con Lightroom Classic. Galeris Studio funciona igual sin ella: si nunca se
+ * Vinculacion opcional con Lightroom Classic. Recer Studio funciona igual sin ella: si nunca se
  * instala el complemento, la carpeta de entrada no existe y nada de esto hace nada. La carpeta la
  * maneja el lado de Rust (src-tauri/src/lightroom.rs).
  */
@@ -58,6 +58,6 @@ export const quitarComplementoLightroom = () => invoke<void>("quitar_complemento
  * ruta del archivo original guardada en una obra ("ubicación del archivo original"). Si Lightroom no
  * esta corriendo, lo abre. El complemento (VigilarPedidos.lua, ya corriendo dentro de Lightroom
  * mientras este abierto) es quien busca la foto y avisa con un cartel propio si no la encuentra —
- * Galeris Studio no se entera del resultado, asi que esto no tira error si la foto no estaba.
+ * Recer Studio no se entera del resultado, asi que esto no tira error si la foto no estaba.
  */
 export const pedirAbrirEnLightroom = (ruta: string) => invoke<void>("pedir_abrir_en_lightroom", { ruta });

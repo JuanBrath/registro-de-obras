@@ -24,7 +24,7 @@ If you choose a **PSD, PSB or TIFF**, the program generates a JPG on its own fro
 - **Year / Period**: the exact year or a range, for example 2024-2025.
 - **Notes**: free text.
 
-In Galeris Studio the artwork is registered under your name: at the top of the form you see "Artist: your name", with an **Edit my info** button that takes you to your profile.
+In Recer Studio the artwork is registered under your name: at the top of the form you see "Artist: your name", with an **Edit my info** button that takes you to your profile.
 
 ## Step 3: the category
 
@@ -45,13 +45,13 @@ Each category has its **subtypes** (for example, in Photography: classic analog,
 - Choose the **Subtype**. Depending on which one it is, the fields that follow change.
 - **Capture date** (in synthography it's called **Creation date**), **Edition year**, **Series or project** and **Technique**.
 - **Capture data**: camera, ISO, shutter speed, aperture and focal length. They don't appear in synthography (which has no such data).
-- **Original file location**: for digital photographs, choose the file the artwork is printed from. If the file is **JPEG, TIFF, HEIC, PSD/PSB or camera RAW (CR2, NEF, ARW, ORF, DNG)**, the program fills in on its own the capture date, the editing software, the camera data and the **keywords** (which become tags). In a new artwork it also takes the **star rating** the file already has (for example, set from Lightroom or Bridge). With other RAW formats (such as CR3 or RAF) that data isn't read automatically yet, but you can fill it in by hand. After that, the data lives in Galeris: changing it here doesn't modify the file, nor the other way around. In the other subtypes, this field is free text called **Negative location**.
+- **Original file location**: for digital photographs, choose the file the artwork is printed from. If the file is **JPEG, TIFF, HEIC, PSD/PSB or camera RAW (CR2, NEF, ARW, ORF, DNG)**, the program fills in on its own the capture date, the editing software, the camera data and the **keywords** (which become tags). In a new artwork it also takes the **star rating** the file already has (for example, set from Lightroom or Bridge). With other RAW formats (such as CR3 or RAF) that data isn't read automatically yet, but you can fill it in by hand. After that, the data lives in Recer: changing it here doesn't modify the file, nor the other way around. In the other subtypes, this field is free text called **Negative location**.
 - **Synthography** (art generated entirely by artificial intelligence): it has no camera data. The certificates for these artworks carry the legend **NO COPYRIGHT** at the bottom (**SIN COPYRIGHT** in Spanish), instead of the artist's copyright. See [Certificate of authenticity](cap:certificado).
-- In Galeris Studio you also see the **Editing software** field.
+- In Recer Studio you also see the **Editing software** field.
 
 ## Step 4: tags
 
-In **Tags** choose an existing one or type a new one. Tags belong to Galeris: they are used to classify and search inside the program, but they are not written into the original file.
+In **Tags** choose an existing one or type a new one. Tags belong to Recer: they are used to classify and search inside the program, but they are not written into the original file.
 
 ## Step 5: unique artwork or edition
 

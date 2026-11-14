@@ -76,16 +76,16 @@ High-quality printing on conservation-grade papers, intended for collectible wor
 
 ## Commission
 
-The percentage a gallery keeps of the sale value. It exists only in Galeris Space.
+The percentage a gallery keeps of the sale value. It exists only in Recer Space.
 
 ## Droit de suite (resale royalty right)
 
-A percentage of the resale that belongs to the artist or their heirs. Each country has its own legislation. It exists only in Galeris Space, and the values are entered by hand.
+A percentage of the resale that belongs to the artist or their heirs. Each country has its own legislation. It exists only in Recer Space, and the values are entered by hand.
 
 ## Nail to nail
 
 A type of insurance that covers the artwork from the moment it leaves one place until it arrives at another, without gaps.
 
-## Personal records, Galeris Studio and Galeris Space
+## Personal records, Recer Studio and Recer Space
 
-**Galeris Studio** is the edition for an individual artist or photographer (the "personal records"). **Galeris Space** is the edition for galleries. Each one has its own records.
+**Recer Studio** is the edition for an individual artist or photographer (the "personal records"). **Recer Space** is the edition for galleries. Each one has its own records.

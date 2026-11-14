@@ -72,18 +72,28 @@ async function getOrPickRoot(store: Store, workspace: WorkspaceId): Promise<stri
   }
 
   // La carpeta que se uso la ultima vez ya no aparece: puede ser un disco
-  // externo desconectado, o que la carpeta se haya movido o renombrado.
-  // Se ofrece buscarla de nuevo o, como ultimo recurso, generar una carpeta
-  // nueva (los datos viejos no se borran, solo se deja de apuntar a ellos).
+  // externo desconectado, o que la carpeta se haya movido o renombrado. Se
+  // ofrece buscarla de nuevo y, si no, generar una carpeta nueva (los datos
+  // viejos no se borran, solo se deja de apuntar a ellos) — pero "Cancelar"
+  // en cualquiera de los dos avisos tiene que cancelar de verdad y devolver
+  // a la pantalla anterior sin tocar nada. Antes el primer aviso usaba como
+  // cancelLabel el texto de "Generar una carpeta nueva": cerrar el dialogo
+  // con Escape (que Tauri resuelve igual que tocar "cancelar") terminaba
+  // generando una carpeta nueva solo, sin ninguna salida honesta.
   const t = await getTraductor();
   const buscarla = await ask(t("dialogo.carpetaNoEncontradaMensaje", { ruta: existing }), {
     title: t("dialogo.carpetaNoEncontradaTitulo"),
     kind: "warning",
     okLabel: t("dialogo.carpetaNoEncontradaBuscarla"),
-    cancelLabel: t("dialogo.carpetaNoEncontradaGenerarNueva"),
+    cancelLabel: t("common.cancel"),
   });
   if (buscarla) {
-    return pickAndSaveRoot(store, workspace);
+    try {
+      return await pickAndSaveRoot(store, workspace);
+    } catch {
+      // Cancelo el selector de carpetas: se le sigue ofreciendo generar una
+      // nueva antes de darse por vencido del todo.
+    }
   }
 
   const confirmaNueva = await ask(t("dialogo.carpetaNuevaMensaje"), {
@@ -104,6 +114,12 @@ export async function changeTauriWorkspaceRoot(workspace: WorkspaceId): Promise<
   return pickAndSaveRoot(store, workspace);
 }
 
+/** Solo lee la carpeta guardada para este workspace, sin abrir ningun selector ni pedir confirmaciones — para mostrarla en Ajustes ("Ver carpeta actual"). null si todavia no se eligio ninguna. */
+export async function getTauriWorkspaceRoot(workspace: WorkspaceId): Promise<string | null> {
+  const store = await Store.load(STORE_FILE);
+  return (await store.get<string>(workspace)) ?? null;
+}
+
 export interface ResultadoMudanzaCarpeta {
   nuevaRuta: string;
   rutaVieja: string;
@@ -111,7 +127,7 @@ export interface ResultadoMudanzaCarpeta {
 
 /**
  * "Mover carpeta": a diferencia de "Cambiar carpeta" (que solo le indica a
- * Galeris una carpeta distinta, asumiendo que el usuario ya movio los
+ * Recer una carpeta distinta, asumiendo que el usuario ya movio los
  * archivos a mano), esta funcion copia ella misma todo el contenido de la
  * carpeta actual a una carpeta nueva elegida por el usuario, pensado para
  * quien no esta comodo moviendo carpetas en el Finder/Explorador.
@@ -266,7 +282,7 @@ export async function restaurarTauriWorkspaceDesdeBackup(
     throw new Error("Se necesita elegir la carpeta de la copia de seguridad");
   }
   if (!(await invoke<boolean>("fs_exists", { root: origen, relativePath: "registro.db" }))) {
-    throw new Error("Esa carpeta no parece ser una copia de seguridad de Galeris (no tiene registro.db)");
+    throw new Error("Esa carpeta no parece ser una copia de seguridad de Recer (no tiene registro.db)");
   }
 
   if (dbActual) await dbActual.close();

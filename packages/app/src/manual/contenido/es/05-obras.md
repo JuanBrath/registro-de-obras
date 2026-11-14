@@ -19,7 +19,7 @@ Tocando una tarjeta abrís la ficha de esa obra. Ver [Ficha de la obra](cap:fich
 
 ## Buscar
 
-El cuadro de búsqueda de arriba busca mientras escribís. En Galeris Studio busca en el **título**, en el **número** de la obra y en el **código de inventario**. No busca dentro de las etiquetas: para eso está el filtro de etiquetas (ver más abajo). Si no aparece nada, ves el mensaje "No se encontraron obras con esos filtros."
+El cuadro de búsqueda de arriba busca mientras escribís. En Recer Studio busca en el **título**, en el **número** de la obra y en el **código de inventario**. No busca dentro de las etiquetas: para eso está el filtro de etiquetas (ver más abajo). Si no aparece nada, ves el mensaje "No se encontraron obras con esos filtros."
 
 ## Filtrar y ordenar
 
@@ -50,9 +50,9 @@ Algunas cosas para tener en cuenta:
 
 - El filtro de etiquetas se combina con los demás filtros (categoría, subtipo, estrellas y el cuadro de búsqueda), y ahí sí se restringe: una obra tiene que cumplir todos esos filtros a la vez y, además, tener alguna de las etiquetas elegidas.
 - Hoy no existe una opción para pedir "solo las obras que tengan todas las etiquetas". Si necesitás ver las que tienen dos etiquetas a la vez, elegí una de las dos y buscá la otra a ojo en la ficha, o usá una etiqueta más específica.
-- Las etiquetas son propias de Galeris: sirven para clasificar y buscar dentro del programa, pero no se graban en el archivo original. Si el archivo trae palabras clave (por ejemplo, cargadas en Lightroom), se leen solas la primera vez que indicás su ubicación; desde ahí viven solo en Galeris: cambiarlas acá no modifica el archivo, ni al revés.
+- Las etiquetas son propias de Recer: sirven para clasificar y buscar dentro del programa, pero no se graban en el archivo original. Si el archivo trae palabras clave (por ejemplo, cargadas en Lightroom), se leen solas la primera vez que indicás su ubicación; desde ahí viven solo en Recer: cambiarlas acá no modifica el archivo, ni al revés.
 - La **Galería de obras** usa exactamente el mismo filtro y la misma regla. Ver [Galería de obras](cap:galeria-de-obras).
-- En Galeris Space, el cuadro de búsqueda además busca dentro de las etiquetas.
+- En Recer Space, el cuadro de búsqueda además busca dentro de las etiquetas.
 
 ## Cambiar el tamaño de las miniaturas
 
@@ -60,7 +60,7 @@ El deslizador **Tamaño de las miniaturas** (junto al cuadro de búsqueda) cambi
 
 ## Calificar con estrellas
 
-Tocá una de las cinco estrellas debajo de una obra para calificarla. La calificación se guarda en Galeris y, si la obra tiene indicada la **Ubicación del archivo original**, también se escribe en ese archivo (dentro del JPG, o en un archivo auxiliar **.xmp** al lado si es RAW, TIFF, PSD u otro formato) para que la vean programas como Lightroom o Bridge. Si esa segunda parte falla, la calificación igual queda guardada en Galeris y se muestra un aviso.
+Tocá una de las cinco estrellas debajo de una obra para calificarla. La calificación se guarda en Recer y, si la obra tiene indicada la **Ubicación del archivo original**, también se escribe en ese archivo (dentro del JPG, o en un archivo auxiliar **.xmp** al lado si es RAW, TIFF, PSD u otro formato) para que la vean programas como Lightroom o Bridge. Si esa segunda parte falla, la calificación igual queda guardada en Recer y se muestra un aviso.
 
 ## Generar un listado en PDF
 

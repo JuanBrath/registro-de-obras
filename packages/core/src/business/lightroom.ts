@@ -1,5 +1,5 @@
 /**
- * Lo que manda el complemento de Lightroom Classic (carpeta lightroom/GalerisStudio.lrplugin del
+ * Lo que manda el complemento de Lightroom Classic (carpeta lightroom/RecerStudio.lrplugin del
  * proyecto): un archivo `entrada.json` en la carpeta "lightroom-entrada" de los datos del programa,
  * junto a la foto preparada. Ese archivo viene de afuera, asi que se revisa todo: lo que no sirve
  * se ignora en vez de romper. Aca solo esta la parte pura (sin leer archivos), para poder probarla.
@@ -14,7 +14,7 @@ export interface EnvioLightroom {
   palabrasClave: string[];
   /** Estrellas de 1 a 5, o null si la foto no esta calificada. */
   calificacion: number | null;
-  /** Como los muestra Galeris Studio en "Datos de captura" (ej. "Canon EOS R5", "1/250", "f/2.8", "50mm"). */
+  /** Como los muestra Recer Studio en "Datos de captura" (ej. "Canon EOS R5", "1/250", "f/2.8", "50mm"). */
   camara: string;
   iso: string;
   velocidadObturador: string;

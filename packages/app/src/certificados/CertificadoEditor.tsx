@@ -11,7 +11,7 @@ import { BotonCalendario, CampoFecha } from "../components/CampoFecha.js";
 import { Modal } from "../components/Modal.js";
 import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
 import { detectImageFormat } from "../utils/detectImageFormat.js";
-import { savePdfWithDialog } from "../utils/savePdfDialog.js";
+import { savePdfWithDialogAndPath } from "../utils/savePdfDialog.js";
 import { certificadoVacio, type Certificado, type GuiasCorte, type Idioma, type Modelo, type TamanoHoja } from "./certificado.js";
 import { valoresDeStudio, type DatosStudioCertificado, type FormatoCertificado } from "./datosStudio.js";
 import { generarCertificado } from "./generar.js";
@@ -67,6 +67,7 @@ export function CertificadoEditor({
   onEditarCopia,
   onEditarVenta,
   guardarCorrecciones,
+  onGuardado,
   onClose,
 }: {
   datos: DatosStudioCertificado;
@@ -79,6 +80,8 @@ export function CertificadoEditor({
   onEditarVenta: () => void;
   /** Guarda las correcciones en el registro (obra, copia y venta) y recarga la pantalla de atras. */
   guardarCorrecciones: (correcciones: CorreccionesRegistro) => Promise<void>;
+  /** Avisa donde quedo guardado el PDF, para poder ofrecer volver a abrirlo despues. */
+  onGuardado?: (path: string) => void;
   onClose: () => void;
 }) {
   const { t } = useLanguage();
@@ -268,8 +271,11 @@ export function CertificadoEditor({
     setGuardando(true);
     try {
       const bytes = await generarCertificado(cert);
-      const guardado = await savePdfWithDialog(bytes, `${nombreArchivo}.pdf`);
-      if (guardado) setMensaje({ tipo: "ok", texto: t("ventaForm.informeGenerado") });
+      const { saved, path } = await savePdfWithDialogAndPath(bytes, `${nombreArchivo}.pdf`);
+      if (saved) {
+        setMensaje({ tipo: "ok", texto: t("certificado.generadoCorrectamente") });
+        if (path) onGuardado?.(path);
+      }
     } catch (e) {
       setMensaje({ tipo: "error", texto: e instanceof Error ? e.message : String(e) });
     } finally {

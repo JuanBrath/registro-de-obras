@@ -9,7 +9,7 @@ import {
 
 /**
  * La vinculacion opcional con Lightroom Classic, dentro de Configuracion: instalar, actualizar o quitar
- * el complemento. Sin ella, Galeris Studio funciona igual.
+ * el complemento. Sin ella, Recer Studio funciona igual.
  */
 export function LightroomSettings() {
   const { t } = useLanguage();

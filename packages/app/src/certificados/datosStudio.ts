@@ -8,7 +8,7 @@ import type { Certificado, Modelo } from "./certificado.js";
 export type FormatoCertificado = Modelo | "fichaSinGaleria";
 
 /**
- * Lo que Galeris Studio ya sabe de la obra, la copia y la venta para armar un
+ * Lo que Recer Studio ya sabe de la obra, la copia y la venta para armar un
  * certificado. Son datos crudos: cuales van a cada campo del certificado
  * depende del modelo elegido (ver valoresDeStudio).
  */

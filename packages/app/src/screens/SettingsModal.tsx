@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { edicionIncluyeGaleria, edicionIncluyePersonal, type WorkspaceId } from "@registro/core";
 import { Modal } from "../components/Modal.js";
 import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
@@ -8,6 +8,7 @@ import { useMiniaturasModo } from "../state/MiniaturasModoContext.js";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { useEdicion } from "../state/EdicionContext.js";
 import { isTauri } from "../adapters/detectPlatform.js";
+import { openLocalFile } from "../utils/openExternalUrl.js";
 import { LightroomSettings } from "../components/LightroomSettings.js";
 import { LicenciaSettings } from "../components/LicenciaSettings.js";
 
@@ -65,6 +66,23 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
   const [progresoRestaurar, setProgresoRestaurar] = useState<{ copiados: number; total: number } | null>(null);
   const [errorRestaurar, setErrorRestaurar] = useState<string | null>(null);
   const [restaurado, setRestaurado] = useState(false);
+  const [rutaActual, setRutaActual] = useState<string | null>(null);
+  const [errorVerCarpeta, setErrorVerCarpeta] = useState<string | null>(null);
+
+  // Se lee apenas se abre Ajustes (no hace falta esperar a tocar nada): es
+  // una lectura simple del store, no dispara ningun selector de carpeta.
+  useEffect(() => {
+    if (!isTauri() || !context) return;
+    let cancelado = false;
+    import("../adapters/tauri/tauriAdapterFactory.js").then(({ getTauriWorkspaceRoot }) =>
+      getTauriWorkspaceRoot(context.workspace).then((ruta) => {
+        if (!cancelado) setRutaActual(ruta);
+      }),
+    );
+    return () => {
+      cancelado = true;
+    };
+  }, [context]);
 
   // Fuerza a elegir una carpeta nueva para este workspace (aunque la actual
   // siga siendo valida) y vuelve a la pantalla de inicio para reabrir el
@@ -337,6 +355,27 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
       {isTauri() && context && (
         <fieldset className="settings-idioma-fieldset">
           <legend>{t("settings.carpetaDatos")}</legend>
+
+          {rutaActual && <p className="field-note">{t("settings.carpetaActualNota", { ruta: rutaActual })}</p>}
+          {errorVerCarpeta && (
+            <p className="error" role="alert">
+              ⚠️ {errorVerCarpeta}
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={async () => {
+              setErrorVerCarpeta(null);
+              try {
+                await openLocalFile(rutaActual!);
+              } catch (err) {
+                setErrorVerCarpeta(err instanceof Error ? err.message : String(err));
+              }
+            }}
+            disabled={!rutaActual}
+          >
+            {t("settings.verCarpetaBoton")}
+          </button>
 
           <p className="field-note">{t("settings.cambiarCarpetaNota")}</p>
           {errorCambioCarpeta && (

@@ -8,14 +8,44 @@ In **Artworks**, click the artwork's card. The title is at the top; to go back u
 
 ## What the sheet shows
 
-- The image of the artwork. If you click it, it opens large.
+- The image of the artwork. If you click it, it opens large. Right-clicking it (either the thumbnail or the large view) opens a menu with **Export image…**, **Open in Photoshop** and **Open in Lightroom**; see below.
 - The inventory code, the artist, the category and the subtype.
 - Whether it's a unique artwork or an edition (and how many editions it has).
 - The main details of the artwork: technique, support, dimensions, weight…
 - The **Statement** and the **Notes**: the first line is shown; click the field name to see the full text.
 - Further down, the list of **Copies**: the copies of the artwork. See [Copies and statuses](cap:copias).
 
-Below the details there are three buttons: **Edit artwork**, **Generate report** and **Delete artwork**.
+Below the details there are three buttons: **Edit artwork**, **Generate report** and **Delete artwork**. If there's an original file loaded, the **Ps** button (**Open in Photoshop**) also appears next to them, and, if it's also your own digital photo, the **Lr** button (**Open in Lightroom Classic** — see [Lightroom Classic](cap:lightroom-classic)).
+
+## The right-click menu on the image
+
+Right-clicking the image (the thumbnail or the large view) opens a menu with three options.
+
+### Export image…
+
+- If the artwork doesn't have the **Original file location** loaded, the notice "Can't export: this artwork doesn't have the original file loaded (see "Original file location" in Edit artwork)." appears and nothing opens.
+- If it does, a window opens where you choose:
+  - **Format**: **JPG**, **TIFF** or **Original (exact copy of the file, unchanged)**.
+  - For JPG or TIFF, also: the **Reference side** (**Short side** or **Long side**) and the **Size (in pixels)** of that side. It won't be enlarged: if the original file is smaller than this size, it's exported at its real size.
+  - A **Copyright (optional)** field, suggested as "© [artist's name] [current year]"; you can delete or change it, and it's saved as metadata inside the exported file.
+- Click **Export…**: it first asks where to save the new file (folder and name), and only then generates it.
+
+> With **Original** the file is exported exactly as it is, whatever format it's in. With JPG or TIFF, the program needs to be able to read the original file: for now it works with PSD, PSB, TIFF, JPG and camera RAW (CR2, NEF, ARW, ORF, DNG).
+
+### Open in Photoshop
+
+Opens the original file in Adobe Photoshop (the newest copy, if there are several versions installed on the computer).
+
+- If the artwork doesn't have the **Original file location** loaded, the notice "Can't open in Photoshop: this artwork doesn't have the original file loaded (see "Original file location" in Edit artwork)." appears and nothing else happens.
+- If there's no copy of Photoshop installed on the computer, "Couldn't open the file in Photoshop. You might not have it installed on this computer." appears.
+
+This is the same thing the **Ps** button above does: both ways are there, use whichever is more convenient.
+
+### Open in Lightroom
+
+This is the same as the **Lr** button (see above and [Lightroom Classic](cap:lightroom-classic)), also available from this menu.
+
+- If the artwork doesn't have the **Original file location** loaded, the notice "Can't open in Lightroom: this artwork doesn't have the original file loaded (see "Original file location" in Edit artwork)." appears and nothing else happens.
 
 ## Editing the artwork
 

@@ -8,14 +8,44 @@ En **Obras**, tocá la tarjeta de la obra. Arriba está el título; para volver 
 
 ## Qué muestra la ficha
 
-- La imagen de la obra. Si la tocás, se abre en grande.
+- La imagen de la obra. Si la tocás, se abre en grande. Con click derecho (en la miniatura o en la vista en grande) aparece un menú con **Exportar imagen…**, **Abrir en Photoshop** y **Abrir en Lightroom**; ver más abajo.
 - El código de inventario, el artista, la categoría y el subtipo.
 - Si es una obra única o seriada (y cuántas ediciones tiene).
 - Los datos principales de la obra: técnica, soporte, dimensiones, peso…
 - El **Statement** y las **Notas**: se muestra la primera línea; tocando el nombre del campo ves el texto completo.
 - Más abajo, la lista de **Ejemplares**: las copias de la obra. Ver [Copias y estados](cap:copias).
 
-Debajo de los datos hay tres botones: **Editar obra**, **Generar informe** y **Eliminar obra**.
+Debajo de los datos hay tres botones: **Editar obra**, **Generar informe** y **Eliminar obra**. Si hay un archivo original cargado, al lado aparece también el botón **Ps** (**Abrir en Photoshop**) y, si además es una foto digital propia, el botón **Lr** (**Abrir en Lightroom Classic** — ver [Lightroom Classic](cap:lightroom-classic)).
+
+## El menú del click derecho sobre la imagen
+
+Con click derecho sobre la imagen (la miniatura o la vista en grande) aparece un menú con tres opciones.
+
+### Exportar imagen…
+
+- Si la obra no tiene cargada la **Ubicación del archivo original**, aparece el aviso "No se puede exportar: esta obra no tiene cargado el archivo original (ver "Ubicación del archivo original" en Editar obra)." y no se abre nada.
+- Si lo tiene, se abre una ventana donde elegís:
+  - **Formato**: **JPG**, **TIFF** u **Original (copia exacta del archivo, sin cambios)**.
+  - Para JPG o TIFF, además: el **Lado de referencia** (**Lado corto** o **Lado largo**) y la **Medida (en píxeles)** de ese lado. No se va a ampliar: si el archivo original es más chico que esta medida, se exporta en su tamaño real.
+  - Un **Copyright (opcional)**, que sale sugerido como "© [nombre del artista] [año actual]"; se puede borrar o cambiar, y queda guardado como metadato dentro del archivo exportado.
+- Tocá **Exportar…**: primero preguntá dónde guardar el archivo nuevo (carpeta y nombre) y recién ahí lo genera.
+
+> Con **Original** se exporta el archivo tal cual está, sea el formato que sea. Con JPG o TIFF, el programa necesita poder leer el archivo original: por ahora funciona con PSD, PSB, TIFF, JPG y RAW de cámara (CR2, NEF, ARW, ORF, DNG).
+
+### Abrir en Photoshop
+
+Abre el archivo original en Adobe Photoshop (la copia más nueva, si hay varias versiones instaladas en el equipo).
+
+- Si la obra no tiene cargada la **Ubicación del archivo original**, aparece el aviso "No se puede abrir en Photoshop: esta obra no tiene cargado el archivo original (ver "Ubicación del archivo original" en Editar obra)." y no pasa nada más.
+- Si no hay ninguna copia de Photoshop instalada en el equipo, aparece "No se pudo abrir el archivo en Photoshop. Puede que no lo tengas instalado en este equipo."
+
+Es lo mismo que hace el botón **Ps** de más arriba: están las dos formas, podés usar la que te quede más a mano.
+
+### Abrir en Lightroom
+
+Es lo mismo que el botón **Lr** (ver más arriba y [Lightroom Classic](cap:lightroom-classic)), disponible también desde este menú.
+
+- Si la obra no tiene cargada la **Ubicación del archivo original**, aparece el aviso "No se puede abrir en Lightroom: esta obra no tiene cargado el archivo original (ver "Ubicación del archivo original" en Editar obra)." y no pasa nada más.
 
 ## Editar la obra
 

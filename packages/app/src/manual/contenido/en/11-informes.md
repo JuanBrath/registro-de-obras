@@ -27,7 +27,7 @@ When you click **Generate report** a window opens where you choose what to produ
 ### Common options
 
 - **Report language**: **Español**, **English** or **Ambos / Both** (both languages in the same document). It changes the fixed titles and texts; the data comes out as you entered it. Contracts are generated in Spanish only.
-- **Logo**: **With logo** or **Without logo**. With logo it uses the one you saved in your profile; if you haven't saved one, it uses the Galeris monogram.
+- **Logo**: **With logo** or **Without logo**. With logo it uses the one you saved in your profile; if you haven't saved one, it uses the Recer monogram.
 - **Date in the letterhead**: **With date** or **Without date** (in the reports that offer it). Next to the date goes your city, if you entered it.
 - **Notes** and **Statement**: **Include** or **Omit** (in an artwork's report, when it has those texts filled in).
 - **Signature**: **No signature**, **Digital signature** (uses the signature image from your profile; it's disabled if you haven't saved one) or **Space for handwritten signature** (leaves a line to sign by hand).
