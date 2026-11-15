@@ -61,7 +61,7 @@ The **Reserved** and **Sold** statuses are not chosen by hand: they appear on th
 
 The ⓘ tips explain each item. None of them is required, except what's needed to sell (see below).
 
-> In Galeris Space, the copy also has gallery-specific data: the **Certificate of Authenticity (COA) number**, the **COA issuer**, the **COA issue date**, the **COA security system**, the **Insurance value (nail-to-nail)** and the **Condition report**.
+> In Recer Space, the copy also has gallery-specific data: the **Certificate of Authenticity (COA) number**, the **COA issuer**, the **COA issue date**, the **COA security system**, the **Insurance value (nail-to-nail)** and the **Condition report**.
 
 ## What is needed before selling or reserving
 

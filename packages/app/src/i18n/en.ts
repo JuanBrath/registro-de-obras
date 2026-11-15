@@ -116,13 +116,13 @@ export const en: Record<keyof typeof es, string> = {
   "field.esSeriada": "Is an edition",
 
   // WorkspacePicker
-  "workspacePicker.personal": "Galeris Studio",
-  "workspacePicker.galeria": "Galeris Space",
+  "workspacePicker.personal": "Recer Studio",
+  "workspacePicker.galeria": "Recer Space",
   "workspacePicker.opening": "Opening registry…",
 
   // ActivarLicencia
   "activarLicencia.titulo": "Activate license",
-  "activarLicencia.ayuda": "Galeris needs an active license to run. Choose the license file you received when you purchased it.",
+  "activarLicencia.ayuda": "Recer needs an active license to run. Choose the license file you received when you purchased it.",
 
   // WorkspaceHome
   "workspaceHome.titular": "Owner: {{nombre}}",
@@ -134,11 +134,33 @@ export const en: Record<keyof typeof es, string> = {
   "workspaceHome.ventas": "Sales",
   "workspaceHome.clientes": "Clients",
   "workspaceHome.manual": "User manual",
+  "workspaceHome.verRecorrido": "View initial tour",
+
+  // RecorridoInicial (guided welcome tour, see WorkspaceHome)
+  "recorridoInicial.introTitulo": "Welcome to Recer!",
+  "recorridoInicial.introTexto": "Here's a quick tour of the first steps. You can skip it anytime and watch it again later.",
+  "recorridoInicial.miPerfilTexto":
+    "Here are your details, your logo and your signature — you already filled these in to reach this screen. Come back here whenever you want to update them.",
+  "recorridoInicial.galeriaPerfilTexto": "Here are the gallery's details, logo and signature, used in your documents.",
+  "recorridoInicial.artistasTexto":
+    "Here you add the artists the gallery represents. You need to add an artist before you can add one of their artworks.",
+  "recorridoInicial.obrasTexto": "Here you'll add and view all your artworks. To add the first one, come in here and click \"New artwork\".",
+  "recorridoInicial.clientesTexto": "Your buyers and contacts live here, ready to use when you record a sale.",
+  "recorridoInicial.ventasTexto": "Here you can check your sales report by date.",
+  "recorridoInicial.manualTexto": "Whenever you have questions, the full user manual is here, with a search box.",
+  "recorridoInicial.cierreTitulo": "All set!",
+  "recorridoInicial.cierreTexto":
+    "You're ready to start adding your artworks. If you want to see this tour again, use the \"View initial tour\" button on this screen.",
+  "recorridoInicial.pasoContador": "Step {{n}} of {{total}}",
+  "recorridoInicial.atras": "Back",
+  "recorridoInicial.saltar": "Skip",
+  "recorridoInicial.siguiente": "Next",
+  "recorridoInicial.entendido": "Got it",
 
   // User manual
   "lightroom.titulo": "Lightroom Classic",
   "lightroom.ayuda":
-    "You can add an artwork from Lightroom Classic: in Lightroom, select the photo and use the menu Library › Plug-in Extras › Add artwork to Galeris Studio. “New artwork” opens with the image, title, keywords, rating, capture date, camera data and original file location already filled in. Galeris Studio works the same without this.",
+    "You can add an artwork from Lightroom Classic: in Lightroom, select the photo and use the menu Library › Plug-in Extras › Add artwork to Recer Studio. “New artwork” opens with the image, title, keywords, rating, capture date, camera data and original file location already filled in. Recer Studio works the same without this.",
   "lightroom.instalado": "Plug-in installed.",
   "lightroom.noInstalado": "Plug-in not installed.",
   "lightroom.desactualizado": "There is a newer version of the plug-in: update it so it works properly.",
@@ -238,7 +260,7 @@ export const en: Record<keyof typeof es, string> = {
   "settings.licenciaBoton": "Load license…",
   "settings.licenciaActivadaOk": "License activated successfully.",
   "settings.licenciaErrorPermisos":
-    "macOS blocked access to that file — this happens often with the Desktop, Documents or Downloads folders while this app isn't yet signed with an Apple Developer account. To fix it: open System Settings → Privacy & Security → Files and Folders, find Galeris and enable access for that folder. If you'd rather not change that permission, you can also move the license file to a different folder (e.g. your user folder) and pick it from there.",
+    "macOS blocked access to that file — this happens often with the Desktop, Documents or Downloads folders while this app isn't yet signed with an Apple Developer account. To fix it: open System Settings → Privacy & Security → Files and Folders, find Recer and enable access for that folder. If you'd rather not change that permission, you can also move the license file to a different folder (e.g. your user folder) and pick it from there.",
   "settings.idioma": "Language",
   "settings.espanol": "Spanish",
   "settings.ingles": "English",
@@ -255,11 +277,13 @@ export const en: Record<keyof typeof es, string> = {
   "settings.miniaturasNota":
     "Static: each thumbnail only enlarges when you hover over it. Dynamic: they enlarge on their own, one at a time, with no need to hover.",
   "settings.carpetaDatos": "Data folder",
+  "settings.carpetaActualNota": "Current folder: {{ruta}}",
+  "settings.verCarpetaBoton": "View current folder",
   "settings.cambiarCarpetaNota":
-    "Tells Galeris to use a different folder to read and save this registry's data. If the folder you pick already has Galeris data (for example, because you moved the original folder to an external drive), that data will be used. If you pick an empty folder, it will start fresh. After changing it, you'll go back to the home screen to reopen the registry.",
+    "Tells Recer to use a different folder to read and save this registry's data. If the folder you pick already has Recer data (for example, because you moved the original folder to an external drive), that data will be used. If you pick an empty folder, it will start fresh. After changing it, you'll go back to the home screen to reopen the registry.",
   "settings.cambiarCarpetaBoton": "Change folder…",
   "settings.moverCarpetaNota":
-    "If you'd rather have Galeris move everything for you: it automatically copies the database, photos, and certificates to a new folder you pick, and updates Galeris to use that folder from then on. The old folder is never deleted on its own — you decide whether to delete it, and that's only asked once it's confirmed the new one is working correctly.",
+    "If you'd rather have Recer move everything for you: it automatically copies the database, photos, and certificates to a new folder you pick, and updates Recer to use that folder from then on. The old folder is never deleted on its own — you decide whether to delete it, and that's only asked once it's confirmed the new one is working correctly.",
   "settings.moverCarpetaBoton": "Move folder automatically…",
   "settings.moverCarpetaProgreso": "Copying file {{copiados}} of {{total}}…",
   "settings.moverCarpetaExito": "Everything copied and is working correctly in the new folder: {{nueva}}",
@@ -267,7 +291,7 @@ export const en: Record<keyof typeof es, string> = {
   "settings.moverCarpetaBorrarAhora": "Delete the previous folder now",
   "settings.moverCarpetaDejarla": "Leave it, I'll delete it later",
   "settings.moverCarpetaErrorPermisos":
-    "macOS blocked access to one of the two folders (the source or the destination) — this happens often with external drives, especially while this app isn't yet signed with an Apple Developer account. If your data is currently on an external drive, this permission is needed even to move it FROM there to the internal disk, not just the other way around. To fix it: open System Settings → Privacy & Security → Files and Folders, find Galeris, and enable the permission for \"Removable Volumes\" (if that option isn't listed, try granting Full Disk Access instead). If you'd rather not touch those settings, you can also copy the folder yourself using Finder (which doesn't have this restriction), then use \"Change folder\" to point to that copy.",
+    "macOS blocked access to one of the two folders (the source or the destination) — this happens often with external drives, especially while this app isn't yet signed with an Apple Developer account. If your data is currently on an external drive, this permission is needed even to move it FROM there to the internal disk, not just the other way around. To fix it: open System Settings → Privacy & Security → Files and Folders, find Recer, and enable the permission for \"Removable Volumes\" (if that option isn't listed, try granting Full Disk Access instead). If you'd rather not touch those settings, you can also copy the folder yourself using Finder (which doesn't have this restriction), then use \"Change folder\" to point to that copy.",
   "settings.backupTitulo": "Backup",
   "settings.backupWorkspaceLabel": "Which record?",
   "settings.backupNota":
@@ -298,12 +322,11 @@ export const en: Record<keyof typeof es, string> = {
   "dialogo.carpetaNubeElegirOtra": "Pick another folder",
   "dialogo.carpetaNoEncontradaTitulo": "Data folder not found",
   "dialogo.carpetaNoEncontradaMensaje":
-    "We couldn't find the folder where this registry's data was saved (last known location: {{ruta}}). An external drive may not be connected, or the folder may have been moved or renamed.",
+    "We couldn't find the folder where this registry's data was saved (last known location: {{ruta}}). An external drive may not be connected, or the folder may have been moved or renamed.\n\nIf you cancel, we'll then ask if you want to create a new folder instead — you can cancel that too and leave without changing anything.",
   "dialogo.carpetaNoEncontradaBuscarla": "Find it",
-  "dialogo.carpetaNoEncontradaGenerarNueva": "Create a new folder",
   "dialogo.carpetaNuevaTitulo": "Create new folder",
   "dialogo.carpetaNuevaMensaje":
-    "You're about to create a new, empty folder. The data you had before isn't deleted from where it was, but Galeris will stop showing it until you point back to that folder (you can do that later from Settings, with \"Change folder\").\n\nDo you confirm you want to create a new folder?",
+    "You're about to create a new, empty folder. The data you had before isn't deleted from where it was, but Recer will stop showing it until you point back to that folder (you can do that later from Settings, with \"Change folder\").\n\nDo you confirm you want to create a new folder?",
   "dialogo.carpetaNuevaConfirmar": "Yes, create new",
 
   // ObraForm
@@ -687,6 +710,12 @@ export const en: Record<keyof typeof es, string> = {
   "obrasList.ordenarPorFechaCaptura": "Capture date",
   "obrasList.tamanoMiniaturasLabel": "Thumbnail size",
   "obrasList.skuPrefix": "SKU:",
+  "obrasList.vistaTarjetas": "Cards",
+  "obrasList.vistaColumnas": "Columns",
+  "obrasList.colImagen": "Image",
+  "obrasList.colObra": "Artwork",
+  "obrasList.colDisponibilidad": "Availability",
+  "obrasList.colCalificacion": "Rating",
 
   // Obras report list
   "informesObras.generarInforme": "Generate report",
@@ -731,8 +760,8 @@ export const en: Record<keyof typeof es, string> = {
   "galeria.filtrarPorEstrellas": "Show only artworks with {{n}} star(s)",
   "galeria.quitarCalificacionATodas": "Clear rating from all",
   "galeria.quitarCalificacionATodasConfirm": "Clear the rating from every artwork?",
-  "galeria.errorGuardarCalificacionArchivo": "The rating was saved in Galeris, but couldn't be saved to the original file: {{mensaje}}",
-  "galeria.errorGuardarCalificacionArchivoVarias": "Ratings were cleared in Galeris, but the original file couldn't be updated for {{n}} artwork(s).",
+  "galeria.errorGuardarCalificacionArchivo": "The rating was saved in Recer, but couldn't be saved to the original file: {{mensaje}}",
+  "galeria.errorGuardarCalificacionArchivoVarias": "Ratings were cleared in Recer, but the original file couldn't be updated for {{n}} artwork(s).",
 
   // TagPicker
   "tagPicker.placeholder": "Choose or type a tag…",
@@ -861,6 +890,12 @@ export const en: Record<keyof typeof es, string> = {
   "certificado.destinoCopia": "copy",
   "certificado.destinoVenta": "sale",
   "certificado.botonesBloqueados": "Save or discard your record changes first.",
+  "certificado.yaExisteTexto": "You already generated a certificate for this copy in this session. What do you want to do?",
+  "certificado.yaExisteVer": "View certificate",
+  "certificado.yaExisteRehacer": "Redo",
+  "certificado.generadoCorrectamente": "Certificate generated successfully.",
+  "certificado.errorNoSeEncontroGuardado":
+    "Couldn't open the saved certificate. It may have been moved or deleted — generate a new one.",
   "certificado.campoCorregible": "This comes from your records. To change it, use “Correct records” or edit the artwork, the copy or the sale.",
   "certificado.errorObligatorio": "“{{campo}}” can't be left empty.",
   "certificado.errorAnio": "“{{campo}}”: enter a 4-digit year, e.g. 2024.",
@@ -989,6 +1024,35 @@ export const en: Record<keyof typeof es, string> = {
   "obraDetail.confirmarEliminarObra": "Delete this artwork? This can't be undone.",
   "obraDetail.errorTieneVentas":
     "This artwork has registered sales — it can't be deleted without losing that history. If you still want to delete it, you'll need to resolve those sales first.",
+  "obraDetail.exportarImagen": "Export image…",
+  "obraDetail.errorExportarSinArchivo":
+    "Can't export: this artwork doesn't have the original file loaded (see \"Original file location\" in Edit artwork).",
+  "obraDetail.abrirEnPhotoshop": "Open in Photoshop",
+  "obraDetail.errorAbrirPhotoshopSinArchivo":
+    "Can't open in Photoshop: this artwork doesn't have the original file loaded (see \"Original file location\" in Edit artwork).",
+  "obraDetail.errorAbrirPhotoshop": "Couldn't open the file in Photoshop. You might not have it installed on this computer.",
+  "obraDetail.abrirEnLightroom": "Open in Lightroom",
+  "obraDetail.errorAbrirLightroomSinArchivo":
+    "Can't open in Lightroom: this artwork doesn't have the original file loaded (see \"Original file location\" in Edit artwork).",
+
+  // ExportarImagenModal
+  "exportarImagen.titulo": "Export image",
+  "exportarImagen.formatoLegend": "Format",
+  "exportarImagen.formatoJpg": "JPG",
+  "exportarImagen.formatoTiff": "TIFF",
+  "exportarImagen.formatoOriginal": "Original (exact copy of the file, unchanged)",
+  "exportarImagen.ladoLegend": "Reference side",
+  "exportarImagen.ladoCorto": "Short side",
+  "exportarImagen.ladoLargo": "Long side",
+  "exportarImagen.medidaLabel": "Size (in pixels)",
+  "exportarImagen.medidaNota":
+    "It won't be enlarged: if the original file is smaller than this size, it's exported at its real size.",
+  "exportarImagen.copyrightLabel": "Copyright (optional)",
+  "exportarImagen.errorMedidaInvalida": "Enter a size in pixels greater than zero.",
+  "exportarImagen.exportarBoton": "Export…",
+  "exportarImagen.exportando": "Exporting…",
+  "exportarImagen.exportadoMensaje": "Image exported successfully.",
+
   "obraDetail.ejemplares": "Copies",
   "obraDetail.verMasSeries": "Show the other copies ({{n}})",
   "obraDetail.verMenosSeries": "Show less",

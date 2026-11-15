@@ -1,16 +1,25 @@
 # Certificado de autenticidad
 
-Cómo armar el certificado de autenticidad (COA) de una copia vendida, reservada o donada, con vista previa, y cómo corregir datos desde ahí.
+Cómo armar el certificado de autenticidad (COA) de una copia, con vista previa, y cómo corregir datos desde ahí.
 
 ## Qué es y cuándo se puede preparar
 
-El certificado acompaña a cada copia que sale de tu taller. Se prepara a partir de una copia que ya tiene una **venta**, una **reserva** o una **donación** registrada, y toma la mayoría de los datos de lo que ya cargaste: no tenés que volver a escribirlos.
+El certificado acompaña a cada copia que sale de tu taller: para una venta, una reserva, una donación, o por cualquier otro motivo (por ejemplo, para dejarla en consignación en una galería). No hace falta tener registrada una venta para prepararlo. Toma la mayoría de los datos de lo que ya cargaste: no tenés que volver a escribirlos. Si la copia tiene una venta, reserva o donación registrada, el **Lugar** y la **Fecha** salen de ahí; si no tiene ninguna, esos dos campos quedan vacíos para completarlos a mano (ver **Emisión**, más abajo).
 
 ## Abrir la pantalla del certificado
 
 1. Abrí la obra y buscá la copia. Ver [Copias y estados](cap:copias).
-2. Tocá el botón **Certificado** (está al lado de **Informes**). Si no aparece, la copia todavía no tiene una venta, reserva o donación.
+2. Tocá el botón **Certificado** (está al lado de **Informes**). Solo no aparece si la copia está **Destruida** o **Descartada** y nunca tuvo una venta, reserva o donación.
 3. Se abre una pantalla grande: a la izquierda los datos y a la derecha la vista previa del certificado, que se actualiza sola cada vez que cambiás algo.
+
+### Si ya generaste un certificado de esa copia
+
+Si en lo que va de esta sesión ya guardaste un PDF del certificado de esa copia, al tocar **Certificado** de nuevo el programa pregunta qué querés hacer, en vez de abrir la pantalla directamente:
+
+- **Ver el certificado guardado**: abre el PDF que ya guardaste, con el lector de PDF del sistema. Si el archivo se movió o se borró, avisa y a partir de ahí **Certificado** vuelve a abrir la pantalla directamente.
+- **Rehacer el certificado**: abre la pantalla del certificado de nuevo, con los datos actuales del registro (por ejemplo, si editaste la obra o la copia después de generar el primero).
+
+Esto solo pasa dentro de la misma sesión: si cerrás y volvés a abrir Recer Studio, **Certificado** abre la pantalla directamente, sin preguntar.
 
 ## Elegir cómo se ve
 
@@ -19,7 +28,7 @@ En la sección **Formato**:
 - **Modelo**:
   - **Clásico**: con marco y foto grande.
   - **Simple**: sin marco, con el texto centrado.
-  - **Ficha**: una grilla con los datos, con línea de firma del artista y de la galería (solo en Galeris Space).
+  - **Ficha**: una grilla con los datos, con línea de firma del artista y de la galería (solo en Recer Space).
   - **Ficha sin firma de galería**: la misma grilla, solo con la firma del artista.
 - **Tamaño de hoja**: **A4**, **Carta** o **A5**. El diseño se arma para esa medida, no se achica al imprimir.
 - **Idioma de los títulos**: **Español**, **English** o **Ambos**. Solo cambia los títulos de cada campo; los datos salen como están cargados.
@@ -53,8 +62,8 @@ El número de copia sale como **3/10**. Si la obra tiene pruebas de autor, el ce
 
 ## Emisión
 
-- **Lugar** y **Fecha**: vienen de la venta (el lugar y la fecha de venta) y salen en gris.
-- Si la venta no tiene lugar, el campo queda habilitado para escribirlo.
+- **Lugar** y **Fecha**: si la copia tiene una venta, reserva o donación, vienen de ahí (el lugar y la fecha) y salen en gris.
+- Si la venta no tiene lugar cargado, o si la copia no tiene ninguna venta, reserva ni donación, el campo queda habilitado para escribirlo a mano (vale solo para este certificado).
 
 ## Corregir un dato incorrecto
 
@@ -76,7 +85,7 @@ Se pueden corregir desde acá:
 
 - En la **obra**: **Título**, **Serie**, **Año de la toma** (en la ficha, es el año de la obra si lo tiene cargado) y **Año de edición** (que se muestra en el modelo Clásico).
 - En la **copia**: **Medidas de la imagen**, **Tipo de proceso/impresión**, **Soporte** y **Ubicación de la firma**.
-- En la **venta**: **Lugar** y **Fecha**.
+- En la **venta**: **Lugar** y **Fecha** — solo si la copia tiene una venta, reserva o donación registrada. Si no tiene ninguna, estos dos se completan directamente en el campo habilitado (ver **Emisión**, más arriba) y no aparecen acá.
 
 Todo se guarda junto o no se guarda nada. Si algo no es válido, el programa lo dice y no guarda:
 
@@ -94,5 +103,5 @@ Tocá **Guardar PDF**, elegí dónde guardarlo y, si querés verlo enseguida, **
 
 ## Preguntas frecuentes
 
-- **¿Por qué no aparece el botón Certificado?** Porque la copia todavía no tiene una venta, reserva o donación.
+- **¿Por qué no aparece el botón Certificado?** Solo pasa si la copia está **Destruida** o **Descartada** y nunca tuvo una venta, reserva o donación.
 - **Escribí un dato en un campo habilitado y después no está en la obra.** Es lo esperado: lo que se completa en un campo habilitado vale solo para ese certificado. Para que quede en el registro, cargalo en la obra, la copia o la venta.

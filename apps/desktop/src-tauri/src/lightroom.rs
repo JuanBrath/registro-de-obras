@@ -7,22 +7,32 @@ use tauri::{AppHandle, Manager, Runtime};
 
 // Vinculacion opcional con Lightroom Classic. El complemento (carpeta lightroom/ del proyecto) viene
 // dentro del programa y se copia a la carpeta donde Lightroom busca sus complementos; deja la foto y
-// sus datos en la carpeta "lightroom-entrada" de los datos del programa, que se lee de aca. Galeris
+// sus datos en la carpeta "lightroom-entrada" de los datos del programa, que se lee de aca. Recer
 // Studio funciona igual sin todo esto.
 const ARCHIVOS: [(&str, &str); 4] = [
-    ("Info.lua", include_str!("../../../../lightroom/GalerisStudio.lrplugin/Info.lua")),
-    ("CargarObra.lua", include_str!("../../../../lightroom/GalerisStudio.lrplugin/CargarObra.lua")),
+    ("Info.lua", include_str!("../../../../lightroom/RecerStudio.lrplugin/Info.lua")),
+    ("CargarObra.lua", include_str!("../../../../lightroom/RecerStudio.lrplugin/CargarObra.lua")),
     (
         "VigilarPedidos.lua",
-        include_str!("../../../../lightroom/GalerisStudio.lrplugin/VigilarPedidos.lua"),
+        include_str!("../../../../lightroom/RecerStudio.lrplugin/VigilarPedidos.lua"),
     ),
     (
         "TranslatedStrings_es.txt",
-        include_str!("../../../../lightroom/GalerisStudio.lrplugin/TranslatedStrings_es.txt"),
+        include_str!("../../../../lightroom/RecerStudio.lrplugin/TranslatedStrings_es.txt"),
     ),
 ];
 
-const NOMBRE_CARPETA: &str = "GalerisStudio.lrplugin";
+const NOMBRE_CARPETA: &str = "RecerStudio.lrplugin";
+// Nombre que tenia el complemento antes del cambio de marca (Galeris Studio).
+const NOMBRE_CARPETA_ANTIGUA: &str = "GalerisStudio.lrplugin";
+
+// Borra el complemento con el nombre anterior, si quedo instalado, para que
+// Lightroom no muestre dos entradas del mismo complemento.
+fn quitar_complemento_antiguo() {
+    if let Ok(modulos) = carpeta_modulos() {
+        let _ = fs::remove_dir_all(modulos.join(NOMBRE_CARPETA_ANTIGUA));
+    }
+}
 const CARPETA_ENTRADA: &str = "lightroom-entrada";
 const CARPETA_PEDIDO: &str = "lightroom-pedido";
 
@@ -73,6 +83,7 @@ pub fn estado_lightroom() -> Result<EstadoLightroom, String> {
 
 #[tauri::command]
 pub fn instalar_complemento_lightroom() -> Result<(), String> {
+    quitar_complemento_antiguo();
     let carpeta = carpeta_complemento()?;
     fs::create_dir_all(&carpeta).map_err(|e| e.to_string())?;
     for (nombre, contenido) in ARCHIVOS {
@@ -81,9 +92,10 @@ pub fn instalar_complemento_lightroom() -> Result<(), String> {
     Ok(())
 }
 
-// Solo borra la carpeta propia del complemento (GalerisStudio.lrplugin), nunca la de los demas complementos.
+// Solo borra la carpeta propia del complemento (RecerStudio.lrplugin), nunca la de los demas complementos.
 #[tauri::command]
 pub fn quitar_complemento_lightroom() -> Result<(), String> {
+    quitar_complemento_antiguo();
     let carpeta = carpeta_complemento()?;
     if carpeta.exists() {
         fs::remove_dir_all(&carpeta).map_err(|e| e.to_string())?;

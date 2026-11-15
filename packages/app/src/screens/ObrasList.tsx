@@ -17,12 +17,52 @@ import { MiniaturasSizeSlider } from "../components/MiniaturasSizeSlider.js";
 import { TagFilterPicker } from "../components/TagFilterPicker.js";
 import { CalificacionFilterButton } from "../components/CalificacionFilterButton.js";
 import { StarRating } from "../components/StarRating.js";
-import { cargarColumnasGridInicial, guardarColumnasGrid } from "../utils/columnasGrid.js";
+import { cargarColumnasGridInicial, guardarColumnasGrid, MIN_COLUMNAS_GRID, MAX_COLUMNAS_GRID } from "../utils/columnasGrid.js";
 import { marcarSiMiniaturaMuyVertical } from "../utils/miniaturaVertical.js";
 import { sincronizarCalificacionConArchivo } from "../utils/calificacionArchivo.js";
 
 const COLUMNAS_OBRAS_POR_DEFECTO = 4;
-const COLUMNAS_OBRAS_STORAGE_KEY = "obrasListColumnasGrid";
+// Cada vista (tarjetas / columnas) guarda su propio tamano de miniaturas por
+// separado: cambiarlo en una no toca lo que ya estaba fijado en la otra. El
+// nombre de la clave de tarjetas se mantiene igual que antes de que
+// existiera la vista en columnas, para no resetear lo que ya tenia guardado
+// quien ya usaba el programa.
+const COLUMNAS_OBRAS_TARJETAS_STORAGE_KEY = "obrasListColumnasGrid";
+const COLUMNAS_OBRAS_COLUMNAS_STORAGE_KEY = "obrasListColumnasGridVistaColumnas";
+const VISTA_OBRAS_STORAGE_KEY = "obrasListVista";
+
+type VistaObras = "tarjetas" | "columnas";
+
+function cargarVistaInicial(): VistaObras {
+  try {
+    const guardada = localStorage.getItem(VISTA_OBRAS_STORAGE_KEY);
+    if (guardada === "tarjetas" || guardada === "columnas") return guardada;
+  } catch {
+    // localStorage puede no estar disponible (o bloqueado); se usa el valor por defecto.
+  }
+  return "columnas";
+}
+
+function guardarVista(vista: VistaObras): void {
+  try {
+    localStorage.setItem(VISTA_OBRAS_STORAGE_KEY, vista);
+  } catch {
+    // No se pudo persistir la preferencia; no rompe el uso de esta sesion.
+  }
+}
+
+// En la vista en columnas no hay grilla (una fila por obra), asi que el
+// mismo control de "tamano de las miniaturas" (que en tarjetas elige cuantas
+// entran por fila) se reinterpreta directo como el ancho en pixeles de la
+// miniatura de cada fila: menos "columnas" (control mas hacia "grande") da
+// una miniatura mas ancha, igual sensacion que agrandar las tarjetas.
+const ANCHO_MINIATURA_TABLA_MIN = 40;
+const ANCHO_MINIATURA_TABLA_MAX = 160;
+
+function anchoMiniaturaTabla(columnas: number): number {
+  const progreso = (columnas - MIN_COLUMNAS_GRID) / (MAX_COLUMNAS_GRID - MIN_COLUMNAS_GRID);
+  return Math.round(ANCHO_MINIATURA_TABLA_MAX - progreso * (ANCHO_MINIATURA_TABLA_MAX - ANCHO_MINIATURA_TABLA_MIN));
+}
 
 export interface ObrasListFiltros {
   selectedTags: string[];
@@ -102,9 +142,14 @@ export function ObrasList({
   const [selectedSubtipo, setSelectedSubtipo] = useState<string | null>(null);
   const [busqueda, setBusqueda] = useState("");
   const [ordenPor, setOrdenPor] = useState<"titulo" | "codigo_inventario" | "fecha_captura">("codigo_inventario");
-  const [columnasGrid, setColumnasGrid] = useState<number>(() =>
-    cargarColumnasGridInicial(COLUMNAS_OBRAS_STORAGE_KEY, COLUMNAS_OBRAS_POR_DEFECTO),
+  const [columnasGridTarjetas, setColumnasGridTarjetas] = useState<number>(() =>
+    cargarColumnasGridInicial(COLUMNAS_OBRAS_TARJETAS_STORAGE_KEY, COLUMNAS_OBRAS_POR_DEFECTO),
   );
+  const [columnasGridColumnas, setColumnasGridColumnas] = useState<number>(() =>
+    cargarColumnasGridInicial(COLUMNAS_OBRAS_COLUMNAS_STORAGE_KEY, COLUMNAS_OBRAS_POR_DEFECTO),
+  );
+  const [vista, setVista] = useState<VistaObras>(cargarVistaInicial);
+  const columnasGridActual = vista === "tarjetas" ? columnasGridTarjetas : columnasGridColumnas;
   const objectUrlsRef = useRef<string[]>([]);
 
   const [informesMenuAbierto, setInformesMenuAbierto] = useState(false);
@@ -283,9 +328,9 @@ export function ObrasList({
       setError(err instanceof Error ? err.message : String(err));
       return;
     }
-    // La calificacion en Galeris ya quedo guardada (arriba); esto es aparte,
+    // La calificacion en Recer ya quedo guardada (arriba); esto es aparte,
     // una sincronizacion "mejor esfuerzo" hacia el sidecar XMP del archivo
-    // original, que si falla no debe deshacer lo que ya se guardo en Galeris.
+    // original, que si falla no debe deshacer lo que ya se guardo en Recer.
     if (obraActual?.ubicacion_fisica_actual) {
       try {
         await sincronizarCalificacionConArchivo(obraActual.ubicacion_fisica_actual, nuevaCalificacion);
@@ -322,8 +367,18 @@ export function ObrasList({
   }
 
   function handleTamanoMiniaturasChange(columnas: number) {
-    setColumnasGrid(columnas);
-    guardarColumnasGrid(COLUMNAS_OBRAS_STORAGE_KEY, columnas);
+    if (vista === "tarjetas") {
+      setColumnasGridTarjetas(columnas);
+      guardarColumnasGrid(COLUMNAS_OBRAS_TARJETAS_STORAGE_KEY, columnas);
+    } else {
+      setColumnasGridColumnas(columnas);
+      guardarColumnasGrid(COLUMNAS_OBRAS_COLUMNAS_STORAGE_KEY, columnas);
+    }
+  }
+
+  function handleVistaChange(nueva: VistaObras) {
+    setVista(nueva);
+    guardarVista(nueva);
   }
 
   async function handleAbrirInformesMenu() {
@@ -433,6 +488,7 @@ export function ObrasList({
 
   return (
     <div className="obras-list obras-list-grid-ancho">
+      <div className="obras-encabezado-fijo">
       <div className="obras-list-header">
         <h1>{t("obrasList.title")}</h1>
         <div className="header-actions">
@@ -466,7 +522,27 @@ export function ObrasList({
               {t("informesObras.generarInforme")}
             </button>
           )}
-          {obras.length > 0 && <MiniaturasSizeSlider columnas={columnasGrid} onChange={handleTamanoMiniaturasChange} />}
+          {obras.length > 0 && (
+            <div className="obras-vista-toggle">
+              <button
+                type="button"
+                className={vista === "columnas" ? "obras-vista-toggle-boton activo" : "obras-vista-toggle-boton"}
+                onClick={() => handleVistaChange("columnas")}
+              >
+                {t("obrasList.vistaColumnas")}
+              </button>
+              <button
+                type="button"
+                className={vista === "tarjetas" ? "obras-vista-toggle-boton activo" : "obras-vista-toggle-boton"}
+                onClick={() => handleVistaChange("tarjetas")}
+              >
+                {t("obrasList.vistaTarjetas")}
+              </button>
+            </div>
+          )}
+          {obras.length > 0 && (
+            <MiniaturasSizeSlider columnas={columnasGridActual} onChange={handleTamanoMiniaturasChange} />
+          )}
         </div>
 
         {obras.length > 0 && (
@@ -538,6 +614,7 @@ export function ObrasList({
           </div>
         )}
       </div>
+      </div>
 
       {loading && <p>{t("common.loading")}</p>}
       {error && (
@@ -550,7 +627,8 @@ export function ObrasList({
 
       {!loading && obras.length > 0 && filteredObras.length === 0 && <p>{t("obrasList.sinResultados")}</p>}
 
-      <div className="obras-grid" style={{ gridTemplateColumns: `repeat(${columnasGrid}, 1fr)` }}>
+      {vista === "tarjetas" && (
+      <div className="obras-grid" style={{ gridTemplateColumns: `repeat(${columnasGridTarjetas}, 1fr)` }}>
         {filteredObras.map((obra) => (
           <div className="obra-card-wrapper" key={obra.id}>
             <button type="button" className="obra-card" onClick={() => onOpenObra(obra.id)}>
@@ -614,6 +692,94 @@ export function ObrasList({
           </div>
         ))}
       </div>
+      )}
+
+      {vista === "columnas" && (
+        <div className="obras-tabla-wrapper">
+          <table className="obras-tabla">
+            <thead>
+              <tr>
+                <th>{t("obrasList.colImagen")}</th>
+                <th>{t("obrasList.colObra")}</th>
+                {esGaleria && <th>{t("informesObras.colAutor")}</th>}
+                <th>{t("informesObras.colCategoria")}</th>
+                <th>{t("informesObras.colSubcategoria")}</th>
+                <th>{t("obrasList.colDisponibilidad")}</th>
+                <th>{t("obrasList.colCalificacion")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredObras.map((obra) => {
+                const subtipoValor = obra.categoria_obra === "Fotografia" ? obra.subtipo_fotografia : obra.subtipo;
+                return (
+                  <tr key={obra.id} className="obras-tabla-fila" onClick={() => onOpenObra(obra.id)}>
+                    <td>
+                      {thumbnails[obra.id] ? (
+                        <img
+                          src={thumbnails[obra.id]}
+                          alt={obra.titulo}
+                          className="obras-tabla-miniatura"
+                          style={{ width: anchoMiniaturaTabla(columnasGridColumnas) }}
+                        />
+                      ) : (
+                        <span
+                          className="obras-tabla-sin-imagen"
+                          style={{ width: anchoMiniaturaTabla(columnasGridColumnas) }}
+                        >
+                          {t("obrasList.sinImagen")}
+                        </span>
+                      )}
+                    </td>
+                    <td>
+                      <strong>{obra.titulo}</strong>
+                      {obra.codigo_inventario && (
+                        <>
+                          <br />
+                          <span className="obra-card-sku">
+                            {t("obrasList.skuPrefix")} {obra.codigo_inventario}
+                          </span>
+                        </>
+                      )}
+                    </td>
+                    {esGaleria && <td>{obra.nombre_completo}</td>}
+                    <td>{t(`categoria.${obra.categoria_obra}` as TranslationKey)}</td>
+                    <td>{subtipoValor ? t(subtipoTranslationKey(obra.categoria_obra, subtipoValor)) : "—"}</td>
+                    <td>
+                      {Number(obra.tiene_prueba_artista) === 1 && (
+                        <>
+                          <span className="obra-card-estado obra-card-estado-prueba-artista">
+                            {t("obrasList.conPruebaAutor")}
+                          </span>
+                          <br />
+                        </>
+                      )}
+                      {Number(obra.es_seriada) === 1 ? (
+                        (() => {
+                          const disponibles = Number(obra.ejemplares_disponible) || 0;
+                          const total = Number(obra.total_ejemplares) || 0;
+                          const claseDisponibles = disponibles > 0 ? "disponible" : "vendida";
+                          return (
+                            <span className={`obra-card-estado obra-card-estado-${claseDisponibles}`}>
+                              {t("obrasList.fraccionDisponibles", { disponibles, total })}
+                            </span>
+                          );
+                        })()
+                      ) : (
+                        <span className={`obra-card-estado obra-card-estado-${obra.estado}`}>
+                          {t(`estado.${obra.estado}` as TranslationKey)}
+                        </span>
+                      )}
+                    </td>
+                    <td onClick={(e) => e.stopPropagation()}>
+                      <StarRating value={obra.calificacion} onChange={(n) => handleSetCalificacion(obra.id, n)} />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <div className="screen-footer-back">
         <button type="button" onClick={onBack}>

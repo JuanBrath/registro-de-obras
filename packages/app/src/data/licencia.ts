@@ -13,6 +13,7 @@ export type EstadoLicencia =
   | { estado: "valida"; edicion: EdicionId; titular: string; email: string; emitida: string; vence: string | null };
 
 interface LicenciaValidaDesdeRust {
+  firma: string;
   edicion: EdicionId;
   titular: string;
   email: string;
@@ -20,12 +21,52 @@ interface LicenciaValidaDesdeRust {
   vence: string | null;
 }
 
+type ErrorLicenciaDesdeRust = { tipo: "vencida"; firma: string; vence: string } | { tipo: "invalida"; motivo: string };
+
+function esErrorLicencia(error: unknown): error is ErrorLicenciaDesdeRust {
+  return typeof error === "object" && error !== null && "tipo" in error;
+}
+
+async function leerFirmasVencidas(): Promise<string[]> {
+  if (!isTauri()) return [];
+  const { Store } = await import("@tauri-apps/plugin-store");
+  const store = await Store.load(LICENCIA_STORE_FILE);
+  return (await store.get<string[]>("firmasVencidas")) ?? [];
+}
+
+/**
+ * Una licencia que ya se vio vencer queda recordada acá para siempre (no
+ * hace falta limpiar la lista: cada licencia nueva tiene otra firma). Así,
+ * si alguien atrasa el reloj del sistema para que esa MISMA licencia vuelva
+ * a parecer vigente, igual se sigue rechazando.
+ */
+async function agregarFirmaVencida(firma: string): Promise<void> {
+  if (!isTauri()) return;
+  const { Store } = await import("@tauri-apps/plugin-store");
+  const store = await Store.load(LICENCIA_STORE_FILE);
+  const actuales = (await store.get<string[]>("firmasVencidas")) ?? [];
+  if (actuales.includes(firma)) return;
+  await store.set("firmasVencidas", [...actuales, firma]);
+  await store.save();
+}
+
 async function revalidar(contenido: string): Promise<EstadoLicencia> {
   try {
     const datos = await invoke<LicenciaValidaDesdeRust>("validar_licencia", { contenido, hoy: todayISO() });
+    const firmasVencidas = await leerFirmasVencidas();
+    if (firmasVencidas.includes(datos.firma)) {
+      return { estado: "invalida", motivo: "Esta licencia ya se había detectado vencida anteriormente." };
+    }
     return { estado: "valida", ...datos };
-  } catch (motivo) {
-    return { estado: "invalida", motivo: String(motivo) };
+  } catch (error) {
+    if (esErrorLicencia(error)) {
+      if (error.tipo === "vencida") {
+        await agregarFirmaVencida(error.firma);
+        return { estado: "invalida", motivo: `La licencia venció el ${error.vence}.` };
+      }
+      return { estado: "invalida", motivo: error.motivo };
+    }
+    return { estado: "invalida", motivo: String(error) };
   }
 }
 

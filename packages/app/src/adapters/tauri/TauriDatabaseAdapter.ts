@@ -61,7 +61,7 @@ class TauriDatabaseAdapter implements DatabaseAdapter {
   // si falta, closea todo lo que haya cargado con Database.load() hasta
   // ahora). Eso rompia workspaces recien abiertos en paralelo — por ejemplo
   // peekRandomThumbnails (splash) cerraba su conexion de paso justo cuando
-  // el usuario ya habia tocado "Galeris Studio", y esa apertura real quedaba
+  // el usuario ya habia tocado "Recer Studio", y esa apertura real quedaba
   // con el pool cerrado ("attempted to acquire a connection on a closed
   // pool") aunque nunca se la mando a cerrar. Pasarle this.db.path lo acota
   // a cerrar solo el pool de este archivo.

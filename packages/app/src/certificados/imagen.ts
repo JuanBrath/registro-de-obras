@@ -3,7 +3,7 @@
  * fotos originales suelen pesar varios MB y venir en formatos que jsPDF no
  * entiende (HEIC, TIFF, WebP), asi que se redibujan en un canvas a un
  * tamaño razonable. Las fotos van a JPEG; firmas y logos van a PNG para
- * conservar el fondo transparente. Copia de leerImagen de Galeris Cert.
+ * conservar el fondo transparente. Copia de leerImagen de Recer Proof.
  */
 export async function leerImagen(archivo: File, tipo: "foto" | "grafico"): Promise<Uint8Array> {
   const bitmap = await createImageBitmap(archivo);

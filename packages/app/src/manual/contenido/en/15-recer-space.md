@@ -1,12 +1,12 @@
-# Differences with Galeris Space (gallery)
+# Differences with Recer Space (gallery)
 
-Galeris Space is the version designed for galleries. It shares almost everything with Galeris Studio; this chapter lists what changes.
+Recer Space is the version designed for galleries. It shares almost everything with Recer Studio; this chapter lists what changes.
 
-## What Galeris Space is
+## What Recer Space is
 
-If your installation includes Galeris Space, on the welcome screen you see the **Galeris Space** button as well as **Galeris Studio**. Each one has its own records, with its own data. An installation with both editions (Galeris Suite) lets you switch from one to the other from the home screen.
+If your installation includes Recer Space, on the welcome screen you see the **Recer Space** button as well as **Recer Studio**. Each one has its own records, with its own data. An installation with both editions (Recer Suite) lets you switch from one to the other from the home screen.
 
-## Galeris Space home buttons
+## Recer Space home buttons
 
 - **My Gallery**: the gallery's details (name, logo, digital signature, contact). It replaces **My profile (owner)**.
 - **Artists**: the artists the gallery represents. Each artwork belongs to an artist.
@@ -41,4 +41,4 @@ The **Sales report** also totals how much is owed to each artist (net commission
 
 ## In certificates
 
-Besides **Classic**, **Simple** and **Data sheet, no gallery signature**, Galeris Space offers the **Data sheet** design, with the signature line of the gallery owner and the gallery's contact details at the bottom. See [Certificate of authenticity](cap:certificado).
+Besides **Classic**, **Simple** and **Data sheet, no gallery signature**, Recer Space offers the **Data sheet** design, with the signature line of the gallery owner and the gallery's contact details at the bottom. See [Certificate of authenticity](cap:certificado).

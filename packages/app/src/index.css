@@ -15,13 +15,13 @@
   --sans: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
   --heading: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
-  /* Fuente de marca: solo para BrandHeader (el "Galeris" del logo), nunca
+  /* Fuente de marca: solo para BrandHeader (el "Recer" del logo), nunca
      para el resto de la interfaz — ver --sans/--heading arriba. */
   --brand-font: 'Montserrat', 'Inter', system-ui, sans-serif;
 
-  /* Colores de marca Galeris: fijos (no cambian entre modo claro/oscuro). */
-  --galeris-gold: #c9a247;
-  --galeris-charcoal: #17171a;
+  /* Colores de marca Recer: fijos (no cambian entre modo claro/oscuro). */
+  --recer-gold: #c9a247;
+  --recer-charcoal: #17171a;
 
   /* Alto de la franja fija (BrandHeader + engranaje) en App.tsx — #root le
      deja este espacio arriba para que el contenido nunca quede tapado. */
@@ -136,9 +136,9 @@ h1,
 h2 {
   font-family: var(--heading);
   font-weight: 500;
-  /* Mismo dorado fijo que el texto del logo (--galeris-gold en :root arriba),
+  /* Mismo dorado fijo que el texto del logo (--recer-gold en :root arriba),
      para que los títulos de cada módulo se sientan parte de la marca. */
-  color: var(--galeris-gold);
+  color: var(--recer-gold);
 }
 
 h1 {

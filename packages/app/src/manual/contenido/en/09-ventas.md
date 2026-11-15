@@ -44,7 +44,7 @@ Also, if it isn't a donation:
 - **Costs associated with the sale**: **Framing**, **Pedestal / plinth**, **Professional packing (crate)**, **Transport / freight** and **Insurance (nail to nail)**.
 - **Payment condition**: **Payment status** (**Paid**, **Pending** or **Installments / leasing**), **Payment method** and **Effective collection date**.
 
-In Galeris Studio the artist receives the full amount: there is no commission. Commissions, VAT and other commercial data exist in Galeris Space. See [Galeris Space](cap:galeris-space).
+In Recer Studio the artist receives the full amount: there is no commission. Commissions, VAT and other commercial data exist in Recer Space. See [Recer Space](cap:recer-space).
 
 ## The certificate number
 

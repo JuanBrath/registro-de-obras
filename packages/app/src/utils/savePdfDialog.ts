@@ -39,7 +39,15 @@ async function saveBytesWithDialog(
   return { saved: true, path };
 }
 
-export async function savePdfWithDialog(bytes: Uint8Array, defaultFileName: string): Promise<boolean> {
+/**
+ * Igual que savePdfWithDialog (mismo aviso de "¿Lo abrís?"), pero ademas devuelve la ruta donde
+ * quedo guardado — para poder volver a abrirlo mas adelante sin pasar de nuevo por el diálogo
+ * (ver el botón "Certificado" en ObraDetail.tsx).
+ */
+export async function savePdfWithDialogAndPath(
+  bytes: Uint8Array,
+  defaultFileName: string,
+): Promise<{ saved: boolean; path: string | null }> {
   const { saved, path } = await saveBytesWithDialog(bytes, defaultFileName, "application/pdf", "PDF", ["pdf"]);
   if (saved && path) {
     const t = await getTraductor();
@@ -51,6 +59,11 @@ export async function savePdfWithDialog(bytes: Uint8Array, defaultFileName: stri
     });
     if (verlo) await openLocalFile(path);
   }
+  return { saved, path };
+}
+
+export async function savePdfWithDialog(bytes: Uint8Array, defaultFileName: string): Promise<boolean> {
+  const { saved } = await savePdfWithDialogAndPath(bytes, defaultFileName);
   return saved;
 }
 

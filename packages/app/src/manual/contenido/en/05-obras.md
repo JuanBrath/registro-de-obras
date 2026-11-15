@@ -19,7 +19,7 @@ Click a card to open that artwork's sheet. See [Artwork sheet](cap:ficha-de-obra
 
 ## Search
 
-The search box at the top searches as you type. In Galeris Studio it searches the **title**, the artwork **number** and the **inventory code**. It doesn't search inside tags: for that there is the tag filter (see below). If nothing shows up, you see the message "No artworks matched those filters."
+The search box at the top searches as you type. In Recer Studio it searches the **title**, the artwork **number** and the **inventory code**. It doesn't search inside tags: for that there is the tag filter (see below). If nothing shows up, you see the message "No artworks matched those filters."
 
 ## Filtering and sorting
 
@@ -50,9 +50,9 @@ A few things to keep in mind:
 
 - The tag filter combines with the other filters (category, subtype, stars and the search box), and there it does narrow things down: an artwork has to meet all those filters at once and, in addition, have some of the chosen tags.
 - Right now there is no option to ask for "only the artworks that have all the tags". If you need to see those that have two tags at once, choose one of them and look for the other by eye in the sheet, or use a more specific tag.
-- Tags belong to Galeris: they are used to classify and search inside the program, but they are not written into the original file. If the file carries keywords (for example, entered in Lightroom), they are read automatically the first time you indicate its location; from then on they live only in Galeris: changing them here doesn't modify the file, nor the other way around.
+- Tags belong to Recer: they are used to classify and search inside the program, but they are not written into the original file. If the file carries keywords (for example, entered in Lightroom), they are read automatically the first time you indicate its location; from then on they live only in Recer: changing them here doesn't modify the file, nor the other way around.
 - The **Artwork gallery** uses exactly the same filter and the same rule. See [Artwork gallery](cap:galeria-de-obras).
-- In Galeris Space, the search box also searches inside the tags.
+- In Recer Space, the search box also searches inside the tags.
 
 ## Changing the thumbnail size
 
@@ -60,7 +60,7 @@ The **Thumbnail size** slider (next to the search box) changes how many artworks
 
 ## Rating with stars
 
-Click one of the five stars under an artwork to rate it. The rating is saved in Galeris and, if the artwork has an **Original file location**, it is also written into that file (inside the JPG, or in an auxiliary **.xmp** file next to it if it's RAW, TIFF, PSD or another format) so that programs like Lightroom or Bridge can see it. If that second part fails, the rating is still saved in Galeris and a notice is shown.
+Click one of the five stars under an artwork to rate it. The rating is saved in Recer and, if the artwork has an **Original file location**, it is also written into that file (inside the JPG, or in an auxiliary **.xmp** file next to it if it's RAW, TIFF, PSD or another format) so that programs like Lightroom or Bridge can see it. If that second part fails, the rating is still saved in Recer and a notice is shown.
 
 ## Generating a PDF list
 

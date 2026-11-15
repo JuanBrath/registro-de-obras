@@ -18,13 +18,13 @@ use std::path::Path;
 use moxcms::{ColorProfile, Layout, TransformOptions};
 
 /// Calidad del JPEG resultante (1 a 100).
-const CALIDAD_JPEG: u8 = 88;
+pub(crate) const CALIDAD_JPEG: u8 = 88;
 
 /// Cordura contra archivos corruptos o gigantescos: mas de esta cantidad de pixeles no se intenta.
-const MAX_PIXELES: u64 = 1_000_000_000;
+pub(crate) const MAX_PIXELES: u64 = 1_000_000_000;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-enum Modo {
+pub(crate) enum Modo {
     Gris,
     Rgb,
     Cmyk,
@@ -40,13 +40,23 @@ impl Modo {
     }
 }
 
+/// A que lado del rectangulo se refiere la medida pedida por el usuario — ver
+/// `medidas_finales`. Usado tanto para las miniaturas/vista previa (siempre
+/// `Largo`, el comportamiento de siempre) como para exportar_imagen.rs
+/// (elegible por el usuario).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(crate) enum Lado {
+    Corto,
+    Largo,
+}
+
 /// La imagen ya achicada: un plano por canal, con valores de 0 a 65535.
-struct Reducida {
-    ancho: usize,
-    alto: usize,
-    modo: Modo,
-    planos: Vec<Vec<u16>>,
-    icc: Option<Vec<u8>>,
+pub(crate) struct Reducida {
+    pub(crate) ancho: usize,
+    pub(crate) alto: usize,
+    pub(crate) modo: Modo,
+    pub(crate) planos: Vec<Vec<u16>>,
+    pub(crate) icc: Option<Vec<u8>>,
 }
 
 // ---------- achicar ----------
@@ -80,7 +90,7 @@ fn ventanas(origen: usize, destino: usize) -> Vec<(usize, Vec<f32>)> {
 }
 
 /// Achica un plano de `ancho` x `alto` a `nuevo_ancho` x `nuevo_alto` promediando por area.
-fn reducir_plano(origen: &[u16], ancho: usize, alto: usize, nuevo_ancho: usize, nuevo_alto: usize) -> Vec<u16> {
+pub(crate) fn reducir_plano(origen: &[u16], ancho: usize, alto: usize, nuevo_ancho: usize, nuevo_alto: usize) -> Vec<u16> {
     if nuevo_ancho == ancho && nuevo_alto == alto {
         return origen.to_vec();
     }
@@ -120,14 +130,18 @@ fn reducir_plano(origen: &[u16], ancho: usize, alto: usize, nuevo_ancho: usize, 
     resultado
 }
 
-/// Medidas finales: el lado mas largo queda en `lado_maximo` como mucho (nunca se agranda).
-fn medidas_finales(ancho: usize, alto: usize, lado_maximo: u32) -> (usize, usize) {
-    let mayor = ancho.max(alto);
+/// Medidas finales: el lado elegido (corto o largo) queda en `lado_maximo` como mucho — nunca se agranda
+/// (si ese lado ya es mas chico o igual al pedido, se devuelven las medidas originales tal cual).
+pub(crate) fn medidas_finales(ancho: usize, alto: usize, lado_maximo: u32, lado: Lado) -> (usize, usize) {
+    let referencia = match lado {
+        Lado::Largo => ancho.max(alto),
+        Lado::Corto => ancho.min(alto),
+    };
     let tope = lado_maximo.max(1) as usize;
-    if mayor <= tope {
+    if referencia <= tope {
         return (ancho, alto);
     }
-    let escala = tope as f64 / mayor as f64;
+    let escala = tope as f64 / referencia as f64;
     (
         ((ancho as f64 * escala).round() as usize).max(1),
         ((alto as f64 * escala).round() as usize).max(1),
@@ -284,7 +298,7 @@ impl<'a> LectorPsd<'a> {
     }
 }
 
-fn leer_psd(ruta: &Path, lado_maximo: u32) -> Result<Reducida, String> {
+pub(crate) fn leer_psd(ruta: &Path, lado_maximo: u32, lado: Lado) -> Result<Reducida, String> {
     let archivo = File::open(ruta).map_err(|e| format!("no se pudo abrir el archivo: {e}"))?;
     let mut lector = BufReader::with_capacity(1 << 20, archivo);
 
@@ -365,7 +379,7 @@ fn leer_psd(ruta: &Path, lado_maximo: u32) -> Result<Reducida, String> {
     };
     let mut psd = LectorPsd { origen, compresion, ancho, alto, profundidad };
 
-    let (nuevo_ancho, nuevo_alto) = medidas_finales(ancho, alto, lado_maximo);
+    let (nuevo_ancho, nuevo_alto) = medidas_finales(ancho, alto, lado_maximo, lado);
     let mut planos = Vec::with_capacity(modo.canales());
     for _ in 0..modo.canales() {
         let mut plano = psd.canal()?;
@@ -380,7 +394,7 @@ fn leer_psd(ruta: &Path, lado_maximo: u32) -> Result<Reducida, String> {
 
 // ---------- TIFF ----------
 
-fn leer_tiff(ruta: &Path, lado_maximo: u32) -> Result<Reducida, String> {
+pub(crate) fn leer_tiff(ruta: &Path, lado_maximo: u32, lado: Lado) -> Result<Reducida, String> {
     use tiff::decoder::{Decoder, DecodingResult};
     use tiff::tags::{PhotometricInterpretation, Tag};
     use tiff::ColorType;
@@ -424,7 +438,7 @@ fn leer_tiff(ruta: &Path, lado_maximo: u32) -> Result<Reducida, String> {
     let icc = decodificador.get_tag_u8_vec(Tag::IccProfile).ok().filter(|v| !v.is_empty());
 
     let datos = decodificador.read_image().map_err(|e| format!("no se pudo decodificar el TIFF: {e}"))?;
-    let (nuevo_ancho, nuevo_alto) = medidas_finales(ancho, alto, lado_maximo);
+    let (nuevo_ancho, nuevo_alto) = medidas_finales(ancho, alto, lado_maximo, lado);
 
     let mut planos = Vec::with_capacity(modo.canales());
     for canal in 0..modo.canales() {
@@ -457,7 +471,7 @@ fn a_ocho_bits(v: u16) -> u8 {
 }
 
 /// Los pixeles de la imagen achicada como RGB de 8 bits en sRGB (los tres valores de cada pixel seguidos).
-fn a_srgb(reducida: &Reducida) -> Result<Vec<u8>, String> {
+pub(crate) fn a_srgb(reducida: &Reducida) -> Result<Vec<u8>, String> {
     let pixeles = reducida.ancho * reducida.alto;
     let canales = reducida.modo.canales();
     let mut intercalado = vec![0u16; pixeles * canales];
@@ -514,7 +528,7 @@ fn sin_perfil(modo: Modo, intercalado: &[u16], pixeles: usize) -> Vec<u16> {
     salida
 }
 
-fn a_jpeg(ancho: usize, alto: usize, rgb: &[u8]) -> Result<Vec<u8>, String> {
+pub(crate) fn a_jpeg(ancho: usize, alto: usize, rgb: &[u8]) -> Result<Vec<u8>, String> {
     let ancho16 = u16::try_from(ancho).map_err(|_| "imagen demasiado ancha")?;
     let alto16 = u16::try_from(alto).map_err(|_| "imagen demasiado alta")?;
     let mut salida = Vec::new();
@@ -535,9 +549,9 @@ pub fn convertir(ruta: &Path, lado_maximo: u32) -> Result<Vec<u8>, String> {
         .map_err(|e| format!("no se pudo leer el archivo: {e}"))?;
 
     let reducida = if &inicio == b"8BPS" {
-        leer_psd(ruta, lado_maximo)?
+        leer_psd(ruta, lado_maximo, Lado::Largo)?
     } else if inicio == [0x49, 0x49, 0x2a, 0x00] || inicio == [0x4d, 0x4d, 0x00, 0x2a] || inicio == [0x49, 0x49, 0x2b, 0x00] || inicio == [0x4d, 0x4d, 0x00, 0x2b] {
-        leer_tiff(ruta, lado_maximo)?
+        leer_tiff(ruta, lado_maximo, Lado::Largo)?
     } else {
         return Err("formato no soportado (se esperaba PSD, PSB o TIFF)".into());
     };
@@ -577,7 +591,7 @@ mod pruebas {
     use super::*;
 
     fn escribir_temporal(nombre: &str, contenido: &[u8]) -> std::path::PathBuf {
-        let ruta = std::env::temp_dir().join(format!("galeris_imagen_{}_{nombre}", std::process::id()));
+        let ruta = std::env::temp_dir().join(format!("recer_imagen_{}_{nombre}", std::process::id()));
         std::fs::write(&ruta, contenido).unwrap();
         ruta
     }
@@ -701,9 +715,18 @@ mod pruebas {
 
     #[test]
     fn las_medidas_finales_no_agrandan_y_conservan_la_proporcion() {
-        assert_eq!(medidas_finales(6000, 4000, 2400), (2400, 1600));
-        assert_eq!(medidas_finales(4000, 6000, 2400), (1600, 2400));
-        assert_eq!(medidas_finales(1000, 800, 2400), (1000, 800));
+        assert_eq!(medidas_finales(6000, 4000, 2400, Lado::Largo), (2400, 1600));
+        assert_eq!(medidas_finales(4000, 6000, 2400, Lado::Largo), (1600, 2400));
+        assert_eq!(medidas_finales(1000, 800, 2400, Lado::Largo), (1000, 800));
+    }
+
+    #[test]
+    fn las_medidas_finales_con_lado_corto_limitan_el_lado_menor() {
+        // 6000x4000: el lado corto (4000) se lleva a 1000, el largo queda proporcional (1500).
+        assert_eq!(medidas_finales(6000, 4000, 1000, Lado::Corto), (1500, 1000));
+        assert_eq!(medidas_finales(4000, 6000, 1000, Lado::Corto), (1000, 1500));
+        // Si el lado corto ya es menor o igual al pedido, no se agranda.
+        assert_eq!(medidas_finales(1000, 800, 2400, Lado::Corto), (1000, 800));
     }
 
     #[test]
@@ -757,7 +780,7 @@ mod pruebas {
     #[test]
     fn tiff_de_16_bits_se_convierte() {
         use tiff::encoder::{colortype, TiffEncoder};
-        let ruta = std::env::temp_dir().join(format!("galeris_imagen_{}_prueba.tif", std::process::id()));
+        let ruta = std::env::temp_dir().join(format!("recer_imagen_{}_prueba.tif", std::process::id()));
         {
             let archivo = File::create(&ruta).unwrap();
             let mut codificador = TiffEncoder::new(archivo).unwrap();

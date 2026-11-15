@@ -27,7 +27,7 @@ Al tocar **Generar informe** se abre una ventana donde elegís qué sacar y cóm
 ### Opciones comunes
 
 - **Idioma del informe**: **Español**, **English** o **Ambos / Both** (en el mismo documento, los dos idiomas). Cambia los títulos y textos fijos; los datos salen como los cargaste. Los contratos se generan solo en español.
-- **Logo**: **Con logo** o **Sin logo**. Con logo usa el que cargaste en tu perfil; si no cargaste ninguno, usa el monograma de Galeris.
+- **Logo**: **Con logo** o **Sin logo**. Con logo usa el que cargaste en tu perfil; si no cargaste ninguno, usa el monograma de Recer.
 - **Fecha en el membrete**: **Con fecha** o **Sin fecha** (en los informes que lo ofrecen). Junto a la fecha va tu localidad, si la cargaste.
 - **Notas** y **Statement**: **Incluir** u **Omitir** (en el informe de una obra, cuando tiene esos textos cargados).
 - **Firma**: **Sin firma**, **Firma digital** (usa la imagen de firma de tu perfil; queda deshabilitada si no cargaste ninguna) o **Espacio para firma manuscrita** (deja una línea para firmar a mano).

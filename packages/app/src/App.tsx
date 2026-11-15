@@ -58,7 +58,7 @@ function WorkspaceScreens({ onManual }: { onManual: () => void }) {
   }, [screen.name]);
 
   // Vinculacion opcional con Lightroom Classic: al abrir el registro y cada vez que la ventana vuelve a primer
-  // plano (el complemento abre Galeris Studio justo despues de dejar la foto), se revisa si llego una obra.
+  // plano (el complemento abre Recer Studio justo despues de dejar la foto), se revisa si llego una obra.
   // Si todavia falta el perfil, se espera: la obra queda en la carpeta hasta que se pueda cargar.
   const faltaPerfil = context?.workspace === "personal" && !personalArtista;
   useEffect(() => {

@@ -44,7 +44,7 @@ También, si no es una donación:
 - **Costos asociados a la venta**: **Enmarcado**, **Peana**, **Embalaje profesional (crate)**, **Transporte / flete** y **Seguro (clavo a clavo)**.
 - **Condición de pago**: **Estado de pago** (**Pagado**, **Pendiente** o **En cuotas / leasing**), **Método de pago** y **Fecha de cobro efectiva**.
 
-En Galeris Studio el artista recibe el valor total: no hay comisión. Las comisiones, el IVA y otros datos comerciales existen en Galeris Space. Ver [Galeris Space](cap:galeris-space).
+En Recer Studio el artista recibe el valor total: no hay comisión. Las comisiones, el IVA y otros datos comerciales existen en Recer Space. Ver [Recer Space](cap:recer-space).
 
 ## El número de certificado
 

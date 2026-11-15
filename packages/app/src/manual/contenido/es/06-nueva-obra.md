@@ -24,7 +24,7 @@ Si elegís un **PSD, PSB o TIFF**, el programa genera solo un JPG con la imagen 
 - **Año / Período**: el año exacto o un rango, por ejemplo 2024-2025.
 - **Notas**: texto libre.
 
-En Galeris Studio la obra queda a tu nombre: arriba del formulario ves "Artista: tu nombre", con un botón **Editar mis datos** que lleva a tu perfil.
+En Recer Studio la obra queda a tu nombre: arriba del formulario ves "Artista: tu nombre", con un botón **Editar mis datos** que lleva a tu perfil.
 
 ## Paso 3: la categoría
 
@@ -45,13 +45,13 @@ Cada categoría tiene sus **subtipos** (por ejemplo, en Fotografía: analógica 
 - Elegí el **Subtipo**. Según cuál sea, cambian los campos que siguen.
 - **Fecha de captura** (en la sintografía se llama **Fecha de creación**), **Año de edición**, **Serie o proyecto** y **Técnica**.
 - **Datos de captura**: cámara, ISO, velocidad de obturación, diafragma y distancia focal. No aparecen en la sintografía (que no tiene esos datos).
-- **Ubicación del archivo original**: en las fotografías digitales elegí el archivo con el que se imprime la obra. Si el archivo es **JPEG, TIFF, HEIC, PSD/PSB o RAW de cámara (CR2, NEF, ARW, ORF, DNG)**, el programa completa solo la fecha de captura, el software de edición, los datos de la cámara y las **palabras clave** (que pasan a ser etiquetas). En una obra nueva toma además la **calificación en estrellas** que el archivo ya tenga (por ejemplo, puesta desde Lightroom o Bridge). Con otros formatos RAW (como CR3 o RAF) esos datos todavía no se leen solos, pero se pueden completar a mano. Después de eso, los datos viven en Galeris: cambiarlos acá no modifica el archivo, ni al revés. En los otros subtipos, este campo es un texto libre llamado **Ubicación del negativo**.
+- **Ubicación del archivo original**: en las fotografías digitales elegí el archivo con el que se imprime la obra. Si el archivo es **JPEG, TIFF, HEIC, PSD/PSB o RAW de cámara (CR2, NEF, ARW, ORF, DNG)**, el programa completa solo la fecha de captura, el software de edición, los datos de la cámara y las **palabras clave** (que pasan a ser etiquetas). En una obra nueva toma además la **calificación en estrellas** que el archivo ya tenga (por ejemplo, puesta desde Lightroom o Bridge). Con otros formatos RAW (como CR3 o RAF) esos datos todavía no se leen solos, pero se pueden completar a mano. Después de eso, los datos viven en Recer: cambiarlos acá no modifica el archivo, ni al revés. En los otros subtipos, este campo es un texto libre llamado **Ubicación del negativo**.
 - **Sintografía** (arte generado íntegramente por inteligencia artificial): no lleva datos de cámara. Los certificados de estas obras llevan al pie la leyenda **SIN COPYRIGHT**, en lugar del copyright del artista. Ver [Certificado de autenticidad](cap:certificado).
-- En Galeris Studio ves además el campo **Software de edición**.
+- En Recer Studio ves además el campo **Software de edición**.
 
 ## Paso 4: etiquetas
 
-En **Etiquetas** elegí una existente o escribí una nueva. Las etiquetas son propias de Galeris: sirven para clasificar y buscar dentro del programa, pero no se graban en el archivo original.
+En **Etiquetas** elegí una existente o escribí una nueva. Las etiquetas son propias de Recer: sirven para clasificar y buscar dentro del programa, pero no se graban en el archivo original.
 
 ## Paso 5: obra única o seriada
 

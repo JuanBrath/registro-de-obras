@@ -76,16 +76,16 @@ Impresión de alta calidad sobre papeles de conservación, pensada para obra de 
 
 ## Comisión
 
-El porcentaje que retiene una galería sobre el valor de venta. Existe solo en Galeris Space.
+El porcentaje que retiene una galería sobre el valor de venta. Existe solo en Recer Space.
 
 ## Droit de suite (derecho de participación)
 
-Un porcentaje de la reventa que le corresponde al artista o a sus herederos. Cada país tiene su propia legislación. Existe solo en Galeris Space, y los valores se cargan a mano.
+Un porcentaje de la reventa que le corresponde al artista o a sus herederos. Cada país tiene su propia legislación. Existe solo en Recer Space, y los valores se cargan a mano.
 
 ## Clavo a clavo (nail-to-nail)
 
 Un tipo de seguro que cubre la obra desde que sale de un lugar hasta que llega a otro, sin cortes.
 
-## Registro personal, Galeris Studio y Galeris Space
+## Registro personal, Recer Studio y Recer Space
 
-**Galeris Studio** es la edición para un artista o fotógrafo individual (el "registro personal"). **Galeris Space** es la edición para galerías. Cada una tiene su propio registro.
+**Recer Studio** es la edición para un artista o fotógrafo individual (el "registro personal"). **Recer Space** es la edición para galerías. Cada una tiene su propio registro.

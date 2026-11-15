@@ -61,7 +61,7 @@ Los estados **Reservada** y **Vendida** no se eligen a mano: aparecen solos cuan
 
 Los cartelitos ⓘ explican cada dato. Ninguno es obligatorio, salvo lo necesario para vender (ver abajo).
 
-> En Galeris Space, la copia tiene además datos propios de galería: el **Número**, el **Emisor** y la **Fecha de emisión del COA**, el **Sistema de seguridad del COA**, el **Valor de seguro** y el **Informe de conservación**.
+> En Recer Space, la copia tiene además datos propios de galería: el **Número**, el **Emisor** y la **Fecha de emisión del COA**, el **Sistema de seguridad del COA**, el **Valor de seguro** y el **Informe de conservación**.
 
 ## Lo que hace falta antes de vender o reservar
 

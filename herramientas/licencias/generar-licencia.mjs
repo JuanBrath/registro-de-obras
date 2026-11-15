@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Herramienta interna para emitir licencias de Galeris (firma Ed25519,
+// Herramienta interna para emitir licencias de Recer (firma Ed25519,
 // validacion 100% offline en la app — ver apps/desktop/src-tauri/src/licencia.rs).
 // Sin dependencias npm: usa solo node:crypto/fs/path. No forma parte del
 // workspace de pnpm (vive fuera de apps/* y packages/*) ni se compila.

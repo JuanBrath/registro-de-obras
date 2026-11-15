@@ -1,0 +1,8 @@
+"$$$/RecerStudio/Menu=Cargar obra en Recer Studio…"
+"$$$/RecerStudio/Titulo=Recer Studio"
+"$$$/RecerStudio/SoloMac=Este complemento solo funciona en macOS."
+"$$$/RecerStudio/SinFoto=Primero elegí una foto."
+"$$$/RecerStudio/ErrorExportar=No se pudo preparar la foto: ^1"
+"$$$/RecerStudio/ErrorGeneral=No se pudo mandar la foto a Recer Studio: ^1"
+"$$$/RecerStudio/NoAbrio=La foto y sus datos quedaron listos, pero no se pudo abrir Recer Studio. Abrilo a mano y se cargan solos."
+"$$$/RecerStudio/FotoNoEncontrada=No se encontró esa foto en el catálogo actual de Lightroom. Puede que se haya movido de carpeta, o que pertenezca a otro catálogo.\n\n^1"

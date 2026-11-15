@@ -15,7 +15,7 @@
     "opener:allow-reveal-item-in-dir",
     {
       "identifier": "opener:allow-open-path",
-      "allow": [{ "path": "$HOME/**" }]
+      "allow": [{ "path": "$HOME/**" }, { "path": "/Volumes/**" }]
     }
   ]
 }

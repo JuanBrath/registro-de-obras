@@ -4,7 +4,7 @@ How to get around the program: the home buttons, the gear, the back buttons and 
 
 ## The home screen
 
-After opening your records you see the name **Galeris Studio**, your name as the owner, and these buttons:
+After opening your records you see the name **Recer Studio**, your name as the owner, and these buttons:
 
 - **My profile (owner)**: your details, your logo and your signature. See [My profile](cap:mi-perfil).
 - **Artworks**: the list of all your artworks. From there you add new artworks. See [Artworks](cap:obras).
@@ -14,9 +14,15 @@ After opening your records you see the name **Galeris Studio**, your name as the
 
 Below them, some thumbnails of your artworks may appear, picked at random, as decoration.
 
+## The initial tour
+
+The first time you open a set of records, a short tour automatically appears, pointing out these buttons one by one with a brief explanation of each. You can click **Next** to move forward, **Back** to return to the previous step, or **Skip** (or the Esc key) to close it at any time. Once you close it, it won't appear on its own again.
+
+To watch it again whenever you like, click the **View initial tour** button, next to **User manual**.
+
 ## The top bar
 
-- The **Galeris** logo (top left) closes your records and takes you back to the welcome screen.
+- The **Recer** logo (top left) closes your records and takes you back to the welcome screen.
 - The gear ⚙ (top right) opens **Settings**. See [Settings](cap:configuracion).
 
 ## Going back

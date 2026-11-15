@@ -1,4 +1,4 @@
--- Tarea en segundo plano: mientras Lightroom Classic esta abierto, revisa cada tanto si Galeris
+-- Tarea en segundo plano: mientras Lightroom Classic esta abierto, revisa cada tanto si Recer
 -- Studio dejo un pedido de abrir una foto (boton "Abrir en Lightroom" de una obra) y, si la encuentra
 -- en el catalogo actual, pasa a la Biblioteca, cambia a la carpeta de esa foto (si no, la seleccion
 -- no se ve aunque se haya hecho) y la selecciona. Si no la encuentra (se movio de carpeta, o es de
@@ -16,7 +16,7 @@ local LrPathUtils = import 'LrPathUtils'
 local LrTasks = import 'LrTasks'
 
 local function mostrar(mensaje)
-  LrDialogs.message(LOC "$$$/GalerisStudio/Titulo=Galeris Studio", mensaje, 'info')
+  LrDialogs.message(LOC "$$$/RecerStudio/Titulo=Recer Studio", mensaje, 'info')
 end
 
 local function revisarPedido(carpeta)
@@ -33,7 +33,7 @@ local function revisarPedido(carpeta)
   local catalogo = LrApplication.activeCatalog()
   local foto = catalogo:findPhotoByPath(ruta)
   if not foto then
-    mostrar(LOC("$$$/GalerisStudio/FotoNoEncontrada=No se encontró esa foto en el catálogo actual de Lightroom. Puede que se haya movido de carpeta, o que pertenezca a otro catálogo.\n\n^1", ruta))
+    mostrar(LOC("$$$/RecerStudio/FotoNoEncontrada=No se encontró esa foto en el catálogo actual de Lightroom. Puede que se haya movido de carpeta, o que pertenezca a otro catálogo.\n\n^1", ruta))
     return
   end
 

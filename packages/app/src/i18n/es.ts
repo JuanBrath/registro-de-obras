@@ -114,13 +114,13 @@ export const es = {
   "field.esSeriada": "Es seriada",
 
   // WorkspacePicker
-  "workspacePicker.personal": "Galeris Studio",
-  "workspacePicker.galeria": "Galeris Space",
+  "workspacePicker.personal": "Recer Studio",
+  "workspacePicker.galeria": "Recer Space",
   "workspacePicker.opening": "Abriendo registro…",
 
   // ActivarLicencia
   "activarLicencia.titulo": "Activar licencia",
-  "activarLicencia.ayuda": "Para usar Galeris hace falta una licencia activa. Elegí el archivo de licencia que recibiste al comprarla.",
+  "activarLicencia.ayuda": "Para usar Recer hace falta una licencia activa. Elegí el archivo de licencia que recibiste al comprarla.",
 
   // WorkspaceHome
   "workspaceHome.titular": "Titular: {{nombre}}",
@@ -132,11 +132,34 @@ export const es = {
   "workspaceHome.ventas": "Ventas",
   "workspaceHome.clientes": "Clientes",
   "workspaceHome.manual": "Manual del usuario",
+  "workspaceHome.verRecorrido": "Ver recorrido inicial",
+
+  // RecorridoInicial (recorrido guiado de bienvenida, ver WorkspaceHome)
+  "recorridoInicial.introTitulo": "¡Bienvenido a Recer!",
+  "recorridoInicial.introTexto":
+    "Te mostramos un recorrido breve por los primeros pasos. Podés saltearlo cuando quieras y volver a verlo más adelante.",
+  "recorridoInicial.miPerfilTexto":
+    "Acá están tus datos, tu logo y tu firma — ya los completaste para llegar hasta esta pantalla. Volvés acá cuando quieras actualizarlos.",
+  "recorridoInicial.galeriaPerfilTexto": "Acá están los datos de la galería, el logo y la firma que se usan en los documentos.",
+  "recorridoInicial.artistasTexto":
+    "Acá cargás los artistas que representa la galería. Hace falta cargar un artista antes de poder cargarle una obra.",
+  "recorridoInicial.obrasTexto": "Acá vas a cargar y ver todas tus obras. Para cargar la primera, entrá acá y tocá \"Nueva obra\".",
+  "recorridoInicial.clientesTexto": "Tus compradores y contactos quedan acá, para usarlos cuando registrés una venta.",
+  "recorridoInicial.ventasTexto": "Acá vas a poder consultar el reporte de tus ventas por fechas.",
+  "recorridoInicial.manualTexto": "Si en algún momento tenés dudas, acá está el manual completo del programa, con buscador.",
+  "recorridoInicial.cierreTitulo": "¡Listo!",
+  "recorridoInicial.cierreTexto":
+    "Ya podés empezar a cargar tus obras. Si querés volver a ver este recorrido, usá el botón \"Ver recorrido inicial\" de esta pantalla.",
+  "recorridoInicial.pasoContador": "Paso {{n}} de {{total}}",
+  "recorridoInicial.atras": "Atrás",
+  "recorridoInicial.saltar": "Saltar",
+  "recorridoInicial.siguiente": "Siguiente",
+  "recorridoInicial.entendido": "Entendido",
 
   // Manual del usuario
   "lightroom.titulo": "Lightroom Classic",
   "lightroom.ayuda":
-    "Podés cargar una obra desde Lightroom Classic: en Lightroom, elegí la foto y usá el menú Biblioteca › Extras de plug-in › Cargar obra en Galeris Studio. Se abre «Nueva obra» con la imagen, el título, las palabras clave, la calificación, la fecha de captura, los datos de la cámara y la ubicación del archivo original ya cargados. Galeris Studio funciona igual sin esto.",
+    "Podés cargar una obra desde Lightroom Classic: en Lightroom, elegí la foto y usá el menú Biblioteca › Extras de plug-in › Cargar obra en Recer Studio. Se abre «Nueva obra» con la imagen, el título, las palabras clave, la calificación, la fecha de captura, los datos de la cámara y la ubicación del archivo original ya cargados. Recer Studio funciona igual sin esto.",
   "lightroom.instalado": "Complemento instalado.",
   "lightroom.noInstalado": "Complemento no instalado.",
   "lightroom.desactualizado": "Hay una versión nueva del complemento: actualizalo para que funcione bien.",
@@ -236,7 +259,7 @@ export const es = {
   "settings.licenciaBoton": "Cargar licencia…",
   "settings.licenciaActivadaOk": "Licencia activada correctamente.",
   "settings.licenciaErrorPermisos":
-    "macOS bloqueó el acceso a ese archivo — pasa seguido con las carpetas Escritorio, Documentos o Descargas mientras esta app todavía no está firmada con una cuenta de desarrollador de Apple. Para solucionarlo: abrí Ajustes del Sistema → Privacidad y Seguridad → Archivos y Carpetas, buscá Galeris y activá el permiso para esa carpeta. Si preferís no tocar ese permiso, también podés mover el archivo de licencia a otra carpeta (por ejemplo, tu carpeta de Usuario) y elegirlo desde ahí.",
+    "macOS bloqueó el acceso a ese archivo — pasa seguido con las carpetas Escritorio, Documentos o Descargas mientras esta app todavía no está firmada con una cuenta de desarrollador de Apple. Para solucionarlo: abrí Ajustes del Sistema → Privacidad y Seguridad → Archivos y Carpetas, buscá Recer y activá el permiso para esa carpeta. Si preferís no tocar ese permiso, también podés mover el archivo de licencia a otra carpeta (por ejemplo, tu carpeta de Usuario) y elegirlo desde ahí.",
   "settings.idioma": "Idioma",
   "settings.espanol": "Español",
   "settings.ingles": "Inglés",
@@ -253,11 +276,13 @@ export const es = {
   "settings.miniaturasNota":
     "Estáticas: cada miniatura se agranda solo al pasar el cursor por encima. Dinámicas: se van agrandando solas una por una, sin necesidad del cursor.",
   "settings.carpetaDatos": "Carpeta de datos",
+  "settings.carpetaActualNota": "Carpeta actual: {{ruta}}",
+  "settings.verCarpetaBoton": "Ver carpeta actual",
   "settings.cambiarCarpetaNota":
-    "Le indica a Galeris una carpeta distinta para leer y guardar los datos de este registro. Si la carpeta que elijas ya tiene datos de Galeris (por ejemplo, porque moviste la carpeta original a un disco externo), se van a usar esos. Si elegís una carpeta vacía, se va a empezar de cero. Después de cambiarla, volvés a la pantalla de inicio para reabrir el registro.",
+    "Le indica a Recer una carpeta distinta para leer y guardar los datos de este registro. Si la carpeta que elijas ya tiene datos de Recer (por ejemplo, porque moviste la carpeta original a un disco externo), se van a usar esos. Si elegís una carpeta vacía, se va a empezar de cero. Después de cambiarla, volvés a la pantalla de inicio para reabrir el registro.",
   "settings.cambiarCarpetaBoton": "Cambiar carpeta…",
   "settings.moverCarpetaNota":
-    "Si preferís que Galeris mueva todo por vos: copia automáticamente la base de datos, las fotos y los certificados a una carpeta nueva que elijas, y actualiza Galeris para que use esa carpeta de ahí en más. La carpeta anterior nunca se borra sola — vos decidís si borrarla, y recién se pregunta una vez confirmado que todo quedó funcionando bien en la nueva.",
+    "Si preferís que Recer mueva todo por vos: copia automáticamente la base de datos, las fotos y los certificados a una carpeta nueva que elijas, y actualiza Recer para que use esa carpeta de ahí en más. La carpeta anterior nunca se borra sola — vos decidís si borrarla, y recién se pregunta una vez confirmado que todo quedó funcionando bien en la nueva.",
   "settings.moverCarpetaBoton": "Mover carpeta automáticamente…",
   "settings.moverCarpetaProgreso": "Copiando archivo {{copiados}} de {{total}}…",
   "settings.moverCarpetaExito": "Todo se copió y quedó funcionando correctamente en la nueva carpeta: {{nueva}}",
@@ -265,7 +290,7 @@ export const es = {
   "settings.moverCarpetaBorrarAhora": "Borrar la carpeta anterior ahora",
   "settings.moverCarpetaDejarla": "Dejarla, la borro yo después",
   "settings.moverCarpetaErrorPermisos":
-    "macOS bloqueó el acceso a una de las dos carpetas (la de origen o la de destino) — pasa seguido con discos externos, sobre todo mientras esta app todavía no está firmada con una cuenta de desarrollador de Apple. Si tus datos están hoy en un disco externo, este permiso hace falta incluso para mover los datos DE ahí hacia el disco interno, no solo al revés. Para solucionarlo: abrí Ajustes del Sistema → Privacidad y Seguridad → Archivos y Carpetas, buscá Galeris y activá el permiso para \"Volúmenes extraíbles\" (si no aparece esa opción, probá dándole Acceso total al disco). Si preferís no tocar esos permisos, también podés copiar la carpeta vos mismo desde el Finder (que no tiene esta restricción) y después usar \"Cambiar carpeta\" para apuntar a esa copia.",
+    "macOS bloqueó el acceso a una de las dos carpetas (la de origen o la de destino) — pasa seguido con discos externos, sobre todo mientras esta app todavía no está firmada con una cuenta de desarrollador de Apple. Si tus datos están hoy en un disco externo, este permiso hace falta incluso para mover los datos DE ahí hacia el disco interno, no solo al revés. Para solucionarlo: abrí Ajustes del Sistema → Privacidad y Seguridad → Archivos y Carpetas, buscá Recer y activá el permiso para \"Volúmenes extraíbles\" (si no aparece esa opción, probá dándole Acceso total al disco). Si preferís no tocar esos permisos, también podés copiar la carpeta vos mismo desde el Finder (que no tiene esta restricción) y después usar \"Cambiar carpeta\" para apuntar a esa copia.",
   "settings.backupTitulo": "Copia de seguridad",
   "settings.backupWorkspaceLabel": "¿De qué registro?",
   "settings.backupNota":
@@ -296,12 +321,11 @@ export const es = {
   "dialogo.carpetaNubeElegirOtra": "Elegir otra carpeta",
   "dialogo.carpetaNoEncontradaTitulo": "No se encontró la carpeta de datos",
   "dialogo.carpetaNoEncontradaMensaje":
-    "No encontramos la carpeta donde estaban guardados los datos de este registro (última ubicación conocida: {{ruta}}). Puede que un disco externo no esté conectado, o que la carpeta se haya movido o renombrado.",
+    "No encontramos la carpeta donde estaban guardados los datos de este registro (última ubicación conocida: {{ruta}}). Puede que un disco externo no esté conectado, o que la carpeta se haya movido o renombrado.\n\nSi cancelás, después te preguntamos si querés generar una carpeta nueva en su lugar — ahí también podés cancelar y salir sin tocar nada.",
   "dialogo.carpetaNoEncontradaBuscarla": "Buscarla",
-  "dialogo.carpetaNoEncontradaGenerarNueva": "Generar una carpeta nueva",
   "dialogo.carpetaNuevaTitulo": "Generar carpeta nueva",
   "dialogo.carpetaNuevaMensaje":
-    "Vas a generar una carpeta nueva y vacía. Los datos que tenías antes no se borran de donde estaban, pero Galeris va a dejar de mostrarlos hasta que vuelvas a apuntar a esa carpeta (podés hacerlo más adelante desde Configuración, con \"Cambiar carpeta\").\n\n¿Confirmás que querés generar una carpeta nueva?",
+    "Vas a generar una carpeta nueva y vacía. Los datos que tenías antes no se borran de donde estaban, pero Recer va a dejar de mostrarlos hasta que vuelvas a apuntar a esa carpeta (podés hacerlo más adelante desde Configuración, con \"Cambiar carpeta\").\n\n¿Confirmás que querés generar una carpeta nueva?",
   "dialogo.carpetaNuevaConfirmar": "Sí, generar nueva",
 
   // ObraForm
@@ -685,6 +709,12 @@ export const es = {
   "obrasList.ordenarPorFechaCaptura": "Fecha de captura",
   "obrasList.tamanoMiniaturasLabel": "Tamaño de las miniaturas",
   "obrasList.skuPrefix": "SKU:",
+  "obrasList.vistaTarjetas": "Tarjetas",
+  "obrasList.vistaColumnas": "Columnas",
+  "obrasList.colImagen": "Imagen",
+  "obrasList.colObra": "Obra",
+  "obrasList.colDisponibilidad": "Disponibilidad",
+  "obrasList.colCalificacion": "Calificación",
 
   // Informes de Obras (listado)
   "informesObras.generarInforme": "Generar informe",
@@ -729,8 +759,8 @@ export const es = {
   "galeria.filtrarPorEstrellas": "Mostrar solo las obras con {{n}} estrella(s)",
   "galeria.quitarCalificacionATodas": "Quitar la calificación a todas",
   "galeria.quitarCalificacionATodasConfirm": "¿Quitar la calificación a todas las obras?",
-  "galeria.errorGuardarCalificacionArchivo": "La calificación se guardó en Galeris, pero no se pudo guardar en el archivo original: {{mensaje}}",
-  "galeria.errorGuardarCalificacionArchivoVarias": "Las calificaciones se quitaron en Galeris, pero no se pudieron actualizar en el archivo original de {{n}} obra(s).",
+  "galeria.errorGuardarCalificacionArchivo": "La calificación se guardó en Recer, pero no se pudo guardar en el archivo original: {{mensaje}}",
+  "galeria.errorGuardarCalificacionArchivoVarias": "Las calificaciones se quitaron en Recer, pero no se pudieron actualizar en el archivo original de {{n}} obra(s).",
 
   // TagPicker
   "tagPicker.placeholder": "Elegir o escribir una etiqueta…",
@@ -859,6 +889,12 @@ export const es = {
   "certificado.destinoCopia": "copia",
   "certificado.destinoVenta": "venta",
   "certificado.botonesBloqueados": "Guardá o descartá los cambios del registro primero.",
+  "certificado.yaExisteTexto": "Ya generaste un certificado de esta copia en esta sesión. ¿Qué querés hacer?",
+  "certificado.yaExisteVer": "Ver certificado",
+  "certificado.yaExisteRehacer": "Rehacer",
+  "certificado.generadoCorrectamente": "Certificado generado correctamente.",
+  "certificado.errorNoSeEncontroGuardado":
+    "No se pudo abrir el certificado guardado. Puede que se haya movido o borrado — generá uno nuevo.",
   "certificado.campoCorregible": "Viene de tu registro. Para cambiarlo, usá «Corregir datos del registro» o editalo en la obra, la copia o la venta.",
   "certificado.errorObligatorio": "«{{campo}}» no puede quedar vacío.",
   "certificado.errorAnio": "«{{campo}}»: escribí un año de 4 cifras, por ejemplo 2024.",
@@ -987,6 +1023,35 @@ export const es = {
   "obraDetail.confirmarEliminarObra": "¿Eliminar esta obra? No se puede deshacer.",
   "obraDetail.errorTieneVentas":
     "Esta obra tiene ventas registradas — no se puede eliminar sin perder ese historial. Si igual querés eliminarla, primero tendrías que resolver esas ventas.",
+  "obraDetail.exportarImagen": "Exportar imagen…",
+  "obraDetail.errorExportarSinArchivo":
+    "No se puede exportar: esta obra no tiene cargado el archivo original (ver \"Ubicación del archivo original\" en Editar obra).",
+  "obraDetail.abrirEnPhotoshop": "Abrir en Photoshop",
+  "obraDetail.errorAbrirPhotoshopSinArchivo":
+    "No se puede abrir en Photoshop: esta obra no tiene cargado el archivo original (ver \"Ubicación del archivo original\" en Editar obra).",
+  "obraDetail.errorAbrirPhotoshop": "No se pudo abrir el archivo en Photoshop. Puede que no lo tengas instalado en este equipo.",
+  "obraDetail.abrirEnLightroom": "Abrir en Lightroom",
+  "obraDetail.errorAbrirLightroomSinArchivo":
+    "No se puede abrir en Lightroom: esta obra no tiene cargado el archivo original (ver \"Ubicación del archivo original\" en Editar obra).",
+
+  // ExportarImagenModal
+  "exportarImagen.titulo": "Exportar imagen",
+  "exportarImagen.formatoLegend": "Formato",
+  "exportarImagen.formatoJpg": "JPG",
+  "exportarImagen.formatoTiff": "TIFF",
+  "exportarImagen.formatoOriginal": "Original (copia exacta del archivo, sin cambios)",
+  "exportarImagen.ladoLegend": "Lado de referencia",
+  "exportarImagen.ladoCorto": "Lado corto",
+  "exportarImagen.ladoLargo": "Lado largo",
+  "exportarImagen.medidaLabel": "Medida (en píxeles)",
+  "exportarImagen.medidaNota":
+    "No se va a ampliar: si el archivo original es más chico que esta medida, se exporta en su tamaño real.",
+  "exportarImagen.copyrightLabel": "Copyright (opcional)",
+  "exportarImagen.errorMedidaInvalida": "Ingresá una medida en píxeles mayor a cero.",
+  "exportarImagen.exportarBoton": "Exportar…",
+  "exportarImagen.exportando": "Exportando…",
+  "exportarImagen.exportadoMensaje": "Imagen exportada correctamente.",
+
   "obraDetail.ejemplares": "Ejemplares",
   "obraDetail.verMasSeries": "Ver las demás series ({{n}})",
   "obraDetail.verMenosSeries": "Ver menos",

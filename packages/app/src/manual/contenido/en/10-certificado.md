@@ -1,16 +1,25 @@
 # Certificate of authenticity
 
-How to prepare the certificate of authenticity (COA) for a sold, reserved or donated copy, with a preview, and how to correct data from there.
+How to prepare the certificate of authenticity (COA) for a copy, with a preview, and how to correct data from there.
 
 ## What it is and when it can be prepared
 
-The certificate goes with every copy that leaves your studio. It is prepared from a copy that already has a **sale**, a **reservation** or a **donation** recorded, and it takes most of its data from what you already entered: you don't have to type it again.
+The certificate goes with every copy that leaves your studio: for a sale, a reservation, a donation, or for any other reason (for example, to leave it on consignment at a gallery). You don't need a recorded sale to prepare it. It takes most of its data from what you already entered: you don't have to type it again. If the copy has a sale, reservation or donation recorded, the **Place** and the **Date** come from there; if it doesn't have any, those two fields stay empty for you to fill in by hand (see **Issue**, below).
 
 ## Opening the certificate screen
 
 1. Open the artwork and find the copy. See [Copies and statuses](cap:copias).
-2. Click the **Certificate** button (it's next to **Reports**). If it doesn't appear, the copy doesn't have a sale, reservation or donation yet.
+2. Click the **Certificate** button (it's next to **Reports**). It only doesn't appear if the copy is **Destroyed** or **Discarded** and never had a sale, reservation or donation.
 3. A large screen opens: the data on the left and the certificate preview on the right, which updates by itself every time you change something.
+
+### If you already generated a certificate for that copy
+
+If you already saved a certificate PDF for that copy earlier in this session, clicking **Certificate** again asks what you want to do instead of opening the screen directly:
+
+- **View the saved certificate**: opens the PDF you already saved, with the system's PDF reader. If the file was moved or deleted, it tells you, and from then on **Certificate** opens the screen directly again.
+- **Redo the certificate**: opens the certificate screen again, with the record's current data (for example, if you edited the artwork or the copy after generating the first one).
+
+This only happens within the same session: if you close and reopen Recer Studio, **Certificate** opens the screen directly, without asking.
 
 ## Choosing how it looks
 
@@ -19,7 +28,7 @@ In the **Layout** section:
 - **Design**:
   - **Classic**: framed, with a large photo.
   - **Simple**: no frame, with centered text.
-  - **Data sheet**: a grid with the details, with a signature line for the artist and for the gallery (only in Galeris Space).
+  - **Data sheet**: a grid with the details, with a signature line for the artist and for the gallery (only in Recer Space).
   - **Data sheet, no gallery signature**: the same grid, with the artist's signature only.
 - **Paper size**: **A4**, **Letter** or **A5**. The design is built for that size, it isn't shrunk when printing.
 - **Label language**: **Español**, **English** or **Ambos / Both**. It only changes the titles of each field; the data comes out as entered.
@@ -53,8 +62,8 @@ The copy number comes out as **3/10**. If the artwork has artist's proofs, the c
 
 ## Issue
 
-- **Place** and **Date**: they come from the sale (the sale's place and date) and come out in grey.
-- If the sale has no place, the field stays enabled so you can type it.
+- **Place** and **Date**: if the copy has a sale, reservation or donation, they come from there and come out in grey.
+- If the sale has no place entered, or if the copy has no sale, reservation or donation at all, the field stays enabled so you can type it by hand (it's valid only for this certificate).
 
 ## Correcting a wrong detail
 
@@ -76,7 +85,7 @@ You can correct these from here:
 
 - In the **artwork**: **Title**, **Series**, **Year taken** (on the data sheet, it's the artwork's year if it has one) and **Edition year** (shown in the Classic design).
 - In the **copy**: **Image size**, **Process/print type**, **Medium** and **Signature placement**.
-- In the **sale**: **Place** and **Date**.
+- In the **sale**: **Place** and **Date** — only if the copy has a sale, reservation or donation recorded. If it doesn't have any, you fill these in directly in the enabled field (see **Issue**, above) and they don't appear here.
 
 Everything is saved together or nothing is saved. If something isn't valid, the program says so and doesn't save:
 
@@ -94,5 +103,5 @@ Click **Save PDF**, choose where to save it and, if you want to see it right awa
 
 ## Frequently asked questions
 
-- **Why doesn't the Certificate button appear?** Because the copy doesn't have a sale, reservation or donation yet.
+- **Why doesn't the Certificate button appear?** It only happens if the copy is **Destroyed** or **Discarded** and never had a sale, reservation or donation.
 - **I typed something in an enabled field and then it isn't in the artwork.** That's expected: what you fill in an enabled field is valid only for that certificate. For it to stay in your records, enter it in the artwork, the copy or the sale.

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import {
   derivarAnioDesdeFecha,
   derivarEsSeriadaObraGrafica,
@@ -52,12 +52,16 @@ import { generarMiniatura } from "../utils/generarMiniatura.js";
 import type { ArchivoMetadata } from "../utils/readImageMetadata.js";
 import { drawPdfHeader, drawSignatureBlock, writeWrappedText, type FirmaEleccion } from "../utils/pdfBranding.js";
 import { InformesModal } from "../components/InformesModal.js";
+import { MenuContextual } from "../components/MenuContextual.js";
+import { ExportarImagenModal } from "../components/ExportarImagenModal.js";
+import { abrirEnPhotoshop } from "../utils/photoshop.js";
 import { tInforme, type InformeIdioma } from "../reports/informeIdioma.js";
 import { resolveFirmaBytes, resolveMembreteLogoBytes, resolveLocalidad } from "../reports/reportBranding.js";
 import { buildObraSeriesDetalladoPdfBytes, type ObraEjemplarDetalle } from "../reports/obraReports.js";
 import { resolveObraImagenParaPdf } from "../utils/resolveObraImagenPdf.js";
 import { CertificadoEditor } from "../certificados/CertificadoEditor.js";
 import type { DatosStudioCertificado, FormatoCertificado } from "../certificados/datosStudio.js";
+import { openLocalFile } from "../utils/openExternalUrl.js";
 import {
   buildComprobanteVentaPdfBytes,
   buildContratoPdfBytes,
@@ -795,6 +799,8 @@ export function ObraDetail({
   const [ventaTarget, setVentaTarget] = useState<{ ejemplarId: number; existingVenta?: VentaExistente } | null>(null);
   const [fullImageUrl, setFullImageUrl] = useState<string | null>(null);
   const [loadingFullImage, setLoadingFullImage] = useState(false);
+  const [menuImagenPos, setMenuImagenPos] = useState<{ x: number; y: number } | null>(null);
+  const [exportarImagenAbierto, setExportarImagenAbierto] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [anulandoVenta, setAnulandoVenta] = useState(false);
@@ -829,6 +835,16 @@ export function ObraDetail({
     ejemplar: EjemplarRow;
     venta: VentaRow | undefined;
     datos: DatosStudioCertificado;
+  } | null>(null);
+  // Donde quedo guardado el ultimo certificado de cada copia (mientras esta pantalla sigue
+  // abierta): permite preguntar, al tocar "Certificado" de nuevo, si lo que se quiere es ver
+  // ese PDF o armar uno nuevo, en vez de reabrir la pantalla del certificado en blanco y perder
+  // de vista que ya se habia generado uno.
+  const [certificadosGuardados, setCertificadosGuardados] = useState<Record<number, string>>({});
+  const [confirmarCertificado, setConfirmarCertificado] = useState<{
+    ejemplar: EjemplarRow;
+    venta: VentaRow | undefined;
+    path: string;
   } | null>(null);
   const [rofrPlazoAnios, setRofrPlazoAnios] = useState("3");
   const [rofrPlazoDias, setRofrPlazoDias] = useState("30");
@@ -974,11 +990,43 @@ export function ObraDetail({
     }
   }
 
+  function handleAbrirMenuImagen(e: ReactMouseEvent) {
+    e.preventDefault();
+    setMenuImagenPos({ x: e.clientX, y: e.clientY });
+  }
+
+  function handleExportarImagenClick() {
+    if (!obra?.ubicacion_fisica_actual) {
+      setError(t("obraDetail.errorExportarSinArchivo"));
+      return;
+    }
+    setError(null);
+    setExportarImagenAbierto(true);
+  }
+
+  async function handleAbrirEnPhotoshopClick() {
+    if (!obra?.ubicacion_fisica_actual) {
+      setError(t("obraDetail.errorAbrirPhotoshopSinArchivo"));
+      return;
+    }
+    setError(null);
+    try {
+      await abrirEnPhotoshop(obra.ubicacion_fisica_actual);
+    } catch {
+      setError(t("obraDetail.errorAbrirPhotoshop"));
+    }
+  }
+
   // Mismo pedido que el boton "Lr" de FilePathField.tsx (en el formulario de
-  // edicion), pero disponible tambien desde la vista de solo lectura: asi no
-  // hace falta entrar a "Editar" para mandar la foto a Lightroom.
+  // edicion), pero disponible tambien desde la vista de solo lectura (el
+  // boton de acá al lado de "Editar obra" y el menú del click derecho sobre
+  // la imagen): asi no hace falta entrar a "Editar" para mandar la foto a
+  // Lightroom.
   async function handleAbrirEnLightroomDesdeVista() {
-    if (!obra?.ubicacion_fisica_actual) return;
+    if (!obra?.ubicacion_fisica_actual) {
+      setError(t("obraDetail.errorAbrirLightroomSinArchivo"));
+      return;
+    }
     setError(null);
     try {
       await pedirAbrirEnLightroom(obra.ubicacion_fisica_actual);
@@ -1264,9 +1312,41 @@ export function ObraDetail({
     setFirmaBytesDisponibles(await resolveFirmaBytes(context, personalArtista, galeriaPerfil));
   }
 
+  // Lo que llama el boton "Certificado" de cada copia: si ya se guardo un certificado de esta
+  // copia en lo que va de esta sesion, pregunta si se quiere ver ese PDF o armar uno nuevo, en
+  // vez de reabrir la pantalla del certificado directamente y perder de vista el que ya existe.
+  function handleCertificadoBotonClick(ejemplar: EjemplarRow, venta: VentaRow | undefined) {
+    const path = certificadosGuardados[ejemplar.id];
+    if (path) {
+      setConfirmarCertificado({ ejemplar, venta, path });
+      return;
+    }
+    handleAbrirCertificado(ejemplar, venta);
+  }
+
+  async function handleVerCertificadoGuardado(path: string, ejemplarId: number) {
+    setConfirmarCertificado(null);
+    try {
+      await openLocalFile(path);
+    } catch {
+      // El archivo puede haberse movido o borrado desde que se guardo: se avisa y se olvida esa
+      // ruta, para que la proxima vez vaya directo a armar uno nuevo en vez de volver a fallar.
+      setError(t("certificado.errorNoSeEncontroGuardado"));
+      setCertificadosGuardados((previo) => {
+        const { [ejemplarId]: _quitado, ...resto } = previo;
+        return resto;
+      });
+    }
+  }
+
+  function handleRehacerCertificado(ejemplar: EjemplarRow, venta: VentaRow | undefined) {
+    setConfirmarCertificado(null);
+    handleAbrirCertificado(ejemplar, venta);
+  }
+
   // Junta todo lo que Studio ya sabe de esta obra, copia y venta, y abre la
   // pantalla del certificado con esos datos (que ahi salen en gris). Se abre
-  // con el boton "Certificado de autenticidad" de cada copia vendida.
+  // con el boton "Certificado" de cada copia (no hace falta que tenga una venta).
   async function handleAbrirCertificado(ejemplar: EjemplarRow, venta: VentaRow | undefined) {
     if (!obra || !context) return;
     setAbriendoCertificado(true);
@@ -2196,6 +2276,10 @@ export function ObraDetail({
     esRegistroPersonal &&
     !!obra?.ubicacion_fisica_actual &&
     (ext?.subtipo_fotografia === "DigitalFineArt" || ext?.subtipo_fotografia === "Sintografia");
+  // Photoshop sirve para cualquier categoria (no solo fotografia), asi que a
+  // diferencia de Lightroom no se restringe por subtipo ni por modo de
+  // registro: alcanza con que haya un archivo original cargado.
+  const mostrarBotonPhotoshopVista = !!obra?.ubicacion_fisica_actual;
 
   return (
     <div className="obra-detail">
@@ -2222,7 +2306,13 @@ export function ObraDetail({
       {obra && !editingObra && (
         <div className="obra-detail-header">
           {thumbnailUrl && (
-            <button type="button" className="obra-detail-thumbnail-button" onClick={handleShowFullImage} disabled={loadingFullImage}>
+            <button
+              type="button"
+              className="obra-detail-thumbnail-button"
+              onClick={handleShowFullImage}
+              onContextMenu={handleAbrirMenuImagen}
+              disabled={loadingFullImage}
+            >
               <img src={thumbnailUrl} alt={obra.titulo} className="obra-detail-thumbnail" />
             </button>
           )}
@@ -2313,6 +2403,17 @@ export function ObraDetail({
                   Lr
                 </button>
               )}
+              {mostrarBotonPhotoshopVista && (
+                <button
+                  type="button"
+                  className="link-icon-button link-icon-button-photoshop"
+                  onClick={handleAbrirEnPhotoshopClick}
+                  aria-label={t("obraDetail.abrirEnPhotoshop")}
+                  title={t("obraDetail.abrirEnPhotoshop")}
+                >
+                  Ps
+                </button>
+              )}
             </div>
             {fichaPdfMensaje && (
               <p className="success" role="status">
@@ -2375,7 +2476,7 @@ export function ObraDetail({
               onConfirmarVenta={(venta) => handleConfirmarVenta(venta, ej.id)}
               anulando={anulandoVenta}
               onAbrirInformes={() => handleAbrirInformesVenta(ej)}
-              onAbrirCertificado={() => handleAbrirCertificado(ej, ej.venta_id ? ventas[ej.venta_id] : undefined)}
+              onAbrirCertificado={() => handleCertificadoBotonClick(ej, ej.venta_id ? ventas[ej.venta_id] : undefined)}
               abriendoCertificado={abriendoCertificado}
             />
           ))}
@@ -2421,7 +2522,7 @@ export function ObraDetail({
                   onConfirmarVenta={(venta) => handleConfirmarVenta(venta, ej.id)}
                   anulando={anulandoVenta}
                   onAbrirInformes={() => handleAbrirInformesVenta(ej)}
-                  onAbrirCertificado={() => handleAbrirCertificado(ej, ej.venta_id ? ventas[ej.venta_id] : undefined)}
+                  onAbrirCertificado={() => handleCertificadoBotonClick(ej, ej.venta_id ? ventas[ej.venta_id] : undefined)}
                   abriendoCertificado={abriendoCertificado}
                 />
               ))}
@@ -2634,8 +2735,34 @@ export function ObraDetail({
             setCertificadoTarget(null);
             if (venta) setVentaTarget({ ejemplarId: ejemplar.id, existingVenta: toVentaExistente(venta) });
           }}
+          onGuardado={(path) =>
+            setCertificadosGuardados((previo) => ({ ...previo, [certificadoTarget.ejemplar.id]: path }))
+          }
           onClose={() => setCertificadoTarget(null)}
         />
+      )}
+
+      {confirmarCertificado && (
+        <Modal onClose={() => setConfirmarCertificado(null)}>
+          <p>{t("certificado.yaExisteTexto")}</p>
+          <div className="obra-form-saved-actions obra-form-saved-actions-wrap">
+            <button
+              type="button"
+              onClick={() => handleVerCertificadoGuardado(confirmarCertificado.path, confirmarCertificado.ejemplar.id)}
+            >
+              {t("certificado.yaExisteVer")}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleRehacerCertificado(confirmarCertificado.ejemplar, confirmarCertificado.venta)}
+            >
+              {t("certificado.yaExisteRehacer")}
+            </button>
+            <button type="button" onClick={() => setConfirmarCertificado(null)}>
+              {t("common.cancel")}
+            </button>
+          </div>
+        </Modal>
       )}
 
       {ventaTarget && (
@@ -2656,8 +2783,40 @@ export function ObraDetail({
 
       {fullImageUrl && (
         <Modal onClose={() => setFullImageUrl(null)} wide className="modal-content-image">
-          <img src={fullImageUrl} alt={obra?.titulo} className="obra-full-image" />
+          {error && (
+            <p className="error" role="alert">
+              ⚠️ {error}
+            </p>
+          )}
+          <img
+            src={fullImageUrl}
+            alt={obra?.titulo}
+            className="obra-full-image"
+            onContextMenu={handleAbrirMenuImagen}
+          />
         </Modal>
+      )}
+
+      {menuImagenPos && (
+        <MenuContextual
+          x={menuImagenPos.x}
+          y={menuImagenPos.y}
+          onClose={() => setMenuImagenPos(null)}
+          items={[
+            { label: t("obraDetail.exportarImagen"), onClick: handleExportarImagenClick },
+            { label: t("obraDetail.abrirEnPhotoshop"), onClick: handleAbrirEnPhotoshopClick },
+            { label: t("obraDetail.abrirEnLightroom"), onClick: handleAbrirEnLightroomDesdeVista },
+          ]}
+        />
+      )}
+
+      {exportarImagenAbierto && obra?.ubicacion_fisica_actual && (
+        <ExportarImagenModal
+          titulo={obra.titulo}
+          nombreArtista={obra.nombre_completo}
+          rutaOriginal={obra.ubicacion_fisica_actual}
+          onClose={() => setExportarImagenAbierto(false)}
+        />
       )}
     </div>
   );
@@ -3856,7 +4015,7 @@ function EjemplarRowView({
               <span className="field-label">
                 {t("obraDetail.tipoEnmarcadoLabel")} <HelpIcon fieldKey="tipo_enmarcado" />
               </span>
-              <input type="text" value={tipoEnmarcado} onChange={(e) => setTipoEnmarcado(e.target.value)} />
+              <textarea rows={2} value={tipoEnmarcado} onChange={(e) => setTipoEnmarcado(e.target.value)} />
             </label>
             <label>
               <span className="field-label">{t("obraDetail.tamanoFinalEnmarcadoLabel")}</span>
@@ -4292,7 +4451,7 @@ function EjemplarRowView({
             {t("ventaForm.informesButton")}
           </button>
         )}
-        {venta && (
+        {(!["descartada", "destruida"].includes(ejemplar.estado) || venta) && (
           <button type="button" onClick={onAbrirCertificado} disabled={abriendoCertificado} title={t("certificado.botonAyuda")}>
             {abriendoCertificado ? t("common.loading") : t("certificado.boton")}
           </button>

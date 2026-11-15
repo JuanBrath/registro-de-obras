@@ -4,7 +4,7 @@ Cómo moverte por el programa: los botones de inicio, el engranaje, los botones 
 
 ## La pantalla de inicio
 
-Después de abrir tu registro ves el nombre **Galeris Studio**, tu nombre como titular y estos botones:
+Después de abrir tu registro ves el nombre **Recer Studio**, tu nombre como titular y estos botones:
 
 - **Mi perfil (titular)**: tus datos, tu logo y tu firma. Ver [Mi perfil](cap:mi-perfil).
 - **Obras**: el listado de todas tus obras. Desde ahí cargás obras nuevas. Ver [Obras](cap:obras).
@@ -14,9 +14,15 @@ Después de abrir tu registro ves el nombre **Galeris Studio**, tu nombre como t
 
 Debajo pueden aparecer unas miniaturas de tus obras, elegidas al azar, como decoración.
 
+## El recorrido inicial
+
+La primera vez que entrás a un registro aparece automáticamente un recorrido corto que va señalando estos botones, uno por uno, con una explicación breve de cada uno. Podés tocar **Siguiente** para avanzar, **Atrás** para volver al paso anterior, o **Saltar** (o la tecla Esc) para cerrarlo en cualquier momento. Una vez que lo cerrás, no vuelve a aparecer solo.
+
+Para volver a verlo cuando quieras, tocá el botón **Ver recorrido inicial**, al lado de **Manual del usuario**.
+
 ## La barra de arriba
 
-- El logo **Galeris** (arriba a la izquierda) cierra el registro y te lleva de vuelta a la pantalla de presentación.
+- El logo **Recer** (arriba a la izquierda) cierra el registro y te lleva de vuelta a la pantalla de presentación.
 - El engranaje ⚙ (arriba a la derecha) abre la **Configuración**. Ver [Configuración](cap:configuracion).
 
 ## Volver atrás

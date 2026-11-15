@@ -6,7 +6,7 @@ import { dibujarSinCopyright } from "./sinCopyright.js";
  * Certificado de autenticidad clasico, en una sola hoja: marco de doble
  * linea, banner con el titulo, la foto de la obra en el cuerpo, campos con
  * linea debajo, lugar y fecha, y pie de derechos reservados. Tomado de
- * buildCoaPdfBytes de Galeris Studio; todas las medidas van multiplicadas
+ * buildCoaPdfBytes de Recer Studio; todas las medidas van multiplicadas
  * por `k` para adaptarse a la hoja elegida (ver nuevoDocumento).
  */
 export async function generarClasico(c: Certificado): Promise<Uint8Array> {

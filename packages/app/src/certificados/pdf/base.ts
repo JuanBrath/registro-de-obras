@@ -101,7 +101,7 @@ function dibujarGuias(doc: jsPDF, c: Pick<Certificado, "tamanoHoja" | "guiasCort
 
 let interBase64: Promise<string> | null = null;
 
-// jsPDF solo puede embeber TTF crudo; el .ttf viene de Galeris Studio.
+// jsPDF solo puede embeber TTF crudo; el .ttf viene de Recer Studio.
 async function registrarFuentes(doc: jsPDF): Promise<void> {
   if (!interBase64) {
     interBase64 = fetch(interRegularUrl)

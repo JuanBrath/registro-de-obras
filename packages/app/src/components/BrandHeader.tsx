@@ -1,5 +1,5 @@
 import type { EdicionId } from "@registro/core";
-import gsMonograma from "../assets/brand/gs-monograma.png";
+import gsMonograma from "../assets/brand/rs-monograma.png";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { useEdicion } from "../state/EdicionContext.js";
 import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
@@ -33,7 +33,7 @@ export function BrandHeader({
     >
       <img src={gsMonograma} alt="" className="brand-header-icon" />
       <span className="brand-header-text">
-        Galeris
+        Recer
         {edicion && <span className="brand-header-suffix">{t(SUFFIX_KEY[edicion])}</span>}
       </span>
     </button>
