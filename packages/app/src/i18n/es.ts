@@ -116,6 +116,9 @@ export const es = {
   // WorkspacePicker
   "workspacePicker.personal": "Recer Studio",
   "workspacePicker.galeria": "Recer Space",
+  "porQueRecer.titulo": "¿Por qué Recer?",
+  "porQueRecer.texto": "En catalán, <i>recer</i> significa resguardo, abrigo y protección (<i>estar a recer</i> es estar a salvo de la intemperie). Toda obra artística necesita un espacio donde ser preservada, documentada y puesta en valor a lo largo del tiempo. Recer nace con esa vocación: ofrecer una infraestructura digital sólida para custodiar el archivo, la trazabilidad y la historia de cada pieza.",
+  "porQueRecer.lema": "Resguardo · abrigo · protección",
   "workspacePicker.opening": "Abriendo registro…",
 
   // ActivarLicencia

@@ -118,6 +118,9 @@ export const en: Record<keyof typeof es, string> = {
   // WorkspacePicker
   "workspacePicker.personal": "Recer Studio",
   "workspacePicker.galeria": "Recer Space",
+  "porQueRecer.titulo": "Why Recer?",
+  "porQueRecer.texto": "In Catalan, <i>recer</i> means shelter, refuge and protection (<i>estar a recer</i> is to be safe from the elements). Every work of art needs a space where it can be preserved, documented and valued over time. Recer was born with that purpose: to offer a solid digital infrastructure to safeguard the archive, the traceability and the history of every piece.",
+  "porQueRecer.lema": "Shelter · refuge · protection",
   "workspacePicker.opening": "Opening registry…",
 
   // ActivarLicencia

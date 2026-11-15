@@ -13,9 +13,12 @@ const SUFFIX_KEY: Record<EdicionId, TranslationKey> = {
 export function BrandHeader({
   size = "navbar",
   className,
+  onClick,
 }: {
   size?: "navbar" | "splash";
   className?: string;
+  /** Si se pasa, reemplaza la accion por defecto (volver a la seleccion de modulo). */
+  onClick?: () => void;
 }) {
   const { close } = useWorkspace();
   const { edicion } = useEdicion();
@@ -28,8 +31,8 @@ export function BrandHeader({
     <button
       type="button"
       className={`brand-header brand-header-${size}${className ? ` ${className}` : ""}`}
-      onClick={() => void close()}
-      aria-label={t("brand.irAInicio")}
+      onClick={onClick ?? (() => void close())}
+      aria-label={onClick ? t("porQueRecer.titulo") : t("brand.irAInicio")}
     >
       <img src={gsMonograma} alt="" className="brand-header-icon" />
       <span className="brand-header-text">

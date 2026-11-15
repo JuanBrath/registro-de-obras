@@ -135,6 +135,18 @@ input[type="date"] {
   margin: 24px 0;
 }
 
+.workspace-picker-lema {
+  margin: -12px 0 0;
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.65;
+}
+
+.por-que-recer-texto {
+  line-height: 1.6;
+}
+
 .workspace-picker {
   max-width: 480px;
   margin: 4rem auto;
