@@ -430,7 +430,6 @@ export function SeleccionesScreen({
                   cursor: "grab",
                 }}
                 >
-                  <span className="seleccion-orden">{i + 1}</span>
                   <button type="button" className="obra-card" onClick={() => onOpenObra(obra.id)}>
                     {thumbs[obra.id] ? (
                       <img src={thumbs[obra.id]} alt={obra.titulo} onLoad={(e) => marcarSiMiniaturaMuyVertical(e.currentTarget)} />
@@ -467,7 +466,6 @@ export function SeleccionesScreen({
               <table className="obras-tabla">
                 <thead>
                   <tr>
-                    <th>#</th>
                     <th>{t("obrasList.colImagen")}</th>
                     <th>{t("obrasList.colObra")}</th>
                     <th>{t("informesObras.colAutor")}</th>
@@ -512,7 +510,6 @@ export function SeleccionesScreen({
                   cursor: "grab",
                 }}
                       >
-                        <td>{i + 1}</td>
                         <td>
                           {thumbs[obra.id] ? (
                             <img

@@ -3159,23 +3159,7 @@ button:not(:disabled):hover {
   margin-bottom: 1.5rem;
 }
 
-/* Selecciones: número de orden sobre la tarjeta y barra de vista. */
-.seleccion-orden {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  z-index: 2;
-  min-width: 1.6rem;
-  padding: 0.1rem 0.45rem;
-  border-radius: 999px;
-  background: var(--azul-marino);
-  color: #fff;
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-align: center;
-  pointer-events: none;
-}
-
+/* Selecciones: barra de vista. */
 .selecciones-vista-barra {
   margin-bottom: 1rem;
 }
