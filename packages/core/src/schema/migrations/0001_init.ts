@@ -84,6 +84,7 @@ import { migration0084AyudaImagenObra2400 } from "./0084_ayuda_imagen_obra_2400.
 import { migration0085DimensionesSoloPorEjemplar } from "./0085_dimensiones_solo_por_ejemplar.js";
 import { migration0086DimensionesObraVuelveSiEsSeriada } from "./0086_dimensiones_obra_vuelve_si_es_seriada.js";
 import { migration0087LimpiarDimensionesEjemplarSeries } from "./0087_limpiar_dimensiones_ejemplar_series.js";
+import { migration0088Selecciones } from "./0088_selecciones.js";
 
 export interface Migration {
   name: string;
@@ -299,4 +300,5 @@ export const ALL_MIGRATIONS: Migration[] = [
   migration0085DimensionesSoloPorEjemplar,
   migration0086DimensionesObraVuelveSiEsSeriada,
   migration0087LimpiarDimensionesEjemplarSeries,
+  migration0088Selecciones,
 ];

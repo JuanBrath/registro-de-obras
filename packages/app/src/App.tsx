@@ -18,6 +18,7 @@ import { ObraForm } from "./screens/ObraForm.js";
 import { ObrasList, type ObrasListFiltros } from "./screens/ObrasList.js";
 import { ObraDetail } from "./screens/ObraDetail.js";
 import { PersonalProfileForm } from "./screens/PersonalProfileForm.js";
+import { SeleccionesScreen } from "./screens/SeleccionesScreen.js";
 import { ArtistasScreen } from "./screens/ArtistasScreen.js";
 import { GaleriaFotos } from "./screens/GaleriaFotos.js";
 import { SettingsModal } from "./screens/SettingsModal.js";
@@ -40,7 +41,8 @@ type Screen =
   | { name: "galeria-fotos"; filtros?: ObrasListFiltros; fotoIdInicial?: number }
   | { name: "ventas" }
   | { name: "galeria-perfil" }
-  | { name: "clientes" };
+  | { name: "clientes" }
+  | { name: "selecciones" };
 
 function WorkspaceScreens({ onManual }: { onManual: () => void }) {
   const { context, personalArtista, close } = useWorkspace();
@@ -168,6 +170,15 @@ function WorkspaceScreens({ onManual }: { onManual: () => void }) {
           onOpenObra={(obraId) => setScreen({ name: "obra-detail", obraId })}
           onNuevaObra={() => setScreen({ name: "nueva-obra" })}
           onVerGaleria={(filtros) => setScreen({ name: "galeria-fotos", filtros })}
+          onVerSelecciones={() => setScreen({ name: "selecciones" })}
+        />
+      );
+      break;
+    case "selecciones":
+      content = (
+        <SeleccionesScreen
+          onBack={() => setScreen({ name: "obras" })}
+          onOpenObra={(obraId) => setScreen({ name: "obra-detail", obraId, volverA: { name: "selecciones" } })}
         />
       );
       break;

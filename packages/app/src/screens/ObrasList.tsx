@@ -20,6 +20,7 @@ import { StarRating } from "../components/StarRating.js";
 import { cargarColumnasGridInicial, guardarColumnasGrid, MIN_COLUMNAS_GRID, MAX_COLUMNAS_GRID } from "../utils/columnasGrid.js";
 import { marcarSiMiniaturaMuyVertical } from "../utils/miniaturaVertical.js";
 import { sincronizarCalificacionConArchivo } from "../utils/calificacionArchivo.js";
+import { AgregarASeleccionModal } from "../components/AgregarASeleccionModal.js";
 
 const COLUMNAS_OBRAS_POR_DEFECTO = 4;
 // Cada vista (tarjetas / columnas) guarda su propio tamano de miniaturas por
@@ -122,11 +123,13 @@ export function ObrasList({
   onOpenObra,
   onNuevaObra,
   onVerGaleria,
+  onVerSelecciones,
 }: {
   onBack: () => void;
   onOpenObra: (obraId: number) => void;
   onNuevaObra: () => void;
   onVerGaleria: (filtros: ObrasListFiltros) => void;
+  onVerSelecciones: () => void;
 }) {
   const { context, personalArtista, galeriaPerfil } = useWorkspace();
   const { t, idioma } = useLanguage();
@@ -161,6 +164,18 @@ export function ObrasList({
   const [firmaBytesDisponibles, setFirmaBytesDisponibles] = useState<Uint8Array | null>(null);
   const [generandoInforme, setGenerandoInforme] = useState(false);
   const [informeMensaje, setInformeMensaje] = useState<string | null>(null);
+  // Modo "Seleccionar": tildar obras a mano para agregarlas a una selección (base de los dossiers).
+  const [modoSeleccion, setModoSeleccion] = useState(false);
+  const [elegidas, setElegidas] = useState<Set<number>>(new Set());
+  const [agregarAbierto, setAgregarAbierto] = useState(false);
+  const [seleccionMensaje, setSeleccionMensaje] = useState<string | null>(null);
+  const alternarElegida = (id: number) =>
+    setElegidas((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   useEscapeToDismiss(informeMensaje, setInformeMensaje);
 
   useEffect(() => {
@@ -517,6 +532,35 @@ export function ObrasList({
           >
             {t("workspaceHome.galeriaFotos")}
           </button>
+          <button type="button" onClick={onVerSelecciones}>
+            {t("selecciones.boton")}
+          </button>
+          {obras.length > 0 && (
+            <button
+              type="button"
+              className={modoSeleccion ? "obras-vista-toggle-boton activo" : undefined}
+              onClick={() => {
+                setModoSeleccion((m) => !m);
+                setElegidas(new Set());
+              }}
+            >
+              {modoSeleccion ? t("selecciones.terminarSeleccion") : t("selecciones.seleccionar")}
+            </button>
+          )}
+          {modoSeleccion && (
+            <>
+              <span>{t("selecciones.contador", { cantidad: elegidas.size })}</span>
+              <button type="button" onClick={() => setElegidas(new Set(filteredObras.map((o) => o.id)))}>
+                {t("selecciones.todasFiltradas")}
+              </button>
+              <button type="button" onClick={() => setElegidas(new Set())} disabled={elegidas.size === 0}>
+                {t("selecciones.ninguna")}
+              </button>
+              <button type="button" onClick={() => setAgregarAbierto(true)} disabled={elegidas.size === 0}>
+                {t("selecciones.agregarABoton")}
+              </button>
+            </>
+          )}
           {obras.length > 0 && (
             <button type="button" onClick={handleAbrirInformesMenu} disabled={filteredObras.length === 0}>
               {t("informesObras.generarInforme")}
@@ -625,13 +669,31 @@ export function ObrasList({
 
       {!loading && obras.length === 0 && <p>{t("obrasList.sinObras")}</p>}
 
+      {seleccionMensaje && (
+        <p role="status" onClick={() => setSeleccionMensaje(null)}>
+          {seleccionMensaje}
+        </p>
+      )}
       {!loading && obras.length > 0 && filteredObras.length === 0 && <p>{t("obrasList.sinResultados")}</p>}
 
       {vista === "tarjetas" && (
       <div className="obras-grid" style={{ gridTemplateColumns: `repeat(${columnasGridTarjetas}, 1fr)` }}>
         {filteredObras.map((obra) => (
           <div className="obra-card-wrapper" key={obra.id}>
-            <button type="button" className="obra-card" onClick={() => onOpenObra(obra.id)}>
+            {modoSeleccion && (
+              <input
+                type="checkbox"
+                checked={elegidas.has(obra.id)}
+                onChange={() => alternarElegida(obra.id)}
+                style={{ position: "absolute", top: 8, left: 8, zIndex: 2, width: 22, height: 22 }}
+              />
+            )}
+            <button
+              type="button"
+              className="obra-card"
+              style={modoSeleccion && elegidas.has(obra.id) ? { outline: "3px solid var(--accent, #4a90e2)" } : undefined}
+              onClick={() => (modoSeleccion ? alternarElegida(obra.id) : onOpenObra(obra.id))}
+            >
             {thumbnails[obra.id] ? (
               <img
                 src={thumbnails[obra.id]}
@@ -712,8 +774,9 @@ export function ObrasList({
               {filteredObras.map((obra) => {
                 const subtipoValor = obra.categoria_obra === "Fotografia" ? obra.subtipo_fotografia : obra.subtipo;
                 return (
-                  <tr key={obra.id} className="obras-tabla-fila" onClick={() => onOpenObra(obra.id)}>
+                  <tr key={obra.id} className="obras-tabla-fila" onClick={() => (modoSeleccion ? alternarElegida(obra.id) : onOpenObra(obra.id))}>
                     <td>
+                      {modoSeleccion && <input type="checkbox" checked={elegidas.has(obra.id)} readOnly />}
                       {thumbnails[obra.id] ? (
                         <img
                           src={thumbnails[obra.id]}
@@ -787,8 +850,21 @@ export function ObrasList({
         </button>
       </div>
 
+      {agregarAbierto && (
+        <AgregarASeleccionModal
+          obraIds={Array.from(elegidas)}
+          onClose={() => setAgregarAbierto(false)}
+          onDone={(mensaje) => {
+            setAgregarAbierto(false);
+            setModoSeleccion(false);
+            setElegidas(new Set());
+            setSeleccionMensaje(mensaje);
+          }}
+        />
+      )}
+
       {informesMenuAbierto && (
-        <InformesModal
+              <InformesModal
           titulo={t("informesObras.generarInforme")}
           opciones={[
             { id: "resumido", label: t("informesObras.opcionResumido") },

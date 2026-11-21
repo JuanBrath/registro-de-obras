@@ -62,6 +62,7 @@ import { resolveObraImagenParaPdf } from "../utils/resolveObraImagenPdf.js";
 import { CertificadoEditor } from "../certificados/CertificadoEditor.js";
 import type { DatosStudioCertificado, FormatoCertificado } from "../certificados/datosStudio.js";
 import { openLocalFile } from "../utils/openExternalUrl.js";
+import { AgregarASeleccionModal } from "../components/AgregarASeleccionModal.js";
 import {
   buildComprobanteVentaPdfBytes,
   buildContratoPdfBytes,
@@ -806,6 +807,7 @@ export function ObraDetail({
   const [anulandoVenta, setAnulandoVenta] = useState(false);
   const [generandoFichaPdf, setGenerandoFichaPdf] = useState(false);
   const [fichaPdfMensaje, setFichaPdfMensaje] = useState<string | null>(null);
+  const [agregarSeleccionAbierto, setAgregarSeleccionAbierto] = useState(false);
   useEscapeToDismiss(fichaPdfMensaje, setFichaPdfMensaje);
   const [informesMenuAbierto, setInformesMenuAbierto] = useState(false);
   const [informeSeleccionId, setInformeSeleccionId] = useState("completa");
@@ -2389,6 +2391,9 @@ export function ObraDetail({
               <button type="button" onClick={handleAbrirInformesMenu} disabled={generandoFichaPdf}>
                 {generandoFichaPdf ? t("common.saving") : t("common.generarInforme")}
               </button>
+              <button type="button" onClick={() => setAgregarSeleccionAbierto(true)}>
+                {t("selecciones.agregarABoton")}
+              </button>
               <button type="button" onClick={() => setConfirmingDelete(true)}>
                 {t("obraDetail.eliminarObra")}
               </button>
@@ -2415,6 +2420,16 @@ export function ObraDetail({
                 </button>
               )}
             </div>
+            {agregarSeleccionAbierto && (
+              <AgregarASeleccionModal
+                obraIds={[obraId]}
+                onClose={() => setAgregarSeleccionAbierto(false)}
+                onDone={(mensaje) => {
+                  setAgregarSeleccionAbierto(false);
+                  setFichaPdfMensaje(mensaje);
+                }}
+              />
+            )}
             {fichaPdfMensaje && (
               <p className="success" role="status">
                 ✅ {fichaPdfMensaje}
