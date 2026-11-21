@@ -13,21 +13,27 @@ export interface DossierObra {
   medidas: string | null;
   /** Precio ya formateado sin sufijo (ej. "U$ 1.000"), o null si no hay. */
   precio: string | null;
-  serie: string | null;
   imagen: { bytes: Uint8Array; formato: "PNG" | "JPEG" } | null;
 }
 
 export interface DossierArtista {
   id: number;
   nombre: string;
+  /** Ya con las ediciones hechas en el asistente (no se guarda en el artista). */
   bio: string | null;
 }
 
 export interface DossierOpciones {
-  /** Texto de la portada (por defecto el nombre del artista); vacío = sin portada. */
+  /** Texto principal de la portada (por defecto el nombre del artista); vacío = sin portada. */
   tituloPortada: string;
+  /** Segunda línea de la portada (nombre de la selección), o vacío para omitirla. */
+  subtituloPortada: string;
+  /** Tamaño de letra del texto principal de la portada, en puntos. */
+  tamanoPortada: number;
   incluirBio: boolean;
-  incluirTextoSerie: boolean;
+  /** Título de la página de statement (nombre de la selección) y su texto; sin texto = sin página. */
+  statementTitulo: string;
+  statementTexto: string;
   incluirTituloAnio: boolean;
   incluirTecnica: boolean;
   incluirMedidas: boolean;
@@ -36,9 +42,10 @@ export interface DossierOpciones {
   sufijoPrecio: string;
   /** Texto que se agrega si varias obras comparten ficha ("c/u"). */
   sufijoCadaUno: string;
-  /** Texto de cada serie, por clave `${artistaId}|${serie}`. */
-  textosSerie: Record<string, string>;
-  obrasPorPagina: 1 | 2 | 4 | 6 | 8;
+  /** Obras por hoja por defecto. */
+  obrasPorPagina: number;
+  /** Excepciones: número de hoja de obras (1, 2, 3…) -> cantidad de obras en esa hoja. */
+  obrasPorPaginaExcepciones: Record<number, number>;
   contactoLineas: string[];
   logoBytes: Uint8Array | null;
 }
@@ -46,13 +53,28 @@ export interface DossierOpciones {
 const W = 297;
 const H = 210;
 const M = 15;
-const GRID: Record<number, [number, number]> = { 1: [1, 1], 2: [2, 1], 4: [2, 2], 6: [3, 2], 8: [4, 2] };
+const GRID: Record<number, [number, number]> = {
+  1: [1, 1],
+  2: [2, 1],
+  3: [3, 1],
+  4: [2, 2],
+  5: [3, 2],
+  6: [3, 2],
+  7: [4, 2],
+  8: [4, 2],
+  9: [3, 3],
+  10: [5, 2],
+  11: [4, 3],
+  12: [4, 3],
+};
+
+function gridPara(n: number): [number, number] {
+  if (GRID[n]) return GRID[n];
+  const cols = Math.ceil(Math.sqrt(n * 1.5));
+  return [cols, Math.ceil(n / cols)];
+}
 const GRIS: [number, number, number] = [110, 110, 110];
 const NEGRO: [number, number, number] = [40, 40, 40];
-
-export function claveSerie(artistaId: number, serie: string): string {
-  return `${artistaId}|${serie}`;
-}
 
 /** "300 x 450 mm" -> "30 × 45 cm". Si no tiene ese formato se deja tal cual. */
 export function medidasEnCm(texto: string | null): string | null {
@@ -160,9 +182,9 @@ function paginaTexto(doc: jsPDF, titulo: string, texto: string | null): void {
   }
 }
 
-async function paginaObras(doc: jsPDF, lote: DossierObra[], o: DossierOpciones): Promise<void> {
+async function paginaObras(doc: jsPDF, lote: DossierObra[], cantidad: number, o: DossierOpciones): Promise<void> {
   doc.addPage();
-  const [cols, filas] = GRID[o.obrasPorPagina];
+  const [cols, filas] = gridPara(cantidad);
   const compartida = lote.length > 1 && lote.every((ob) => firmaCaption(ob, o) === firmaCaption(lote[0], o));
   const size = 9;
   const altoCompartida = compartida || lote.length === 1 ? alturaCaption(lote[0], o, size) + 8 : 0;
@@ -213,11 +235,28 @@ export async function buildDossierPdfBytes(
   const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "landscape" });
   await registerBrandFonts(doc);
 
-  if (o.tituloPortada.trim()) {
+  if (o.tituloPortada.trim() || o.subtituloPortada.trim()) {
     doc.setTextColor(...NEGRO);
     doc.setFont("Inter", "normal");
-    doc.setFontSize(18);
-    doc.text(o.tituloPortada.trim(), W / 2, H / 2 - 10, { align: "center" });
+    const tam = o.tamanoPortada;
+    const ancho = W - 2 * M - 20;
+    const titulo = o.tituloPortada.trim() ? (doc.setFontSize(tam), doc.splitTextToSize(o.tituloPortada.trim(), ancho) as string[]) : [];
+    const lh = tam * 0.46;
+    let y = H / 2 - 10;
+    for (const l of titulo) {
+      doc.text(l, W / 2, y, { align: "center" });
+      y += lh * 1.3;
+    }
+    if (o.subtituloPortada.trim()) {
+      const subTam = Math.max(8, Math.round(tam * 0.65));
+      doc.setFontSize(subTam);
+      doc.setTextColor(...GRIS);
+      y += lh * 0.4;
+      for (const l of doc.splitTextToSize(o.subtituloPortada.trim(), ancho) as string[]) {
+        doc.text(l, W / 2, y, { align: "center" });
+        y += subTam * 0.46 * 1.4;
+      }
+    }
     await logoAbajo(doc, o.logoBytes, H - 38, 14);
   } else {
     // Sin portada: la primera página real se agrega con addPage(); se borra la vacía del final.
@@ -225,30 +264,31 @@ export async function buildDossierPdfBytes(
   }
 
   const bioHecha = new Set<number>();
-  const serieHecha = new Set<string>();
+  let statementHecho = false;
+  let hoja = 1;
   let i = 0;
   while (i < obras.length) {
     const ini = obras[i];
-    // Tanda consecutiva del mismo artista y serie (respeta el orden de la selección).
+    // Tanda consecutiva del mismo artista (respeta el orden de la selección).
     let j = i;
-    while (j < obras.length && obras[j].artistaId === ini.artistaId && obras[j].serie === ini.serie) j++;
+    while (j < obras.length && obras[j].artistaId === ini.artistaId) j++;
     const tanda = obras.slice(i, j);
 
     if (o.incluirBio && !bioHecha.has(ini.artistaId)) {
       bioHecha.add(ini.artistaId);
       const art = artistas.find((a) => a.id === ini.artistaId);
-      if (art?.bio) paginaTexto(doc, art.nombre, art.bio);
+      if (art?.bio?.trim()) paginaTexto(doc, art.nombre, art.bio);
     }
-    if (o.incluirTextoSerie && ini.serie) {
-      const clave = claveSerie(ini.artistaId, ini.serie);
-      const texto = o.textosSerie[clave]?.trim();
-      if (texto && !serieHecha.has(clave)) {
-        serieHecha.add(clave);
-        paginaTexto(doc, ini.serie, texto);
-      }
+    if (!statementHecho && o.statementTexto.trim()) {
+      statementHecho = true;
+      paginaTexto(doc, o.statementTitulo, o.statementTexto.trim());
     }
-    for (let k = 0; k < tanda.length; k += o.obrasPorPagina) {
-      await paginaObras(doc, tanda.slice(k, k + o.obrasPorPagina), o);
+    let k = 0;
+    while (k < tanda.length) {
+      const cantidad = Math.max(1, o.obrasPorPaginaExcepciones[hoja] ?? o.obrasPorPagina);
+      await paginaObras(doc, tanda.slice(k, k + cantidad), cantidad, o);
+      k += cantidad;
+      hoja++;
     }
     i = j;
   }

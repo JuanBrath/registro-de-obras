@@ -3073,3 +3073,25 @@ input[type="date"] {
   gap: 1rem;
   padding-top: 0.5rem;
 }
+
+.dossier-campo-chico {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 110px;
+}
+
+.dossier-campo-chico input[type="number"],
+.dossier-campo input[type="number"] {
+  width: 100%;
+}
+
+.dossier-excepciones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.dossier-excepcion {
+  align-items: flex-end;
+}
