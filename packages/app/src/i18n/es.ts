@@ -1188,4 +1188,9 @@ export const es = {
   "selecciones.quitarFiltradas": "Quitar las filtradas",
   "selecciones.primeroElegir": "Elegí o creá una selección para empezar a tildar obras.",
   "selecciones.existentes": "Selecciones armadas",
+  "dossier.seccionFormato": "Formato",
+  "dossier.seccionPortada": "Portada",
+  "dossier.seccionTextos": "Textos",
+  "dossier.seccionFicha": "Ficha de cada obra",
+  "dossier.seccionCierre": "Cierre",
 } as const;

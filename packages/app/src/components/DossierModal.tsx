@@ -229,7 +229,7 @@ export function DossierModal({
   }
 
   const check = (label: string, value: boolean, set: (v: boolean) => void, disabled = false) => (
-    <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+    <label className={`dossier-check${disabled ? " dossier-check-off" : ""}`}>
       <input type="checkbox" checked={value && !disabled} disabled={disabled} onChange={(e) => set(e.target.checked)} />
       <span>{label}</span>
     </label>
@@ -237,84 +237,107 @@ export function DossierModal({
 
   return (
     <Modal onClose={onClose} wide maximizable>
-      <h2>{t("dossier.title", { nombre: seleccionNombre })}</h2>
-      {cargando && <p>{t("common.loading")}</p>}
-      {!cargando && filas.length === 0 && <p>{t("selecciones.sinObras")}</p>}
-      {!cargando && filas.length > 0 && (
-        <>
-          <label>
-            <span className="field-label">{t("dossier.idioma")}</span>
-            <select value={idioma} onChange={(e) => cambiarIdioma(e.target.value as "es" | "en")}>
-              <option value="es">Español</option>
-              <option value="en">English</option>
-            </select>
-          </label>
+      <div className="dossier-modal">
+        <h2 className="dossier-titulo">{t("dossier.title", { nombre: seleccionNombre })}</h2>
+        {cargando && <p>{t("common.loading")}</p>}
+        {!cargando && filas.length === 0 && <p>{t("selecciones.sinObras")}</p>}
+        {!cargando && filas.length > 0 && (
+          <div className="dossier-cuerpo">
+            <section className="dossier-seccion">
+              <h3>{t("dossier.seccionFormato")}</h3>
+              <div className="dossier-fila">
+                <label className="dossier-campo">
+                  <span className="field-label">{t("dossier.idioma")}</span>
+                  <select value={idioma} onChange={(e) => cambiarIdioma(e.target.value as "es" | "en")}>
+                    <option value="es">Español</option>
+                    <option value="en">English</option>
+                  </select>
+                </label>
+                <label className="dossier-campo">
+                  <span className="field-label">{t("dossier.obrasPorPagina")}</span>
+                  <select value={obrasPorPagina} onChange={(e) => setObrasPorPagina(Number(e.target.value) as 1 | 2 | 4 | 6 | 8)}>
+                    {[1, 2, 4, 6, 8].map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            </section>
 
-          {check(t("dossier.portada"), incluirPortada, setIncluirPortada)}
-          {incluirPortada && (
-            <label>
-              <span className="field-label">{t("dossier.tituloPortada")}</span>
-              <input type="text" value={titulo} onChange={(e) => setTitulo(e.target.value)} />
-            </label>
-          )}
-          {check(t("dossier.bio"), incluirBio, setIncluirBio)}
-          {check(t("dossier.textoSerie"), incluirTextoSerie, setIncluirTextoSerie, series.length === 0)}
-          {incluirTextoSerie &&
-            series.map((s) => (
-              <label key={s.clave}>
-                <span className="field-label">{s.nombre}</span>
-                <textarea
-                  rows={3}
-                  value={textosSerie[s.clave] ?? ""}
-                  onChange={(e) => setTextosSerie((prev) => ({ ...prev, [s.clave]: e.target.value }))}
-                />
-              </label>
-            ))}
-          {series.length === 0 && <p className="field-hint">{t("dossier.sinSeries")}</p>}
-          {check(t("dossier.tituloAnio"), incluirTituloAnio, setIncluirTituloAnio)}
-          {check(t("dossier.tecnica"), incluirTecnica, setIncluirTecnica)}
-          {check(t("dossier.medidas"), incluirMedidas, setIncluirMedidas)}
-          {check(t("dossier.precio"), incluirPrecio, setIncluirPrecio, sinPrecio)}
-          {sinPrecio && <p className="field-hint">{t("dossier.sinPrecio")}</p>}
-          {incluirPrecio && !sinPrecio && (
-            <div className="obras-toolbar-fila">
-              <label>
-                <span className="field-label">{t("dossier.sufijoPrecio")}</span>
-                <input type="text" value={sufijoPrecio} onChange={(e) => setSufijoPrecio(e.target.value)} />
-              </label>
-              <label>
-                <span className="field-label">{t("dossier.sufijoCadaUno")}</span>
-                <input type="text" value={sufijoCadaUno} onChange={(e) => setSufijoCadaUno(e.target.value)} />
-              </label>
-            </div>
-          )}
-          {check(t("dossier.contacto"), incluirContacto, setIncluirContacto)}
+            <section className="dossier-seccion">
+              <h3>{t("dossier.seccionPortada")}</h3>
+              {check(t("dossier.portada"), incluirPortada, setIncluirPortada)}
+              {incluirPortada && (
+                <label className="dossier-campo">
+                  <span className="field-label">{t("dossier.tituloPortada")}</span>
+                  <input type="text" value={titulo} onChange={(e) => setTitulo(e.target.value)} />
+                </label>
+              )}
+            </section>
 
-          <label>
-            <span className="field-label">{t("dossier.obrasPorPagina")}</span>
-            <select value={obrasPorPagina} onChange={(e) => setObrasPorPagina(Number(e.target.value) as 1 | 2 | 4 | 6 | 8)}>
-              {[1, 2, 4, 6, 8].map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-            </select>
-          </label>
-        </>
-      )}
-      {error && <p className="error">{error}</p>}
-      {mensaje && (
-        <p className="success" role="status">
-          ✅ {mensaje}
-        </p>
-      )}
-      <div className="form-actions">
-        <button type="button" onClick={onClose}>
-          {t("common.close")}
-        </button>
-        <button type="button" onClick={generar} disabled={generando || cargando || filas.length === 0}>
-          {generando ? t("common.saving") : t("dossier.generar")}
-        </button>
+            <section className="dossier-seccion">
+              <h3>{t("dossier.seccionTextos")}</h3>
+              {check(t("dossier.bio"), incluirBio, setIncluirBio)}
+              {check(t("dossier.textoSerie"), incluirTextoSerie, setIncluirTextoSerie, series.length === 0)}
+              {series.length === 0 && <p className="dossier-nota">{t("dossier.sinSeries")}</p>}
+              {incluirTextoSerie &&
+                series.map((s) => (
+                  <label key={s.clave} className="dossier-campo dossier-serie">
+                    <span className="field-label">{s.nombre}</span>
+                    <textarea
+                      rows={3}
+                      value={textosSerie[s.clave] ?? ""}
+                      onChange={(e) => setTextosSerie((prev) => ({ ...prev, [s.clave]: e.target.value }))}
+                    />
+                  </label>
+                ))}
+            </section>
+
+            <section className="dossier-seccion">
+              <h3>{t("dossier.seccionFicha")}</h3>
+              <div className="dossier-checks">
+                {check(t("dossier.tituloAnio"), incluirTituloAnio, setIncluirTituloAnio)}
+                {check(t("dossier.tecnica"), incluirTecnica, setIncluirTecnica)}
+                {check(t("dossier.medidas"), incluirMedidas, setIncluirMedidas)}
+                {check(t("dossier.precio"), incluirPrecio, setIncluirPrecio, sinPrecio)}
+              </div>
+              {sinPrecio && <p className="dossier-nota">{t("dossier.sinPrecio")}</p>}
+              {incluirPrecio && !sinPrecio && (
+                <div className="dossier-fila">
+                  <label className="dossier-campo">
+                    <span className="field-label">{t("dossier.sufijoPrecio")}</span>
+                    <input type="text" value={sufijoPrecio} onChange={(e) => setSufijoPrecio(e.target.value)} />
+                  </label>
+                  <label className="dossier-campo">
+                    <span className="field-label">{t("dossier.sufijoCadaUno")}</span>
+                    <input type="text" value={sufijoCadaUno} onChange={(e) => setSufijoCadaUno(e.target.value)} />
+                  </label>
+                </div>
+              )}
+            </section>
+
+            <section className="dossier-seccion">
+              <h3>{t("dossier.seccionCierre")}</h3>
+              {check(t("dossier.contacto"), incluirContacto, setIncluirContacto)}
+            </section>
+          </div>
+        )}
+        {error && <p className="error">{error}</p>}
+        {mensaje && (
+          <p className="success" role="status">
+            ✅ {mensaje}
+          </p>
+        )}
+        <div className="dossier-acciones">
+          <button type="button" onClick={onClose}>
+            {t("common.close")}
+          </button>
+          <button type="button" onClick={generar} disabled={generando || cargando || filas.length === 0}>
+            {generando ? t("common.saving") : t("dossier.generar")}
+          </button>
+        </div>
       </div>
     </Modal>
   );

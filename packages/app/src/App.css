@@ -2977,3 +2977,99 @@ input[type="date"] {
 .selecciones-bloque .obras-toolbar-fila {
   gap: 0.75rem 1rem;
 }
+
+/* Asistente de dossier: secciones con aire. */
+.dossier-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 0.5rem 0.75rem 0.25rem;
+  min-width: min(640px, 86vw);
+}
+
+.dossier-titulo {
+  margin: 0;
+}
+
+.dossier-cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.dossier-seccion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.dossier-seccion h3 {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.dossier-fila {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+}
+
+.dossier-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 180px;
+}
+
+.dossier-campo input[type="text"],
+.dossier-campo textarea {
+  width: 100%;
+}
+
+.dossier-serie {
+  margin-top: 0.25rem;
+}
+
+.dossier-checks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(160px, 1fr));
+  gap: 0.75rem 1.5rem;
+}
+
+.dossier-check {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+}
+
+.dossier-check input {
+  width: 1.1rem;
+  height: 1.1rem;
+  margin: 0;
+}
+
+.dossier-check-off {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.dossier-nota {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.dossier-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding-top: 0.5rem;
+}

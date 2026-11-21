@@ -1189,4 +1189,9 @@ export const en: Record<keyof typeof es, string> = {
   "selecciones.quitarFiltradas": "Remove filtered",
   "selecciones.primeroElegir": "Choose or create a selection to start ticking works.",
   "selecciones.existentes": "Existing selections",
+  "dossier.seccionFormato": "Format",
+  "dossier.seccionPortada": "Cover",
+  "dossier.seccionTextos": "Texts",
+  "dossier.seccionFicha": "Caption for each work",
+  "dossier.seccionCierre": "Closing page",
 };
