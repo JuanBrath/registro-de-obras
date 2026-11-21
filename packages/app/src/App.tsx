@@ -180,7 +180,6 @@ function WorkspaceScreens({ onManual }: { onManual: () => void }) {
         <SeleccionesScreen
           onBack={() => setScreen({ name: "obras" })}
           onOpenObra={(obraId) => setScreen({ name: "obra-detail", obraId, volverA: { name: "selecciones" } })}
-          onVerInformes={(seleccionId) => setScreen({ name: "obras", seleccionId })}
         />
       );
       break;

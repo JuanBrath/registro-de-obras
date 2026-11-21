@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { InformeListadoObrasModal, SQL_INFORME_OBRAS, type InformeObraRow } from "../components/InformeListadoObrasModal.js";
 import { DossierModal } from "../components/DossierModal.js";
 import { DossiersGuardadosModal } from "../components/DossiersGuardadosModal.js";
 import { useWorkspace } from "../state/WorkspaceContext.js";
@@ -29,12 +30,9 @@ interface ObraMini {
 export function SeleccionesScreen({
   onBack,
   onOpenObra,
-  onVerInformes,
 }: {
   onBack: () => void;
   onOpenObra: (obraId: number) => void;
-  /** Abre Obras limitado a las fotos de esta selección, para generar informes de ellas. */
-  onVerInformes: (seleccionId: number) => void;
 }) {
   const { context } = useWorkspace();
   const { t } = useLanguage();
@@ -49,6 +47,7 @@ export function SeleccionesScreen({
   const [error, setError] = useState<string | null>(null);
   const [dossierAbierto, setDossierAbierto] = useState(false);
   const [guardadosAbierto, setGuardadosAbierto] = useState(false);
+  const [informeObras, setInformeObras] = useState<InformeObraRow[] | null>(null);
   const [cantidadDossiers, setCantidadDossiers] = useState(0);
   const [arrastrando, setArrastrando] = useState<number | null>(null);
   const [sobre, setSobre] = useState<number | null>(null);
@@ -146,6 +145,16 @@ export function SeleccionesScreen({
       await recargarLista();
     });
 
+  // Abre directamente la ventana de informes, limitada a las obras de la selección (en su orden).
+  const abrirInformes = () =>
+    run(async () => {
+      if (!context || obras.length === 0) return;
+      const ids = obras.map((o) => o.id);
+      const rows = await context.db.query<InformeObraRow>(SQL_INFORME_OBRAS(ids.map(() => "?").join(",")), ids);
+      const porId = new Map(rows.map((r) => [r.id, r]));
+      setInformeObras(ids.map((id) => porId.get(id)).filter((r): r is InformeObraRow => !!r));
+    });
+
   const eliminar = () =>
     run(async () => {
       if (!context || activaId === null) return;
@@ -232,15 +241,17 @@ export function SeleccionesScreen({
                 {t("selecciones.eliminar")}
               </button>
             ) : !nueva ? (
-              <>
-                <span>{t("selecciones.eliminarPregunta")}</span>
-                <button type="button" onClick={eliminar}>
-                  {t("selecciones.eliminarConfirmar")}
-                </button>
-                <button type="button" onClick={() => setConfirmarEliminar(false)}>
-                  {t("common.cancel")}
-                </button>
-              </>
+              <div className="confirm-box selecciones-confirmar-eliminar" role="alertdialog">
+                <p>{t("selecciones.eliminarPregunta")}</p>
+                <div className="form-actions">
+                  <button type="button" className="boton-peligro" onClick={eliminar}>
+                    {t("selecciones.eliminarConfirmar")}
+                  </button>
+                  <button type="button" onClick={() => setConfirmarEliminar(false)}>
+                    {t("common.cancel")}
+                  </button>
+                </div>
+              </div>
             ) : null}
           </div>
         </section>
@@ -291,7 +302,7 @@ export function SeleccionesScreen({
               </button>
             )}
             {!nueva && (
-              <button type="button" onClick={() => activaId !== null && onVerInformes(activaId)} disabled={obras.length === 0}>
+              <button type="button" onClick={abrirInformes} disabled={obras.length === 0}>
                 {t("selecciones.informesBoton")}
               </button>
             )}
@@ -395,6 +406,7 @@ export function SeleccionesScreen({
           onGenerado={() => contarDossiers(context.db, activa.id).then(setCantidadDossiers)}
         />
       )}
+      {informeObras && <InformeListadoObrasModal obras={informeObras} onClose={() => setInformeObras(null)} />}
       {guardadosAbierto && activa && (
         <DossiersGuardadosModal
           seleccionId={activa.id}

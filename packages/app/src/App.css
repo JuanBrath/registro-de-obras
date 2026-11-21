@@ -3129,3 +3129,21 @@ button:not(:disabled):hover {
   border: 2px solid var(--azul-marino-borde);
   border-radius: 6px;
 }
+
+/* Confirmación de eliminar una selección: caja destacada en rojo. */
+.selecciones-confirmar-eliminar {
+  border-width: 2px;
+  align-items: flex-start;
+  padding: 1rem 1.25rem;
+}
+
+.selecciones-confirmar-eliminar p {
+  margin: 0;
+  font-weight: 600;
+}
+
+.boton-peligro {
+  background: #c62828;
+  border-color: #c62828;
+  color: #fff;
+}
