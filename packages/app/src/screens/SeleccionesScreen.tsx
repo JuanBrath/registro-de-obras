@@ -301,6 +301,11 @@ export function SeleccionesScreen({
             ) : !nueva ? (
               <div className="confirm-box selecciones-confirmar-eliminar" role="alertdialog">
                 <p>{t("selecciones.eliminarPregunta")}</p>
+                {cantidadDossiers > 0 && (
+                  <p className="selecciones-aviso-dossiers">
+                    ⚠️ {t("selecciones.eliminarAvisoDossiers", { cantidad: cantidadDossiers })}
+                  </p>
+                )}
                 <div className="form-actions">
                   <button type="button" className="boton-peligro" onClick={eliminar}>
                     {t("selecciones.eliminarConfirmar")}
