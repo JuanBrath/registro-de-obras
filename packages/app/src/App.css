@@ -3163,3 +3163,9 @@ button:not(:disabled):hover {
 .selecciones-vista-barra {
   margin-bottom: 1rem;
 }
+
+.dossier-textos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}

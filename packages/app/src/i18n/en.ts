@@ -1227,4 +1227,6 @@ export const en: Record<keyof typeof es, string> = {
   "selecciones.eliminarAvisoDossiers": "The {{cantidad}} saved dossier(s) of this selection will also be deleted, and cannot be recovered.",
   "obraDetail.volverASeleccion": "Back to the selection",
   "dossier.textoAdicionalPortada": "Additional text (optional)",
+  "dossier.idiomaAmbos": "Spanish and English (both)",
+  "dossier.nombreArtistaFicha": "Artist name in each caption",
 };

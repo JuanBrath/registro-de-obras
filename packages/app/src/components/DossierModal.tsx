@@ -42,6 +42,8 @@ interface FilaEjemplar {
   estado: string;
 }
 
+type Idioma = "es" | "en" | "ambos";
+
 interface ArtistaFila {
   id: number;
   nombre: string;
@@ -92,17 +94,21 @@ export function DossierModal({
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [ultimoAbsPath, setUltimoAbsPath] = useState<string | null>(null);
 
-  const [idioma, setIdioma] = useState<"es" | "en">("es");
+  const [idioma, setIdioma] = useState<Idioma>("es");
   const [incluirPortada, setIncluirPortada] = useState(true);
   const [tituloPortada, setTituloPortada] = useState("");
   const [nombreSeleccionEnPortada, setNombreSeleccionEnPortada] = useState(true);
   const [tamanoPortada, setTamanoPortada] = useState(18);
   const [textoAdicionalPortada, setTextoAdicionalPortada] = useState("");
   const [incluirBio, setIncluirBio] = useState(true);
-  const [bios, setBios] = useState<Record<number, string>>({});
-  const [biosEditadas, setBiosEditadas] = useState(false);
+  // Textos editables solo para este dossier: biografía de cada artista y statement, en cada idioma.
+  const [biosEs, setBiosEs] = useState<Record<number, string>>({});
+  const [biosEn, setBiosEn] = useState<Record<number, string>>({});
   const [incluirStatement, setIncluirStatement] = useState(true);
-  const [statement, setStatement] = useState("");
+  const [statementEs, setStatementEs] = useState("");
+  const [statementEn, setStatementEn] = useState("");
+  // En Studio el nombre del autor ya figura en la portada; en Space cada ficha lo lleva.
+  const [incluirNombreArtista, setIncluirNombreArtista] = useState(context?.workspace !== "personal");
   const [incluirTituloAnio, setIncluirTituloAnio] = useState(true);
   const [incluirTecnica, setIncluirTecnica] = useState(true);
   const [incluirMedidas, setIncluirMedidas] = useState(true);
@@ -154,9 +160,14 @@ export function DossierModal({
         const artistasIds = new Set(ordenadas.map((r) => r.artista_id));
         const primero = ordenadas[0];
         setTituloPortada(artistasIds.size === 1 ? (primero?.nombre_artistico || primero?.nombre_completo || "") : "");
-        const iniciales: Record<number, string> = {};
-        for (const r of ordenadas) if (!(r.artista_id in iniciales)) iniciales[r.artista_id] = r.bio ?? "";
-        setBios(iniciales);
+        const inicialesEs: Record<number, string> = {};
+        const inicialesEn: Record<number, string> = {};
+        for (const r of ordenadas) {
+          if (!(r.artista_id in inicialesEs)) inicialesEs[r.artista_id] = r.bio ?? "";
+          if (!(r.artista_id in inicialesEn)) inicialesEn[r.artista_id] = r.bio_en ?? "";
+        }
+        setBiosEs(inicialesEs);
+        setBiosEn(inicialesEn);
       } catch (e) {
         if (!cancelado) setError(e instanceof Error ? e.message : String(e));
       } finally {
@@ -201,17 +212,14 @@ export function DossierModal({
     [filas.length, obrasPorPagina, excepciones],
   );
 
-  function cambiarIdioma(nuevo: "es" | "en") {
+  function cambiarIdioma(nuevo: Idioma) {
     setIdioma(nuevo);
-    setSufijoPrecio(nuevo === "es" ? "+ IVA" : "+ VAT");
-    setSufijoCadaUno(nuevo === "es" ? "c/u" : "each");
-    // Si todavía no se tocó ninguna biografía, se cambia a la del idioma elegido (si no hay, queda la otra).
-    if (!biosEditadas) {
-      const nuevas: Record<number, string> = {};
-      for (const a of artistas) nuevas[a.id] = (nuevo === "en" ? a.bioEn || a.bio : a.bio) || "";
-      setBios(nuevas);
-    }
+    setSufijoPrecio(nuevo === "es" ? "+ IVA" : nuevo === "en" ? "+ VAT" : "+ IVA / + VAT");
+    setSufijoCadaUno(nuevo === "es" ? "c/u" : nuevo === "en" ? "each" : "c/u / each");
   }
+
+  /** Texto según el idioma elegido; con "ambos" junta las dos versiones ("Ejemplar / Edition"). */
+  const bi = (es: string, en: string) => (idioma === "es" ? es : idioma === "en" ? en : `${es} / ${en}`);
 
   const cambiarExcepcion = (indice: number, cambios: Partial<Excepcion>) =>
     setExcepciones((prev) => prev.map((e, i) => (i === indice ? { ...e, ...cambios } : e)));
@@ -234,7 +242,6 @@ export function DossierModal({
         const elegido = elegidoPorObra.get(r.id) ?? null;
         const seriada = Number(r.es_seriada) === 1;
         const pruebas = mias.filter((e) => e.tipo === "prueba_artista" && ESTADOS_OFRECIBLES.has(e.estado)).length;
-        const es = idioma === "es";
         obras.push({
           id: r.id,
           artistaId: r.artista_id,
@@ -244,12 +251,13 @@ export function DossierModal({
           tecnica: r.tecnica,
           medidas: medidasEnCm(elegido?.dimensiones ?? r.dimensiones_obra),
           precio: elegido ? formatearPrecio(elegido.precio_venta, elegido.moneda_venta) : null,
-          numeroSerie: elegido && seriada ? `${es ? "Ejemplar" : "Edition"} ${elegido.numero}` : null,
+          numeroSerie: elegido && seriada ? `${bi("Ejemplar", "Edition")} ${elegido.numero}` : null,
           pruebasArtista:
             pruebas > 0
-              ? es
-                ? `${pruebas} ${pruebas === 1 ? "prueba de artista" : "pruebas de artista"}`
-                : `${pruebas} artist's ${pruebas === 1 ? "proof" : "proofs"}`
+              ? bi(
+                  `${pruebas} ${pruebas === 1 ? "prueba de artista" : "pruebas de artista"}`,
+                  `${pruebas} artist's ${pruebas === 1 ? "proof" : "proofs"}`,
+                )
               : null,
           imagen: await resolveObraImagenParaPdf(context, r).then((img) => {
             if (img?.usoMiniatura) conMiniatura.push(r.titulo);
@@ -257,7 +265,11 @@ export function DossierModal({
           }),
         });
       }
-      const artistasPdf: DossierArtista[] = artistas.map((a) => ({ id: a.id, nombre: a.nombre, bio: bios[a.id] ?? "" }));
+      const artistasPdf: DossierArtista[] = artistas.map((a) => ({
+        id: a.id,
+        nombre: a.nombre,
+        bios: [...(idioma !== "en" ? [biosEs[a.id] ?? ""] : []), ...(idioma !== "es" ? [biosEn[a.id] ?? ""] : [])],
+      }));
       const logoBytes = await resolveMembreteLogoBytes(context, personalArtista, galeriaPerfil);
       const perfil = context.workspace === "personal" ? personalArtista : galeriaPerfil;
       const nombrePerfil = context.workspace === "personal" ? personalArtista?.nombreCompleto : galeriaPerfil?.nombre;
@@ -280,7 +292,8 @@ export function DossierModal({
         tamanoPortada,
         incluirBio,
         statementTitulo: seleccionNombre,
-        statementTexto: incluirStatement ? statement : "",
+        statementTextos: incluirStatement ? [...(idioma !== "en" ? [statementEs] : []), ...(idioma !== "es" ? [statementEn] : [])] : [],
+        incluirNombreArtista,
         incluirTituloAnio,
         incluirTecnica,
         incluirMedidas,
@@ -321,6 +334,15 @@ export function DossierModal({
       <input type="checkbox" checked={value && !disabled} disabled={disabled} onChange={(e) => set(e.target.checked)} />
       <span>{label}</span>
     </label>
+  );
+
+  const campoTexto = (etiqueta: string, valor: string, onChange: (v: string) => void) => (
+    <div className="dossier-campo">
+      <NotasLabel texto={valor} onChange={onChange}>
+        <span className="field-label">{etiqueta}</span>
+      </NotasLabel>
+      <textarea rows={4} value={valor} onChange={(e) => onChange(e.target.value)} />
+    </div>
   );
 
   const numero = (valor: number, min: number, max: number, onChange: (n: number) => void) => (
@@ -365,9 +387,10 @@ export function DossierModal({
               <div className="dossier-fila">
                 <label className="dossier-campo">
                   <span className="field-label">{t("dossier.idioma")}</span>
-                  <select value={idioma} onChange={(e) => cambiarIdioma(e.target.value as "es" | "en")}>
+                  <select value={idioma} onChange={(e) => cambiarIdioma(e.target.value as Idioma)}>
                     <option value="es">Español</option>
                     <option value="en">English</option>
+                    <option value="ambos">{t("dossier.idiomaAmbos")}</option>
                   </select>
                 </label>
                 <label className="dossier-campo">
@@ -428,33 +451,36 @@ export function DossierModal({
               {check(t("dossier.bio"), incluirBio, setIncluirBio)}
               {incluirBio &&
                 artistas.map((a) => (
-                  <div className="dossier-campo" key={a.id}>
-                    <NotasLabel
-                      texto={bios[a.id] ?? ""}
-                      onChange={(v) => {
-                        setBiosEditadas(true);
-                        setBios((prev) => ({ ...prev, [a.id]: v }));
-                      }}
-                    >
-                      <span className="field-label">{artistas.length > 1 ? `${t("dossier.bioDe")} ${a.nombre}` : t("dossier.bioLabel")}</span>
-                    </NotasLabel>
-                    <textarea
-                      rows={4}
-                      value={bios[a.id] ?? ""}
-                      onChange={(e) => {
-                        setBiosEditadas(true);
-                        setBios((prev) => ({ ...prev, [a.id]: e.target.value }));
-                      }}
-                    />
+                  <div className="dossier-textos" key={a.id}>
+                    {idioma !== "en" &&
+                      campoTexto(
+                        `${artistas.length > 1 ? `${t("dossier.bioDe")} ${a.nombre}` : t("dossier.bioLabel")}${idioma === "ambos" ? " (ES)" : ""}`,
+                        biosEs[a.id] ?? "",
+                        (v) => setBiosEs((prev) => ({ ...prev, [a.id]: v })),
+                      )}
+                    {idioma !== "es" &&
+                      campoTexto(
+                        `${artistas.length > 1 ? `${t("dossier.bioDe")} ${a.nombre}` : t("dossier.bioLabel")}${idioma === "ambos" ? " (EN)" : ""}`,
+                        biosEn[a.id] ?? "",
+                        (v) => setBiosEn((prev) => ({ ...prev, [a.id]: v })),
+                      )}
                   </div>
                 ))}
               {check(t("dossier.statement"), incluirStatement, setIncluirStatement)}
               {incluirStatement && (
-                <div className="dossier-campo">
-                  <NotasLabel texto={statement} onChange={setStatement}>
-                    <span className="field-label">{t("dossier.statementLabel", { nombre: seleccionNombre })}</span>
-                  </NotasLabel>
-                  <textarea rows={4} value={statement} onChange={(e) => setStatement(e.target.value)} />
+                <div className="dossier-textos">
+                  {idioma !== "en" &&
+                    campoTexto(
+                      `${t("dossier.statementLabel", { nombre: seleccionNombre })}${idioma === "ambos" ? " (ES)" : ""}`,
+                      statementEs,
+                      setStatementEs,
+                    )}
+                  {idioma !== "es" &&
+                    campoTexto(
+                      `${t("dossier.statementLabel", { nombre: seleccionNombre })}${idioma === "ambos" ? " (EN)" : ""}`,
+                      statementEn,
+                      setStatementEn,
+                    )}
                 </div>
               )}
             </section>
@@ -462,6 +488,7 @@ export function DossierModal({
             <section className="dossier-seccion">
               <h3>{t("dossier.seccionFicha")}</h3>
               <div className="dossier-checks">
+                {check(t("dossier.nombreArtistaFicha"), incluirNombreArtista, setIncluirNombreArtista)}
                 {check(t("dossier.tituloAnio"), incluirTituloAnio, setIncluirTituloAnio)}
                 {check(t("dossier.tecnica"), incluirTecnica, setIncluirTecnica)}
                 {check(t("dossier.medidas"), incluirMedidas, setIncluirMedidas)}

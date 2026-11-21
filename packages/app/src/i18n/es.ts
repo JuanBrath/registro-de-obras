@@ -1226,4 +1226,6 @@ export const es = {
   "selecciones.eliminarAvisoDossiers": "También se van a eliminar los {{cantidad}} dossier(s) guardados de esta selección, y no se pueden recuperar.",
   "obraDetail.volverASeleccion": "Volver a la selección",
   "dossier.textoAdicionalPortada": "Texto adicional (opcional)",
+  "dossier.idiomaAmbos": "Español e inglés (ambos)",
+  "dossier.nombreArtistaFicha": "Nombre del artista en cada ficha",
 } as const;

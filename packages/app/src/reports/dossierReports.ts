@@ -23,8 +23,8 @@ export interface DossierObra {
 export interface DossierArtista {
   id: number;
   nombre: string;
-  /** Ya con las ediciones hechas en el asistente (no se guarda en el artista). */
-  bio: string | null;
+  /** Textos ya con las ediciones hechas en el asistente (no se guardan en el artista): uno por idioma, cada uno en su página. */
+  bios: string[];
 }
 
 export interface DossierOpciones {
@@ -39,7 +39,9 @@ export interface DossierOpciones {
   incluirBio: boolean;
   /** Título de la página de statement (nombre de la selección) y su texto; sin texto = sin página. */
   statementTitulo: string;
-  statementTexto: string;
+  statementTextos: string[];
+  /** Si la ficha de cada obra empieza con el nombre del artista (en Studio sobra: ya figura en la portada). */
+  incluirNombreArtista: boolean;
   incluirTituloAnio: boolean;
   incluirTecnica: boolean;
   incluirMedidas: boolean;
@@ -123,7 +125,7 @@ function lineasCaption(obra: DossierObra, o: DossierOpciones, cadaUno: boolean):
 
 function firmaCaption(obra: DossierObra, o: DossierOpciones): string {
   const c = lineasCaption(obra, o, false);
-  return [obra.artistaNombre, ...c.gris, c.negrita ?? ""].join("\n");
+  return [o.incluirNombreArtista ? obra.artistaNombre : "", ...c.gris, c.negrita ?? ""].join("\n");
 }
 
 function escribirCaption(
@@ -142,8 +144,10 @@ function escribirCaption(
   doc.setFont("Inter", "medium");
   doc.setFontSize(size);
   doc.setTextColor(...NEGRO);
-  doc.text(obra.artistaNombre, x, cy);
-  cy += lh * 1.9;
+  if (o.incluirNombreArtista) {
+    doc.text(obra.artistaNombre, x, cy);
+    cy += lh * 1.9;
+  }
   doc.setFont("Inter", "normal");
   doc.setTextColor(...GRIS);
   for (const linea of c.gris) {
@@ -163,7 +167,7 @@ function escribirCaption(
 function alturaCaption(obra: DossierObra, o: DossierOpciones, size: number): number {
   const c = lineasCaption(obra, o, false);
   const lh = size * 0.46;
-  return lh * 1.9 + c.gris.length * lh * 1.4 + (c.negrita ? lh * 1.8 : 0);
+  return (o.incluirNombreArtista ? lh * 1.9 : 0) + c.gris.length * lh * 1.4 + (c.negrita ? lh * 1.8 : 0);
 }
 
 async function logoAbajo(doc: jsPDF, logo: Uint8Array | null, y: number, alto: number): Promise<void> {
@@ -316,11 +320,11 @@ export async function buildDossierPdfBytes(
     if (o.incluirBio && !bioHecha.has(ini.artistaId)) {
       bioHecha.add(ini.artistaId);
       const art = artistas.find((a) => a.id === ini.artistaId);
-      if (art?.bio?.trim()) paginaTexto(doc, art.nombre, art.bio);
+      for (const bio of art?.bios ?? []) if (bio.trim()) paginaTexto(doc, art!.nombre, bio);
     }
-    if (!statementHecho && o.statementTexto.trim()) {
+    if (!statementHecho && o.statementTextos.some((x) => x.trim())) {
       statementHecho = true;
-      paginaTexto(doc, o.statementTitulo, o.statementTexto.trim());
+      for (const texto of o.statementTextos) if (texto.trim()) paginaTexto(doc, o.statementTitulo, texto.trim());
     }
     let k = 0;
     while (k < tanda.length) {
