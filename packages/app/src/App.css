@@ -895,21 +895,9 @@ input[type="date"] {
 }
 
 .obras-vista-toggle-boton.activo {
-  background: #1a73e8;
-  border-color: #1a73e8;
-  color: var(--bg);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .obras-vista-toggle-boton.activo {
-    background: #64b5f6;
-    border-color: #64b5f6;
-  }
-}
-
-:root[data-theme="dark"] .obras-vista-toggle-boton.activo {
-  background: #64b5f6;
-  border-color: #64b5f6;
+  background: var(--azul-marino);
+  border-color: var(--azul-marino-borde);
+  color: #fff;
 }
 
 /* Vista en columnas de Obras: una fila por obra, con miniatura chica y los
@@ -3124,4 +3112,20 @@ input[type="date"] {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem 0.75rem;
+}
+
+/* Contorno azul marino al pasar el mouse por cualquier botón. */
+button:not(:disabled):hover {
+  outline: 2px solid var(--azul-marino-borde);
+  outline-offset: 1px;
+}
+
+/* Modo Seleccionar: el selector de la selección activa se marca con borde azul. */
+.obras-seleccion-panel {
+  border: 2px solid var(--azul-marino-borde);
+}
+
+.obras-seleccion-panel select {
+  border: 2px solid var(--azul-marino-borde);
+  border-radius: 6px;
 }

@@ -5,6 +5,8 @@
   --bg-panel: #f2f2f4;
   --border: #e5e4e7;
   --code-bg: #f4f3ec;
+  --azul-marino: #1b2f6b;
+  --azul-marino-borde: #1b2f6b;
   --accent: #aa3bff;
   --accent-bg: rgba(170, 59, 255, 0.1);
   --accent-border: rgba(170, 59, 255, 0.5);
@@ -59,6 +61,8 @@ optgroup {
     --bg-panel: #1e1f27;
     --border: #2e303a;
     --code-bg: #1f2028;
+    --azul-marino: #1f3a8a;
+    --azul-marino-borde: #4668c9;
     --accent: #c084fc;
     --accent-bg: rgba(192, 132, 252, 0.15);
     --accent-border: rgba(192, 132, 252, 0.5);
@@ -91,6 +95,8 @@ optgroup {
 }
 
 :root[data-theme="dark"] {
+  --azul-marino: #1f3a8a;
+  --azul-marino-borde: #4668c9;
   color-scheme: dark;
   --text: #9ca3af;
   --text-h: #c3c6cf;
