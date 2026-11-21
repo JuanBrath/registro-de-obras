@@ -1224,4 +1224,5 @@ export const es = {
   "dossier.vertical": "Vertical",
   "dossier.avisoMiniatura": "Estas obras no tienen imagen en alta resolución utilizable y salieron con la miniatura (baja calidad): {{obras}}.",
   "selecciones.eliminarAvisoDossiers": "También se van a eliminar los {{cantidad}} dossier(s) guardados de esta selección, y no se pueden recuperar.",
+  "obraDetail.volverASeleccion": "Volver a la selección",
 } as const;

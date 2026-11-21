@@ -42,7 +42,8 @@ type Screen =
   | { name: "ventas" }
   | { name: "galeria-perfil" }
   | { name: "clientes" }
-  | { name: "selecciones" };
+  // `seleccionId`: selección que estaba abierta, para volver exactamente ahí (ej. desde la ficha de una obra).
+  | { name: "selecciones"; seleccionId?: number };
 
 function WorkspaceScreens({ onManual }: { onManual: () => void }) {
   const { context, personalArtista, close } = useWorkspace();
@@ -179,7 +180,10 @@ function WorkspaceScreens({ onManual }: { onManual: () => void }) {
       content = (
         <SeleccionesScreen
           onBack={() => setScreen({ name: "obras" })}
-          onOpenObra={(obraId) => setScreen({ name: "obra-detail", obraId, volverA: { name: "selecciones" } })}
+          seleccionInicialId={activeScreen.seleccionId}
+          onOpenObra={(obraId, seleccionId) =>
+            setScreen({ name: "obra-detail", obraId, volverA: { name: "selecciones", seleccionId: seleccionId ?? undefined } })
+          }
         />
       );
       break;
@@ -188,7 +192,13 @@ function WorkspaceScreens({ onManual }: { onManual: () => void }) {
         <ObraDetail
           obraId={activeScreen.obraId}
           onBack={() => setScreen(activeScreen.volverA ?? { name: "obras" })}
-          volverALabel={activeScreen.volverA?.name === "galeria-fotos" ? t("obraDetail.volverAGaleria") : undefined}
+          volverALabel={
+            activeScreen.volverA?.name === "galeria-fotos"
+              ? t("obraDetail.volverAGaleria")
+              : activeScreen.volverA?.name === "selecciones"
+                ? t("obraDetail.volverASeleccion")
+                : undefined
+          }
         />
       );
       break;

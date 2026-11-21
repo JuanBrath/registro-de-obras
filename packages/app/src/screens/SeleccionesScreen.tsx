@@ -46,14 +46,18 @@ function cargarVista(): Vista {
 export function SeleccionesScreen({
   onBack,
   onOpenObra,
+  seleccionInicialId,
 }: {
   onBack: () => void;
-  onOpenObra: (obraId: number) => void;
+  /** Recibe también la selección abierta, para que "Volver" regrese a ella. */
+  onOpenObra: (obraId: number, seleccionId: number | null) => void;
+  /** Selección que se abre al entrar (al volver desde la ficha de una obra). */
+  seleccionInicialId?: number;
 }) {
   const { context } = useWorkspace();
   const { t } = useLanguage();
   const [selecciones, setSelecciones] = useState<Seleccion[]>([]);
-  const [activaId, setActivaId] = useState<number | null>(null);
+  const [activaId, setActivaId] = useState<number | null>(seleccionInicialId ?? null);
   const [obras, setObras] = useState<ObraRow[]>([]);
   const [vista, setVista] = useState<Vista>(cargarVista);
   const [columnasTarjetas, setColumnasTarjetas] = useState(() => cargarColumnasGridInicial(COLUMNAS_TARJETAS_KEY, 4));
@@ -430,7 +434,7 @@ export function SeleccionesScreen({
                   cursor: "grab",
                 }}
                 >
-                  <button type="button" className="obra-card" onClick={() => onOpenObra(obra.id)}>
+                  <button type="button" className="obra-card" onClick={() => onOpenObra(obra.id, activaId)}>
                     {thumbs[obra.id] ? (
                       <img src={thumbs[obra.id]} alt={obra.titulo} onLoad={(e) => marcarSiMiniaturaMuyVertical(e.currentTarget)} />
                     ) : (
@@ -483,7 +487,7 @@ export function SeleccionesScreen({
                       <tr
                         key={obra.id}
                         className="obras-tabla-fila"
-                        onClick={() => onOpenObra(obra.id)}
+                        onClick={() => onOpenObra(obra.id, activaId)}
                         draggable
                 onDragStart={(e) => {
                   setArrastrando(i);

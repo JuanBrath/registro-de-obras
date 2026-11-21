@@ -1225,4 +1225,5 @@ export const en: Record<keyof typeof es, string> = {
   "dossier.vertical": "Portrait",
   "dossier.avisoMiniatura": "These works have no usable high-resolution image and used the thumbnail (low quality): {{obras}}.",
   "selecciones.eliminarAvisoDossiers": "The {{cantidad}} saved dossier(s) of this selection will also be deleted, and cannot be recovered.",
+  "obraDetail.volverASeleccion": "Back to the selection",
 };
