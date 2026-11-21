@@ -13,6 +13,10 @@ export interface DossierObra {
   medidas: string | null;
   /** Precio ya formateado sin sufijo (ej. "U$ 1.000"), o null si no hay. */
   precio: string | null;
+  /** Primer ejemplar disponible de una obra seriada, ya con etiqueta (ej. "Ejemplar 3/10"), o null. */
+  numeroSerie: string | null;
+  /** Pruebas de artista disponibles, ya con etiqueta (ej. "2 pruebas de artista"), o null. */
+  pruebasArtista: string | null;
   imagen: { bytes: Uint8Array; formato: "PNG" | "JPEG" } | null;
 }
 
@@ -38,6 +42,8 @@ export interface DossierOpciones {
   incluirTecnica: boolean;
   incluirMedidas: boolean;
   incluirPrecio: boolean;
+  incluirNumeroSerie: boolean;
+  incluirPruebasArtista: boolean;
   /** Se agrega después del precio ("+ IVA"). */
   sufijoPrecio: string;
   /** Texto que se agrega si varias obras comparten ficha ("c/u"). */
@@ -97,6 +103,8 @@ function lineasCaption(obra: DossierObra, o: DossierOpciones, cadaUno: boolean):
   if (o.incluirTituloAnio) gris.push(obra.anio ? `${obra.titulo}, ${obra.anio}` : obra.titulo);
   if (o.incluirTecnica && obra.tecnica) gris.push(obra.tecnica);
   if (o.incluirMedidas && obra.medidas) gris.push(obra.medidas);
+  if (o.incluirNumeroSerie && obra.numeroSerie) gris.push(obra.numeroSerie);
+  if (o.incluirPruebasArtista && obra.pruebasArtista) gris.push(obra.pruebasArtista);
   let negrita: string | null = null;
   if (o.incluirPrecio && obra.precio) {
     negrita = [obra.precio, o.sufijoPrecio.trim(), cadaUno ? o.sufijoCadaUno.trim() : ""].filter(Boolean).join(" ");

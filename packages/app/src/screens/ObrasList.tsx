@@ -131,12 +131,15 @@ export function ObrasList({
   onNuevaObra,
   onVerGaleria,
   onVerSelecciones,
+  seleccionInicialId,
 }: {
   onBack: () => void;
   onOpenObra: (obraId: number) => void;
   onNuevaObra: () => void;
   onVerGaleria: (filtros: ObrasListFiltros) => void;
   onVerSelecciones: () => void;
+  /** Si viene, la lista arranca limitada a las obras de esa selección (para generar informes de ellas). */
+  seleccionInicialId?: number;
 }) {
   const { context, personalArtista, galeriaPerfil } = useWorkspace();
   const { t, idioma } = useLanguage();
@@ -179,6 +182,25 @@ export function ObrasList({
   const [nombreNuevaSeleccion, setNombreNuevaSeleccion] = useState("");
   const [idsEnActiva, setIdsEnActiva] = useState<Set<number>>(new Set());
   const [seleccionMensaje, setSeleccionMensaje] = useState<string | null>(null);
+  // Filtro por selección: limita la lista (y por lo tanto los informes) a las obras de esa selección.
+  const [filtroSeleccionId, setFiltroSeleccionId] = useState<number | null>(seleccionInicialId ?? null);
+  const [idsFiltroSeleccion, setIdsFiltroSeleccion] = useState<Set<number> | null>(null);
+  const [seleccionesParaFiltro, setSeleccionesParaFiltro] = useState<Seleccion[]>([]);
+
+  useEffect(() => {
+    if (!context) return;
+    listSelecciones(context.db).then(setSeleccionesParaFiltro).catch(() => setSeleccionesParaFiltro([]));
+  }, [context]);
+
+  useEffect(() => {
+    if (!context || filtroSeleccionId === null) {
+      setIdsFiltroSeleccion(null);
+      return;
+    }
+    listObraIdsDeSeleccion(context.db, filtroSeleccionId)
+      .then((ids) => setIdsFiltroSeleccion(new Set(ids)))
+      .catch(() => setIdsFiltroSeleccion(new Set()));
+  }, [context, filtroSeleccionId]);
   const activaId = typeof seleccionActivaId === "number" ? seleccionActivaId : null;
 
   async function recargarSelecciones() {
@@ -354,6 +376,7 @@ export function ObrasList({
   const filteredObras = useMemo(() => {
     const busquedaNorm = busqueda.trim().toLowerCase();
     const filtradas = obras.filter((o) => {
+      if (filtroSeleccionId !== null && !(idsFiltroSeleccion?.has(o.id) ?? false)) return false;
       if (calificacionFiltro > 0 && o.calificacion !== calificacionFiltro) return false;
       if (selectedTags.length > 0 && !selectedTags.some((tag) => parseTags(o.tags).includes(tag))) return false;
       if (esGaleria && selectedArtistaId !== null && o.artista_id !== selectedArtistaId) return false;
@@ -401,6 +424,8 @@ export function ObrasList({
     selectedSubtipo,
     busqueda,
     calificacionFiltro,
+    filtroSeleccionId,
+    idsFiltroSeleccion,
     esRegistroPersonal,
     esGaleria,
     ordenPor,
@@ -711,6 +736,23 @@ export function ObrasList({
                   {allArtistas.map((a) => (
                     <option key={a.id} value={a.id}>
                       {a.nombre}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+
+            {seleccionesParaFiltro.length > 0 && (
+              <label className="galeria-filtro-artista">
+                {t("selecciones.filtroLabel")}
+                <select
+                  value={filtroSeleccionId ?? ""}
+                  onChange={(e) => setFiltroSeleccionId(e.target.value === "" ? null : Number(e.target.value))}
+                >
+                  <option value="">{t("selecciones.filtroTodas")}</option>
+                  {seleccionesParaFiltro.map((sel) => (
+                    <option key={sel.id} value={sel.id}>
+                      {sel.nombre} ({sel.cantidad})
                     </option>
                   ))}
                 </select>

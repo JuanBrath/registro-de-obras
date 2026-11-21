@@ -67,3 +67,47 @@ export async function reordenarSeleccion(db: DatabaseAdapter, seleccionId: numbe
     }
   });
 }
+
+export interface SeleccionDossier {
+  id: number;
+  seleccion_id: number;
+  numero: number;
+  creado_en: string;
+  archivo_path: string;
+  cantidad_obras: number;
+}
+
+export async function listDossiers(db: DatabaseAdapter, seleccionId: number): Promise<SeleccionDossier[]> {
+  return db.query<SeleccionDossier>(
+    "SELECT id, seleccion_id, numero, creado_en, archivo_path, cantidad_obras FROM seleccion_dossier WHERE seleccion_id = ? ORDER BY numero DESC",
+    [seleccionId],
+  );
+}
+
+export async function contarDossiers(db: DatabaseAdapter, seleccionId: number): Promise<number> {
+  const [r] = await db.query<{ n: number }>("SELECT COUNT(*) AS n FROM seleccion_dossier WHERE seleccion_id = ?", [seleccionId]);
+  return r?.n ?? 0;
+}
+
+/** Próximo número correlativo de dossier para la selección. */
+export async function proximoNumeroDossier(db: DatabaseAdapter, seleccionId: number): Promise<number> {
+  const [r] = await db.query<{ m: number | null }>("SELECT MAX(numero) AS m FROM seleccion_dossier WHERE seleccion_id = ?", [seleccionId]);
+  return (r?.m ?? 0) + 1;
+}
+
+export async function registrarDossier(
+  db: DatabaseAdapter,
+  seleccionId: number,
+  numero: number,
+  archivoPath: string,
+  cantidadObras: number,
+): Promise<void> {
+  await db.execute(
+    "INSERT INTO seleccion_dossier (seleccion_id, numero, archivo_path, cantidad_obras) VALUES (?, ?, ?, ?)",
+    [seleccionId, numero, archivoPath, cantidadObras],
+  );
+}
+
+export async function eliminarRegistroDossier(db: DatabaseAdapter, id: number): Promise<void> {
+  await db.execute("DELETE FROM seleccion_dossier WHERE id = ?", [id]);
+}

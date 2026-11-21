@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { DossierModal } from "../components/DossierModal.js";
+import { DossiersGuardadosModal } from "../components/DossiersGuardadosModal.js";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
 import { leerMiniaturasPorIdEnParalelo } from "../utils/imageObjectUrl.js";
 import {
   actualizarSeleccion,
   crearSeleccion,
+  contarDossiers,
   eliminarSeleccion,
+  listDossiers,
   listObraIdsDeSeleccion,
   listSelecciones,
   quitarObraDeSeleccion,
@@ -23,7 +26,16 @@ interface ObraMini {
 }
 
 /** Selecciones: grupos de obras elegidos a mano (base de los dossiers en PDF). */
-export function SeleccionesScreen({ onBack, onOpenObra }: { onBack: () => void; onOpenObra: (obraId: number) => void }) {
+export function SeleccionesScreen({
+  onBack,
+  onOpenObra,
+  onVerInformes,
+}: {
+  onBack: () => void;
+  onOpenObra: (obraId: number) => void;
+  /** Abre Obras limitado a las fotos de esta selección, para generar informes de ellas. */
+  onVerInformes: (seleccionId: number) => void;
+}) {
   const { context } = useWorkspace();
   const { t } = useLanguage();
   const [selecciones, setSelecciones] = useState<Seleccion[]>([]);
@@ -36,6 +48,8 @@ export function SeleccionesScreen({ onBack, onOpenObra }: { onBack: () => void; 
   const [confirmarEliminar, setConfirmarEliminar] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dossierAbierto, setDossierAbierto] = useState(false);
+  const [guardadosAbierto, setGuardadosAbierto] = useState(false);
+  const [cantidadDossiers, setCantidadDossiers] = useState(0);
   const [arrastrando, setArrastrando] = useState<number | null>(null);
   const [sobre, setSobre] = useState<number | null>(null);
   const objectUrlsRef = useRef<string[]>([]);
@@ -96,6 +110,7 @@ export function SeleccionesScreen({ onBack, onOpenObra }: { onBack: () => void; 
     setNombre(s?.nombre ?? "");
     setNotas(s?.notas ?? "");
     cargarObras(activaId).catch((e) => setError(e instanceof Error ? e.message : String(e)));
+    contarDossiers(context!.db, activaId).then(setCantidadDossiers).catch(() => setCantidadDossiers(0));
     // Solo al cambiar de selección: recargar al renombrar/mover no debe pisar lo que se esta escribiendo.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activaId, cargarObras]);
@@ -134,6 +149,13 @@ export function SeleccionesScreen({ onBack, onOpenObra }: { onBack: () => void; 
   const eliminar = () =>
     run(async () => {
       if (!context || activaId === null) return;
+      for (const d of await listDossiers(context.db, activaId)) {
+        try {
+          await context.fs.remove(d.archivo_path);
+        } catch {
+          // Archivo ya borrado: no impide eliminar la selección.
+        }
+      }
       await eliminarSeleccion(context.db, activaId);
       setActivaId(null);
       await recargarLista();
@@ -263,6 +285,16 @@ export function SeleccionesScreen({ onBack, onOpenObra }: { onBack: () => void; 
                 {t("dossier.boton")}
               </button>
             )}
+            {!nueva && (
+              <button type="button" onClick={() => setGuardadosAbierto(true)}>
+                {t("dossier.guardadosBoton", { cantidad: cantidadDossiers })}
+              </button>
+            )}
+            {!nueva && (
+              <button type="button" onClick={() => activaId !== null && onVerInformes(activaId)} disabled={obras.length === 0}>
+                {t("selecciones.informesBoton")}
+              </button>
+            )}
             {nueva && (
               <button type="button" onClick={() => setNueva(false)}>
                 {t("common.cancel")}
@@ -356,7 +388,20 @@ export function SeleccionesScreen({ onBack, onOpenObra }: { onBack: () => void; 
         </section>
       )}
       {dossierAbierto && activa && (
-        <DossierModal seleccionId={activa.id} seleccionNombre={activa.nombre} onClose={() => setDossierAbierto(false)} />
+        <DossierModal
+          seleccionId={activa.id}
+          seleccionNombre={activa.nombre}
+          onClose={() => setDossierAbierto(false)}
+          onGenerado={() => contarDossiers(context.db, activa.id).then(setCantidadDossiers)}
+        />
+      )}
+      {guardadosAbierto && activa && (
+        <DossiersGuardadosModal
+          seleccionId={activa.id}
+          seleccionNombre={activa.nombre}
+          onClose={() => setGuardadosAbierto(false)}
+          onCambio={() => contarDossiers(context.db, activa.id).then(setCantidadDossiers)}
+        />
       )}
     </div>
   );

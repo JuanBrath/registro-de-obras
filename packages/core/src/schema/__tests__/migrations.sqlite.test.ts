@@ -211,6 +211,7 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
       "0086_dimensiones_obra_vuelve_si_es_seriada",
       "0087_limpiar_dimensiones_ejemplar_series",
       "0088_selecciones",
+      "0089_seleccion_dossier",
     ]);
   });
 

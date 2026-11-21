@@ -85,6 +85,7 @@ import { migration0085DimensionesSoloPorEjemplar } from "./0085_dimensiones_solo
 import { migration0086DimensionesObraVuelveSiEsSeriada } from "./0086_dimensiones_obra_vuelve_si_es_seriada.js";
 import { migration0087LimpiarDimensionesEjemplarSeries } from "./0087_limpiar_dimensiones_ejemplar_series.js";
 import { migration0088Selecciones } from "./0088_selecciones.js";
+import { migration0089SeleccionDossier } from "./0089_seleccion_dossier.js";
 
 export interface Migration {
   name: string;
@@ -301,4 +302,5 @@ export const ALL_MIGRATIONS: Migration[] = [
   migration0086DimensionesObraVuelveSiEsSeriada,
   migration0087LimpiarDimensionesEjemplarSeries,
   migration0088Selecciones,
+  migration0089SeleccionDossier,
 ];

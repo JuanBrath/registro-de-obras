@@ -3,10 +3,10 @@ import { useWorkspace } from "../state/WorkspaceContext.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
 import { Modal } from "./Modal.js";
 import { NotasLabel } from "./NotasLabel.js";
-import { listObraIdsDeSeleccion } from "../data/selecciones.js";
+import { listObraIdsDeSeleccion, proximoNumeroDossier, registrarDossier } from "../data/selecciones.js";
+import { openLocalFile } from "../utils/openExternalUrl.js";
 import { resolveObraImagenParaPdf } from "../utils/resolveObraImagenPdf.js";
 import { resolveMembreteLogoBytes } from "../reports/reportBranding.js";
-import { savePdfWithDialog } from "../utils/savePdfDialog.js";
 import {
   buildDossierPdfBytes,
   formatearPrecio,
@@ -35,6 +35,9 @@ interface FilaEjemplar {
   precio_venta: number | null;
   moneda_venta: string | null;
   dimensiones: string | null;
+  tipo: string;
+  numero: string;
+  estado: string;
 }
 
 interface ArtistaFila {
@@ -68,10 +71,13 @@ export function DossierModal({
   seleccionId,
   seleccionNombre,
   onClose,
+  onGenerado,
 }: {
   seleccionId: number;
   seleccionNombre: string;
   onClose: () => void;
+  /** Se llama después de guardar un dossier nuevo (para refrescar el historial). */
+  onGenerado?: () => void;
 }) {
   const { context, personalArtista, galeriaPerfil } = useWorkspace();
   const { t } = useLanguage();
@@ -81,6 +87,7 @@ export function DossierModal({
   const [generando, setGenerando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mensaje, setMensaje] = useState<string | null>(null);
+  const [ultimoAbsPath, setUltimoAbsPath] = useState<string | null>(null);
 
   const [idioma, setIdioma] = useState<"es" | "en">("es");
   const [incluirPortada, setIncluirPortada] = useState(true);
@@ -96,6 +103,8 @@ export function DossierModal({
   const [incluirTecnica, setIncluirTecnica] = useState(true);
   const [incluirMedidas, setIncluirMedidas] = useState(true);
   const [incluirPrecio, setIncluirPrecio] = useState(true);
+  const [incluirNumeroSerie, setIncluirNumeroSerie] = useState(true);
+  const [incluirPruebasArtista, setIncluirPruebasArtista] = useState(false);
   const [incluirContacto, setIncluirContacto] = useState(true);
   const [sufijoPrecio, setSufijoPrecio] = useState("+ IVA");
   const [sufijoCadaUno, setSufijoCadaUno] = useState("c/u");
@@ -127,8 +136,8 @@ export function DossierModal({
           ids,
         );
         const ej = await context.db.query<FilaEjemplar>(
-          `SELECT obra_id, precio_venta, moneda_venta, dimensiones FROM ejemplar
-           WHERE tipo = 'edicion' AND obra_id IN (${ph}) ORDER BY indice`,
+          `SELECT obra_id, precio_venta, moneda_venta, dimensiones, tipo, numero, estado FROM ejemplar
+           WHERE obra_id IN (${ph}) ORDER BY tipo, indice`,
           ids,
         );
         const porId = new Map(rows.map((r) => [r.id, r]));
@@ -168,7 +177,18 @@ export function DossierModal({
     return Array.from(vistos.values());
   }, [filas]);
 
-  const sinPrecio = useMemo(() => !ejemplares.some((e) => e.precio_venta != null), [ejemplares]);
+  // Datos de cada obra seriada: los del primer ejemplar disponible (o el primero de la edición si no queda ninguno).
+  const elegidoPorObra = useMemo(() => {
+    const mapa = new Map<number, FilaEjemplar>();
+    for (const e of ejemplares) {
+      if (e.tipo !== "edicion") continue;
+      const actual = mapa.get(e.obra_id);
+      if (!actual || (actual.estado !== "disponible" && e.estado === "disponible")) mapa.set(e.obra_id, e);
+    }
+    return mapa;
+  }, [ejemplares]);
+
+  const sinPrecio = useMemo(() => !Array.from(elegidoPorObra.values()).some((e) => e.precio_venta != null), [elegidoPorObra]);
   const totalHojas = useMemo(
     () => contarHojas(filas.length, obrasPorPagina, excepciones),
     [filas.length, obrasPorPagina, excepciones],
@@ -203,9 +223,10 @@ export function DossierModal({
       const obras: DossierObra[] = [];
       for (const r of filas) {
         const mias = ejemplares.filter((e) => e.obra_id === r.id);
-        const precios = mias.filter((e) => e.precio_venta != null);
-        // Si las copias tienen precios distintos se muestra el menor.
-        const minimo = precios.length > 0 ? precios.reduce((a, b) => (b.precio_venta! < a.precio_venta! ? b : a)) : null;
+        const elegido = elegidoPorObra.get(r.id) ?? null;
+        const totalEdiciones = mias.filter((e) => e.tipo === "edicion").length;
+        const pruebas = mias.filter((e) => e.tipo === "prueba_artista" && e.estado === "disponible").length;
+        const es = idioma === "es";
         obras.push({
           id: r.id,
           artistaId: r.artista_id,
@@ -213,8 +234,15 @@ export function DossierModal({
           titulo: r.titulo,
           anio: r.anio_periodo,
           tecnica: r.tecnica,
-          medidas: medidasEnCm(mias.find((e) => e.dimensiones)?.dimensiones ?? r.dimensiones_obra),
-          precio: minimo ? formatearPrecio(minimo.precio_venta, minimo.moneda_venta) : null,
+          medidas: medidasEnCm(elegido?.dimensiones ?? mias.find((e) => e.dimensiones)?.dimensiones ?? r.dimensiones_obra),
+          precio: elegido ? formatearPrecio(elegido.precio_venta, elegido.moneda_venta) : null,
+          numeroSerie: elegido && totalEdiciones > 1 ? `${es ? "Ejemplar" : "Edition"} ${elegido.numero}` : null,
+          pruebasArtista:
+            pruebas > 0
+              ? es
+                ? `${pruebas} ${pruebas === 1 ? "prueba de artista" : "pruebas de artista"}`
+                : `${pruebas} artist's ${pruebas === 1 ? "proof" : "proofs"}`
+              : null,
           imagen: await resolveObraImagenParaPdf(context, r),
         });
       }
@@ -245,6 +273,8 @@ export function DossierModal({
         incluirTecnica,
         incluirMedidas,
         incluirPrecio,
+        incluirNumeroSerie,
+        incluirPruebasArtista,
         sufijoPrecio,
         sufijoCadaUno,
         obrasPorPagina,
@@ -252,9 +282,18 @@ export function DossierModal({
         contactoLineas,
         logoBytes,
       });
-      const nombreArchivo = `dossier_${seleccionNombre.replace(/[^\p{L}\p{N}]+/gu, "_")}.pdf`;
-      const guardado = await savePdfWithDialog(bytes, nombreArchivo);
-      if (guardado) setMensaje(t("dossier.generado"));
+      // Se guarda en la carpeta del registro con número correlativo y fecha: nunca pisa un dossier anterior.
+      const numero = await proximoNumeroDossier(context.db, seleccionId);
+      const ahora = new Date();
+      const p2 = (n: number) => String(n).padStart(2, "0");
+      const sello = `${ahora.getFullYear()}${p2(ahora.getMonth() + 1)}${p2(ahora.getDate())}-${p2(ahora.getHours())}${p2(ahora.getMinutes())}`;
+      const relPath = `dossiers/${seleccionId}/dossier_${p2(numero)}_${sello}.pdf`;
+      await context.fs.ensureDir(`dossiers/${seleccionId}`);
+      await context.fs.writeFile(relPath, bytes);
+      await registrarDossier(context.db, seleccionId, numero, relPath, obras.length);
+      setUltimoAbsPath(await context.fs.resolveAbsolutePath(relPath));
+      setMensaje(t("dossier.guardadoNumero", { numero }));
+      onGenerado?.();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -392,7 +431,10 @@ export function DossierModal({
                 {check(t("dossier.tecnica"), incluirTecnica, setIncluirTecnica)}
                 {check(t("dossier.medidas"), incluirMedidas, setIncluirMedidas)}
                 {check(t("dossier.precio"), incluirPrecio, setIncluirPrecio, sinPrecio)}
+                {check(t("dossier.numeroSerie"), incluirNumeroSerie, setIncluirNumeroSerie)}
+                {check(t("dossier.pruebasArtista"), incluirPruebasArtista, setIncluirPruebasArtista)}
               </div>
+              <p className="dossier-nota">{t("dossier.notaPrimerDisponible")}</p>
               {sinPrecio && <p className="dossier-nota">{t("dossier.sinPrecio")}</p>}
               {incluirPrecio && !sinPrecio && (
                 <div className="dossier-fila">
@@ -417,7 +459,12 @@ export function DossierModal({
         {error && <p className="error">{error}</p>}
         {mensaje && (
           <p className="success" role="status">
-            ✅ {mensaje}
+            ✅ {mensaje}{" "}
+            {ultimoAbsPath && (
+              <button type="button" onClick={() => openLocalFile(ultimoAbsPath)}>
+                {t("dossier.abrir")}
+              </button>
+            )}
           </p>
         )}
         <div className="dossier-acciones">

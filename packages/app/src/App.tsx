@@ -33,7 +33,7 @@ type Screen =
   | { name: "home" }
   | { name: "profile" }
   | { name: "nueva-obra" }
-  | { name: "obras" }
+  | { name: "obras"; seleccionId?: number }
   // `volverA`: a que pantalla vuelve el boton "Volver" (por defecto, "obras") — permite abrir la ficha
   // desde Galeria de obras y que el boton de volver regrese ahi, a la misma foto, en vez de a Obras.
   | { name: "obra-detail"; obraId: number; volverA?: Screen }
@@ -171,6 +171,7 @@ function WorkspaceScreens({ onManual }: { onManual: () => void }) {
           onNuevaObra={() => setScreen({ name: "nueva-obra" })}
           onVerGaleria={(filtros) => setScreen({ name: "galeria-fotos", filtros })}
           onVerSelecciones={() => setScreen({ name: "selecciones" })}
+          seleccionInicialId={activeScreen.seleccionId}
         />
       );
       break;
@@ -179,6 +180,7 @@ function WorkspaceScreens({ onManual }: { onManual: () => void }) {
         <SeleccionesScreen
           onBack={() => setScreen({ name: "obras" })}
           onOpenObra={(obraId) => setScreen({ name: "obra-detail", obraId, volverA: { name: "selecciones" } })}
+          onVerInformes={(seleccionId) => setScreen({ name: "obras", seleccionId })}
         />
       );
       break;
