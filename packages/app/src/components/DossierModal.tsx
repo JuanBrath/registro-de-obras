@@ -3,6 +3,7 @@ import { useWorkspace } from "../state/WorkspaceContext.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
 import { Modal } from "./Modal.js";
 import { NotasLabel } from "./NotasLabel.js";
+import { ESTADOS_OFRECIBLES } from "../utils/estadosOfrecibles.js";
 import { listObraIdsDeSeleccion, proximoNumeroDossier, registrarDossier } from "../data/selecciones.js";
 import { openLocalFile } from "../utils/openExternalUrl.js";
 import { resolveObraImagenParaPdf } from "../utils/resolveObraImagenPdf.js";
@@ -55,9 +56,6 @@ interface Excepcion {
 
 const MAX_POR_HOJA = 12;
 
-// Estados cuyos datos pueden mostrarse en un dossier. Quedan afuera: vendida, reservada, descartada,
-// destruida y colección del autor.
-const ESTADOS_OFRECIBLES = new Set(["disponible", "en_stock", "exhibicion", "consignacion", "en_produccion"]);
 
 /** Cuántas hojas de obras salen con esta distribución (para mostrar un resumen). */
 function contarHojas(total: number, porDefecto: number, excepciones: Excepcion[]): number {

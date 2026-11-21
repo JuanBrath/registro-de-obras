@@ -62,6 +62,7 @@ import { resolveObraImagenParaPdf } from "../utils/resolveObraImagenPdf.js";
 import { CertificadoEditor } from "../certificados/CertificadoEditor.js";
 import type { DatosStudioCertificado, FormatoCertificado } from "../certificados/datosStudio.js";
 import { openLocalFile } from "../utils/openExternalUrl.js";
+import { ESTADOS_OFRECIBLES } from "../utils/estadosOfrecibles.js";
 import { AgregarASeleccionModal } from "../components/AgregarASeleccionModal.js";
 import {
   buildComprobanteVentaPdfBytes,
@@ -2261,11 +2262,11 @@ export function ObraDetail({
   // separado: cada una tiene su propio boton de "ver mas", ver mas abajo.
   const edicionesEjemplares = ejemplares.filter((ej) => ej.tipo === "edicion");
   const pruebasEjemplares = ejemplares.filter((ej) => ej.tipo === "prueba_artista");
-  // Colapsado, se muestra cualquier ejemplar que no este disponible (vendido,
-  // reservado, etc.), que es lo que interesa ver de entrada; si todos estan
-  // disponibles no hay nada que destacar y se muestra solo el primero.
-  const edicionesNoDisponibles = edicionesEjemplares.filter((ej) => ej.estado !== "disponible");
-  const edicionesColapsadas = edicionesNoDisponibles.length > 0 ? edicionesNoDisponibles : edicionesEjemplares.slice(0, 1);
+  // Colapsado, de la serie se muestra la primera copia que esta en condiciones de ofrecerse (disponible, en
+  // stock, en exhibicion, en consignacion o en produccion); si ninguna lo esta, la primera de todas. El resto
+  // se despliega con el boton "ver mas".
+  const primeraOfrecible = edicionesEjemplares.find((ej) => ESTADOS_OFRECIBLES.has(ej.estado));
+  const edicionesColapsadas = primeraOfrecible ? [primeraOfrecible] : edicionesEjemplares.slice(0, 1);
   const pruebasNoDisponibles = pruebasEjemplares.filter((ej) => ej.estado !== "disponible");
   const pruebasColapsadas = pruebasNoDisponibles.length > 0 ? pruebasNoDisponibles : pruebasEjemplares.slice(0, 1);
 

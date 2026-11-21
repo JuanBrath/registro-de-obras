@@ -117,20 +117,34 @@ export function SeleccionesScreen({
     return liberarThumbs;
   }, [recargarLista]);
 
+  // Carga las obras y el conteo de dossiers al cambiar de selección.
   useEffect(() => {
     setConfirmarEliminar(false);
     if (activaId === null) {
       setObras([]);
       return;
     }
-    const s = selecciones.find((x) => x.id === activaId);
-    setNombre(s?.nombre ?? "");
-    setNotas(s?.notas ?? "");
     cargarObras(activaId).catch((e) => setError(e instanceof Error ? e.message : String(e)));
     contarDossiers(context!.db, activaId).then(setCantidadDossiers).catch(() => setCantidadDossiers(0));
-    // Solo al cambiar de selección: recargar al renombrar/mover no debe pisar lo que se esta escribiendo.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activaId, cargarObras]);
+
+  // Rellena nombre y notas con los de la selección abierta. Espera a que la lista esté cargada (al volver
+  // desde la ficha de una obra la selección ya viene elegida pero la lista llega después) y se hace una sola
+  // vez por selección: renombrar o mover obras no debe pisar lo que se está escribiendo.
+  const camposCargadosPara = useRef<number | null>(null);
+  useEffect(() => {
+    if (activaId === null) {
+      camposCargadosPara.current = null;
+      return;
+    }
+    if (camposCargadosPara.current === activaId) return;
+    const s = selecciones.find((x) => x.id === activaId);
+    if (!s) return;
+    camposCargadosPara.current = activaId;
+    setNombre(s.nombre);
+    setNotas(s.notas ?? "");
+  }, [activaId, selecciones]);
 
   async function run(fn: () => Promise<void>) {
     setError(null);
