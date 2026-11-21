@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { DossierModal } from "../components/DossierModal.js";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
 import { leerMiniaturasPorIdEnParalelo } from "../utils/imageObjectUrl.js";
@@ -34,6 +35,7 @@ export function SeleccionesScreen({ onBack, onOpenObra }: { onBack: () => void; 
   const [nuevoNombre, setNuevoNombre] = useState("");
   const [confirmarEliminar, setConfirmarEliminar] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dossierAbierto, setDossierAbierto] = useState(false);
   const [arrastrando, setArrastrando] = useState<number | null>(null);
   const [sobre, setSobre] = useState<number | null>(null);
   const objectUrlsRef = useRef<string[]>([]);
@@ -208,6 +210,9 @@ export function SeleccionesScreen({ onBack, onOpenObra }: { onBack: () => void; 
             <button type="button" onClick={guardarDatos} disabled={!nombre.trim()}>
               {t("common.save")}
             </button>
+            <button type="button" onClick={() => setDossierAbierto(true)} disabled={obras.length === 0}>
+              {t("dossier.boton")}
+            </button>
             {!confirmarEliminar ? (
               <button type="button" onClick={() => setConfirmarEliminar(true)}>
                 {t("selecciones.eliminar")}
@@ -291,6 +296,9 @@ export function SeleccionesScreen({ onBack, onOpenObra }: { onBack: () => void; 
             ))}
           </div>
         </section>
+      )}
+      {dossierAbierto && activa && (
+        <DossierModal seleccionId={activa.id} seleccionNombre={activa.nombre} onClose={() => setDossierAbierto(false)} />
       )}
     </div>
   );
