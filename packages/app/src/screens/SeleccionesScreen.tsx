@@ -5,6 +5,14 @@ import { DossiersGuardadosModal } from "../components/DossiersGuardadosModal.js"
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
 import { leerMiniaturasPorIdEnParalelo } from "../utils/imageObjectUrl.js";
+import { ObraDisponibilidad, ObraTarjetaInfo, SQL_OBRA_ROWS, anchoMiniaturaTabla, type ObraRow } from "../components/ObraVista.js";
+import { MiniaturasSizeSlider } from "../components/MiniaturasSizeSlider.js";
+import { StarRating } from "../components/StarRating.js";
+import { subtipoTranslationKey } from "./fields/ObraDetalleFields.js";
+import { cargarColumnasGridInicial, guardarColumnasGrid } from "../utils/columnasGrid.js";
+import { marcarSiMiniaturaMuyVertical } from "../utils/miniaturaVertical.js";
+import { sincronizarCalificacionConArchivo } from "../utils/calificacionArchivo.js";
+import type { TranslationKey } from "../i18n/LanguageContext.js";
 import {
   actualizarSeleccion,
   crearSeleccion,
@@ -18,12 +26,20 @@ import {
   type Seleccion,
 } from "../data/selecciones.js";
 
-interface ObraMini {
-  id: number;
-  titulo: string;
-  nombre_completo: string | null;
-  anio_periodo: string | null;
-  miniatura_path: string | null;
+// Misma presentación que Obras (tarjetas o columnas), con su propio tamaño de miniaturas guardado aparte.
+const COLUMNAS_TARJETAS_KEY = "seleccionesColumnasGrid";
+const COLUMNAS_COLUMNAS_KEY = "seleccionesColumnasGridVistaColumnas";
+const VISTA_KEY = "seleccionesVista";
+type Vista = "tarjetas" | "columnas";
+
+function cargarVista(): Vista {
+  try {
+    const v = localStorage.getItem(VISTA_KEY);
+    if (v === "tarjetas" || v === "columnas") return v;
+  } catch {
+    // localStorage no disponible: se usa el valor por defecto.
+  }
+  return "tarjetas";
 }
 
 /** Selecciones: grupos de obras elegidos a mano (base de los dossiers en PDF). */
@@ -38,7 +54,10 @@ export function SeleccionesScreen({
   const { t } = useLanguage();
   const [selecciones, setSelecciones] = useState<Seleccion[]>([]);
   const [activaId, setActivaId] = useState<number | null>(null);
-  const [obras, setObras] = useState<ObraMini[]>([]);
+  const [obras, setObras] = useState<ObraRow[]>([]);
+  const [vista, setVista] = useState<Vista>(cargarVista);
+  const [columnasTarjetas, setColumnasTarjetas] = useState(() => cargarColumnasGridInicial(COLUMNAS_TARJETAS_KEY, 4));
+  const [columnasColumnas, setColumnasColumnas] = useState(() => cargarColumnasGridInicial(COLUMNAS_COLUMNAS_KEY, 4));
   const [thumbs, setThumbs] = useState<Record<number, string>>({});
   const [nombre, setNombre] = useState("");
   const [notas, setNotas] = useState("");
@@ -69,16 +88,11 @@ export function SeleccionesScreen({
     async (seleccionId: number) => {
       if (!context) return;
       const ids = await listObraIdsDeSeleccion(context.db, seleccionId);
-      let rows: ObraMini[] = [];
+      let rows: ObraRow[] = [];
       if (ids.length > 0) {
-        const found = await context.db.query<ObraMini>(
-          `SELECT obra.id, obra.titulo, obra.anio_periodo, obra.miniatura_path, artista.nombre_completo
-           FROM obra LEFT JOIN artista ON artista.id = obra.artista_id
-           WHERE obra.id IN (${ids.map(() => "?").join(",")})`,
-          ids,
-        );
+        const found = await context.db.query<ObraRow>(SQL_OBRA_ROWS(`WHERE obra.id IN (${ids.map(() => "?").join(",")})`), ids);
         const porId = new Map(found.map((o) => [o.id, o]));
-        rows = ids.map((id) => porId.get(id)).filter((o): o is ObraMini => !!o);
+        rows = ids.map((id) => porId.get(id)).filter((o): o is ObraRow => !!o);
       }
       setObras(rows);
       liberarThumbs();
@@ -144,6 +158,47 @@ export function SeleccionesScreen({
       await actualizarSeleccion(context.db, activaId, nombre, notas.trim() || null);
       await recargarLista();
     });
+
+  const cambiarVista = (v: Vista) => {
+    setVista(v);
+    try {
+      localStorage.setItem(VISTA_KEY, v);
+    } catch {
+      // No se pudo guardar la preferencia.
+    }
+  };
+  const columnasActual = vista === "tarjetas" ? columnasTarjetas : columnasColumnas;
+  const cambiarTamano = (n: number) => {
+    if (vista === "tarjetas") {
+      setColumnasTarjetas(n);
+      guardarColumnasGrid(COLUMNAS_TARJETAS_KEY, n);
+    } else {
+      setColumnasColumnas(n);
+      guardarColumnasGrid(COLUMNAS_COLUMNAS_KEY, n);
+    }
+  };
+
+  async function calificar(obraId: number, nueva: number) {
+    if (!context) return;
+    const actual = obras.find((o) => o.id === obraId);
+    const anterior = actual?.calificacion ?? 0;
+    setObras((prev) => prev.map((o) => (o.id === obraId ? { ...o, calificacion: nueva } : o)));
+    try {
+      await context.db.execute("UPDATE obra SET calificacion = ? WHERE id = ?", [nueva, obraId]);
+    } catch (e) {
+      setObras((prev) => prev.map((o) => (o.id === obraId ? { ...o, calificacion: anterior } : o)));
+      setError(e instanceof Error ? e.message : String(e));
+      return;
+    }
+    // Sincronización "mejor esfuerzo" con el archivo original; si falla no deshace lo guardado.
+    if (actual?.ubicacion_fisica_actual) {
+      try {
+        await sincronizarCalificacionConArchivo(actual.ubicacion_fisica_actual, nueva);
+      } catch (e) {
+        setError(t("galeria.errorGuardarCalificacionArchivo", { mensaje: e instanceof Error ? e.message : String(e) }));
+      }
+    }
+  }
 
   // Abre directamente la ventana de informes, limitada a las obras de la selección (en su orden).
   const abrirInformes = () =>
@@ -321,12 +376,35 @@ export function SeleccionesScreen({
           <div className="selecciones-bloque">
 
           {obras.length === 0 && <p>{t("selecciones.sinObras")}</p>}
-          <div className="obras-grid" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
-            {obras.map((obra, i) => (
-              <div
-                className="obra-card-wrapper"
-                key={obra.id}
-                draggable
+          {obras.length > 0 && (
+            <div className="obras-toolbar-fila selecciones-vista-barra">
+              <div className="obras-vista-toggle">
+                <button
+                  type="button"
+                  className={vista === "columnas" ? "obras-vista-toggle-boton activo" : "obras-vista-toggle-boton"}
+                  onClick={() => cambiarVista("columnas")}
+                >
+                  {t("obrasList.vistaColumnas")}
+                </button>
+                <button
+                  type="button"
+                  className={vista === "tarjetas" ? "obras-vista-toggle-boton activo" : "obras-vista-toggle-boton"}
+                  onClick={() => cambiarVista("tarjetas")}
+                >
+                  {t("obrasList.vistaTarjetas")}
+                </button>
+              </div>
+              <MiniaturasSizeSlider columnas={columnasActual} onChange={cambiarTamano} />
+            </div>
+          )}
+
+          {vista === "tarjetas" && (
+            <div className="obras-grid" style={{ gridTemplateColumns: `repeat(${columnasTarjetas}, 1fr)` }}>
+              {obras.map((obra, i) => (
+                <div
+                  className="obra-card-wrapper"
+                  key={obra.id}
+                  draggable
                 onDragStart={(e) => {
                   setArrastrando(i);
                   e.dataTransfer.effectAllowed = "move";
@@ -346,45 +424,155 @@ export function SeleccionesScreen({
                   setArrastrando(null);
                   setSobre(null);
                 }}
-                style={{
+                  style={{
                   opacity: arrastrando === i ? 0.4 : 1,
-                  outline: sobre === i && arrastrando !== null && arrastrando !== i ? "3px dashed var(--accent, #4a90e2)" : undefined,
+                  outline: sobre === i && arrastrando !== null && arrastrando !== i ? "3px dashed var(--azul-marino-borde)" : undefined,
                   cursor: "grab",
                 }}
-              >
-                <button type="button" className="obra-card" onClick={() => onOpenObra(obra.id)}>
-                  {thumbs[obra.id] ? (
-                    <img src={thumbs[obra.id]} alt={obra.titulo} />
-                  ) : (
-                    <div className="obra-card-placeholder">{t("obrasList.sinImagen")}</div>
-                  )}
-                  <div className="obra-card-info">
-                    <span>
-                      {i + 1}. {obra.titulo}
-                    </span>
-                    {obra.nombre_completo && <span>{obra.nombre_completo}</span>}
+                >
+                  <span className="seleccion-orden">{i + 1}</span>
+                  <button type="button" className="obra-card" onClick={() => onOpenObra(obra.id)}>
+                    {thumbs[obra.id] ? (
+                      <img src={thumbs[obra.id]} alt={obra.titulo} onLoad={(e) => marcarSiMiniaturaMuyVertical(e.currentTarget)} />
+                    ) : (
+                      <div className="obra-card-placeholder">{t("obrasList.sinImagen")}</div>
+                    )}
+                    <ObraTarjetaInfo obra={obra} />
+                  </button>
+                  <StarRating value={obra.calificacion} onChange={(n) => calificar(obra.id, n)} />
+                  <div className="form-actions">
+                    <button type="button" onClick={() => mover(i, i - 1)} disabled={i === 0} aria-label={t("selecciones.subir")} title={t("selecciones.subir")}>
+                      ←
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => mover(i, i + 1)}
+                      disabled={i === obras.length - 1}
+                      aria-label={t("selecciones.bajar")}
+                      title={t("selecciones.bajar")}
+                    >
+                      →
+                    </button>
+                    <button type="button" onClick={() => quitar(obra.id)}>
+                      {t("selecciones.quitar")}
+                    </button>
                   </div>
-                </button>
-                <div className="form-actions">
-                  <button type="button" onClick={() => mover(i, i - 1)} disabled={i === 0} aria-label={t("selecciones.subir")} title={t("selecciones.subir")}>
-                    ←
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => mover(i, i + 1)}
-                    disabled={i === obras.length - 1}
-                    aria-label={t("selecciones.bajar")}
-                    title={t("selecciones.bajar")}
-                  >
-                    →
-                  </button>
-                  <button type="button" onClick={() => quitar(obra.id)}>
-                    {t("selecciones.quitar")}
-                  </button>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
+
+          {vista === "columnas" && obras.length > 0 && (
+            <div className="obras-tabla-wrapper">
+              <table className="obras-tabla">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>{t("obrasList.colImagen")}</th>
+                    <th>{t("obrasList.colObra")}</th>
+                    <th>{t("informesObras.colAutor")}</th>
+                    <th>{t("informesObras.colCategoria")}</th>
+                    <th>{t("informesObras.colSubcategoria")}</th>
+                    <th>{t("obrasList.colDisponibilidad")}</th>
+                    <th>{t("obrasList.colCalificacion")}</th>
+                    <th />
+                  </tr>
+                </thead>
+                <tbody>
+                  {obras.map((obra, i) => {
+                    const subtipoValor = obra.categoria_obra === "Fotografia" ? obra.subtipo_fotografia : obra.subtipo;
+                    return (
+                      <tr
+                        key={obra.id}
+                        className="obras-tabla-fila"
+                        onClick={() => onOpenObra(obra.id)}
+                        draggable
+                onDragStart={(e) => {
+                  setArrastrando(i);
+                  e.dataTransfer.effectAllowed = "move";
+                  e.dataTransfer.setData("text/plain", String(i));
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  if (sobre !== i) setSobre(i);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (arrastrando !== null) mover(arrastrando, i);
+                  setArrastrando(null);
+                  setSobre(null);
+                }}
+                onDragEnd={() => {
+                  setArrastrando(null);
+                  setSobre(null);
+                }}
+                        style={{
+                  opacity: arrastrando === i ? 0.4 : 1,
+                  outline: sobre === i && arrastrando !== null && arrastrando !== i ? "3px dashed var(--azul-marino-borde)" : undefined,
+                  cursor: "grab",
+                }}
+                      >
+                        <td>{i + 1}</td>
+                        <td>
+                          {thumbs[obra.id] ? (
+                            <img
+                              src={thumbs[obra.id]}
+                              alt={obra.titulo}
+                              className="obras-tabla-miniatura"
+                              style={{ width: anchoMiniaturaTabla(columnasColumnas) }}
+                            />
+                          ) : (
+                            <span className="obras-tabla-sin-imagen" style={{ width: anchoMiniaturaTabla(columnasColumnas) }}>
+                              {t("obrasList.sinImagen")}
+                            </span>
+                          )}
+                        </td>
+                        <td>
+                          <strong>{obra.titulo}</strong>
+                          {obra.codigo_inventario && (
+                            <>
+                              <br />
+                              <span className="obra-card-sku">
+                                {t("obrasList.skuPrefix")} {obra.codigo_inventario}
+                              </span>
+                            </>
+                          )}
+                        </td>
+                        <td>{obra.nombre_completo}</td>
+                        <td>{t(`categoria.${obra.categoria_obra}` as TranslationKey)}</td>
+                        <td>{subtipoValor ? t(subtipoTranslationKey(obra.categoria_obra, subtipoValor as never)) : "—"}</td>
+                        <td>
+                          <ObraDisponibilidad obra={obra} />
+                        </td>
+                        <td onClick={(e) => e.stopPropagation()}>
+                          <StarRating value={obra.calificacion} onChange={(n) => calificar(obra.id, n)} />
+                        </td>
+                        <td onClick={(e) => e.stopPropagation()}>
+                          <div className="form-actions">
+                            <button type="button" onClick={() => mover(i, i - 1)} disabled={i === 0} aria-label={t("selecciones.subir")} title={t("selecciones.subir")}>
+                              ↑
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => mover(i, i + 1)}
+                              disabled={i === obras.length - 1}
+                              aria-label={t("selecciones.bajar")}
+                              title={t("selecciones.bajar")}
+                            >
+                              ↓
+                            </button>
+                            <button type="button" onClick={() => quitar(obra.id)}>
+                              {t("selecciones.quitar")}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
           </div>
         </section>
       )}
