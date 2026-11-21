@@ -32,6 +32,8 @@ export interface DossierOpciones {
   tituloPortada: string;
   /** Segunda línea de la portada (nombre de la selección), o vacío para omitirla. */
   subtituloPortada: string;
+  /** Texto libre adicional en la portada (debajo del nombre de la selección), o vacío para omitirlo. */
+  textoAdicionalPortada: string;
   /** Tamaño de letra del texto principal de la portada, en puntos. */
   tamanoPortada: number;
   incluirBio: boolean;
@@ -262,7 +264,7 @@ export async function buildDossierPdfBytes(
   const H = doc.internal.pageSize.getHeight();
   await registerBrandFonts(doc);
 
-  if (o.tituloPortada.trim() || o.subtituloPortada.trim()) {
+  if (o.tituloPortada.trim() || o.subtituloPortada.trim() || o.textoAdicionalPortada.trim()) {
     doc.setTextColor(...NEGRO);
     doc.setFont("Inter", "normal");
     const tam = o.tamanoPortada;
@@ -282,6 +284,16 @@ export async function buildDossierPdfBytes(
       for (const l of doc.splitTextToSize(o.subtituloPortada.trim(), ancho) as string[]) {
         doc.text(l, W / 2, y, { align: "center" });
         y += subTam * 0.46 * 1.4;
+      }
+    }
+    if (o.textoAdicionalPortada.trim()) {
+      const extraTam = Math.max(8, Math.round(tam * 0.5));
+      doc.setFontSize(extraTam);
+      doc.setTextColor(...GRIS);
+      y += extraTam * 0.46 * 1.2;
+      for (const l of doc.splitTextToSize(o.textoAdicionalPortada.trim(), ancho) as string[]) {
+        doc.text(l, W / 2, y, { align: "center" });
+        y += extraTam * 0.46 * 1.4;
       }
     }
     await logoAbajo(doc, o.logoBytes, H - 38, 14);

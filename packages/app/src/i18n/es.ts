@@ -1204,7 +1204,7 @@ export const es = {
   "dossier.statementLabel": "Statement de «{{nombre}}»",
   "dossier.numeroSerie": "Número de serie (ejemplar)",
   "dossier.pruebasArtista": "Pruebas de artista",
-  "dossier.notaPrimerDisponible": "En las obras seriadas se toman los datos del primer ejemplar disponible.",
+  "dossier.notaPrimerDisponible": "Se toman los datos de la copia única o, en obras seriadas, de la primera copia disponible, en stock, en exhibición, en consignación o en producción. Se descartan las vendidas, reservadas, descartadas, destruidas y de colección del autor.",
   "selecciones.informesBoton": "Generar informes de la selección",
   "selecciones.filtroLabel": "Selección",
   "selecciones.filtroTodas": "Todas las obras",
@@ -1225,4 +1225,5 @@ export const es = {
   "dossier.avisoMiniatura": "Estas obras no tienen imagen en alta resolución utilizable y salieron con la miniatura (baja calidad): {{obras}}.",
   "selecciones.eliminarAvisoDossiers": "También se van a eliminar los {{cantidad}} dossier(s) guardados de esta selección, y no se pueden recuperar.",
   "obraDetail.volverASeleccion": "Volver a la selección",
+  "dossier.textoAdicionalPortada": "Texto adicional (opcional)",
 } as const;

@@ -22,6 +22,7 @@ interface FilaObra {
   artista_id: number;
   nombre_completo: string | null;
   nombre_artistico: string | null;
+  es_seriada: number;
   bio: string | null;
   bio_en: string | null;
   tecnica: string | null;
@@ -53,6 +54,10 @@ interface Excepcion {
 }
 
 const MAX_POR_HOJA = 12;
+
+// Estados cuyos datos pueden mostrarse en un dossier. Quedan afuera: vendida, reservada, descartada,
+// destruida y colección del autor.
+const ESTADOS_OFRECIBLES = new Set(["disponible", "en_stock", "exhibicion", "consignacion", "en_produccion"]);
 
 /** Cuántas hojas de obras salen con esta distribución (para mostrar un resumen). */
 function contarHojas(total: number, porDefecto: number, excepciones: Excepcion[]): number {
@@ -94,6 +99,7 @@ export function DossierModal({
   const [tituloPortada, setTituloPortada] = useState("");
   const [nombreSeleccionEnPortada, setNombreSeleccionEnPortada] = useState(true);
   const [tamanoPortada, setTamanoPortada] = useState(18);
+  const [textoAdicionalPortada, setTextoAdicionalPortada] = useState("");
   const [incluirBio, setIncluirBio] = useState(true);
   const [bios, setBios] = useState<Record<number, string>>({});
   const [biosEditadas, setBiosEditadas] = useState(false);
@@ -125,7 +131,7 @@ export function DossierModal({
         }
         const ph = ids.map(() => "?").join(",");
         const rows = await context.db.query<FilaObra>(
-          `SELECT obra.id, obra.titulo, obra.anio_periodo, obra.artista_id,
+          `SELECT obra.id, obra.titulo, obra.anio_periodo, obra.artista_id, obra.es_seriada,
                   artista.nombre_completo, artista.nombre_artistico, artista.bio, artista.bio_en,
                   COALESCE(obra_fotografia.tecnica, obra_detalle.tecnica) AS tecnica,
                   COALESCE(obra_fotografia.dimensiones, obra_detalle.dimensiones) AS dimensiones_obra,
@@ -179,16 +185,17 @@ export function DossierModal({
     return Array.from(vistos.values());
   }, [filas]);
 
-  // Datos de cada obra seriada: los del primer ejemplar disponible (o el primero de la edición si no queda ninguno).
+  // Datos de cada obra: la copia única si no es seriada; si es seriada, la primera copia (por índice) cuyo
+  // estado se pueda ofrecer. Las vendidas, reservadas, descartadas, destruidas o de colección del autor se descartan.
   const elegidoPorObra = useMemo(() => {
     const mapa = new Map<number, FilaEjemplar>();
+    const seriada = new Map(filas.map((f) => [f.id, Number(f.es_seriada) === 1]));
     for (const e of ejemplares) {
-      if (e.tipo !== "edicion") continue;
-      const actual = mapa.get(e.obra_id);
-      if (!actual || (actual.estado !== "disponible" && e.estado === "disponible")) mapa.set(e.obra_id, e);
+      if (e.tipo !== "edicion" || mapa.has(e.obra_id)) continue;
+      if (!seriada.get(e.obra_id) || ESTADOS_OFRECIBLES.has(e.estado)) mapa.set(e.obra_id, e);
     }
     return mapa;
-  }, [ejemplares]);
+  }, [ejemplares, filas]);
 
   const sinPrecio = useMemo(() => !Array.from(elegidoPorObra.values()).some((e) => e.precio_venta != null), [elegidoPorObra]);
   const totalHojas = useMemo(
@@ -227,8 +234,8 @@ export function DossierModal({
       for (const r of filas) {
         const mias = ejemplares.filter((e) => e.obra_id === r.id);
         const elegido = elegidoPorObra.get(r.id) ?? null;
-        const totalEdiciones = mias.filter((e) => e.tipo === "edicion").length;
-        const pruebas = mias.filter((e) => e.tipo === "prueba_artista" && e.estado === "disponible").length;
+        const seriada = Number(r.es_seriada) === 1;
+        const pruebas = mias.filter((e) => e.tipo === "prueba_artista" && ESTADOS_OFRECIBLES.has(e.estado)).length;
         const es = idioma === "es";
         obras.push({
           id: r.id,
@@ -237,9 +244,9 @@ export function DossierModal({
           titulo: r.titulo,
           anio: r.anio_periodo,
           tecnica: r.tecnica,
-          medidas: medidasEnCm(elegido?.dimensiones ?? mias.find((e) => e.dimensiones)?.dimensiones ?? r.dimensiones_obra),
+          medidas: medidasEnCm(elegido?.dimensiones ?? r.dimensiones_obra),
           precio: elegido ? formatearPrecio(elegido.precio_venta, elegido.moneda_venta) : null,
-          numeroSerie: elegido && totalEdiciones > 1 ? `${es ? "Ejemplar" : "Edition"} ${elegido.numero}` : null,
+          numeroSerie: elegido && seriada ? `${es ? "Ejemplar" : "Edition"} ${elegido.numero}` : null,
           pruebasArtista:
             pruebas > 0
               ? es
@@ -271,6 +278,7 @@ export function DossierModal({
       const bytes = await buildDossierPdfBytes(artistasPdf, obras, {
         tituloPortada: incluirPortada ? tituloPortada : "",
         subtituloPortada: incluirPortada && nombreSeleccionEnPortada ? seleccionNombre : "",
+        textoAdicionalPortada: incluirPortada ? textoAdicionalPortada : "",
         tamanoPortada,
         incluirBio,
         statementTitulo: seleccionNombre,
@@ -405,6 +413,10 @@ export function DossierModal({
                     <input type="text" value={tituloPortada} onChange={(e) => setTituloPortada(e.target.value)} />
                   </label>
                   {check(t("dossier.nombreSeleccionPortada", { nombre: seleccionNombre }), nombreSeleccionEnPortada, setNombreSeleccionEnPortada)}
+                  <label className="dossier-campo">
+                    <span className="field-label">{t("dossier.textoAdicionalPortada")}</span>
+                    <input type="text" value={textoAdicionalPortada} onChange={(e) => setTextoAdicionalPortada(e.target.value)} />
+                  </label>
                   <label className="dossier-campo dossier-campo-chico">
                     <span className="field-label">{t("dossier.tamanoLetraPortada")}</span>
                     {numero(tamanoPortada, 10, 60, setTamanoPortada)}

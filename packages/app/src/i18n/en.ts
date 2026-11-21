@@ -1205,7 +1205,7 @@ export const en: Record<keyof typeof es, string> = {
   "dossier.statementLabel": "Statement for “{{nombre}}”",
   "dossier.numeroSerie": "Edition number",
   "dossier.pruebasArtista": "Artist's proofs",
-  "dossier.notaPrimerDisponible": "For editioned works, the data of the first available copy is used.",
+  "dossier.notaPrimerDisponible": "Data comes from the single copy or, for editioned works, from the first copy that is available, in stock, on exhibition, on consignment or in production. Sold, reserved, discarded, destroyed and artist's-collection copies are ignored.",
   "selecciones.informesBoton": "Generate selection reports",
   "selecciones.filtroLabel": "Selection",
   "selecciones.filtroTodas": "All works",
@@ -1226,4 +1226,5 @@ export const en: Record<keyof typeof es, string> = {
   "dossier.avisoMiniatura": "These works have no usable high-resolution image and used the thumbnail (low quality): {{obras}}.",
   "selecciones.eliminarAvisoDossiers": "The {{cantidad}} saved dossier(s) of this selection will also be deleted, and cannot be recovered.",
   "obraDetail.volverASeleccion": "Back to the selection",
+  "dossier.textoAdicionalPortada": "Additional text (optional)",
 };
