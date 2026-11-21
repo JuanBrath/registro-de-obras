@@ -20,7 +20,14 @@ import { StarRating } from "../components/StarRating.js";
 import { cargarColumnasGridInicial, guardarColumnasGrid, MIN_COLUMNAS_GRID, MAX_COLUMNAS_GRID } from "../utils/columnasGrid.js";
 import { marcarSiMiniaturaMuyVertical } from "../utils/miniaturaVertical.js";
 import { sincronizarCalificacionConArchivo } from "../utils/calificacionArchivo.js";
-import { AgregarASeleccionModal } from "../components/AgregarASeleccionModal.js";
+import {
+  agregarObrasASeleccion,
+  crearSeleccion,
+  listObraIdsDeSeleccion,
+  listSelecciones,
+  quitarObraDeSeleccion,
+  type Seleccion,
+} from "../data/selecciones.js";
 
 const COLUMNAS_OBRAS_POR_DEFECTO = 4;
 // Cada vista (tarjetas / columnas) guarda su propio tamano de miniaturas por
@@ -166,16 +173,83 @@ export function ObrasList({
   const [informeMensaje, setInformeMensaje] = useState<string | null>(null);
   // Modo "Seleccionar": tildar obras a mano para agregarlas a una selección (base de los dossiers).
   const [modoSeleccion, setModoSeleccion] = useState(false);
-  const [elegidas, setElegidas] = useState<Set<number>>(new Set());
-  const [agregarAbierto, setAgregarAbierto] = useState(false);
+  // Selección "activa": lo que se tilda se guarda en ella al instante (queda aunque se cierre el modo).
+  const [seleccionesLista, setSeleccionesLista] = useState<Seleccion[]>([]);
+  const [seleccionActivaId, setSeleccionActivaId] = useState<number | "nueva" | null>(null);
+  const [nombreNuevaSeleccion, setNombreNuevaSeleccion] = useState("");
+  const [idsEnActiva, setIdsEnActiva] = useState<Set<number>>(new Set());
   const [seleccionMensaje, setSeleccionMensaje] = useState<string | null>(null);
-  const alternarElegida = (id: number) =>
-    setElegidas((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+  const activaId = typeof seleccionActivaId === "number" ? seleccionActivaId : null;
+
+  async function recargarSelecciones() {
+    if (!context) return;
+    setSeleccionesLista(await listSelecciones(context.db));
+  }
+
+  useEffect(() => {
+    if (!context || !modoSeleccion) return;
+    recargarSelecciones().catch((err) => setError(err instanceof Error ? err.message : String(err)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [context, modoSeleccion]);
+
+  async function elegirSeleccion(valor: string) {
+    setSeleccionMensaje(null);
+    if (valor === "nueva") {
+      setSeleccionActivaId("nueva");
+      setIdsEnActiva(new Set());
+    } else if (valor === "") {
+      setSeleccionActivaId(null);
+      setIdsEnActiva(new Set());
+    } else {
+      const id = Number(valor);
+      setSeleccionActivaId(id);
+      setIdsEnActiva(new Set(await listObraIdsDeSeleccion(context!.db, id)));
+    }
+  }
+
+  async function crearYUsarSeleccion() {
+    const nombre = nombreNuevaSeleccion.trim();
+    if (!context || !nombre) return;
+    try {
+      const id = await crearSeleccion(context.db, nombre);
+      setNombreNuevaSeleccion("");
+      await recargarSelecciones();
+      setSeleccionActivaId(id);
+      setIdsEnActiva(new Set());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  async function alternarElegida(id: number) {
+    if (!context) return;
+    if (activaId === null) {
+      setSeleccionMensaje(t("selecciones.primeroElegir"));
+      return;
+    }
+    setSeleccionMensaje(null);
+    try {
+      if (idsEnActiva.has(id)) await quitarObraDeSeleccion(context.db, activaId, id);
+      else await agregarObrasASeleccion(context.db, activaId, [id]);
+      setIdsEnActiva(new Set(await listObraIdsDeSeleccion(context.db, activaId)));
+      await recargarSelecciones();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  async function agregarOQuitarFiltradas(agregar: boolean) {
+    if (!context || activaId === null) return;
+    try {
+      const ids = filteredObras.map((o) => o.id);
+      if (agregar) await agregarObrasASeleccion(context.db, activaId, ids);
+      else for (const id of ids) await quitarObraDeSeleccion(context.db, activaId, id);
+      setIdsEnActiva(new Set(await listObraIdsDeSeleccion(context.db, activaId)));
+      await recargarSelecciones();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  }
   useEscapeToDismiss(informeMensaje, setInformeMensaje);
 
   useEffect(() => {
@@ -541,25 +615,10 @@ export function ObrasList({
               className={modoSeleccion ? "obras-vista-toggle-boton activo" : undefined}
               onClick={() => {
                 setModoSeleccion((m) => !m);
-                setElegidas(new Set());
               }}
             >
               {modoSeleccion ? t("selecciones.terminarSeleccion") : t("selecciones.seleccionar")}
             </button>
-          )}
-          {modoSeleccion && (
-            <>
-              <span>{t("selecciones.contador", { cantidad: elegidas.size })}</span>
-              <button type="button" onClick={() => setElegidas(new Set(filteredObras.map((o) => o.id)))}>
-                {t("selecciones.todasFiltradas")}
-              </button>
-              <button type="button" onClick={() => setElegidas(new Set())} disabled={elegidas.size === 0}>
-                {t("selecciones.ninguna")}
-              </button>
-              <button type="button" onClick={() => setAgregarAbierto(true)} disabled={elegidas.size === 0}>
-                {t("selecciones.agregarABoton")}
-              </button>
-            </>
           )}
           {obras.length > 0 && (
             <button type="button" onClick={handleAbrirInformesMenu} disabled={filteredObras.length === 0}>
@@ -588,6 +647,50 @@ export function ObrasList({
             <MiniaturasSizeSlider columnas={columnasGridActual} onChange={handleTamanoMiniaturasChange} />
           )}
         </div>
+
+        {modoSeleccion && (
+          <div className="obras-toolbar-fila obras-seleccion-panel">
+            <label className="galeria-filtro-artista">
+              {t("selecciones.activa")}
+              <select value={seleccionActivaId ?? ""} onChange={(e) => elegirSeleccion(e.target.value)}>
+                <option value="">{t("selecciones.elegirActiva")}</option>
+                {seleccionesLista.map((sel) => (
+                  <option key={sel.id} value={sel.id}>
+                    {sel.nombre} ({sel.cantidad})
+                  </option>
+                ))}
+                <option value="nueva">{t("selecciones.nuevaOpcion")}</option>
+              </select>
+            </label>
+            {seleccionActivaId === "nueva" && (
+              <>
+                <input
+                  type="text"
+                  value={nombreNuevaSeleccion}
+                  placeholder={t("selecciones.nuevaNombre")}
+                  onChange={(e) => setNombreNuevaSeleccion(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && crearYUsarSeleccion()}
+                  autoFocus
+                />
+                <button type="button" onClick={crearYUsarSeleccion} disabled={!nombreNuevaSeleccion.trim()}>
+                  {t("selecciones.crearYUsar")}
+                </button>
+              </>
+            )}
+            {activaId !== null && (
+              <>
+                <span>{t("selecciones.enActiva", { cantidad: idsEnActiva.size })}</span>
+                <button type="button" onClick={() => agregarOQuitarFiltradas(true)} disabled={filteredObras.length === 0}>
+                  {t("selecciones.agregarFiltradas")}
+                </button>
+                <button type="button" onClick={() => agregarOQuitarFiltradas(false)} disabled={filteredObras.length === 0}>
+                  {t("selecciones.quitarFiltradas")}
+                </button>
+              </>
+            )}
+            {activaId === null && seleccionActivaId !== "nueva" && <span>{t("selecciones.primeroElegir")}</span>}
+          </div>
+        )}
 
         {obras.length > 0 && (
           <div className="obras-toolbar-fila">
@@ -683,7 +786,7 @@ export function ObrasList({
             {modoSeleccion && (
               <input
                 type="checkbox"
-                checked={elegidas.has(obra.id)}
+                checked={idsEnActiva.has(obra.id)}
                 onChange={() => alternarElegida(obra.id)}
                 style={{ position: "absolute", top: 8, left: 8, zIndex: 2, width: 22, height: 22 }}
               />
@@ -691,7 +794,7 @@ export function ObrasList({
             <button
               type="button"
               className="obra-card"
-              style={modoSeleccion && elegidas.has(obra.id) ? { outline: "3px solid var(--accent, #4a90e2)" } : undefined}
+              style={modoSeleccion && idsEnActiva.has(obra.id) ? { outline: "3px solid var(--accent, #4a90e2)" } : undefined}
               onClick={() => (modoSeleccion ? alternarElegida(obra.id) : onOpenObra(obra.id))}
             >
             {thumbnails[obra.id] ? (
@@ -776,7 +879,7 @@ export function ObrasList({
                 return (
                   <tr key={obra.id} className="obras-tabla-fila" onClick={() => (modoSeleccion ? alternarElegida(obra.id) : onOpenObra(obra.id))}>
                     <td>
-                      {modoSeleccion && <input type="checkbox" checked={elegidas.has(obra.id)} readOnly />}
+                      {modoSeleccion && <input type="checkbox" checked={idsEnActiva.has(obra.id)} readOnly />}
                       {thumbnails[obra.id] ? (
                         <img
                           src={thumbnails[obra.id]}
@@ -849,19 +952,6 @@ export function ObrasList({
           {t("common.back")}
         </button>
       </div>
-
-      {agregarAbierto && (
-        <AgregarASeleccionModal
-          obraIds={Array.from(elegidas)}
-          onClose={() => setAgregarAbierto(false)}
-          onDone={(mensaje) => {
-            setAgregarAbierto(false);
-            setModoSeleccion(false);
-            setElegidas(new Set());
-            setSeleccionMensaje(mensaje);
-          }}
-        />
-      )}
 
       {informesMenuAbierto && (
               <InformesModal

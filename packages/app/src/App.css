@@ -2922,3 +2922,28 @@ input[type="date"] {
 .obras-toolbar ~ .obras-grid {
   margin-top: 0.75rem;
 }
+
+/* Selecciones: separación entre botones/controles de las filas nuevas. */
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin-top: 1rem;
+}
+
+.obras-seleccion-panel {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.obra-card-wrapper > .form-actions {
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+.obra-card-wrapper > .form-actions button {
+  padding: 0.25em 0.7em;
+}
