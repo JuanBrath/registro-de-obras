@@ -2947,3 +2947,33 @@ input[type="date"] {
 .obra-card-wrapper > .form-actions button {
   padding: 0.25em 0.7em;
 }
+
+/* Pantalla Selecciones: más aire entre bloques. */
+.selecciones-bloque {
+  margin-top: 2rem;
+}
+
+.selecciones-formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.selecciones-formulario > label {
+  max-width: 640px;
+}
+
+.selecciones-formulario label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.selecciones-subtitulo {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+}
+
+.selecciones-bloque .obras-toolbar-fila {
+  gap: 0.75rem 1rem;
+}

@@ -1188,4 +1188,5 @@ export const en: Record<keyof typeof es, string> = {
   "selecciones.agregarFiltradas": "Add all filtered",
   "selecciones.quitarFiltradas": "Remove filtered",
   "selecciones.primeroElegir": "Choose or create a selection to start ticking works.",
+  "selecciones.existentes": "Existing selections",
 };

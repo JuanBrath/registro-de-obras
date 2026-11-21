@@ -32,7 +32,7 @@ export function SeleccionesScreen({ onBack, onOpenObra }: { onBack: () => void; 
   const [thumbs, setThumbs] = useState<Record<number, string>>({});
   const [nombre, setNombre] = useState("");
   const [notas, setNotas] = useState("");
-  const [nuevoNombre, setNuevoNombre] = useState("");
+  const [nueva, setNueva] = useState(false);
   const [confirmarEliminar, setConfirmarEliminar] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dossierAbierto, setDossierAbierto] = useState(false);
@@ -109,18 +109,24 @@ export function SeleccionesScreen({ onBack, onOpenObra }: { onBack: () => void; 
     }
   }
 
-  const crear = () =>
-    run(async () => {
-      if (!context || !nuevoNombre.trim()) return;
-      const id = await crearSeleccion(context.db, nuevoNombre);
-      setNuevoNombre("");
-      await recargarLista();
-      setActivaId(id);
-    });
+  const empezarNueva = () => {
+    setActivaId(null);
+    setNueva(true);
+    setNombre("");
+    setNotas("");
+  };
 
   const guardarDatos = () =>
     run(async () => {
-      if (!context || activaId === null || !nombre.trim()) return;
+      if (!context || !nombre.trim()) return;
+      if (nueva) {
+        const id = await crearSeleccion(context.db, nombre, notas.trim() || null);
+        await recargarLista();
+        setNueva(false);
+        setActivaId(id);
+        return;
+      }
+      if (activaId === null) return;
       await actualizarSeleccion(context.db, activaId, nombre, notas.trim() || null);
       await recargarLista();
     });
@@ -169,35 +175,14 @@ export function SeleccionesScreen({ onBack, onOpenObra }: { onBack: () => void; 
       </div>
       {error && <p className="error">{error}</p>}
 
-      <div className="obras-toolbar-fila">
-        <input
-          type="text"
-          value={nuevoNombre}
-          placeholder={t("selecciones.nombreLabel")}
-          onChange={(e) => setNuevoNombre(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && crear()}
-        />
-        <button type="button" onClick={crear} disabled={!nuevoNombre.trim()}>
+      <div className="selecciones-bloque">
+        <button type="button" onClick={empezarNueva} disabled={nueva}>
           {t("selecciones.crear")}
         </button>
       </div>
 
-      {selecciones.length === 0 && <p>{t("selecciones.vacio")}</p>}
-      <div className="obras-toolbar-fila" style={{ flexWrap: "wrap" }}>
-        {selecciones.map((s) => (
-          <button
-            key={s.id}
-            type="button"
-            className={s.id === activaId ? "obras-vista-toggle-boton activo" : "obras-vista-toggle-boton"}
-            onClick={() => setActivaId(s.id)}
-          >
-            {s.nombre} ({s.cantidad})
-          </button>
-        ))}
-      </div>
-
-      {activa && (
-        <section>
+      {nueva && (
+        <section className="selecciones-bloque selecciones-formulario">
           <label>
             <span className="field-label">{t("selecciones.nombreLabel")}</span>
             <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} />
@@ -210,14 +195,21 @@ export function SeleccionesScreen({ onBack, onOpenObra }: { onBack: () => void; 
             <button type="button" onClick={guardarDatos} disabled={!nombre.trim()}>
               {t("common.save")}
             </button>
-            <button type="button" onClick={() => setDossierAbierto(true)} disabled={obras.length === 0}>
-              {t("dossier.boton")}
-            </button>
-            {!confirmarEliminar ? (
+            {!nueva && (
+              <button type="button" onClick={() => setDossierAbierto(true)} disabled={obras.length === 0}>
+                {t("dossier.boton")}
+              </button>
+            )}
+            {nueva && (
+              <button type="button" onClick={() => setNueva(false)}>
+                {t("common.cancel")}
+              </button>
+            )}
+            {!nueva && !confirmarEliminar ? (
               <button type="button" onClick={() => setConfirmarEliminar(true)}>
                 {t("selecciones.eliminar")}
               </button>
-            ) : (
+            ) : !nueva ? (
               <>
                 <span>{t("selecciones.eliminarPregunta")}</span>
                 <button type="button" onClick={eliminar}>
@@ -227,8 +219,73 @@ export function SeleccionesScreen({ onBack, onOpenObra }: { onBack: () => void; 
                   {t("common.cancel")}
                 </button>
               </>
-            )}
+            ) : null}
           </div>
+        </section>
+      )}
+
+      <div className="selecciones-bloque">
+        {selecciones.length === 0 && !nueva && <p>{t("selecciones.vacio")}</p>}
+        {selecciones.length > 0 && <h2 className="selecciones-subtitulo">{t("selecciones.existentes")}</h2>}
+        <div className="obras-toolbar-fila">
+          {selecciones.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              className={s.id === activaId ? "obras-vista-toggle-boton activo" : "obras-vista-toggle-boton"}
+              onClick={() => {
+                setNueva(false);
+                setActivaId(s.id);
+              }}
+            >
+              {s.nombre} ({s.cantidad})
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {activa && (
+        <section className="selecciones-bloque selecciones-formulario">
+          <label>
+            <span className="field-label">{t("selecciones.nombreLabel")}</span>
+            <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} />
+          </label>
+          <label>
+            <span className="field-label">{t("selecciones.notasLabel")}</span>
+            <textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2} />
+          </label>
+          <div className="form-actions">
+            <button type="button" onClick={guardarDatos} disabled={!nombre.trim()}>
+              {t("common.save")}
+            </button>
+            {!nueva && (
+              <button type="button" onClick={() => setDossierAbierto(true)} disabled={obras.length === 0}>
+                {t("dossier.boton")}
+              </button>
+            )}
+            {nueva && (
+              <button type="button" onClick={() => setNueva(false)}>
+                {t("common.cancel")}
+              </button>
+            )}
+            {!nueva && !confirmarEliminar ? (
+              <button type="button" onClick={() => setConfirmarEliminar(true)}>
+                {t("selecciones.eliminar")}
+              </button>
+            ) : !nueva ? (
+              <>
+                <span>{t("selecciones.eliminarPregunta")}</span>
+                <button type="button" onClick={eliminar}>
+                  {t("selecciones.eliminarConfirmar")}
+                </button>
+                <button type="button" onClick={() => setConfirmarEliminar(false)}>
+                  {t("common.cancel")}
+                </button>
+              </>
+            ) : null}
+          </div>
+
+          <div className="selecciones-bloque">
 
           {obras.length === 0 && <p>{t("selecciones.sinObras")}</p>}
           <div className="obras-grid" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
@@ -294,6 +351,7 @@ export function SeleccionesScreen({ onBack, onOpenObra }: { onBack: () => void; 
                 </div>
               </div>
             ))}
+          </div>
           </div>
         </section>
       )}

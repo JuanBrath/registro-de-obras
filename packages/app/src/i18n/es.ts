@@ -1187,4 +1187,5 @@ export const es = {
   "selecciones.agregarFiltradas": "Agregar todas las filtradas",
   "selecciones.quitarFiltradas": "Quitar las filtradas",
   "selecciones.primeroElegir": "Elegí o creá una selección para empezar a tildar obras.",
+  "selecciones.existentes": "Selecciones armadas",
 } as const;
