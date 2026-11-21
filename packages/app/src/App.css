@@ -3132,6 +3132,7 @@ button:not(:disabled):hover {
 
 /* Confirmación de eliminar una selección: caja destacada en rojo. */
 .selecciones-confirmar-eliminar {
+  flex-basis: 100%;
   border-width: 2px;
   align-items: flex-start;
   padding: 1rem 1.25rem;

@@ -236,23 +236,6 @@ export function SeleccionesScreen({
                 {t("common.cancel")}
               </button>
             )}
-            {!nueva && !confirmarEliminar ? (
-              <button type="button" onClick={() => setConfirmarEliminar(true)}>
-                {t("selecciones.eliminar")}
-              </button>
-            ) : !nueva ? (
-              <div className="confirm-box selecciones-confirmar-eliminar" role="alertdialog">
-                <p>{t("selecciones.eliminarPregunta")}</p>
-                <div className="form-actions">
-                  <button type="button" className="boton-peligro" onClick={eliminar}>
-                    {t("selecciones.eliminarConfirmar")}
-                  </button>
-                  <button type="button" onClick={() => setConfirmarEliminar(false)}>
-                    {t("common.cancel")}
-                  </button>
-                </div>
-              </div>
-            ) : null}
           </div>
         </section>
       )}
@@ -316,15 +299,17 @@ export function SeleccionesScreen({
                 {t("selecciones.eliminar")}
               </button>
             ) : !nueva ? (
-              <>
-                <span>{t("selecciones.eliminarPregunta")}</span>
-                <button type="button" onClick={eliminar}>
-                  {t("selecciones.eliminarConfirmar")}
-                </button>
-                <button type="button" onClick={() => setConfirmarEliminar(false)}>
-                  {t("common.cancel")}
-                </button>
-              </>
+              <div className="confirm-box selecciones-confirmar-eliminar" role="alertdialog">
+                <p>{t("selecciones.eliminarPregunta")}</p>
+                <div className="form-actions">
+                  <button type="button" className="boton-peligro" onClick={eliminar}>
+                    {t("selecciones.eliminarConfirmar")}
+                  </button>
+                  <button type="button" onClick={() => setConfirmarEliminar(false)}>
+                    {t("common.cancel")}
+                  </button>
+                </div>
+              </div>
             ) : null}
           </div>
 
