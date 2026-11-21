@@ -1217,4 +1217,10 @@ export const es = {
   "dossier.guardadosVacio": "Todavía no se generó ningún dossier de esta selección.",
   "dossier.numeroDossier": "Dossier n.º {{numero}}",
   "dossier.cantidadObrasItem": "{{cantidad}} obras",
+  "dossier.tamanoHoja": "Tamaño de hoja",
+  "dossier.oficio": "Oficio",
+  "dossier.orientacion": "Orientación",
+  "dossier.horizontal": "Horizontal",
+  "dossier.vertical": "Vertical",
+  "dossier.avisoMiniatura": "Estas obras no tienen imagen en alta resolución utilizable y salieron con la miniatura (baja calidad): {{obras}}.",
 } as const;

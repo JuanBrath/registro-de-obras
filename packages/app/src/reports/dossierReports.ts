@@ -52,12 +52,13 @@ export interface DossierOpciones {
   obrasPorPagina: number;
   /** Excepciones: número de hoja de obras (1, 2, 3…) -> cantidad de obras en esa hoja. */
   obrasPorPaginaExcepciones: Record<number, number>;
+  /** Tamaño y orientación de la hoja. */
+  formatoPagina: "a4" | "oficio";
+  orientacion: "horizontal" | "vertical";
   contactoLineas: string[];
   logoBytes: Uint8Array | null;
 }
 
-const W = 297;
-const H = 210;
 const M = 15;
 const GRID: Record<number, [number, number]> = {
   1: [1, 1],
@@ -74,10 +75,16 @@ const GRID: Record<number, [number, number]> = {
   12: [4, 3],
 };
 
-function gridPara(n: number): [number, number] {
-  if (GRID[n]) return GRID[n];
-  const cols = Math.ceil(Math.sqrt(n * 1.5));
-  return [cols, Math.ceil(n / cols)];
+function gridPara(n: number, vertical: boolean): [number, number] {
+  let cols: number;
+  let filas: number;
+  if (GRID[n]) [cols, filas] = GRID[n];
+  else {
+    cols = Math.ceil(Math.sqrt(n * 1.5));
+    filas = Math.ceil(n / cols);
+  }
+  // En hoja vertical se invierte: más filas que columnas.
+  return vertical ? [filas, cols] : [cols, filas];
 }
 const GRIS: [number, number, number] = [110, 110, 110];
 const NEGRO: [number, number, number] = [40, 40, 40];
@@ -159,6 +166,7 @@ function alturaCaption(obra: DossierObra, o: DossierOpciones, size: number): num
 
 async function logoAbajo(doc: jsPDF, logo: Uint8Array | null, y: number, alto: number): Promise<void> {
   if (!logo) return;
+  const W = doc.internal.pageSize.getWidth();
   const { detectImageFormat } = await import("../utils/detectImageFormat.js");
   const formato = detectImageFormat(logo);
   if (!formato) return;
@@ -170,6 +178,8 @@ async function logoAbajo(doc: jsPDF, logo: Uint8Array | null, y: number, alto: n
 
 function paginaTexto(doc: jsPDF, titulo: string, texto: string | null): void {
   doc.addPage();
+  const W = doc.internal.pageSize.getWidth();
+  const H = doc.internal.pageSize.getHeight();
   doc.setTextColor(...NEGRO);
   doc.setFont("Inter", "medium");
   doc.setFontSize(18);
@@ -192,7 +202,9 @@ function paginaTexto(doc: jsPDF, titulo: string, texto: string | null): void {
 
 async function paginaObras(doc: jsPDF, lote: DossierObra[], cantidad: number, o: DossierOpciones): Promise<void> {
   doc.addPage();
-  const [cols, filas] = gridPara(cantidad);
+  const W = doc.internal.pageSize.getWidth();
+  const H = doc.internal.pageSize.getHeight();
+  const [cols, filas] = gridPara(cantidad, H > W);
   const compartida = lote.length > 1 && lote.every((ob) => firmaCaption(ob, o) === firmaCaption(lote[0], o));
   const size = 9;
   const altoCompartida = compartida || lote.length === 1 ? alturaCaption(lote[0], o, size) + 8 : 0;
@@ -240,7 +252,14 @@ export async function buildDossierPdfBytes(
   o: DossierOpciones,
 ): Promise<Uint8Array> {
   const { default: jsPDF } = await import("jspdf");
-  const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "landscape" });
+  const doc = new jsPDF({
+    unit: "mm",
+    // Oficio (Argentina): 216 × 330 mm.
+    format: o.formatoPagina === "oficio" ? [216, 330] : "a4",
+    orientation: o.orientacion === "vertical" ? "portrait" : "landscape",
+  });
+  const W = doc.internal.pageSize.getWidth();
+  const H = doc.internal.pageSize.getHeight();
   await registerBrandFonts(doc);
 
   if (o.tituloPortada.trim() || o.subtituloPortada.trim()) {

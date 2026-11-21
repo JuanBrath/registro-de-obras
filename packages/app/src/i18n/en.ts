@@ -1218,4 +1218,10 @@ export const en: Record<keyof typeof es, string> = {
   "dossier.guardadosVacio": "No dossier has been generated for this selection yet.",
   "dossier.numeroDossier": "Dossier no. {{numero}}",
   "dossier.cantidadObrasItem": "{{cantidad}} works",
+  "dossier.tamanoHoja": "Page size",
+  "dossier.oficio": "Legal (Oficio)",
+  "dossier.orientacion": "Orientation",
+  "dossier.horizontal": "Landscape",
+  "dossier.vertical": "Portrait",
+  "dossier.avisoMiniatura": "These works have no usable high-resolution image and used the thumbnail (low quality): {{obras}}.",
 };

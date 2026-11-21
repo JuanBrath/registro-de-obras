@@ -108,6 +108,8 @@ export function DossierModal({
   const [incluirContacto, setIncluirContacto] = useState(true);
   const [sufijoPrecio, setSufijoPrecio] = useState("+ IVA");
   const [sufijoCadaUno, setSufijoCadaUno] = useState("c/u");
+  const [formatoPagina, setFormatoPagina] = useState<"a4" | "oficio">("a4");
+  const [orientacion, setOrientacion] = useState<"horizontal" | "vertical">("horizontal");
   const [obrasPorPagina, setObrasPorPagina] = useState(4);
   const [excepciones, setExcepciones] = useState<Excepcion[]>([]);
 
@@ -221,6 +223,7 @@ export function DossierModal({
     setMensaje(null);
     try {
       const obras: DossierObra[] = [];
+      const conMiniatura: string[] = [];
       for (const r of filas) {
         const mias = ejemplares.filter((e) => e.obra_id === r.id);
         const elegido = elegidoPorObra.get(r.id) ?? null;
@@ -243,7 +246,10 @@ export function DossierModal({
                 ? `${pruebas} ${pruebas === 1 ? "prueba de artista" : "pruebas de artista"}`
                 : `${pruebas} artist's ${pruebas === 1 ? "proof" : "proofs"}`
               : null,
-          imagen: await resolveObraImagenParaPdf(context, r),
+          imagen: await resolveObraImagenParaPdf(context, r).then((img) => {
+            if (img?.usoMiniatura) conMiniatura.push(r.titulo);
+            return img;
+          }),
         });
       }
       const artistasPdf: DossierArtista[] = artistas.map((a) => ({ id: a.id, nombre: a.nombre, bio: bios[a.id] ?? "" }));
@@ -277,6 +283,8 @@ export function DossierModal({
         incluirPruebasArtista,
         sufijoPrecio,
         sufijoCadaUno,
+        formatoPagina,
+        orientacion,
         obrasPorPagina,
         obrasPorPaginaExcepciones: Object.fromEntries(excepciones.map((e) => [e.hoja, e.cantidad])),
         contactoLineas,
@@ -293,6 +301,7 @@ export function DossierModal({
       await registrarDossier(context.db, seleccionId, numero, relPath, obras.length);
       setUltimoAbsPath(await context.fs.resolveAbsolutePath(relPath));
       setMensaje(t("dossier.guardadoNumero", { numero }));
+      if (conMiniatura.length > 0) setError(t("dossier.avisoMiniatura", { obras: conMiniatura.join(", ") }));
       onGenerado?.();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -331,6 +340,22 @@ export function DossierModal({
           <div className="dossier-cuerpo">
             <section className="dossier-seccion">
               <h3>{t("dossier.seccionFormato")}</h3>
+              <div className="dossier-fila">
+                <label className="dossier-campo">
+                  <span className="field-label">{t("dossier.tamanoHoja")}</span>
+                  <select value={formatoPagina} onChange={(e) => setFormatoPagina(e.target.value as "a4" | "oficio")}>
+                    <option value="a4">A4 (210 × 297 mm)</option>
+                    <option value="oficio">{t("dossier.oficio")} (216 × 330 mm)</option>
+                  </select>
+                </label>
+                <label className="dossier-campo">
+                  <span className="field-label">{t("dossier.orientacion")}</span>
+                  <select value={orientacion} onChange={(e) => setOrientacion(e.target.value as "horizontal" | "vertical")}>
+                    <option value="horizontal">{t("dossier.horizontal")}</option>
+                    <option value="vertical">{t("dossier.vertical")}</option>
+                  </select>
+                </label>
+              </div>
               <div className="dossier-fila">
                 <label className="dossier-campo">
                   <span className="field-label">{t("dossier.idioma")}</span>
