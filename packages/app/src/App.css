@@ -3152,3 +3152,9 @@ button:not(:disabled):hover {
 .selecciones-confirmar-eliminar .selecciones-aviso-dossiers {
   color: #c62828;
 }
+
+/* Panel del modo Seleccionar: más aire respecto de los botones de arriba y los filtros de abajo. */
+.obras-seleccion-panel {
+  margin-top: 1.25rem;
+  margin-bottom: 1.5rem;
+}
