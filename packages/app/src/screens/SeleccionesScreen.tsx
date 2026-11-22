@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { InformeListadoObrasModal, SQL_INFORME_OBRAS, type InformeObraRow } from "../components/InformeListadoObrasModal.js";
 import { AyudaSeccion, pasoAyuda } from "../components/AyudaSeccion.js";
+import { ExportarSeleccionModal } from "../components/ExportarSeleccionModal.js";
 import { DossierModal } from "../components/DossierModal.js";
 import { DossiersGuardadosModal } from "../components/DossiersGuardadosModal.js";
 import { useWorkspace } from "../state/WorkspaceContext.js";
@@ -71,6 +72,7 @@ export function SeleccionesScreen({
   const [error, setError] = useState<string | null>(null);
   const [dossierAbierto, setDossierAbierto] = useState(false);
   const [guardadosAbierto, setGuardadosAbierto] = useState(false);
+  const [exportarAbierto, setExportarAbierto] = useState(false);
   const [informeObras, setInformeObras] = useState<InformeObraRow[] | null>(null);
   const [cantidadDossiers, setCantidadDossiers] = useState(0);
   // Modo "ordenar y quitar": solo mientras está activo se puede arrastrar, mover con flechas y quitar obras, y tocar una
@@ -279,6 +281,7 @@ export function SeleccionesScreen({
     pasoAyuda(t, "sel-guardar", "ayudaSelecciones.guardar", t("common.save")),
     pasoAyuda(t, "sel-dossier", "ayudaSelecciones.dossier", t("dossier.boton")),
     pasoAyuda(t, "sel-guardados", "ayudaSelecciones.guardados", t("dossier.guardadosBoton", { cantidad: cantidadDossiers } as never)),
+    pasoAyuda(t, "sel-exportar", "ayudaSelecciones.exportar", t("selecciones.exportarFotos")),
     pasoAyuda(t, "sel-informes", "ayudaSelecciones.informes", t("selecciones.informesBoton")),
     pasoAyuda(t, "sel-eliminar", "ayudaSelecciones.eliminar", t("selecciones.eliminar")),
     pasoAyuda(t, "obras-vista", "ayudaSelecciones.vista", t("obrasList.vistaTarjetas") + " / " + t("obrasList.vistaColumnas")),
@@ -379,9 +382,14 @@ export function SeleccionesScreen({
               </button>
             )}
             {!nueva && (
-              <button type="button" data-recorrido="sel-informes" onClick={abrirInformes} disabled={obras.length === 0}>
-                {t("selecciones.informesBoton")}
-              </button>
+              <>
+                <button type="button" data-recorrido="sel-exportar" onClick={() => setExportarAbierto(true)} disabled={obras.length === 0}>
+                  {t("selecciones.exportarFotos")}
+                </button>
+                <button type="button" data-recorrido="sel-informes" onClick={abrirInformes} disabled={obras.length === 0}>
+                  {t("selecciones.informesBoton")}
+                </button>
+              </>
             )}
             {nueva && (
               <button type="button" onClick={() => setNueva(false)}>
@@ -433,9 +441,6 @@ export function SeleccionesScreen({
                   {t("obrasList.vistaTarjetas")}
                 </button>
               </div>
-              <span className="obras-recorrido-envoltorio" data-recorrido="obras-tamano">
-                <MiniaturasSizeSlider columnas={columnasActual} onChange={cambiarTamano} />
-              </span>
               <button
                 type="button"
                 data-recorrido="sel-orden"
@@ -444,6 +449,9 @@ export function SeleccionesScreen({
               >
                 {modoOrden ? t("selecciones.terminarOrden") : t("selecciones.ordenarQuitar")}
               </button>
+              <span className="obras-recorrido-envoltorio" data-recorrido="obras-tamano">
+                <MiniaturasSizeSlider columnas={columnasActual} onChange={cambiarTamano} />
+              </span>
             </div>
           )}
 
@@ -456,15 +464,18 @@ export function SeleccionesScreen({
                   data-recorrido={i === 0 ? "sel-obra" : undefined}
                   draggable={modoOrden}
                 onDragStart={(e) => {
+                  if (!modoOrden) return;
                   setArrastrando(i);
                   e.dataTransfer.effectAllowed = "move";
                   e.dataTransfer.setData("text/plain", String(i));
                 }}
                 onDragOver={(e) => {
+                  if (!modoOrden) return;
                   e.preventDefault();
                   if (sobre !== i) setSobre(i);
                 }}
                 onDrop={(e) => {
+                  if (!modoOrden) return;
                   e.preventDefault();
                   if (arrastrando !== null) mover(arrastrando, i);
                   setArrastrando(null);
@@ -539,15 +550,18 @@ export function SeleccionesScreen({
                         onClick={() => !modoOrden && onOpenObra(obra.id, activaId)}
                         draggable={modoOrden}
                 onDragStart={(e) => {
+                  if (!modoOrden) return;
                   setArrastrando(i);
                   e.dataTransfer.effectAllowed = "move";
                   e.dataTransfer.setData("text/plain", String(i));
                 }}
                 onDragOver={(e) => {
+                  if (!modoOrden) return;
                   e.preventDefault();
                   if (sobre !== i) setSobre(i);
                 }}
                 onDrop={(e) => {
+                  if (!modoOrden) return;
                   e.preventDefault();
                   if (arrastrando !== null) mover(arrastrando, i);
                   setArrastrando(null);
@@ -637,6 +651,13 @@ export function SeleccionesScreen({
         />
       )}
       {informeObras && <InformeListadoObrasModal obras={informeObras} onClose={() => setInformeObras(null)} />}
+      {exportarAbierto && activa && (
+        <ExportarSeleccionModal
+          seleccionNombre={activa.nombre}
+          obras={obras.map((o) => ({ titulo: o.titulo, nombreArtista: o.nombre_completo, rutaOriginal: o.ubicacion_fisica_actual }))}
+          onClose={() => setExportarAbierto(false)}
+        />
+      )}
       {guardadosAbierto && activa && (
         <DossiersGuardadosModal
           seleccionId={activa.id}

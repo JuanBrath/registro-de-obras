@@ -96,6 +96,13 @@ pub fn fs_write_absolute(path: String, data: Vec<u8>) -> Result<(), String> {
     fs::write(path, data).map_err(|e| e.to_string())
 }
 
+/// Dice si ya existe un archivo o carpeta en una ruta absoluta. Se usa al exportar varias imagenes a
+/// una carpeta elegida por el usuario, para no pisar un archivo que ya estuviera ahi.
+#[tauri::command]
+pub fn fs_existe_absoluta(path: String) -> bool {
+    Path::new(&path).exists()
+}
+
 /// Reads an arbitrary absolute path with no root/traversal check — the read
 /// counterpart of fs_write_absolute, used to read metadata (EXIF/IPTC/XMP)
 /// from a file the user already picked explicitly via a native "Open" dialog
