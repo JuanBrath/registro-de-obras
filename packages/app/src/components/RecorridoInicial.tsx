@@ -42,6 +42,12 @@ export function RecorridoInicial({ pasos, onCerrar }: { pasos: PasoRecorrido[]; 
       if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
       if ([" ", "PageUp", "PageDown", "Home", "End", "ArrowUp", "ArrowDown"].includes(e.key)) e.preventDefault();
     };
+    // Sin barra de scroll (que se pudiera arrastrar): el desplazamiento lo hace solo el recorrido. La reserva de
+    // espacio de la barra evita que el contenido "salte" de ancho al ocultarla.
+    const html = document.documentElement;
+    const previo = { overflow: html.style.overflow, gutter: html.style.scrollbarGutter };
+    html.style.scrollbarGutter = "stable";
+    html.style.overflow = "hidden";
     window.addEventListener("wheel", frenar, { passive: false });
     window.addEventListener("touchmove", frenar, { passive: false });
     window.addEventListener("keydown", frenarTeclas);
@@ -49,6 +55,8 @@ export function RecorridoInicial({ pasos, onCerrar }: { pasos: PasoRecorrido[]; 
       window.removeEventListener("wheel", frenar);
       window.removeEventListener("touchmove", frenar);
       window.removeEventListener("keydown", frenarTeclas);
+      html.style.overflow = previo.overflow;
+      html.style.scrollbarGutter = previo.gutter;
     };
   }, []);
 
@@ -58,17 +66,37 @@ export function RecorridoInicial({ pasos, onCerrar }: { pasos: PasoRecorrido[]; 
 
   const paso = pasos[indice];
 
-  // Se recalcula solo al cambiar de paso: esta pantalla no tiene contenido que se mueva solo
-  // mientras el recorrido esta abierto.
+  // Al cambiar de paso la pantalla se desplaza sola (hacia arriba o hacia abajo) para dejar a la vista, y centrado,
+  // lo que se está explicando. Mientras dura ese desplazamiento el recuadro y la tarjeta acompañan al elemento.
   useLayoutEffect(() => {
     if (!paso?.targetSelector) {
       setRect(null);
       return;
     }
     const el = document.querySelector(paso.targetSelector);
-    // Si el elemento quedó fuera de la ventana (p. ej. una obra más abajo), se lo trae a la vista antes de medirlo.
-    el?.scrollIntoView({ block: "nearest", inline: "nearest" });
-    setRect(el ? el.getBoundingClientRect() : null);
+    if (!el) {
+      setRect(null);
+      return;
+    }
+    setRect(el.getBoundingClientRect());
+    el.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
+
+    const medir = () => setRect(el.getBoundingClientRect());
+    window.addEventListener("scroll", medir, true);
+    window.addEventListener("resize", medir);
+    // Respaldo: sigue midiendo un rato por si el desplazamiento no dispara eventos de scroll.
+    let cuadro = 0;
+    const inicio = performance.now();
+    const seguir = () => {
+      medir();
+      if (performance.now() - inicio < 900) cuadro = requestAnimationFrame(seguir);
+    };
+    cuadro = requestAnimationFrame(seguir);
+    return () => {
+      window.removeEventListener("scroll", medir, true);
+      window.removeEventListener("resize", medir);
+      cancelAnimationFrame(cuadro);
+    };
   }, [paso]);
 
   // Alto real de la tarjeta (varía con el largo del texto) para ubicarla sin salirse de la pantalla.
