@@ -86,6 +86,14 @@ Un porcentaje de la reventa que le corresponde al artista o a sus herederos. Cad
 
 Un tipo de seguro que cubre la obra desde que sale de un lugar hasta que llega a otro, sin cortes.
 
+## Selección
+
+Un grupo de obras elegidas a mano, con un orden propio. Una obra puede estar en varias selecciones. Es la base del dossier. Ver [Selecciones y dossier](cap:selecciones-y-dossier).
+
+## Dossier
+
+Un PDF de presentación armado a partir de una selección: portada, biografía, texto, las obras con su ficha y el contacto. Cada dossier generado queda guardado, numerado y con fecha. Ver [Selecciones y dossier](cap:selecciones-y-dossier).
+
 ## Registro personal, Recer Studio y Recer Space
 
 **Recer Studio** es la edición para un artista o fotógrafo individual (el "registro personal"). **Recer Space** es la edición para galerías. Cada una tiene su propio registro.

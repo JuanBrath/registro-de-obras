@@ -30,6 +30,7 @@ Debajo de los botones hay varios controles que se combinan entre sí:
 - **Subtipo**: aparece cuando hay obras con subtipo, y se ajusta a la categoría elegida.
 - **Estrellas**: tocá una estrella para ver solo las obras con esa calificación; si tocás la misma estrella otra vez, se quita el filtro. Si dejás apretada una estrella un momento, el programa te pregunta si querés quitar la calificación a todas las obras.
 - **Etiquetas**: elegí una o varias etiquetas para ver las obras que las tengan. Ver [Filtrar por etiquetas](cap:obras).
+- **Selección**: muestra solo las obras de una de tus selecciones. Ver [Selecciones y dossier](cap:selecciones-y-dossier).
 
 La barra con el buscador y los filtros queda **fija en la parte de arriba** mientras te desplazás por las obras (el título se va con el scroll), así siempre ves qué filtros tenés puestos. Los filtros no borran nada: solo cambian lo que ves. Para volver a ver todo, elegí en cada uno la primera opción (**Todas las categorías**, **Todos**) y sacá las estrellas y las etiquetas.
 
@@ -76,3 +77,5 @@ El listado incluye: nombre de la obra, autor, categoría, subcategoría, cantida
 
 - **Nueva obra**: abre el formulario para cargar una obra. Ver [Cargar una obra nueva](cap:nueva-obra).
 - **Galería de obras**: abre la vista de fotos grandes, respetando los filtros que tengas puestos. Ver [Galería de obras](cap:galeria-de-obras).
+- **Selecciones**: abre tus grupos de obras elegidas a mano, base de los dossiers en PDF. Ver [Selecciones y dossier](cap:selecciones-y-dossier).
+- **Seleccionar**: activa las casillas para tildar obras y guardarlas en una selección. Ver [Selecciones y dossier](cap:selecciones-y-dossier).

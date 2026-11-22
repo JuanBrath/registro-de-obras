@@ -86,6 +86,14 @@ A percentage of the resale that belongs to the artist or their heirs. Each count
 
 A type of insurance that covers the artwork from the moment it leaves one place until it arrives at another, without gaps.
 
+## Selection
+
+A group of hand-picked artworks, with its own order. An artwork can be in several selections. It is the basis of the dossier. See [Selections and dossier](cap:selecciones-y-dossier).
+
+## Dossier
+
+A presentation PDF built from a selection: cover, biography, text, the artworks with their captions and the contact details. Each generated dossier is saved, numbered and dated. See [Selections and dossier](cap:selecciones-y-dossier).
+
 ## Personal records, Recer Studio and Recer Space
 
 **Recer Studio** is the edition for an individual artist or photographer (the "personal records"). **Recer Space** is the edition for galleries. Each one has its own records.
