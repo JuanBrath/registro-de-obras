@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { InformeListadoObrasModal, SQL_INFORME_OBRAS, type InformeObraRow } from "../components/InformeListadoObrasModal.js";
+import { NotasLabel } from "../components/NotasLabel.js";
 import { SelectorObras } from "../components/SelectorObras.js";
 import { useMenuExportarImagen } from "../components/useMenuExportarImagen.js";
 import { AyudaSeccion, pasoAyuda } from "../components/AyudaSeccion.js";
@@ -360,7 +361,11 @@ export function SeleccionesScreen({
             <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} />
           </label>
           <label>
-            <span className="field-label">{t("selecciones.notasLabel")}</span>
+            <div className="selecciones-notas-cabecera">
+              <NotasLabel texto={notas} onChange={setNotas}>
+                <span>{t("selecciones.notasLabel")}</span>
+              </NotasLabel>
+            </div>
             <textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2} />
           </label>
           <div className="form-actions">
@@ -389,7 +394,11 @@ export function SeleccionesScreen({
             <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} />
           </label>
           <label>
-            <span className="field-label">{t("selecciones.notasLabel")}</span>
+            <div className="selecciones-notas-cabecera">
+              <NotasLabel texto={notas} onChange={setNotas}>
+                <span>{t("selecciones.notasLabel")}</span>
+              </NotasLabel>
+            </div>
             <textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2} />
           </label>
           <div className="form-actions">
