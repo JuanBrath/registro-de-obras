@@ -3368,3 +3368,48 @@ button[type="submit"]:disabled {
   opacity: 0.8;
   font-variant-numeric: tabular-nums;
 }
+
+/* Visor de la Galería de obras (imagen a tamaño completo): textos y controles con el máximo contraste (blanco puro en
+   tema oscuro) para que se distingan bien sobre el fondo. */
+.modal-content-image .lightbox-caption {
+  color: var(--visor-texto);
+  font-size: 1.05rem;
+}
+
+.modal-content-image .lightbox-info-button {
+  width: 1.8rem;
+  height: 1.8rem;
+  border: 1.5px solid var(--visor-texto);
+  background: transparent;
+  color: var(--visor-texto);
+  font-size: 1.1rem;
+}
+
+.modal-content-image .lightbox-info-button.activo {
+  background: var(--visor-texto);
+  color: var(--bg);
+}
+
+.modal-content-image .lightbox-info,
+.modal-content-image .lightbox-info-serie h3,
+.modal-content-image .lightbox-info-serie-datos {
+  color: var(--visor-texto);
+}
+
+.modal-content-image .lightbox-info {
+  font-size: 0.95rem;
+}
+
+.modal-content-image .lightbox-info-serie-datos dt {
+  opacity: 0.9;
+}
+
+.modal-content-image .lightbox-arrow {
+  border: 1.5px solid var(--visor-texto);
+  color: var(--visor-texto);
+}
+
+.modal-content-image .lightbox-contador {
+  color: var(--visor-texto);
+  opacity: 1;
+}

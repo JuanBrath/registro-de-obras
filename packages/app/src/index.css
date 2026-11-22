@@ -8,6 +8,7 @@
   --azul-marino: #1c2a44;
   --azul-marino-borde: #1c2a44;
   --azul-resalte: #7f95bd;
+  --visor-texto: #08060d;
   --accent: #aa3bff;
   --accent-bg: rgba(170, 59, 255, 0.1);
   --accent-border: rgba(170, 59, 255, 0.5);
@@ -65,6 +66,7 @@ optgroup {
     --azul-marino: #26354f;
     --azul-marino-borde: #6b7fa3;
     --azul-resalte: #7f95bd;
+    --visor-texto: #ffffff;
     --accent: #c084fc;
     --accent-bg: rgba(192, 132, 252, 0.15);
     --accent-border: rgba(192, 132, 252, 0.5);
