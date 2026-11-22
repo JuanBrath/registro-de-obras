@@ -25,6 +25,7 @@ import { SettingsModal } from "./screens/SettingsModal.js";
 import { VentasReport } from "./screens/VentasReport.js";
 import { GaleriaProfileForm } from "./screens/GaleriaProfileForm.js";
 import { ClientesScreen } from "./screens/ClientesScreen.js";
+import { BienvenidaRecer, bienvenidaYaVista } from "./components/BienvenidaRecer.js";
 import { ManualScreen } from "./manual/ManualScreen.js";
 import { isTauri } from "./adapters/detectPlatform.js";
 import { borrarEnvioLightroom, leerEnvioLightroom, type RecibidoDeLightroom } from "./lightroom/lightroom.js";
@@ -252,6 +253,8 @@ function AppShell() {
   // El manual se lee tanto desde la pantalla de presentacion como desde el
   // inicio de un registro abierto: al cerrarlo se vuelve a donde se estaba.
   const [showManual, setShowManual] = useState(false);
+  // Pantalla inicial "¿Por qué Recer?": solo la primera vez (se recuerda en este equipo).
+  const [bienvenidaVista, setBienvenidaVista] = useState(bienvenidaYaVista);
   useForceReflowOnResize();
   useAutoScrollToAlerts();
 
@@ -284,6 +287,8 @@ function AppShell() {
         <ActivarLicencia />
       ) : context ? (
         <WorkspaceScreens key={context.workspace} onManual={() => setShowManual(true)} />
+      ) : !bienvenidaVista ? (
+        <BienvenidaRecer onContinuar={() => setBienvenidaVista(true)} />
       ) : (
         <WorkspacePicker onManual={() => setShowManual(true)} />
       )}

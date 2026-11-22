@@ -10,7 +10,7 @@ Todo lo que cargás queda guardado en tu computadora, en una carpeta que elegís
 
 ## Abrir el programa por primera vez
 
-1. Abrí Recer. Vas a ver la pantalla de presentación, con el logo y el botón **Recer Studio**.
+1. Abrí Recer. La primera vez ves una pantalla que explica **¿Por qué Recer?**: leela y tocá **Comenzar**. Después vas a ver la pantalla de presentación, con el logo y el botón **Recer Studio**. Para volver a leer la explicación, tocá el logo de Recer en esa pantalla.
 2. Tocá **Recer Studio**.
 3. La primera vez, el programa te pide que elijas una carpeta donde guardar todos tus datos. Elegí una carpeta de tu computadora (más abajo hay recomendaciones).
 4. Después te pide completar **Mis datos** (tu perfil como titular). Es un paso obligatorio: hasta que no guardes tus datos no se puede seguir. Ver [Mi perfil](cap:mi-perfil).

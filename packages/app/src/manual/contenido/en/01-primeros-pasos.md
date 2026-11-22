@@ -10,7 +10,7 @@ Everything you enter is saved on your computer, in a folder you choose. You don'
 
 ## Opening the program for the first time
 
-1. Open Recer. You'll see the welcome screen, with the logo and the **Recer Studio** button.
+1. Open Recer. The first time you see a screen that explains **Why Recer?**: read it and click **Get started**. Then you'll see the welcome screen, with the logo and the **Recer Studio** button. To read the explanation again, click the Recer logo on that screen.
 2. Click **Recer Studio**.
 3. The first time, the program asks you to choose a folder where all your data will be saved. Pick a folder on your computer (there are recommendations below).
 4. Then it asks you to fill in **My info** (your profile as the owner). This step is required: you can't continue until you save your details. See [My profile](cap:mi-perfil).

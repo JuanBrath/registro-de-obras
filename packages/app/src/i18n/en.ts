@@ -1229,4 +1229,6 @@ export const en: Record<keyof typeof es, string> = {
   "dossier.textoAdicionalPortada": "Additional text (optional)",
   "dossier.idiomaAmbos": "Spanish and English (both)",
   "dossier.nombreArtistaFicha": "Artist name in each caption",
+  "bienvenida.comenzar": "Get started",
+  "bienvenida.pie": "Next you choose your records and we show you a short tour of the program. You can read this again by clicking the Recer logo on the start screen.",
 };

@@ -1228,4 +1228,6 @@ export const es = {
   "dossier.textoAdicionalPortada": "Texto adicional (opcional)",
   "dossier.idiomaAmbos": "Español e inglés (ambos)",
   "dossier.nombreArtistaFicha": "Nombre del artista en cada ficha",
+  "bienvenida.comenzar": "Comenzar",
+  "bienvenida.pie": "Después elegís tu registro y te mostramos un breve recorrido por el programa. Podés volver a leer esto tocando el logo de Recer en la pantalla de inicio.",
 } as const;
