@@ -19,7 +19,7 @@ At the top right, next to the close button ✕, is the **?** button (**Help for 
 - Its availability. For an edition you see, for example, "3/10 available" and a summary of the other copies: "2 sold", "1 reserved", "1 on display", etc. For a unique artwork you see its status.
 - Below, five stars to rate it.
 
-Click a card to open that artwork's sheet. See [Artwork sheet](cap:ficha-de-obra).
+Click a card to open that artwork's sheet. See [Artwork sheet](cap:ficha-de-obra). Right-clicking the image (on the cards, in the columns view and also inside a selection) shows **Export image…**, with the same options as on the artwork sheet.
 
 ## Search
 

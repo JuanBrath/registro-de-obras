@@ -19,7 +19,7 @@ Arriba a la derecha, al lado del botón de cierre ✕, está el botón **?** (**
 - Su disponibilidad. En una obra seriada ves, por ejemplo, "3/10 disponibles" y un resumen de las demás copias: "2 vendidas", "1 reservada", "1 en exhibición", etc. En una obra única ves su estado.
 - Debajo, cinco estrellas para calificarla.
 
-Tocando una tarjeta abrís la ficha de esa obra. Ver [Ficha de la obra](cap:ficha-de-obra).
+Tocando una tarjeta abrís la ficha de esa obra. Ver [Ficha de la obra](cap:ficha-de-obra). Con click derecho sobre la imagen (en las tarjetas, en la vista en columnas y también dentro de una selección) aparece **Exportar imagen…**, con las mismas opciones que en la ficha de la obra.
 
 ## Buscar
 

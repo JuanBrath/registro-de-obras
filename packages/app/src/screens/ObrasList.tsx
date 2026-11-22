@@ -16,6 +16,7 @@ import { InformeListadoObrasModal } from "../components/InformeListadoObrasModal
 import { HelpIcon } from "../components/HelpIcon.js";
 import { MiniaturasSizeSlider } from "../components/MiniaturasSizeSlider.js";
 import { TagFilterPicker } from "../components/TagFilterPicker.js";
+import { useMenuExportarImagen } from "../components/useMenuExportarImagen.js";
 import { AyudaSeccion } from "../components/AyudaSeccion.js";
 import type { PasoRecorrido } from "../components/RecorridoInicial.js";
 import { CalificacionFilterButton } from "../components/CalificacionFilterButton.js";
@@ -94,6 +95,7 @@ export function ObrasList({
   const [thumbnails, setThumbnails] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { abrirMenu: abrirMenuImagen, elementos: elementosMenuImagen } = useMenuExportarImagen(setError);
   useEscapeToDismiss(error, setError);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [calificacionFiltro, setCalificacionFiltro] = useState(0);
@@ -692,9 +694,12 @@ export function ObrasList({
                 src={thumbnails[obra.id]}
                 alt={obra.titulo}
                 onLoad={(e) => marcarSiMiniaturaMuyVertical(e.currentTarget)}
+                onContextMenu={(e) => abrirMenuImagen(e, obra)}
               />
             ) : (
-              <div className="obra-card-placeholder">{t("obrasList.sinImagen")}</div>
+              <div className="obra-card-placeholder" onContextMenu={(e) => abrirMenuImagen(e, obra)}>
+                {t("obrasList.sinImagen")}
+              </div>
             )}
             <ObraTarjetaInfo obra={obra} />
             </button>
@@ -731,11 +736,13 @@ export function ObrasList({
                           alt={obra.titulo}
                           className="obras-tabla-miniatura"
                           style={{ width: anchoMiniaturaTabla(columnasGridColumnas) }}
+                          onContextMenu={(e) => abrirMenuImagen(e, obra)}
                         />
                       ) : (
                         <span
                           className="obras-tabla-sin-imagen"
                           style={{ width: anchoMiniaturaTabla(columnasGridColumnas) }}
+                          onContextMenu={(e) => abrirMenuImagen(e, obra)}
                         >
                           {t("obrasList.sinImagen")}
                         </span>
@@ -776,6 +783,7 @@ export function ObrasList({
       </div>
 
       {informesMenuAbierto && <InformeListadoObrasModal obras={filteredObras} onClose={() => setInformesMenuAbierto(false)} />}
+      {elementosMenuImagen}
     </div>
   );
 }

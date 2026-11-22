@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { InformeListadoObrasModal, SQL_INFORME_OBRAS, type InformeObraRow } from "../components/InformeListadoObrasModal.js";
+import { useMenuExportarImagen } from "../components/useMenuExportarImagen.js";
 import { AyudaSeccion, pasoAyuda } from "../components/AyudaSeccion.js";
 import { ExportarSeleccionModal } from "../components/ExportarSeleccionModal.js";
 import { DossierModal } from "../components/DossierModal.js";
@@ -70,6 +71,7 @@ export function SeleccionesScreen({
   const [nueva, setNueva] = useState(false);
   const [confirmarEliminar, setConfirmarEliminar] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { abrirMenu: abrirMenuImagen, elementos: elementosMenuImagen } = useMenuExportarImagen(setError);
   const [dossierAbierto, setDossierAbierto] = useState(false);
   const [guardadosAbierto, setGuardadosAbierto] = useState(false);
   const [exportarAbierto, setExportarAbierto] = useState(false);
@@ -508,9 +510,16 @@ export function SeleccionesScreen({
                 >
                   <button type="button" className="obra-card" onClick={() => !modoOrden && onOpenObra(obra.id, activaId)}>
                     {thumbs[obra.id] ? (
-                      <img src={thumbs[obra.id]} alt={obra.titulo} onLoad={(e) => marcarSiMiniaturaMuyVertical(e.currentTarget)} />
+                      <img
+                        src={thumbs[obra.id]}
+                        alt={obra.titulo}
+                        onLoad={(e) => marcarSiMiniaturaMuyVertical(e.currentTarget)}
+                        onContextMenu={(e) => abrirMenuImagen(e, obra)}
+                      />
                     ) : (
-                      <div className="obra-card-placeholder">{t("obrasList.sinImagen")}</div>
+                      <div className="obra-card-placeholder" onContextMenu={(e) => abrirMenuImagen(e, obra)}>
+                        {t("obrasList.sinImagen")}
+                      </div>
                     )}
                     <ObraTarjetaInfo obra={obra} />
                   </button>
@@ -599,9 +608,14 @@ export function SeleccionesScreen({
                               alt={obra.titulo}
                               className="obras-tabla-miniatura"
                               style={{ width: anchoMiniaturaTabla(columnasColumnas) }}
+                              onContextMenu={(e) => abrirMenuImagen(e, obra)}
                             />
                           ) : (
-                            <span className="obras-tabla-sin-imagen" style={{ width: anchoMiniaturaTabla(columnasColumnas) }}>
+                            <span
+                              className="obras-tabla-sin-imagen"
+                              style={{ width: anchoMiniaturaTabla(columnasColumnas) }}
+                              onContextMenu={(e) => abrirMenuImagen(e, obra)}
+                            >
                               {t("obrasList.sinImagen")}
                             </span>
                           )}
@@ -681,6 +695,7 @@ export function SeleccionesScreen({
           onCambio={() => contarDossiers(context.db, activa.id).then(setCantidadDossiers)}
         />
       )}
+      {elementosMenuImagen}
     </div>
   );
 }
