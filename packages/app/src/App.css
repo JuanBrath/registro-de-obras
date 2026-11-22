@@ -3279,3 +3279,45 @@ button:not(:disabled):hover {
 .recorrido-tarjeta button:not(:disabled):hover {
   outline-color: #fff;
 }
+
+/* Mi perfil: los datos se reparten aprovechando el ancho de la ventana (imágenes en una fila, datos personales en
+   dos columnas, textos en tres y contacto en columnas automáticas) en lugar de una sola columna larga. */
+.profile-form .perfil-imagenes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.profile-form .perfil-datos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 1.5rem;
+  align-items: start;
+}
+
+.profile-form .perfil-textos {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem 1.5rem;
+  align-items: start;
+}
+
+.profile-form fieldset {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem 1.5rem;
+  align-items: start;
+}
+
+.profile-form fieldset > legend {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 900px) {
+  .profile-form .perfil-imagenes,
+  .profile-form .perfil-datos,
+  .profile-form .perfil-textos {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

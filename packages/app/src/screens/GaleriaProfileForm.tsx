@@ -278,6 +278,7 @@ export function GaleriaProfileForm({ onBack }: { onBack: () => void }) {
     <form className="obra-form profile-form" onSubmit={handleSubmit}>
       <h2>{t("galeriaProfile.titulo")}</h2>
 
+      <div className="perfil-imagenes">
       <div className="imagen-campo">
         <span className="field-label">{t("galeriaProfile.logo")}</span>
         {logoPreviewUrl && <img src={logoPreviewUrl} alt={t("galeriaProfile.logoAlt")} className="perfil-imagen-preview" />}
@@ -290,6 +291,7 @@ export function GaleriaProfileForm({ onBack }: { onBack: () => void }) {
         </span>
         {firmaPreviewUrl && <img src={firmaPreviewUrl} alt={t("galeriaProfile.firmaAlt")} className="perfil-imagen-preview" />}
         <ImageFileField value={firmaFile} onChange={handleFirmaChange} hasImage={Boolean(existing?.firma_path)} />
+      </div>
       </div>
 
       <label>

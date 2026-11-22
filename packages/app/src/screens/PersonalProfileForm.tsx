@@ -372,6 +372,7 @@ export function PersonalProfileForm({ onExit }: { onExit: () => void }) {
         </div>
       </div>
 
+      <div className="perfil-imagenes">
       <div className="imagen-campo" data-recorrido="perfil-foto">
         <span className="field-label">{t("artistas.foto")}</span>
         {fotoPreviewUrl && (
@@ -391,7 +392,6 @@ export function PersonalProfileForm({ onExit }: { onExit: () => void }) {
         />
       </div>
 
-      <div className="form-row-2">
         <div className="imagen-campo" data-recorrido="perfil-logo">
           <span className="field-label">{t("profile.logo")}</span>
           {logoPreviewUrl && (
@@ -423,6 +423,7 @@ export function PersonalProfileForm({ onExit }: { onExit: () => void }) {
         </div>
       </div>
 
+      <div className="perfil-datos">
       <label>
         {t("artistaSelector.nombreCompleto")}
         <input type="text" required value={nombreCompleto} onChange={(e) => setNombreCompleto(e.target.value)} />
@@ -432,7 +433,9 @@ export function PersonalProfileForm({ onExit }: { onExit: () => void }) {
         {t("artistas.fechaNacimiento")} <BotonCalendario valorIso={fechaNacimiento} onChangeIso={setFechaNacimiento} />
         <CampoFecha valorIso={fechaNacimiento} onChangeIso={setFechaNacimiento} />
       </label>
+      </div>
 
+      <div className="perfil-textos">
       <label>
         <NotasLabel texto={bio} onChange={setBio}>
           {t("artistas.bio")}
@@ -454,6 +457,7 @@ export function PersonalProfileForm({ onExit }: { onExit: () => void }) {
         </NotasLabel>
         <textarea rows={3} value={notas} onChange={(e) => setNotas(e.target.value)} />
       </label>
+      </div>
 
       <fieldset data-recorrido="perfil-contacto">
         <legend>{t("profile.contactoLegend")}</legend>
