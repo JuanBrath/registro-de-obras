@@ -16,7 +16,7 @@ Cada copia tiene su propio estado, sus propios datos de impresión y, si se vend
 
 ## La lista de copias en la ficha
 
-Al abrir una obra, la lista de **Ejemplares** muestra primero las copias que **no** están disponibles (vendidas, reservadas, etc.), que es lo que suele interesar. Si todas están disponibles, muestra solo la primera. Para ver el resto tocá **Ver las demás series (n)**, y para volver a plegar la lista, **Ver menos**. Las pruebas de autor tienen su propio botón para desplegar.
+Al abrir una obra, la lista de **Ejemplares** muestra primero la **primera copia que se puede ofrecer**, es decir, la de menor número que esté disponible, en stock, en exhibición, en consignación o en producción. Si ninguna está en esas condiciones, muestra la primera de todas. Para ver el resto (vendidas, reservadas, etc.) tocá **Ver las demás series (n)**, y para volver a plegar la lista, **Ver menos**. Las pruebas de autor tienen su propio botón para desplegar.
 
 Cada copia muestra su número, su estado, sus datos (fecha de impresión, soporte, ubicación…) y, si tiene una venta, un resumen: "Vendida a Ana el 24/09/2026 — ARS 150000 — certificado #12".
 

@@ -1,3 +1,4 @@
+import { AyudaSeccion, pasoAyuda } from "../components/AyudaSeccion.js";
 import { useEffect, useMemo, useState } from "react";
 import type { Moneda, EstadoLiquidacion } from "@registro/core";
 import { useWorkspace } from "../state/WorkspaceContext.js";
@@ -536,16 +537,27 @@ export function VentasReport({ onBack }: { onBack: () => void }) {
 
   if (!context) return null;
 
+  // Recorrido de ayuda de la sección (botón "?" del encabezado).
+  const pasosAyuda = [
+    pasoAyuda(t, "ventas-filtros", "ayudaVentas.filtros", t("ventasReport.title")),
+    pasoAyuda(t, "ventas-buscar", "ayudaVentas.buscar", t("ventasReport.buscar")),
+    pasoAyuda(t, "ventas-pdf", "ayudaVentas.pdf", t("ventasReport.generarPdf")),
+    pasoAyuda(t, "ventas-planilla", "ayudaVentas.planilla", t("ventasReport.generarPlanilla")),
+  ];
+
   return (
     <div className="obras-list">
       <div className="obras-list-header">
         <h1>{t("ventasReport.title")}</h1>
+        <div className="header-actions">
+          <AyudaSeccion pasos={pasosAyuda} />
         <button type="button" className="header-close-button" onClick={onBack} aria-label={t("common.back")} title={t("common.back")}>
           ✕
         </button>
+        </div>
       </div>
 
-      <form
+      <form data-recorrido="ventas-filtros"
         className="ventas-report-filtros"
         onSubmit={(e) => {
           e.preventDefault();
@@ -661,7 +673,7 @@ export function VentasReport({ onBack }: { onBack: () => void }) {
             </select>
           </label>
         )}
-        <button type="submit" disabled={loading || !fechaDesde || !fechaHasta}>
+        <button type="submit" data-recorrido="ventas-buscar" disabled={loading || !fechaDesde || !fechaHasta}>
           {loading ? t("common.loading") : t("ventasReport.buscar")}
         </button>
       </form>
@@ -821,10 +833,10 @@ export function VentasReport({ onBack }: { onBack: () => void }) {
           )}
 
           <div className="obra-form-saved-actions">
-            <button type="button" onClick={handleGenerarPdf} disabled={generandoPdf}>
+            <button type="button" data-recorrido="ventas-pdf" onClick={handleGenerarPdf} disabled={generandoPdf}>
               {generandoPdf ? t("common.saving") : t("ventasReport.generarPdf")}
             </button>
-            <button type="button" onClick={handleGenerarPlanilla} disabled={generandoPlanilla}>
+            <button type="button" data-recorrido="ventas-planilla" onClick={handleGenerarPlanilla} disabled={generandoPlanilla}>
               {generandoPlanilla ? t("common.saving") : t("ventasReport.generarPlanilla")}
             </button>
           </div>

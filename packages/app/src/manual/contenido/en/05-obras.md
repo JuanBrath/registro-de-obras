@@ -6,6 +6,10 @@ The list of all your artworks: how to search, filter, sort and rate them, and ho
 
 On the home screen click **Artworks**. You see a grid with one card per artwork. If you haven't added any yet, the message "You haven't added any artworks yet." appears and you can start with **New artwork**.
 
+## Section help
+
+At the top right, next to the close button ✕, is the **?** button (**Help for this section**). The main screens have it: **Artworks**, **Artwork gallery**, **Selections**, **Clients**, **Artists**, **Sales**, the **Artwork sheet**, **New artwork** and **My info**. When you click it, the program takes a tour through the buttons and options on the screen, pointing at each one with a short explanation of what you can do with it. You move forward with **Next**, go back with **Back** and close with **Skip** or **Got it**. Only the options you can see at that moment are explained (for example, the tag filter appears when some artwork has tags).
+
 ## What each card shows
 
 - The photo of the artwork (or "No image" if it has none).
@@ -30,6 +34,7 @@ Below the buttons there are several controls that combine with each other:
 - **Subtype**: appears when there are artworks with a subtype, and adjusts to the chosen category.
 - **Stars**: click a star to see only the artworks with that rating; if you click the same star again, the filter is removed. If you hold a star down for a moment, the program asks whether you want to clear the rating from all artworks.
 - **Tags**: choose one or several tags to see the artworks that have them. See [Filtering by tags](cap:obras).
+- **Selection**: shows only the artworks of one of your selections. See [Selections and dossier](cap:selecciones-y-dossier).
 
 The bar with the search box and the filters stays **pinned to the top** while you scroll through the artworks (the title scrolls away), so you always see which filters are on. Filters don't delete anything: they only change what you see. To see everything again, choose the first option in each one (**All categories**, **All**) and remove the stars and the tags.
 
@@ -76,3 +81,5 @@ The list includes: artwork name, author, category, subcategory, number of availa
 
 - **New artwork**: opens the form to add an artwork. See [Adding a new artwork](cap:nueva-obra).
 - **Artwork gallery**: opens the large-photo view, respecting the filters you have on. See [Artwork gallery](cap:galeria-de-obras).
+- **Selections**: opens your hand-picked groups of artworks, the basis of the PDF dossiers. See [Selections and dossier](cap:selecciones-y-dossier).
+- **Select**: turns on the checkboxes so you can tick artworks and save them to a selection. See [Selections and dossier](cap:selecciones-y-dossier).

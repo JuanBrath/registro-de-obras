@@ -7,6 +7,7 @@ All the documents the program generates and how the language, the logo and the s
 Almost every screen has a **Generate report** or **Reports** button:
 
 - **Artworks** (list): summary list of artworks. See [Artworks](cap:obras).
+- **Selections**: list reports limited to one selection, and the PDF dossier. See [Selections and dossier](cap:selecciones-y-dossier).
 - **An artwork's sheet**: data sheet, series detail and report for third parties. See [Artwork sheet](cap:ficha-de-obra).
 - **Each copy**: quote, sale receipt, delivery note and contracts (below).
 - **Certificate**: the certificate of authenticity has its own button. See [Certificate of authenticity](cap:certificado).

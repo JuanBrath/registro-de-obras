@@ -5,21 +5,32 @@ import { leerMiniaturasPorIdEnParalelo } from "../utils/imageObjectUrl.js";
 import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
 import { subtipoTranslationKey } from "./fields/ObraDetalleFields.js";
-import { InformesModal } from "../components/InformesModal.js";
+import {
+  ObraDisponibilidad,
+  ObraTarjetaInfo,
+  SQL_OBRA_ROWS,
+  anchoMiniaturaTabla,
+  type ObraRow,
+} from "../components/ObraVista.js";
+import { InformeListadoObrasModal } from "../components/InformeListadoObrasModal.js";
 import { HelpIcon } from "../components/HelpIcon.js";
-import { detectImageFormat } from "../utils/detectImageFormat.js";
-import { fittedImageSize, type FirmaEleccion } from "../utils/pdfBranding.js";
-import { tInforme, type InformeIdioma } from "../reports/informeIdioma.js";
-import { resolveMembreteLogoBytes, resolveFirmaBytes, resolveLocalidad } from "../reports/reportBranding.js";
-import { buildObrasListadoPdfBytes, type ObraListadoItem } from "../reports/obrasListadoReports.js";
-import { savePdfWithDialog } from "../utils/savePdfDialog.js";
 import { MiniaturasSizeSlider } from "../components/MiniaturasSizeSlider.js";
 import { TagFilterPicker } from "../components/TagFilterPicker.js";
+import { AyudaSeccion } from "../components/AyudaSeccion.js";
+import type { PasoRecorrido } from "../components/RecorridoInicial.js";
 import { CalificacionFilterButton } from "../components/CalificacionFilterButton.js";
 import { StarRating } from "../components/StarRating.js";
-import { cargarColumnasGridInicial, guardarColumnasGrid, MIN_COLUMNAS_GRID, MAX_COLUMNAS_GRID } from "../utils/columnasGrid.js";
+import { cargarColumnasGridInicial, guardarColumnasGrid } from "../utils/columnasGrid.js";
 import { marcarSiMiniaturaMuyVertical } from "../utils/miniaturaVertical.js";
 import { sincronizarCalificacionConArchivo } from "../utils/calificacionArchivo.js";
+import {
+  agregarObrasASeleccion,
+  crearSeleccion,
+  listObraIdsDeSeleccion,
+  listSelecciones,
+  quitarObraDeSeleccion,
+  type Seleccion,
+} from "../data/selecciones.js";
 
 const COLUMNAS_OBRAS_POR_DEFECTO = 4;
 // Cada vista (tarjetas / columnas) guarda su propio tamano de miniaturas por
@@ -51,19 +62,6 @@ function guardarVista(vista: VistaObras): void {
   }
 }
 
-// En la vista en columnas no hay grilla (una fila por obra), asi que el
-// mismo control de "tamano de las miniaturas" (que en tarjetas elige cuantas
-// entran por fila) se reinterpreta directo como el ancho en pixeles de la
-// miniatura de cada fila: menos "columnas" (control mas hacia "grande") da
-// una miniatura mas ancha, igual sensacion que agrandar las tarjetas.
-const ANCHO_MINIATURA_TABLA_MIN = 40;
-const ANCHO_MINIATURA_TABLA_MAX = 160;
-
-function anchoMiniaturaTabla(columnas: number): number {
-  const progreso = (columnas - MIN_COLUMNAS_GRID) / (MAX_COLUMNAS_GRID - MIN_COLUMNAS_GRID);
-  return Math.round(ANCHO_MINIATURA_TABLA_MAX - progreso * (ANCHO_MINIATURA_TABLA_MAX - ANCHO_MINIATURA_TABLA_MIN));
-}
-
 export interface ObrasListFiltros {
   selectedTags: string[];
   selectedArtistaId: number | null;
@@ -72,64 +70,26 @@ export interface ObrasListFiltros {
   calificacionFiltro: number;
 }
 
-interface ObraRow {
-  id: number;
-  titulo: string;
-  categoria_obra: CategoriaObra;
-  estado: string;
-  es_seriada: number;
-  miniatura_path: string | null;
-  codigo_inventario: string | null;
-  tags: string | null;
-  artista_id: number | null;
-  nombre_completo: string;
-  subtipo_fotografia: string | null;
-  subtipo: string | null;
-  fecha_captura: string | null;
-  total_ejemplares: number;
-  ejemplares_disponible: number;
-  ejemplares_en_stock: number;
-  ejemplares_exhibicion: number;
-  ejemplares_reservada: number;
-  ejemplares_vendida: number;
-  ejemplares_consignacion: number;
-  ejemplares_en_produccion: number;
-  ejemplares_coleccion_autor: number;
-  ejemplares_descartada: number;
-  ejemplares_destruida: number;
-  tiene_prueba_artista: number;
-  calificacion: number;
-  ubicacion_fisica_actual: string | null;
-}
 
-// Los fragmentos que se muestran junto a la fraccion "X/Y disponibles" —
-// disponible queda afuera porque ya la cubre esa fraccion. El orden refleja
-// el flujo habitual de una serie.
-const FRAGMENTOS_ESTADO: { estado: string; key: TranslationKey; campo: keyof ObraRow }[] = [
-  { estado: "en_stock", key: "obrasList.fragmentoEnStock", campo: "ejemplares_en_stock" },
-  { estado: "exhibicion", key: "obrasList.fragmentoExhibicion", campo: "ejemplares_exhibicion" },
-  { estado: "reservada", key: "obrasList.fragmentoReservadas", campo: "ejemplares_reservada" },
-  { estado: "consignacion", key: "obrasList.fragmentoConsignacion", campo: "ejemplares_consignacion" },
-  { estado: "en_produccion", key: "obrasList.fragmentoEnProduccion", campo: "ejemplares_en_produccion" },
-  { estado: "coleccion_autor", key: "obrasList.fragmentoColeccionAutor", campo: "ejemplares_coleccion_autor" },
-  { estado: "vendida", key: "obrasList.fragmentoVendidas", campo: "ejemplares_vendida" },
-  { estado: "descartada", key: "obrasList.fragmentoDescartadas", campo: "ejemplares_descartada" },
-  { estado: "destruida", key: "obrasList.fragmentoDestruidas", campo: "ejemplares_destruida" },
-];
 
 export function ObrasList({
   onBack,
   onOpenObra,
   onNuevaObra,
   onVerGaleria,
+  onVerSelecciones,
+  seleccionInicialId,
 }: {
   onBack: () => void;
   onOpenObra: (obraId: number) => void;
   onNuevaObra: () => void;
   onVerGaleria: (filtros: ObrasListFiltros) => void;
+  onVerSelecciones: () => void;
+  /** Si viene, la lista arranca limitada a las obras de esa selección (para generar informes de ellas). */
+  seleccionInicialId?: number;
 }) {
-  const { context, personalArtista, galeriaPerfil } = useWorkspace();
-  const { t, idioma } = useLanguage();
+  const { context } = useWorkspace();
+  const { t } = useLanguage();
   const [obras, setObras] = useState<ObraRow[]>([]);
   const [thumbnails, setThumbnails] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(true);
@@ -153,15 +113,104 @@ export function ObrasList({
   const objectUrlsRef = useRef<string[]>([]);
 
   const [informesMenuAbierto, setInformesMenuAbierto] = useState(false);
-  const [informeSeleccionId, setInformeSeleccionId] = useState("resumido");
-  const [informeIdioma, setInformeIdioma] = useState<InformeIdioma>("es");
-  const [informeIncluirLogo, setInformeIncluirLogo] = useState(true);
-  const [informeIncluirFecha, setInformeIncluirFecha] = useState(true);
-  const [informeFirma, setInformeFirma] = useState<FirmaEleccion>("ninguna");
-  const [firmaBytesDisponibles, setFirmaBytesDisponibles] = useState<Uint8Array | null>(null);
-  const [generandoInforme, setGenerandoInforme] = useState(false);
-  const [informeMensaje, setInformeMensaje] = useState<string | null>(null);
-  useEscapeToDismiss(informeMensaje, setInformeMensaje);
+  // Modo "Seleccionar": tildar obras a mano para agregarlas a una selección (base de los dossiers).
+  const [modoSeleccion, setModoSeleccion] = useState(false);
+  // Selección "activa": lo que se tilda se guarda en ella al instante (queda aunque se cierre el modo).
+  const [seleccionesLista, setSeleccionesLista] = useState<Seleccion[]>([]);
+  const [seleccionActivaId, setSeleccionActivaId] = useState<number | "nueva" | null>(null);
+  const [nombreNuevaSeleccion, setNombreNuevaSeleccion] = useState("");
+  const [idsEnActiva, setIdsEnActiva] = useState<Set<number>>(new Set());
+  const [seleccionMensaje, setSeleccionMensaje] = useState<string | null>(null);
+  // Filtro por selección: limita la lista (y por lo tanto los informes) a las obras de esa selección.
+  const [filtroSeleccionId, setFiltroSeleccionId] = useState<number | null>(seleccionInicialId ?? null);
+  const [idsFiltroSeleccion, setIdsFiltroSeleccion] = useState<Set<number> | null>(null);
+  const [seleccionesParaFiltro, setSeleccionesParaFiltro] = useState<Seleccion[]>([]);
+
+  useEffect(() => {
+    if (!context) return;
+    listSelecciones(context.db).then(setSeleccionesParaFiltro).catch(() => setSeleccionesParaFiltro([]));
+  }, [context]);
+
+  useEffect(() => {
+    if (!context || filtroSeleccionId === null) {
+      setIdsFiltroSeleccion(null);
+      return;
+    }
+    listObraIdsDeSeleccion(context.db, filtroSeleccionId)
+      .then((ids) => setIdsFiltroSeleccion(new Set(ids)))
+      .catch(() => setIdsFiltroSeleccion(new Set()));
+  }, [context, filtroSeleccionId]);
+  const activaId = typeof seleccionActivaId === "number" ? seleccionActivaId : null;
+
+  async function recargarSelecciones() {
+    if (!context) return;
+    setSeleccionesLista(await listSelecciones(context.db));
+  }
+
+  useEffect(() => {
+    if (!context || !modoSeleccion) return;
+    recargarSelecciones().catch((err) => setError(err instanceof Error ? err.message : String(err)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [context, modoSeleccion]);
+
+  async function elegirSeleccion(valor: string) {
+    setSeleccionMensaje(null);
+    if (valor === "nueva") {
+      setSeleccionActivaId("nueva");
+      setIdsEnActiva(new Set());
+    } else if (valor === "") {
+      setSeleccionActivaId(null);
+      setIdsEnActiva(new Set());
+    } else {
+      const id = Number(valor);
+      setSeleccionActivaId(id);
+      setIdsEnActiva(new Set(await listObraIdsDeSeleccion(context!.db, id)));
+    }
+  }
+
+  async function crearYUsarSeleccion() {
+    const nombre = nombreNuevaSeleccion.trim();
+    if (!context || !nombre) return;
+    try {
+      const id = await crearSeleccion(context.db, nombre);
+      setNombreNuevaSeleccion("");
+      await recargarSelecciones();
+      setSeleccionActivaId(id);
+      setIdsEnActiva(new Set());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  async function alternarElegida(id: number) {
+    if (!context) return;
+    if (activaId === null) {
+      setSeleccionMensaje(t("selecciones.primeroElegir"));
+      return;
+    }
+    setSeleccionMensaje(null);
+    try {
+      if (idsEnActiva.has(id)) await quitarObraDeSeleccion(context.db, activaId, id);
+      else await agregarObrasASeleccion(context.db, activaId, [id]);
+      setIdsEnActiva(new Set(await listObraIdsDeSeleccion(context.db, activaId)));
+      await recargarSelecciones();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  async function agregarOQuitarFiltradas(agregar: boolean) {
+    if (!context || activaId === null) return;
+    try {
+      const ids = filteredObras.map((o) => o.id);
+      if (agregar) await agregarObrasASeleccion(context.db, activaId, ids);
+      else for (const id of ids) await quitarObraDeSeleccion(context.db, activaId, id);
+      setIdsEnActiva(new Set(await listObraIdsDeSeleccion(context.db, activaId)));
+      await recargarSelecciones();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  }
 
   useEffect(() => {
     if (!context) return;
@@ -173,30 +222,7 @@ export function ObrasList({
       setError(null);
       try {
         const rows = await context!.db.query<ObraRow>(
-          `SELECT obra.id, obra.titulo, obra.categoria_obra, obra.estado, obra.es_seriada, obra.miniatura_path,
-                  obra.codigo_inventario, obra.tags,
-                  obra.calificacion, obra.ubicacion_fisica_actual, obra.artista_id, artista.nombre_completo,
-                  obra_fotografia.subtipo_fotografia, obra_detalle.subtipo,
-                  obra_fotografia.fecha_captura,
-                  COUNT(CASE WHEN ejemplar.tipo = 'edicion' THEN ejemplar.id END) as total_ejemplares,
-                  SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'disponible' THEN 1 ELSE 0 END) as ejemplares_disponible,
-                  SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'en_stock' THEN 1 ELSE 0 END) as ejemplares_en_stock,
-                  SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'exhibicion' THEN 1 ELSE 0 END) as ejemplares_exhibicion,
-                  SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'reservada' THEN 1 ELSE 0 END) as ejemplares_reservada,
-                  SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'vendida' THEN 1 ELSE 0 END) as ejemplares_vendida,
-                  SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'consignacion' THEN 1 ELSE 0 END) as ejemplares_consignacion,
-                  SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'en_produccion' THEN 1 ELSE 0 END) as ejemplares_en_produccion,
-                  SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'coleccion_autor' THEN 1 ELSE 0 END) as ejemplares_coleccion_autor,
-                  SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'descartada' THEN 1 ELSE 0 END) as ejemplares_descartada,
-                  SUM(CASE WHEN ejemplar.tipo = 'edicion' AND ejemplar.estado = 'destruida' THEN 1 ELSE 0 END) as ejemplares_destruida,
-                  MAX(CASE WHEN ejemplar.tipo = 'prueba_artista' THEN 1 ELSE 0 END) as tiene_prueba_artista
-           FROM obra
-           LEFT JOIN ejemplar ON ejemplar.obra_id = obra.id
-           LEFT JOIN artista ON artista.id = obra.artista_id
-           LEFT JOIN obra_fotografia ON obra_fotografia.obra_id = obra.id
-           LEFT JOIN obra_detalle ON obra_detalle.obra_id = obra.id
-           GROUP BY obra.id
-           ORDER BY obra.titulo COLLATE NOCASE ASC`,
+          SQL_OBRA_ROWS(),
         );
         if (cancelled) return;
         setObras(rows);
@@ -265,6 +291,7 @@ export function ObrasList({
   const filteredObras = useMemo(() => {
     const busquedaNorm = busqueda.trim().toLowerCase();
     const filtradas = obras.filter((o) => {
+      if (filtroSeleccionId !== null && !(idsFiltroSeleccion?.has(o.id) ?? false)) return false;
       if (calificacionFiltro > 0 && o.calificacion !== calificacionFiltro) return false;
       if (selectedTags.length > 0 && !selectedTags.some((tag) => parseTags(o.tags).includes(tag))) return false;
       if (esGaleria && selectedArtistaId !== null && o.artista_id !== selectedArtistaId) return false;
@@ -312,6 +339,8 @@ export function ObrasList({
     selectedSubtipo,
     busqueda,
     calificacionFiltro,
+    filtroSeleccionId,
+    idsFiltroSeleccion,
     esRegistroPersonal,
     esGaleria,
     ordenPor,
@@ -381,110 +410,36 @@ export function ObrasList({
     guardarVista(nueva);
   }
 
-  async function handleAbrirInformesMenu() {
-    if (!context) return;
-    setInformeSeleccionId("resumido");
-    setInformeIdioma(idioma);
-    setInformeIncluirLogo(true);
-    setInformeIncluirFecha(true);
-    setInformeFirma("ninguna");
-    setInformeMensaje(null);
-    setFirmaBytesDisponibles(await resolveFirmaBytes(context, personalArtista, galeriaPerfil));
+  function handleAbrirInformesMenu() {
     setInformesMenuAbierto(true);
   }
 
-  // Para cada obra, la serie disponible con el indice mas bajo (la "primera").
-  async function cargarPrimeraSerieLibre(obraIds: number[]): Promise<Record<number, string>> {
-    if (!context || obraIds.length === 0) return {};
-    const placeholders = obraIds.map(() => "?").join(", ");
-    const rows = await context.db.query<{ obra_id: number; numero: string }>(
-      `SELECT e.obra_id, e.numero
-       FROM ejemplar e
-       WHERE e.tipo = 'edicion' AND e.estado = 'disponible' AND e.obra_id IN (${placeholders})
-         AND e.indice = (
-           SELECT MIN(e2.indice) FROM ejemplar e2
-           WHERE e2.obra_id = e.obra_id AND e2.tipo = 'edicion' AND e2.estado = 'disponible'
-         )`,
-      obraIds,
-    );
-    return Object.fromEntries(rows.map((r) => [r.obra_id, r.numero]));
-  }
-
-  async function handleGenerarInformeListado(conImagen: boolean) {
-    if (!context) return;
-    setGenerandoInforme(true);
-    setError(null);
-    setInformeMensaje(null);
-    try {
-      const tr = (key: TranslationKey, vars?: Record<string, string | number>) => tInforme(informeIdioma, key, vars);
-      const obraIds = filteredObras.map((o) => o.id);
-      const primeraSerieLibre = await cargarPrimeraSerieLibre(obraIds);
-
-      const items: ObraListadoItem[] = [];
-      for (const o of filteredObras) {
-        const subtipoValor = o.categoria_obra === "Fotografia" ? o.subtipo_fotografia : o.subtipo;
-        const celdas = [
-          o.titulo,
-          o.nombre_completo,
-          tInforme("es", `categoria.${o.categoria_obra}` as TranslationKey),
-          subtipoValor ? tInforme("es", subtipoTranslationKey(o.categoria_obra, subtipoValor)) : "—",
-          String(o.ejemplares_disponible),
-          primeraSerieLibre[o.id] ?? "—",
-        ];
-
-        let imagen: ObraListadoItem["imagen"] = null;
-        if (conImagen && o.miniatura_path) {
-          try {
-            const bytes = await context.fs.readFile(o.miniatura_path);
-            const formato = detectImageFormat(bytes);
-            if (formato) {
-              const { width, height } = await fittedImageSize(bytes, 16);
-              imagen = { bytes, formato, width, height };
-            }
-          } catch {
-            // Miniatura ausente o ilegible: se omite sin romper el informe.
-          }
-        }
-
-        items.push({ celdas, imagen });
-      }
-
-      const headers = [
-        tr("informesObras.colNombre"),
-        tr("informesObras.colAutor"),
-        tr("informesObras.colCategoria"),
-        tr("informesObras.colSubcategoria"),
-        tr("informesObras.colSeriesLibres"),
-        tr("informesObras.colPrimeraSerieLibre"),
-      ];
-
-      const logoBytes = await resolveMembreteLogoBytes(context, personalArtista, galeriaPerfil);
-      const bytes = await buildObrasListadoPdfBytes(t("obrasList.title"), headers, items, conImagen, {
-        idioma: informeIdioma,
-        logoBytes,
-        incluirLogo: informeIncluirLogo,
-        incluirFecha: informeIncluirFecha,
-        firma: informeFirma,
-        firmaBytes: firmaBytesDisponibles,
-        localidad: resolveLocalidad(context, personalArtista, galeriaPerfil),
-      });
-
-      const sufijo = conImagen ? "_con_imagen" : "";
-      const guardado = await savePdfWithDialog(bytes, `listado_obras${sufijo}.pdf`);
-      if (guardado) setInformeMensaje(t("informesObras.informeGenerado"));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setGenerandoInforme(false);
-    }
-  }
-
-  async function handleConfirmarInformeObras() {
-    setInformesMenuAbierto(false);
-    await handleGenerarInformeListado(informeSeleccionId === "resumido_con_imagen");
-  }
-
   if (!context) return null;
+
+  // Recorrido de ayuda de la sección (botón "?" del encabezado): un paso por botón u opción.
+  const paso = (id: string, key: TranslationKey, titulo: string): PasoRecorrido => ({
+    targetSelector: `[data-recorrido="${id}"]`,
+    titulo,
+    texto: t(key),
+  });
+  const pasosAyuda: PasoRecorrido[] = [
+    paso("obras-buscar", "ayudaObras.buscar", t("obrasList.ayudaBuscar")),
+    paso("obras-nueva", "ayudaObras.nueva", t("workspaceHome.nuevaObra")),
+    paso("obras-galeria", "ayudaObras.galeria", t("workspaceHome.galeriaFotos")),
+    paso("obras-selecciones", "ayudaObras.selecciones", t("selecciones.boton")),
+    paso("obras-seleccionar", "ayudaObras.seleccionar", t("selecciones.seleccionar")),
+    paso("obras-informe", "ayudaObras.informe", t("informesObras.generarInforme")),
+    paso("obras-vista", "ayudaObras.vista", t("obrasList.vistaTarjetas") + " / " + t("obrasList.vistaColumnas")),
+    paso("obras-tamano", "ayudaObras.tamano", t("obrasList.tamanoMiniaturasLabel")),
+    paso("obras-orden", "ayudaObras.orden", t("obrasList.ordenarPorLabel")),
+    paso("obras-artista", "ayudaObras.artista", t("obraForm.artistaLabel")),
+    paso("obras-filtro-seleccion", "ayudaObras.filtroSeleccion", t("selecciones.filtroLabel")),
+    paso("obras-categoria", "ayudaObras.categoria", t("obraForm.categoriaLabel")),
+    paso("obras-subtipo", "ayudaObras.subtipo", t("field.subtipo")),
+    paso("obras-estrellas", "ayudaObras.estrellas", t("obrasList.colCalificacion")),
+    paso("obras-etiquetas", "ayudaObras.etiquetas", t("obraForm.etiquetasLabel")),
+    paso("obras-obra", "ayudaObras.obra", t("obrasList.colObra")),
+  ];
 
   return (
     <div className="obras-list obras-list-grid-ancho">
@@ -492,6 +447,7 @@ export function ObrasList({
       <div className="obras-list-header">
         <h1>{t("obrasList.title")}</h1>
         <div className="header-actions">
+          <AyudaSeccion pasos={pasosAyuda} />
           <button type="button" className="header-close-button" onClick={onBack} aria-label={t("common.back")} title={t("common.back")}>
             ✕
           </button>
@@ -501,29 +457,45 @@ export function ObrasList({
       <div className="obras-toolbar">
         <div className="obras-toolbar-fila">
           {obras.length > 0 && (
-            <div className="buscador-con-ayuda obras-list-buscador-fila-principal">
+            <div className="buscador-con-ayuda obras-list-buscador-fila-principal" data-recorrido="obras-buscar">
               <input type="search" className="obras-list-buscador" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
               <HelpIcon fieldKey="busqueda_general" />
             </div>
           )}
-          <button type="button" onClick={onNuevaObra}>
+          <button type="button" data-recorrido="obras-nueva" onClick={onNuevaObra}>
             {t("workspaceHome.nuevaObra")}
           </button>
           <button
             type="button"
+            data-recorrido="obras-galeria"
             onClick={() =>
               onVerGaleria({ selectedTags, selectedArtistaId, selectedCategoria, selectedSubtipo, calificacionFiltro })
             }
           >
             {t("workspaceHome.galeriaFotos")}
           </button>
+          <button type="button" data-recorrido="obras-selecciones" onClick={onVerSelecciones}>
+            {t("selecciones.boton")}
+          </button>
           {obras.length > 0 && (
-            <button type="button" onClick={handleAbrirInformesMenu} disabled={filteredObras.length === 0}>
+            <button
+              type="button"
+              data-recorrido="obras-seleccionar"
+              className={modoSeleccion ? "obras-vista-toggle-boton activo" : undefined}
+              onClick={() => {
+                setModoSeleccion((m) => !m);
+              }}
+            >
+              {modoSeleccion ? t("selecciones.terminarSeleccion") : t("selecciones.seleccionar")}
+            </button>
+          )}
+          {obras.length > 0 && (
+            <button type="button" data-recorrido="obras-informe" onClick={handleAbrirInformesMenu} disabled={filteredObras.length === 0}>
               {t("informesObras.generarInforme")}
             </button>
           )}
           {obras.length > 0 && (
-            <div className="obras-vista-toggle">
+            <div className="obras-vista-toggle" data-recorrido="obras-vista">
               <button
                 type="button"
                 className={vista === "columnas" ? "obras-vista-toggle-boton activo" : "obras-vista-toggle-boton"}
@@ -541,13 +513,59 @@ export function ObrasList({
             </div>
           )}
           {obras.length > 0 && (
-            <MiniaturasSizeSlider columnas={columnasGridActual} onChange={handleTamanoMiniaturasChange} />
+            <span className="obras-recorrido-envoltorio" data-recorrido="obras-tamano">
+              <MiniaturasSizeSlider columnas={columnasGridActual} onChange={handleTamanoMiniaturasChange} />
+            </span>
           )}
         </div>
 
+        {modoSeleccion && (
+          <div className="obras-toolbar-fila obras-seleccion-panel">
+            <label className="galeria-filtro-artista">
+              {t("selecciones.activa")}
+              <select value={seleccionActivaId ?? ""} onChange={(e) => elegirSeleccion(e.target.value)}>
+                <option value="">{t("selecciones.elegirActiva")}</option>
+                {seleccionesLista.map((sel) => (
+                  <option key={sel.id} value={sel.id}>
+                    {sel.nombre} ({sel.cantidad})
+                  </option>
+                ))}
+                <option value="nueva">{t("selecciones.nuevaOpcion")}</option>
+              </select>
+            </label>
+            {seleccionActivaId === "nueva" && (
+              <>
+                <input
+                  type="text"
+                  value={nombreNuevaSeleccion}
+                  placeholder={t("selecciones.nuevaNombre")}
+                  onChange={(e) => setNombreNuevaSeleccion(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && crearYUsarSeleccion()}
+                  autoFocus
+                />
+                <button type="button" onClick={crearYUsarSeleccion} disabled={!nombreNuevaSeleccion.trim()}>
+                  {t("selecciones.crearYUsar")}
+                </button>
+              </>
+            )}
+            {activaId !== null && (
+              <>
+                <span>{t("selecciones.enActiva", { cantidad: idsEnActiva.size })}</span>
+                <button type="button" onClick={() => agregarOQuitarFiltradas(true)} disabled={filteredObras.length === 0}>
+                  {t("selecciones.agregarFiltradas")}
+                </button>
+                <button type="button" onClick={() => agregarOQuitarFiltradas(false)} disabled={filteredObras.length === 0}>
+                  {t("selecciones.quitarFiltradas")}
+                </button>
+              </>
+            )}
+            {activaId === null && seleccionActivaId !== "nueva" && <span>{t("selecciones.primeroElegir")}</span>}
+          </div>
+        )}
+
         {obras.length > 0 && (
           <div className="obras-toolbar-fila">
-            <label className="galeria-filtro-artista">
+            <label className="galeria-filtro-artista" data-recorrido="obras-orden">
               {t("obrasList.ordenarPorLabel")}
               <select value={ordenPor} onChange={(e) => setOrdenPor(e.target.value as "titulo" | "codigo_inventario" | "fecha_captura")}>
                 <option value="codigo_inventario">{t("obrasList.ordenarPorCodigoInventario")}</option>
@@ -557,7 +575,7 @@ export function ObrasList({
             </label>
 
             {esGaleria && allArtistas.length > 0 && (
-              <label className="galeria-filtro-artista">
+              <label className="galeria-filtro-artista" data-recorrido="obras-artista">
                 {t("obraForm.artistaLabel")}
                 <select value={selectedArtistaId ?? ""} onChange={(e) => setSelectedArtistaId(e.target.value === "" ? null : Number(e.target.value))}>
                   <option value="">{t("galeria.todosArtistas")}</option>
@@ -570,8 +588,25 @@ export function ObrasList({
               </label>
             )}
 
+            {seleccionesParaFiltro.length > 0 && (
+              <label className="galeria-filtro-artista" data-recorrido="obras-filtro-seleccion">
+                {t("selecciones.filtroLabel")}
+                <select
+                  value={filtroSeleccionId ?? ""}
+                  onChange={(e) => setFiltroSeleccionId(e.target.value === "" ? null : Number(e.target.value))}
+                >
+                  <option value="">{t("selecciones.filtroTodas")}</option>
+                  {seleccionesParaFiltro.map((sel) => (
+                    <option key={sel.id} value={sel.id}>
+                      {sel.nombre} ({sel.cantidad})
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+
             {allCategorias.length > 0 && (
-              <label className="galeria-filtro-artista">
+              <label className="galeria-filtro-artista" data-recorrido="obras-categoria">
                 {t("obraForm.categoriaLabel")}
                 <select value={selectedCategoria ?? ""} onChange={(e) => handleCategoriaChange(e.target.value)}>
                   <option value="">{t("galeria.todasCategorias")}</option>
@@ -585,7 +620,7 @@ export function ObrasList({
             )}
 
             {allSubtipos.length > 0 && (
-              <label className="galeria-filtro-artista">
+              <label className="galeria-filtro-artista" data-recorrido="obras-subtipo">
                 {t("field.subtipo")}
                 <select value={selectedSubtipo ?? ""} onChange={(e) => setSelectedSubtipo(e.target.value || null)}>
                   <option value="">{t("galeria.todosSubtipos")}</option>
@@ -598,13 +633,15 @@ export function ObrasList({
               </label>
             )}
 
-            <CalificacionFilterButton
-              calificacionFiltro={calificacionFiltro}
-              onChange={setCalificacionFiltro}
-              onQuitarATodas={handleQuitarCalificacionATodas}
-            />
+            <span className="obras-recorrido-envoltorio" data-recorrido="obras-estrellas">
+              <CalificacionFilterButton
+                calificacionFiltro={calificacionFiltro}
+                onChange={setCalificacionFiltro}
+                onQuitarATodas={handleQuitarCalificacionATodas}
+              />
+            </span>
             {allTags.length > 0 && (
-              <div className="obras-toolbar-etiquetas">
+              <div className="obras-toolbar-etiquetas" data-recorrido="obras-etiquetas">
                 <span className="galeria-filtro-etiquetas-label">
                   {t("obraForm.etiquetasLabel")} <HelpIcon fieldKey="filtro_etiquetas_multiple" />
                 </span>
@@ -625,13 +662,31 @@ export function ObrasList({
 
       {!loading && obras.length === 0 && <p>{t("obrasList.sinObras")}</p>}
 
+      {seleccionMensaje && (
+        <p role="status" onClick={() => setSeleccionMensaje(null)}>
+          {seleccionMensaje}
+        </p>
+      )}
       {!loading && obras.length > 0 && filteredObras.length === 0 && <p>{t("obrasList.sinResultados")}</p>}
 
       {vista === "tarjetas" && (
       <div className="obras-grid" style={{ gridTemplateColumns: `repeat(${columnasGridTarjetas}, 1fr)` }}>
-        {filteredObras.map((obra) => (
-          <div className="obra-card-wrapper" key={obra.id}>
-            <button type="button" className="obra-card" onClick={() => onOpenObra(obra.id)}>
+        {filteredObras.map((obra, indice) => (
+          <div className="obra-card-wrapper" key={obra.id} data-recorrido={indice === 0 ? "obras-obra" : undefined}>
+            {modoSeleccion && (
+              <input
+                type="checkbox"
+                checked={idsEnActiva.has(obra.id)}
+                onChange={() => alternarElegida(obra.id)}
+                style={{ position: "absolute", top: 8, left: 8, zIndex: 2, width: 22, height: 22 }}
+              />
+            )}
+            <button
+              type="button"
+              className="obra-card"
+              style={modoSeleccion && idsEnActiva.has(obra.id) ? { outline: "3px solid var(--accent, #4a90e2)" } : undefined}
+              onClick={() => (modoSeleccion ? alternarElegida(obra.id) : onOpenObra(obra.id))}
+            >
             {thumbnails[obra.id] ? (
               <img
                 src={thumbnails[obra.id]}
@@ -641,52 +696,7 @@ export function ObrasList({
             ) : (
               <div className="obra-card-placeholder">{t("obrasList.sinImagen")}</div>
             )}
-            <div className="obra-card-info">
-              <strong>{obra.titulo}</strong>
-              {obra.codigo_inventario && (
-                <span className="obra-card-sku">
-                  {t("obrasList.skuPrefix")} {obra.codigo_inventario}
-                </span>
-              )}
-              <span>
-                {t(`categoria.${obra.categoria_obra}` as TranslationKey)}
-                {" — "}
-                {Number(obra.es_seriada) === 1 ? t("obrasList.seriada") : t("obrasList.unica")}
-              </span>
-              {Number(obra.tiene_prueba_artista) === 1 && (
-                <span className="obra-card-estado obra-card-estado-prueba-artista">
-                  {t("obrasList.conPruebaAutor")}
-                </span>
-              )}
-              {Number(obra.es_seriada) === 1 ? (
-                (() => {
-                  const disponibles = Number(obra.ejemplares_disponible) || 0;
-                  const total = Number(obra.total_ejemplares) || 0;
-                  const claseDisponibles = disponibles > 0 ? "disponible" : "vendida";
-
-                  return (
-                    <>
-                      <span className={`obra-card-estado obra-card-estado-${claseDisponibles}`}>
-                        {t("obrasList.fraccionDisponibles", { disponibles, total })}
-                      </span>
-                      {FRAGMENTOS_ESTADO.map(({ estado, key, campo }) => {
-                        const n = Number(obra[campo]) || 0;
-                        if (n === 0) return null;
-                        return (
-                          <span key={estado} className={`obra-card-estado obra-card-estado-${estado}`}>
-                            {t(key, { n })}
-                          </span>
-                        );
-                      })}
-                    </>
-                  );
-                })()
-              ) : (
-                <span className={`obra-card-estado obra-card-estado-${obra.estado}`}>
-                  {t(`estado.${obra.estado}` as TranslationKey)}
-                </span>
-              )}
-            </div>
+            <ObraTarjetaInfo obra={obra} />
             </button>
             <StarRating value={obra.calificacion} onChange={(n) => handleSetCalificacion(obra.id, n)} />
           </div>
@@ -709,11 +719,12 @@ export function ObrasList({
               </tr>
             </thead>
             <tbody>
-              {filteredObras.map((obra) => {
+              {filteredObras.map((obra, indice) => {
                 const subtipoValor = obra.categoria_obra === "Fotografia" ? obra.subtipo_fotografia : obra.subtipo;
                 return (
-                  <tr key={obra.id} className="obras-tabla-fila" onClick={() => onOpenObra(obra.id)}>
+                  <tr key={obra.id} className="obras-tabla-fila" data-recorrido={indice === 0 ? "obras-obra" : undefined} onClick={() => (modoSeleccion ? alternarElegida(obra.id) : onOpenObra(obra.id))}>
                     <td>
+                      {modoSeleccion && <input type="checkbox" checked={idsEnActiva.has(obra.id)} readOnly />}
                       {thumbnails[obra.id] ? (
                         <img
                           src={thumbnails[obra.id]}
@@ -745,30 +756,7 @@ export function ObrasList({
                     <td>{t(`categoria.${obra.categoria_obra}` as TranslationKey)}</td>
                     <td>{subtipoValor ? t(subtipoTranslationKey(obra.categoria_obra, subtipoValor)) : "—"}</td>
                     <td>
-                      {Number(obra.tiene_prueba_artista) === 1 && (
-                        <>
-                          <span className="obra-card-estado obra-card-estado-prueba-artista">
-                            {t("obrasList.conPruebaAutor")}
-                          </span>
-                          <br />
-                        </>
-                      )}
-                      {Number(obra.es_seriada) === 1 ? (
-                        (() => {
-                          const disponibles = Number(obra.ejemplares_disponible) || 0;
-                          const total = Number(obra.total_ejemplares) || 0;
-                          const claseDisponibles = disponibles > 0 ? "disponible" : "vendida";
-                          return (
-                            <span className={`obra-card-estado obra-card-estado-${claseDisponibles}`}>
-                              {t("obrasList.fraccionDisponibles", { disponibles, total })}
-                            </span>
-                          );
-                        })()
-                      ) : (
-                        <span className={`obra-card-estado obra-card-estado-${obra.estado}`}>
-                          {t(`estado.${obra.estado}` as TranslationKey)}
-                        </span>
-                      )}
+                      <ObraDisponibilidad obra={obra} />
                     </td>
                     <td onClick={(e) => e.stopPropagation()}>
                       <StarRating value={obra.calificacion} onChange={(n) => handleSetCalificacion(obra.id, n)} />
@@ -787,30 +775,7 @@ export function ObrasList({
         </button>
       </div>
 
-      {informesMenuAbierto && (
-        <InformesModal
-          titulo={t("informesObras.generarInforme")}
-          opciones={[
-            { id: "resumido", label: t("informesObras.opcionResumido") },
-            { id: "resumido_con_imagen", label: t("informesObras.opcionResumidoConImagen") },
-          ]}
-          selectedId={informeSeleccionId}
-          onSelectId={setInformeSeleccionId}
-          idioma={informeIdioma}
-          onIdiomaChange={setInformeIdioma}
-          incluirLogo={informeIncluirLogo}
-          onIncluirLogoChange={setInformeIncluirLogo}
-          incluirFecha={informeIncluirFecha}
-          onIncluirFechaChange={setInformeIncluirFecha}
-          firma={informeFirma}
-          onFirmaChange={setInformeFirma}
-          firmaDigitalDisponible={firmaBytesDisponibles !== null}
-          onGenerar={handleConfirmarInformeObras}
-          generando={generandoInforme}
-          mensaje={informeMensaje}
-          onClose={() => setInformesMenuAbierto(false)}
-        />
-      )}
+      {informesMenuAbierto && <InformeListadoObrasModal obras={filteredObras} onClose={() => setInformesMenuAbierto(false)} />}
     </div>
   );
 }

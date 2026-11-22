@@ -16,7 +16,7 @@ Each copy has its own status, its own printing data and, if it's sold, its own s
 
 ## The list of copies on the sheet
 
-When you open an artwork, the **Copies** list first shows the copies that are **not** available (sold, reserved, etc.), which is usually what matters. If they are all available, it shows only the first one. To see the rest click **Show the other copies (n)**, and to fold the list again, **Show less**. Artist's proofs have their own button to unfold.
+When you open an artwork, the **Copies** list first shows the **first copy that can be offered**, that is, the lowest-numbered one that is available, in stock, on exhibition, on consignment or in production. If none is in those conditions, it shows the first one of all. To see the rest (sold, reserved, etc.) click **Show the other copies (n)**, and to fold the list again, **Show less**. Artist's proofs have their own button to unfold.
 
 Each copy shows its number, its status, its data (print date, medium, location…) and, if it has a sale, a summary: "Sold to Ana on 24/09/2026 — ARS 150000 — certificate #12".
 

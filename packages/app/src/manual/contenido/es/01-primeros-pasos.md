@@ -2,6 +2,12 @@
 
 Qué es Recer Studio y cómo dejarlo listo la primera vez que lo abrís.
 
+## Qué significa Recer
+
+En catalán, "recer" significa resguardo, abrigo y protección ("estar a recer" es estar a salvo de la intemperie). Toda obra artística necesita un espacio donde ser preservada, documentada y puesta en valor a lo largo del tiempo. Recer nace con esa vocación: ofrecer una infraestructura digital sólida para custodiar el archivo, la trazabilidad y la historia de cada pieza.
+
+Por eso el lema del programa es **Resguardo · abrigo · protección**. La primera vez que abrís el programa ves esta explicación en la pantalla ¿Por qué Recer?, y podés volver a leerla tocando el logo en la pantalla de inicio. Recer tiene dos ediciones: Recer Studio, para artistas y fotógrafos, y Recer Space, para galerías.
+
 ## Qué es Recer Studio
 
 Recer Studio es el programa donde llevás el registro de tu obra: cada obra con su foto y sus datos técnicos, las copias numeradas de cada edición, las ventas, reservas y donaciones, tus clientes y los documentos que se generan a partir de todo eso (fichas, presupuestos, comprobantes, certificados de autenticidad, contratos).
@@ -10,7 +16,7 @@ Todo lo que cargás queda guardado en tu computadora, en una carpeta que elegís
 
 ## Abrir el programa por primera vez
 
-1. Abrí Recer. Vas a ver la pantalla de presentación, con el logo y el botón **Recer Studio**.
+1. Abrí Recer. La primera vez ves una pantalla que explica **¿Por qué Recer?**: leela y tocá **Comenzar**. Después vas a ver la pantalla de presentación, con el logo y el botón **Recer Studio**. Para volver a leer la explicación, tocá el logo de Recer en esa pantalla.
 2. Tocá **Recer Studio**.
 3. La primera vez, el programa te pide que elijas una carpeta donde guardar todos tus datos. Elegí una carpeta de tu computadora (más abajo hay recomendaciones).
 4. Después te pide completar **Mis datos** (tu perfil como titular). Es un paso obligatorio: hasta que no guardes tus datos no se puede seguir. Ver [Mi perfil](cap:mi-perfil).

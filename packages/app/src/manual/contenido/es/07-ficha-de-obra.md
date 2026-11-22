@@ -15,7 +15,7 @@ En **Obras**, tocá la tarjeta de la obra. Arriba está el título; para volver 
 - El **Statement** y las **Notas**: se muestra la primera línea; tocando el nombre del campo ves el texto completo.
 - Más abajo, la lista de **Ejemplares**: las copias de la obra. Ver [Copias y estados](cap:copias).
 
-Debajo de los datos hay tres botones: **Editar obra**, **Generar informe** y **Eliminar obra**. Si hay un archivo original cargado, al lado aparece también el botón **Ps** (**Abrir en Photoshop**) y, si además es una foto digital propia, el botón **Lr** (**Abrir en Lightroom Classic** — ver [Lightroom Classic](cap:lightroom-classic)).
+Debajo de los datos hay cuatro botones: **Editar obra**, **Generar informe**, **Agregar a selección…** (para sumar la obra a una selección; ver [Selecciones y dossier](cap:selecciones-y-dossier)) y **Eliminar obra**. Si hay un archivo original cargado, al lado aparece también el botón **Ps** (**Abrir en Photoshop**) y, si además es una foto digital propia, el botón **Lr** (**Abrir en Lightroom Classic** — ver [Lightroom Classic](cap:lightroom-classic)).
 
 ## El menú del click derecho sobre la imagen
 

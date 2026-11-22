@@ -7,6 +7,7 @@ Todos los documentos que genera el programa y cómo se eligen el idioma, el logo
 Casi todas las pantallas tienen un botón **Generar informe** o **Informes**:
 
 - **Obras** (listado): listado resumido de obras. Ver [Obras](cap:obras).
+- **Selecciones**: informes del listado limitados a una selección, y el dossier en PDF. Ver [Selecciones y dossier](cap:selecciones-y-dossier).
 - **Ficha de una obra**: ficha, detalle de series e informe para terceros. Ver [Ficha de la obra](cap:ficha-de-obra).
 - **Cada copia**: presupuesto, comprobante de venta, remito y contratos (más abajo).
 - **Certificado**: el certificado de autenticidad tiene su propio botón. Ver [Certificado de autenticidad](cap:certificado).

@@ -62,6 +62,9 @@ import { resolveObraImagenParaPdf } from "../utils/resolveObraImagenPdf.js";
 import { CertificadoEditor } from "../certificados/CertificadoEditor.js";
 import type { DatosStudioCertificado, FormatoCertificado } from "../certificados/datosStudio.js";
 import { openLocalFile } from "../utils/openExternalUrl.js";
+import { AyudaSeccion, pasoAyuda } from "../components/AyudaSeccion.js";
+import { ESTADOS_OFRECIBLES } from "../utils/estadosOfrecibles.js";
+import { AgregarASeleccionModal } from "../components/AgregarASeleccionModal.js";
 import {
   buildComprobanteVentaPdfBytes,
   buildContratoPdfBytes,
@@ -806,6 +809,7 @@ export function ObraDetail({
   const [anulandoVenta, setAnulandoVenta] = useState(false);
   const [generandoFichaPdf, setGenerandoFichaPdf] = useState(false);
   const [fichaPdfMensaje, setFichaPdfMensaje] = useState<string | null>(null);
+  const [agregarSeleccionAbierto, setAgregarSeleccionAbierto] = useState(false);
   useEscapeToDismiss(fichaPdfMensaje, setFichaPdfMensaje);
   const [informesMenuAbierto, setInformesMenuAbierto] = useState(false);
   const [informeSeleccionId, setInformeSeleccionId] = useState("completa");
@@ -2259,11 +2263,11 @@ export function ObraDetail({
   // separado: cada una tiene su propio boton de "ver mas", ver mas abajo.
   const edicionesEjemplares = ejemplares.filter((ej) => ej.tipo === "edicion");
   const pruebasEjemplares = ejemplares.filter((ej) => ej.tipo === "prueba_artista");
-  // Colapsado, se muestra cualquier ejemplar que no este disponible (vendido,
-  // reservado, etc.), que es lo que interesa ver de entrada; si todos estan
-  // disponibles no hay nada que destacar y se muestra solo el primero.
-  const edicionesNoDisponibles = edicionesEjemplares.filter((ej) => ej.estado !== "disponible");
-  const edicionesColapsadas = edicionesNoDisponibles.length > 0 ? edicionesNoDisponibles : edicionesEjemplares.slice(0, 1);
+  // Colapsado, de la serie se muestra la primera copia que esta en condiciones de ofrecerse (disponible, en
+  // stock, en exhibicion, en consignacion o en produccion); si ninguna lo esta, la primera de todas. El resto
+  // se despliega con el boton "ver mas".
+  const primeraOfrecible = edicionesEjemplares.find((ej) => ESTADOS_OFRECIBLES.has(ej.estado));
+  const edicionesColapsadas = primeraOfrecible ? [primeraOfrecible] : edicionesEjemplares.slice(0, 1);
   const pruebasNoDisponibles = pruebasEjemplares.filter((ej) => ej.estado !== "disponible");
   const pruebasColapsadas = pruebasNoDisponibles.length > 0 ? pruebasNoDisponibles : pruebasEjemplares.slice(0, 1);
 
@@ -2281,19 +2285,39 @@ export function ObraDetail({
   // registro: alcanza con que haya un archivo original cargado.
   const mostrarBotonPhotoshopVista = !!obra?.ubicacion_fisica_actual;
 
+  // Recorrido de ayuda de la sección (botón "?" del encabezado).
+  const pasosAyuda = [
+    pasoAyuda(t, "obra-imagen", "ayudaObra.imagen", t("obraForm.imagenLabel")),
+    pasoAyuda(t, "obra-editar", "ayudaObra.editar", t("obraDetail.editarObra")),
+    pasoAyuda(t, "obra-informe", "ayudaObra.informe", t("common.generarInforme")),
+    pasoAyuda(t, "obra-seleccion", "ayudaObra.seleccion", t("selecciones.agregarABoton")),
+    pasoAyuda(t, "obra-eliminar", "ayudaObra.eliminar", t("obraDetail.eliminarObra")),
+    pasoAyuda(t, "obra-lightroom", "ayudaObra.lightroom", "Lr"),
+    pasoAyuda(t, "obra-photoshop", "ayudaObra.photoshop", "Ps"),
+    pasoAyuda(t, "obra-ejemplares", "ayudaObra.ejemplares", t("obraDetail.ejemplares")),
+    pasoAyuda(t, "obra-ver-mas", "ayudaObra.verMas", t("obraDetail.verMenosSeries")),
+    pasoAyuda(t, "obra-ej-editar", "ayudaObra.ejEditar", t("common.edit")),
+    pasoAyuda(t, "obra-ej-vender", "ayudaObra.ejVender", t("obraDetail.ventaReserva")),
+    pasoAyuda(t, "obra-ej-informes", "ayudaObra.ejInformes", t("ventaForm.informesButton")),
+    pasoAyuda(t, "obra-ej-certificado", "ayudaObra.ejCertificado", t("certificado.boton")),
+  ];
+
   return (
     <div className="obra-detail">
       <div className="obras-list-header">
         <h1>{obra?.titulo ?? t("obraDetail.fallbackTitulo")}</h1>
-        <button
-          type="button"
-          className="header-close-button"
-          onClick={onBack}
-          aria-label={volverALabel ?? t("obraDetail.volverAObras")}
-          title={volverALabel ?? t("obraDetail.volverAObras")}
-        >
-          ✕
-        </button>
+        <div className="header-actions">
+          <AyudaSeccion pasos={pasosAyuda} />
+          <button
+            type="button"
+            className="header-close-button"
+            onClick={onBack}
+            aria-label={volverALabel ?? t("obraDetail.volverAObras")}
+            title={volverALabel ?? t("obraDetail.volverAObras")}
+          >
+            ✕
+          </button>
+        </div>
       </div>
 
       {loading && <p>{t("common.loading")}</p>}
@@ -2309,6 +2333,7 @@ export function ObraDetail({
             <button
               type="button"
               className="obra-detail-thumbnail-button"
+              data-recorrido="obra-imagen"
               onClick={handleShowFullImage}
               onContextMenu={handleAbrirMenuImagen}
               disabled={loadingFullImage}
@@ -2383,19 +2408,23 @@ export function ObraDetail({
                 );
               })()}
             <div className="obra-form-saved-actions">
-              <button type="button" onClick={() => setEditingObra(true)}>
+              <button type="button" data-recorrido="obra-editar" onClick={() => setEditingObra(true)}>
                 {t("obraDetail.editarObra")}
               </button>
-              <button type="button" onClick={handleAbrirInformesMenu} disabled={generandoFichaPdf}>
+              <button type="button" data-recorrido="obra-informe" onClick={handleAbrirInformesMenu} disabled={generandoFichaPdf}>
                 {generandoFichaPdf ? t("common.saving") : t("common.generarInforme")}
               </button>
-              <button type="button" onClick={() => setConfirmingDelete(true)}>
+              <button type="button" data-recorrido="obra-seleccion" onClick={() => setAgregarSeleccionAbierto(true)}>
+                {t("selecciones.agregarABoton")}
+              </button>
+              <button type="button" data-recorrido="obra-eliminar" onClick={() => setConfirmingDelete(true)}>
                 {t("obraDetail.eliminarObra")}
               </button>
               {mostrarBotonLightroomVista && (
                 <button
                   type="button"
                   className="link-icon-button link-icon-button-lightroom"
+                  data-recorrido="obra-lightroom"
                   onClick={handleAbrirEnLightroomDesdeVista}
                   aria-label={t("filePathField.abrirEnLightroom")}
                   title={t("filePathField.abrirEnLightroom")}
@@ -2407,6 +2436,7 @@ export function ObraDetail({
                 <button
                   type="button"
                   className="link-icon-button link-icon-button-photoshop"
+                  data-recorrido="obra-photoshop"
                   onClick={handleAbrirEnPhotoshopClick}
                   aria-label={t("obraDetail.abrirEnPhotoshop")}
                   title={t("obraDetail.abrirEnPhotoshop")}
@@ -2415,6 +2445,16 @@ export function ObraDetail({
                 </button>
               )}
             </div>
+            {agregarSeleccionAbierto && (
+              <AgregarASeleccionModal
+                obraIds={[obraId]}
+                onClose={() => setAgregarSeleccionAbierto(false)}
+                onDone={(mensaje) => {
+                  setAgregarSeleccionAbierto(false);
+                  setFichaPdfMensaje(mensaje);
+                }}
+              />
+            )}
             {fichaPdfMensaje && (
               <p className="success" role="status">
                 ✅ {fichaPdfMensaje}
@@ -2453,10 +2493,11 @@ export function ObraDetail({
 
       {obra && (
         <div className="ejemplares-list">
-          <h2>{t("obraDetail.ejemplares")}</h2>
-          {(mostrarTodasSeries ? edicionesEjemplares : edicionesColapsadas).map((ej) => (
+          <h2 data-recorrido="obra-ejemplares">{t("obraDetail.ejemplares")}</h2>
+          {(mostrarTodasSeries ? edicionesEjemplares : edicionesColapsadas).map((ej, indice) => (
             <EjemplarRowView
               key={ej.id}
+              recorrido={indice === 0}
               ejemplar={ej}
               categoria={obra.categoria_obra}
               esFotografiaDigital={obra.categoria_obra === "Fotografia" && ext?.subtipo_fotografia === "DigitalFineArt"}
@@ -2484,6 +2525,7 @@ export function ObraDetail({
             <button
               type="button"
               className="ejemplares-ver-mas"
+              data-recorrido="obra-ver-mas"
               onClick={() => setMostrarTodasSeries((v) => !v)}
             >
               {mostrarTodasSeries
@@ -3769,6 +3811,7 @@ function ObraEditForm({
 }
 
 function EjemplarRowView({
+  recorrido,
   ejemplar,
   categoria,
   esFotografiaDigital,
@@ -3788,6 +3831,8 @@ function EjemplarRowView({
   onAbrirCertificado,
   abriendoCertificado,
 }: {
+  /** Marca los botones de esta copia para el recorrido de ayuda de la ficha (solo la primera). */
+  recorrido?: boolean;
   ejemplar: EjemplarRow;
   categoria: CategoriaObra;
   esFotografiaDigital: boolean;
@@ -4404,6 +4449,7 @@ function EjemplarRowView({
       <div className="obra-form-saved-actions">
         <button
           type="button"
+          data-recorrido={recorrido ? "obra-ej-editar" : undefined}
           onClick={() => {
             setVentaBloqueada(null);
             onEdit();
@@ -4415,7 +4461,7 @@ function EjemplarRowView({
           ejemplar.estado !== "descartada" &&
           ejemplar.estado !== "destruida" &&
           ejemplar.estado !== "coleccion_autor" && (
-            <button type="button" onClick={handleVenderClick}>
+            <button type="button" data-recorrido={recorrido ? "obra-ej-vender" : undefined} onClick={handleVenderClick}>
               {t(ejemplar.tipo === "prueba_artista" ? "obraDetail.ventaReservaDonacion" : "obraDetail.ventaReserva")}
             </button>
           )}
@@ -4447,12 +4493,12 @@ function EjemplarRowView({
           </button>
         )}
         {(!["descartada", "coleccion_autor", "destruida"].includes(ejemplar.estado) || venta) && (
-          <button type="button" onClick={onAbrirInformes}>
+          <button type="button" data-recorrido={recorrido ? "obra-ej-informes" : undefined} onClick={onAbrirInformes}>
             {t("ventaForm.informesButton")}
           </button>
         )}
         {(!["descartada", "destruida"].includes(ejemplar.estado) || venta) && (
-          <button type="button" onClick={onAbrirCertificado} disabled={abriendoCertificado} title={t("certificado.botonAyuda")}>
+          <button type="button" data-recorrido={recorrido ? "obra-ej-certificado" : undefined} onClick={onAbrirCertificado} disabled={abriendoCertificado} title={t("certificado.botonAyuda")}>
             {abriendoCertificado ? t("common.loading") : t("certificado.boton")}
           </button>
         )}

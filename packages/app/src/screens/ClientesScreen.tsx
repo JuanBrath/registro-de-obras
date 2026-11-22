@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import type { TipoCliente } from "@registro/core";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { LinkField } from "../components/LinkField.js";
+import { AyudaSeccion, pasoAyuda } from "../components/AyudaSeccion.js";
 import { HelpIcon } from "../components/HelpIcon.js";
 import { InformesModal } from "../components/InformesModal.js";
 import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
@@ -319,17 +320,28 @@ export function ClientesScreen({ onBack }: { onBack: () => void }) {
 
   if (!context) return null;
 
+  // Recorrido de ayuda de la sección (botón "?" del encabezado).
+  const pasosAyuda = [
+    pasoAyuda(t, "clientes-nuevo", "ayudaClientes.nuevo", t("clientes.nuevoCliente")),
+    pasoAyuda(t, "clientes-informes", "ayudaClientes.informes", t("clientes.generarInformes")),
+    pasoAyuda(t, "clientes-buscar", "ayudaClientes.buscar", t("obrasList.ayudaBuscar")),
+    pasoAyuda(t, "clientes-acciones", "ayudaClientes.acciones", t("common.consultar") + " / " + t("common.edit") + " / " + t("common.delete")),
+    pasoAyuda(t, "clientes-tabs", "ayudaClientes.tabs", t("clientes.datosTab") + " / " + t("clientes.historialTab")),
+    pasoAyuda(t, "clientes-ficha-acciones", "ayudaClientes.fichaAcciones", t("common.generarInforme")),
+  ];
+
   return (
     <div>
       <div className="obras-list-header">
         <h1>{t("clientes.title")}</h1>
         <div className="header-actions">
+          <AyudaSeccion pasos={pasosAyuda} />
           {!mostrandoAlta && fichaId === null && (
             <>
-              <button type="button" onClick={() => setMostrandoAlta(true)}>
+              <button type="button" data-recorrido="clientes-nuevo" onClick={() => setMostrandoAlta(true)}>
                 {t("clientes.nuevoCliente")}
               </button>
-              <button type="button" onClick={handleAbrirInformesLista}>
+              <button type="button" data-recorrido="clientes-informes" onClick={handleAbrirInformesLista}>
                 {t("clientes.generarInformes")}
               </button>
             </>
@@ -479,7 +491,7 @@ export function ClientesScreen({ onBack }: { onBack: () => void }) {
           {!loading && clientes.length === 0 && <p>{t("clientes.sinClientes")}</p>}
 
           {clientes.length > 0 && fichaId === null && (
-            <div className="buscador-con-ayuda">
+            <div className="buscador-con-ayuda" data-recorrido="clientes-buscar">
               <input type="search" className="obras-list-buscador" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
               <HelpIcon fieldKey="busqueda_general" />
             </div>
@@ -490,9 +502,10 @@ export function ClientesScreen({ onBack }: { onBack: () => void }) {
           <div className="artistas-list">
             {filteredClientes
               .filter((c) => fichaId === null || c.id === fichaId)
-              .map((c) => (
+              .map((c, indice) => (
                 <ClienteRowView
                   key={c.id}
+                  esPrimero={indice === 0}
                   cliente={c}
                   modo={fichaId === c.id ? fichaModo : "compacto"}
                   onConsultar={() => {
@@ -523,6 +536,7 @@ export function ClientesScreen({ onBack }: { onBack: () => void }) {
 
 function ClienteRowView({
   cliente,
+  esPrimero,
   modo,
   onConsultar,
   onEditar,
@@ -531,6 +545,7 @@ function ClienteRowView({
   onSave,
 }: {
   cliente: ClienteRow;
+  esPrimero: boolean;
   modo: "compacto" | "consultar" | "editar";
   onConsultar: () => void;
   onEditar: () => void;
@@ -701,7 +716,7 @@ function ClienteRowView({
       <div className="ejemplar-row ejemplar-row-editing" onKeyDown={focusNextOnEnter}>
         <h2>{cliente.nombre}</h2>
 
-        <div className="cliente-tabs">
+        <div className="cliente-tabs" data-recorrido="clientes-tabs">
           <button
             type="button"
             className={`cliente-tab-button${activeTab === "datos" ? " cliente-tab-button-active" : ""}`}
@@ -721,7 +736,7 @@ function ClienteRowView({
         {activeTab === "historial" && (
           <>
             <HistorialCompras clienteId={cliente.id} />
-            <div className="obra-form-saved-actions">
+            <div className="obra-form-saved-actions" data-recorrido="clientes-ficha-acciones">
               <button type="button" onClick={handleAbrirInformesMenu}>
                 {t("common.generarInforme")}
               </button>
@@ -819,7 +834,7 @@ function ClienteRowView({
               <span className="field-label">{t("artistas.notas")}</span>
               <textarea rows={3} value={notas} onChange={(e) => setNotas(e.target.value)} disabled={soloLectura} />
             </label>
-            <div className="obra-form-saved-actions">
+            <div className="obra-form-saved-actions" data-recorrido="clientes-ficha-acciones">
               <button type="button" onClick={handleAbrirInformesMenu}>
                 {t("common.generarInforme")}
               </button>
@@ -884,7 +899,7 @@ function ClienteRowView({
           <a href={`tel:${cliente.telefono}`}>{cliente.telefono}</a>
         </span>
       )}
-      <div className="obra-form-saved-actions cliente-compacto-acciones">
+      <div className="obra-form-saved-actions cliente-compacto-acciones" data-recorrido={esPrimero ? "clientes-acciones" : undefined}>
         <button type="button" onClick={onConsultar}>
           {t("common.consultar")}
         </button>

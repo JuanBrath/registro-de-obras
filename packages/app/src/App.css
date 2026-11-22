@@ -135,6 +135,18 @@ input[type="date"] {
   margin: 24px 0;
 }
 
+.workspace-picker-lema {
+  margin: -12px 0 0;
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.65;
+}
+
+.por-que-recer-texto {
+  line-height: 1.6;
+}
+
 .workspace-picker {
   max-width: 480px;
   margin: 4rem auto;
@@ -883,21 +895,9 @@ input[type="date"] {
 }
 
 .obras-vista-toggle-boton.activo {
-  background: #1a73e8;
-  border-color: #1a73e8;
-  color: var(--bg);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .obras-vista-toggle-boton.activo {
-    background: #64b5f6;
-    border-color: #64b5f6;
-  }
-}
-
-:root[data-theme="dark"] .obras-vista-toggle-boton.activo {
-  background: #64b5f6;
-  border-color: #64b5f6;
+  background: var(--azul-marino);
+  border-color: var(--azul-marino-borde);
+  color: #fff;
 }
 
 /* Vista en columnas de Obras: una fila por obra, con miniatura chica y los
@@ -2909,4 +2909,318 @@ input[type="date"] {
 
 .obras-toolbar ~ .obras-grid {
   margin-top: 0.75rem;
+}
+
+/* Selecciones: separación entre botones/controles de las filas nuevas. */
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin-top: 1rem;
+}
+
+.obras-seleccion-panel {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.obra-card-wrapper > .form-actions {
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+.obra-card-wrapper > .form-actions button {
+  padding: 0.25em 0.7em;
+}
+
+/* Pantalla Selecciones: más aire entre bloques. */
+.selecciones-bloque {
+  margin-top: 2rem;
+}
+
+.selecciones-formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.selecciones-formulario > label {
+  max-width: 640px;
+}
+
+.selecciones-formulario label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.selecciones-subtitulo {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+}
+
+.selecciones-bloque .obras-toolbar-fila {
+  gap: 0.75rem 1rem;
+}
+
+/* Asistente de dossier: secciones con aire. */
+.dossier-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 0.5rem 0.75rem 0.25rem;
+  min-width: min(640px, 86vw);
+}
+
+.dossier-titulo {
+  margin: 0;
+}
+
+.dossier-cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.dossier-seccion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.dossier-seccion h3 {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.dossier-fila {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+}
+
+.dossier-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 180px;
+}
+
+.dossier-campo input[type="text"],
+.dossier-campo textarea {
+  width: 100%;
+}
+
+.dossier-serie {
+  margin-top: 0.25rem;
+}
+
+.dossier-checks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(160px, 1fr));
+  gap: 0.75rem 1.5rem;
+}
+
+.dossier-check {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+}
+
+.dossier-check input {
+  width: 1.1rem;
+  height: 1.1rem;
+  margin: 0;
+}
+
+.dossier-check-off {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.dossier-nota {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.dossier-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding-top: 0.5rem;
+}
+
+.dossier-campo-chico {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 110px;
+}
+
+.dossier-campo-chico input[type="number"],
+.dossier-campo input[type="number"] {
+  width: 100%;
+}
+
+.dossier-excepciones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.dossier-excepcion {
+  align-items: flex-end;
+}
+
+.dossier-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.dossier-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  padding: 0.9rem 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.dossier-item-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+  align-items: baseline;
+}
+
+.dossier-item-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+}
+
+/* Contorno azul marino al pasar el mouse por cualquier botón. */
+button:not(:disabled):hover {
+  outline: 2px solid var(--azul-marino-borde);
+  outline-offset: 1px;
+}
+
+/* Modo Seleccionar: el selector de la selección activa se marca con borde azul. */
+.obras-seleccion-panel {
+  border: 2px solid var(--azul-marino-borde);
+}
+
+.obras-seleccion-panel select {
+  border: 2px solid var(--azul-marino-borde);
+  border-radius: 6px;
+}
+
+/* Confirmación de eliminar una selección: caja destacada en rojo. */
+.selecciones-confirmar-eliminar {
+  flex-basis: 100%;
+  border-width: 2px;
+  align-items: flex-start;
+  padding: 1rem 1.25rem;
+}
+
+.selecciones-confirmar-eliminar p {
+  margin: 0;
+  font-weight: 600;
+}
+
+.boton-peligro {
+  background: #c62828;
+  border-color: #c62828;
+  color: #fff;
+}
+
+.selecciones-confirmar-eliminar .selecciones-aviso-dossiers {
+  color: #c62828;
+}
+
+/* Panel del modo Seleccionar: más aire respecto de los botones de arriba y los filtros de abajo. */
+.obras-seleccion-panel {
+  margin-top: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Selecciones: barra de vista. */
+.selecciones-vista-barra {
+  margin-bottom: 1rem;
+}
+
+.dossier-textos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+/* Pantalla inicial de la primera vez: "¿Por qué Recer?". */
+.bienvenida-recer {
+  max-width: 560px;
+  margin: 4rem auto;
+  padding: 0 1rem;
+  text-align: center;
+}
+
+.bienvenida-recer-titulo {
+  margin: 2rem 0 1rem;
+  font-size: 1.6rem;
+}
+
+.bienvenida-recer .por-que-recer-texto {
+  text-align: left;
+  font-size: 1.05rem;
+}
+
+.bienvenida-recer-boton {
+  margin-top: 2rem;
+  padding: 0.6em 2.2em;
+  font-size: 1.1rem;
+}
+
+.bienvenida-recer-pie {
+  margin-top: 1.5rem;
+  font-size: 0.85rem;
+  opacity: 0.65;
+}
+
+/* Botón "?" de ayuda de la sección, al lado del botón de cierre. */
+.header-help-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  margin-right: 0.5rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.obras-recorrido-envoltorio {
+  display: inline-flex;
+  align-items: center;
 }

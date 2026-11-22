@@ -45,6 +45,8 @@ export function RecorridoInicial({ pasos, onCerrar }: { pasos: PasoRecorrido[]; 
       return;
     }
     const el = document.querySelector(paso.targetSelector);
+    // Si el elemento quedó fuera de la ventana (p. ej. una obra más abajo), se lo trae a la vista antes de medirlo.
+    el?.scrollIntoView({ block: "nearest", inline: "nearest" });
     setRect(el ? el.getBoundingClientRect() : null);
   }, [paso]);
 

@@ -15,7 +15,7 @@ In **Artworks**, click the artwork's card. The title is at the top; to go back u
 - The **Statement** and the **Notes**: the first line is shown; click the field name to see the full text.
 - Further down, the list of **Copies**: the copies of the artwork. See [Copies and statuses](cap:copias).
 
-Below the details there are three buttons: **Edit artwork**, **Generate report** and **Delete artwork**. If there's an original file loaded, the **Ps** button (**Open in Photoshop**) also appears next to them, and, if it's also your own digital photo, the **Lr** button (**Open in Lightroom Classic** — see [Lightroom Classic](cap:lightroom-classic)).
+Below the details there are four buttons: **Edit artwork**, **Generate report**, **Add to selection…** (to add the artwork to a selection; see [Selections and dossier](cap:selecciones-y-dossier)) and **Delete artwork**. If there's an original file loaded, the **Ps** button (**Open in Photoshop**) also appears next to them, and, if it's also your own digital photo, the **Lr** button (**Open in Lightroom Classic** — see [Lightroom Classic](cap:lightroom-classic)).
 
 ## The right-click menu on the image
 

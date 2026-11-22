@@ -210,7 +210,22 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
       "0085_dimensiones_solo_por_ejemplar",
       "0086_dimensiones_obra_vuelve_si_es_seriada",
       "0087_limpiar_dimensiones_ejemplar_series",
+      "0088_selecciones",
+      "0089_seleccion_dossier",
     ]);
+  });
+
+  it("0088 crea selecciones y borrar una selección o una obra limpia seleccion_obra (cascade)", async () => {
+    const db = adaptNodeSqlite(new DatabaseSync(":memory:"));
+    await applyMigrations(db, ALL_MIGRATIONS);
+    await db.execute("PRAGMA foreign_keys = ON");
+    await db.execute("INSERT INTO artista (nombre_completo) VALUES ('A')");
+    await db.execute("INSERT INTO obra (titulo, categoria_obra, artista_id) VALUES ('O1', 'Fotografia', 1)");
+    await db.execute("INSERT INTO seleccion (nombre) VALUES ('Feria')");
+    await db.execute("INSERT INTO seleccion_obra (seleccion_id, obra_id, orden) VALUES (1, 1, 0)");
+    await db.execute("DELETE FROM seleccion WHERE id = 1");
+    const filas = await db.query("SELECT * FROM seleccion_obra");
+    expect(filas).toHaveLength(0);
   });
 
   it("la ayuda de las pruebas de artista aclara que por convencion no se venden pero el programa permite registrar su venta", async () => {

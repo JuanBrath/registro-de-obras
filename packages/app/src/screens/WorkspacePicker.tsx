@@ -5,6 +5,7 @@ import { useEdicion } from "../state/EdicionContext.js";
 import { useMiniaturasModo } from "../state/MiniaturasModoContext.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
 import { BrandHeader } from "../components/BrandHeader.js";
+import { PorQueRecerModal } from "../components/PorQueRecerModal.js";
 import { isTauri } from "../adapters/detectPlatform.js";
 import { useAutoHoverCollage } from "../utils/useAutoHoverCollage.js";
 import { hayEnvioLightroom } from "../lightroom/lightroom.js";
@@ -16,6 +17,7 @@ export function WorkspacePicker({ onManual }: { onManual: () => void }) {
   const { edicion } = useEdicion();
   const { miniaturasModo } = useMiniaturasModo();
   const { t } = useLanguage();
+  const [mostrarPorQueRecer, setMostrarPorQueRecer] = useState(false);
   const [miniaturas, setMiniaturas] = useState<string[]>([]);
   const miniaturasRef = useRef<string[]>([]);
   const indiceAutoAbierto = useAutoHoverCollage(miniaturas.length, miniaturasModo === "dinamicas");
@@ -83,7 +85,9 @@ export function WorkspacePicker({ onManual }: { onManual: () => void }) {
 
   return (
     <div className="workspace-picker">
-      <BrandHeader size="splash" className="workspace-picker-brand" />
+      <BrandHeader size="splash" className="workspace-picker-brand" onClick={() => setMostrarPorQueRecer(true)} />
+      <p className="workspace-picker-lema">{t("porQueRecer.lema")}</p>
+      {mostrarPorQueRecer && <PorQueRecerModal onClose={() => setMostrarPorQueRecer(false)} />}
       <div className="workspace-picker-options">
         {cargandoEdicion && <p>{t("common.loading")}</p>}
         {mostrarPersonal && (

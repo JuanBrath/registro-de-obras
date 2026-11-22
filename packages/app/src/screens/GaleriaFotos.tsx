@@ -16,6 +16,7 @@ import { subtipoTranslationKey } from "./fields/ObraDetalleFields.js";
 import { MiniaturasSizeSlider } from "../components/MiniaturasSizeSlider.js";
 import { TagFilterPicker } from "../components/TagFilterPicker.js";
 import { CalificacionFilterButton } from "../components/CalificacionFilterButton.js";
+import { AyudaSeccion, pasoAyuda } from "../components/AyudaSeccion.js";
 import { StarRating } from "../components/StarRating.js";
 import { HelpIcon } from "../components/HelpIcon.js";
 import { cargarColumnasGridInicial, guardarColumnasGrid } from "../utils/columnasGrid.js";
@@ -494,12 +495,26 @@ export function GaleriaFotos({
 
   if (!context) return null;
 
+  // Recorrido de ayuda de la sección (botón "?" del encabezado).
+  const pasosAyuda = [
+    pasoAyuda(t, "obras-buscar", "ayudaObras.buscar", t("obrasList.ayudaBuscar")),
+    pasoAyuda(t, "obras-tamano", "ayudaObras.tamano", t("obrasList.tamanoMiniaturasLabel")),
+    pasoAyuda(t, "obras-orden", "ayudaObras.orden", t("obrasList.ordenarPorLabel")),
+    pasoAyuda(t, "obras-artista", "ayudaObras.artista", t("obraForm.artistaLabel")),
+    pasoAyuda(t, "obras-categoria", "ayudaObras.categoria", t("obraForm.categoriaLabel")),
+    pasoAyuda(t, "obras-subtipo", "ayudaObras.subtipo", t("field.subtipo")),
+    pasoAyuda(t, "obras-estrellas", "ayudaObras.estrellas", t("obrasList.colCalificacion")),
+    pasoAyuda(t, "obras-etiquetas", "ayudaObras.etiquetas", t("obraForm.etiquetasLabel")),
+    pasoAyuda(t, "galeria-foto", "ayudaGaleria.foto", t("galeria.title")),
+  ];
+
   return (
     <div className="obras-list obras-list-grid-ancho">
       <div className="obras-encabezado-fijo">
       <div className="obras-list-header">
         <h1>{t("galeria.title")}</h1>
         <div className="header-actions">
+          <AyudaSeccion pasos={pasosAyuda} />
           <button type="button" className="header-close-button" onClick={onBack} aria-label={t("common.back")} title={t("common.back")}>
             ✕
           </button>
@@ -509,16 +524,20 @@ export function GaleriaFotos({
       <div className="obras-toolbar">
         <div className="obras-toolbar-fila">
           {fotos.length > 0 && (
-            <div className="buscador-con-ayuda obras-list-buscador-fila-principal">
+            <div className="buscador-con-ayuda obras-list-buscador-fila-principal" data-recorrido="obras-buscar">
               <input type="search" className="obras-list-buscador" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
               <HelpIcon fieldKey="busqueda_general" />
             </div>
           )}
-          {fotos.length > 0 && <MiniaturasSizeSlider columnas={columnasGrid} onChange={handleTamanoMiniaturasChange} />}
+          {fotos.length > 0 && (
+            <span className="obras-recorrido-envoltorio" data-recorrido="obras-tamano">
+              <MiniaturasSizeSlider columnas={columnasGrid} onChange={handleTamanoMiniaturasChange} />
+            </span>
+          )}
         </div>
 
         <div className="obras-toolbar-fila">
-          <label className="galeria-filtro-artista">
+          <label className="galeria-filtro-artista" data-recorrido="obras-orden">
             {t("obrasList.ordenarPorLabel")}
             <select value={ordenPor} onChange={(e) => setOrdenPor(e.target.value as "titulo" | "codigo_inventario" | "fecha_captura")}>
               <option value="codigo_inventario">{t("obrasList.ordenarPorCodigoInventario")}</option>
@@ -528,7 +547,7 @@ export function GaleriaFotos({
           </label>
 
           {esGaleria && allArtistas.length > 0 && (
-            <label className="galeria-filtro-artista">
+            <label className="galeria-filtro-artista" data-recorrido="obras-artista">
               {t("obraForm.artistaLabel")}
               <select value={selectedArtistaId ?? ""} onChange={(e) => handleArtistaChange(e.target.value)}>
                 <option value="">{t("galeria.todosArtistas")}</option>
@@ -542,7 +561,7 @@ export function GaleriaFotos({
           )}
 
           {allCategorias.length > 0 && (
-            <label className="galeria-filtro-artista">
+            <label className="galeria-filtro-artista" data-recorrido="obras-categoria">
               {t("obraForm.categoriaLabel")}
               <select value={selectedCategoria ?? ""} onChange={(e) => handleCategoriaChange(e.target.value)}>
                 <option value="">{t("galeria.todasCategorias")}</option>
@@ -556,7 +575,7 @@ export function GaleriaFotos({
           )}
 
           {allSubtipos.length > 0 && (
-            <label className="galeria-filtro-artista">
+            <label className="galeria-filtro-artista" data-recorrido="obras-subtipo">
               {t("field.subtipo")}
               <select value={selectedSubtipo ?? ""} onChange={(e) => handleSubtipoChange(e.target.value)}>
                 <option value="">{t("galeria.todosSubtipos")}</option>
@@ -569,16 +588,18 @@ export function GaleriaFotos({
             </label>
           )}
 
-          <CalificacionFilterButton
-            calificacionFiltro={calificacionFiltro}
-            onChange={(n) => {
-              setCalificacionFiltro(n);
-              closeLightbox();
-            }}
-            onQuitarATodas={handleQuitarCalificacionATodas}
-          />
+          <span className="obras-recorrido-envoltorio" data-recorrido="obras-estrellas">
+            <CalificacionFilterButton
+              calificacionFiltro={calificacionFiltro}
+              onChange={(n) => {
+                setCalificacionFiltro(n);
+                closeLightbox();
+              }}
+              onQuitarATodas={handleQuitarCalificacionATodas}
+            />
+          </span>
           {allTags.length > 0 && (
-            <div className="obras-toolbar-etiquetas">
+            <div className="obras-toolbar-etiquetas" data-recorrido="obras-etiquetas">
               <span className="galeria-filtro-etiquetas-label">
                 {t("obraForm.etiquetasLabel")} <HelpIcon fieldKey="filtro_etiquetas_multiple" />
               </span>
@@ -601,7 +622,7 @@ export function GaleriaFotos({
         {filteredFotos.map(
           (foto, i) =>
             thumbnails[foto.id] && (
-              <div className="galeria-foto-thumb-wrapper" key={foto.id}>
+              <div className="galeria-foto-thumb-wrapper" key={foto.id} data-recorrido={i === 0 ? "galeria-foto" : undefined}>
                 <button
                   type="button"
                   className="galeria-foto-thumb-button"
