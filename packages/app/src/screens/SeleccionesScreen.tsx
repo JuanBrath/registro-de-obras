@@ -78,6 +78,18 @@ export function SeleccionesScreen({
   // Modo "ordenar y quitar": solo mientras está activo se puede arrastrar, mover con flechas y quitar obras, y tocar una
   // obra no abre su ficha (así no se abre por error al arrastrar).
   const [modoOrden, setModoOrden] = useState(false);
+  // Alto del encabezado fijo: la barra de vista (tarjetas/columnas, ordenar y tamaño) queda fija justo debajo.
+  const encabezadoRef = useRef<HTMLDivElement | null>(null);
+  const [altoEncabezado, setAltoEncabezado] = useState(0);
+  useEffect(() => {
+    const el = encabezadoRef.current;
+    if (!el) return;
+    const medir = () => setAltoEncabezado(el.offsetHeight);
+    medir();
+    const observador = new ResizeObserver(medir);
+    observador.observe(el);
+    return () => observador.disconnect();
+  }, []);
   const [arrastrando, setArrastrando] = useState<number | null>(null);
   const [sobre, setSobre] = useState<number | null>(null);
   const objectUrlsRef = useRef<string[]>([]);
@@ -292,7 +304,7 @@ export function SeleccionesScreen({
 
   return (
     <div className="obras-list obras-list-grid-ancho">
-      <div className="obras-encabezado-fijo">
+      <div className="obras-encabezado-fijo" ref={encabezadoRef}>
       <div className="obras-list-header">
         <h1>{t("selecciones.title")}</h1>
         <div className="header-actions">
@@ -427,7 +439,7 @@ export function SeleccionesScreen({
 
           {obras.length === 0 && <p>{t("selecciones.sinObras")}</p>}
           {obras.length > 0 && (
-            <div className="obras-toolbar-fila selecciones-vista-barra">
+            <div className="obras-toolbar-fila selecciones-vista-barra" style={{ top: `calc(var(--topbar-height) + ${altoEncabezado}px)` }}>
               <div className="obras-vista-toggle" data-recorrido="obras-vista">
                 <button
                   type="button"

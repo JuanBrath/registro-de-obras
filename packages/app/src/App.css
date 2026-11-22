@@ -3321,3 +3321,40 @@ button:not(:disabled):hover {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Selecciones: la barra de vista (Columnas/Tarjetas, Ordenar y quitar, tamaño) queda fija debajo del encabezado. */
+.selecciones-vista-barra {
+  position: sticky;
+  z-index: 49;
+  background: var(--bg);
+  padding: 0.5rem 0;
+  margin-bottom: 0.5rem;
+}
+
+/* Los controles nativos (casillas, selectores de opción, deslizadores) y el foco usan el azul neutro de la app en
+   lugar del azul del sistema, y los botones de enviar (Guardar…) son el botón principal en azul marino. */
+:root {
+  accent-color: var(--azul-marino-borde);
+}
+
+:focus-visible {
+  outline: 2px solid var(--azul-resalte);
+  outline-offset: 2px;
+}
+
+button[type="submit"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--azul-marino);
+  color: #fff;
+  border: 1px solid var(--azul-marino-borde);
+  border-radius: 6px;
+  padding: 0.35em 1em;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+button[type="submit"]:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
