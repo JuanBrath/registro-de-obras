@@ -3467,3 +3467,13 @@ button[type="submit"]:disabled {
   margin: 0;
   font-size: 1.05rem;
 }
+
+/* Visor de la Galería: las flechas de desplazamiento van sin el círculo alrededor, solo la flecha. */
+.modal-content-image .lightbox-arrow {
+  border: none;
+  background: transparent;
+  width: auto;
+  height: auto;
+  padding: 0 0.5rem;
+  font-size: 2.4rem;
+}
