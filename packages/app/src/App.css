@@ -3224,3 +3224,13 @@ button:not(:disabled):hover {
   display: inline-flex;
   align-items: center;
 }
+
+/* Las ventanas se ajustan a su contenido: ni más chicas (que recortan o esconden campos) ni siempre a todo el
+   ancho. Parten de 520px, crecen hasta donde pide el contenido y topean en 760px (o el 90% de la pantalla), y si
+   aun así no entra, se desplazan. Quedan afuera las que tienen su propio ancho: lateral, imagen, certificado,
+   ancha y maximizada. */
+.modal-content:not(.modal-content-drawer):not(.modal-content-image):not(.modal-content-certificado):not(.modal-content-wide):not(.modal-content-maximizada) {
+  width: fit-content;
+  min-width: min(520px, 100%);
+  max-width: min(90vw, 760px);
+}

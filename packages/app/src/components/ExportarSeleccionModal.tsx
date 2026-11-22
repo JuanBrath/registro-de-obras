@@ -66,7 +66,7 @@ export function ExportarSeleccionModal({
   }
 
   return (
-    <Modal onClose={exportando ? () => {} : onClose}>
+    <Modal onClose={exportando ? () => {} : onClose} maximizable>
       <div className="dossier-modal">
         <h2 className="dossier-titulo">{t("exportarSeleccion.titulo", { nombre: seleccionNombre })}</h2>
         <p className="dossier-nota">{t("exportarSeleccion.resumen", { conArchivo, total: obras.length })}</p>
