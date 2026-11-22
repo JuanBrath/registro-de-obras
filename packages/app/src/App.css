@@ -3413,3 +3413,24 @@ button[type="submit"]:disabled {
   color: var(--visor-texto);
   opacity: 1;
 }
+
+/* Selecciones: la barra de vista se apoya apenas debajo del encabezado fijo; la sombra tapa cualquier línea de
+   contenido que pudiera asomar entre los dos al desplazarse. */
+.selecciones-vista-barra {
+  box-shadow: 0 -2px 0 var(--bg);
+}
+
+/* Visor de la Galería: el botón ⓘ ya es un círculo; se le saca el círculo extra que le había agregado. */
+.modal-content-image .lightbox-info-button {
+  border: none;
+  background: transparent;
+  width: auto;
+  height: auto;
+  padding: 0 0.25rem;
+  font-size: 1.25rem;
+}
+
+.modal-content-image .lightbox-info-button.activo {
+  background: transparent;
+  color: var(--azul-resalte);
+}

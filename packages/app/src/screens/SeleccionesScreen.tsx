@@ -84,7 +84,7 @@ export function SeleccionesScreen({
   useEffect(() => {
     const el = encabezadoRef.current;
     if (!el) return;
-    const medir = () => setAltoEncabezado(el.offsetHeight);
+    const medir = () => setAltoEncabezado(Math.floor(el.getBoundingClientRect().height) - 1);
     medir();
     const observador = new ResizeObserver(medir);
     observador.observe(el);
