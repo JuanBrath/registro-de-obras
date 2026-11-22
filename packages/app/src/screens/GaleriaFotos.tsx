@@ -650,6 +650,9 @@ export function GaleriaFotos({
 
       {lightboxIndex !== null && (
         <Modal onClose={closeLightbox} wide className="modal-content-image">
+          <span className="lightbox-contador" aria-label={t("galeria.posicionFoto")}>
+            {lightboxIndex + 1} / {filteredFotos.length}
+          </span>
           {filteredFotos.length > 1 && (
             <button
               type="button"
@@ -696,7 +699,7 @@ export function GaleriaFotos({
                   className="star-rating-lightbox"
                 />
               )}
-              {filteredFotos[lightboxIndex]?.titulo} — {lightboxIndex + 1} / {filteredFotos.length}
+              {filteredFotos[lightboxIndex]?.titulo}
               {filteredFotos[lightboxIndex] && (
                 <button
                   type="button"

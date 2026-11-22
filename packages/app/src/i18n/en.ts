@@ -1310,4 +1310,5 @@ export const en: Record<keyof typeof es, string> = {
   "exportarSeleccion.listo": "{{cantidad}} photo(s) exported to {{carpeta}}.",
   "exportarSeleccion.sinArchivo": "Not exported because they have no original file loaded: {{obras}}.",
   "exportarSeleccion.conError": "Could not be exported: {{obras}}.",
+  "galeria.posicionFoto": "Position of the photo in the gallery",
 };

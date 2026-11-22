@@ -1309,4 +1309,5 @@ export const es = {
   "exportarSeleccion.listo": "Se exportaron {{cantidad}} foto(s) en {{carpeta}}.",
   "exportarSeleccion.sinArchivo": "No se exportaron por no tener archivo original cargado: {{obras}}.",
   "exportarSeleccion.conError": "No se pudieron exportar: {{obras}}.",
+  "galeria.posicionFoto": "Posición de la foto dentro de la galería",
 } as const;

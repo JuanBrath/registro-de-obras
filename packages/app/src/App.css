@@ -3358,3 +3358,13 @@ button[type="submit"]:disabled {
   opacity: 0.55;
   cursor: default;
 }
+
+/* Galería de obras: posición de la foto (n / total) en la esquina superior izquierda, aparte de los datos de la obra. */
+.lightbox-contador {
+  position: absolute;
+  top: 0.9rem;
+  left: 1rem;
+  font-size: 0.85rem;
+  opacity: 0.8;
+  font-variant-numeric: tabular-nums;
+}
