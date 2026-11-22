@@ -3434,3 +3434,9 @@ button[type="submit"]:disabled {
   background: transparent;
   color: var(--azul-resalte);
 }
+
+/* Selecciones: un renglón de aire debajo de la selección elegida, dentro de la zona fija, para que al desplazarse
+   el contenido no quede pegado al botón. */
+.obras-encabezado-fijo.selecciones-encabezado {
+  padding-bottom: 1.1rem;
+}

@@ -8,11 +8,13 @@ export interface Seleccion {
 }
 
 export async function listSelecciones(db: DatabaseAdapter): Promise<Seleccion[]> {
-  return db.query<Seleccion>(
+  const filas = await db.query<Seleccion>(
     `SELECT s.id, s.nombre, s.notas,
             (SELECT COUNT(*) FROM seleccion_obra so WHERE so.seleccion_id = s.id) AS cantidad
-     FROM seleccion s ORDER BY s.nombre COLLATE NOCASE`,
+     FROM seleccion s`,
   );
+  // Orden alfabético por nombre, sin distinguir mayúsculas ni acentos y con números "naturales" (2 antes que 10).
+  return filas.sort((a, b) => a.nombre.localeCompare(b.nombre, undefined, { numeric: true, sensitivity: "base" }));
 }
 
 export async function crearSeleccion(db: DatabaseAdapter, nombre: string, notas: string | null = null): Promise<number> {

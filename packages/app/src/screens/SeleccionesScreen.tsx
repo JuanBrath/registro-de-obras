@@ -306,7 +306,7 @@ export function SeleccionesScreen({
 
   return (
     <div className="obras-list obras-list-grid-ancho">
-      <div className="obras-encabezado-fijo" ref={encabezadoRef}>
+      <div className="obras-encabezado-fijo selecciones-encabezado" ref={encabezadoRef}>
       <div className="obras-list-header">
         <h1>{t("selecciones.title")}</h1>
         <div className="header-actions">
