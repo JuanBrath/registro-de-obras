@@ -16,6 +16,8 @@ import { InformeListadoObrasModal } from "../components/InformeListadoObrasModal
 import { HelpIcon } from "../components/HelpIcon.js";
 import { MiniaturasSizeSlider } from "../components/MiniaturasSizeSlider.js";
 import { TagFilterPicker } from "../components/TagFilterPicker.js";
+import { AyudaSeccion } from "../components/AyudaSeccion.js";
+import type { PasoRecorrido } from "../components/RecorridoInicial.js";
 import { CalificacionFilterButton } from "../components/CalificacionFilterButton.js";
 import { StarRating } from "../components/StarRating.js";
 import { cargarColumnasGridInicial, guardarColumnasGrid } from "../utils/columnasGrid.js";
@@ -414,12 +416,38 @@ export function ObrasList({
 
   if (!context) return null;
 
+  // Recorrido de ayuda de la sección (botón "?" del encabezado): un paso por botón u opción.
+  const paso = (id: string, key: TranslationKey, titulo: string): PasoRecorrido => ({
+    targetSelector: `[data-recorrido="${id}"]`,
+    titulo,
+    texto: t(key),
+  });
+  const pasosAyuda: PasoRecorrido[] = [
+    paso("obras-buscar", "ayudaObras.buscar", t("obrasList.ayudaBuscar")),
+    paso("obras-nueva", "ayudaObras.nueva", t("workspaceHome.nuevaObra")),
+    paso("obras-galeria", "ayudaObras.galeria", t("workspaceHome.galeriaFotos")),
+    paso("obras-selecciones", "ayudaObras.selecciones", t("selecciones.boton")),
+    paso("obras-seleccionar", "ayudaObras.seleccionar", t("selecciones.seleccionar")),
+    paso("obras-informe", "ayudaObras.informe", t("informesObras.generarInforme")),
+    paso("obras-vista", "ayudaObras.vista", t("obrasList.vistaTarjetas") + " / " + t("obrasList.vistaColumnas")),
+    paso("obras-tamano", "ayudaObras.tamano", t("obrasList.tamanoMiniaturasLabel")),
+    paso("obras-orden", "ayudaObras.orden", t("obrasList.ordenarPorLabel")),
+    paso("obras-artista", "ayudaObras.artista", t("obraForm.artistaLabel")),
+    paso("obras-filtro-seleccion", "ayudaObras.filtroSeleccion", t("selecciones.filtroLabel")),
+    paso("obras-categoria", "ayudaObras.categoria", t("obraForm.categoriaLabel")),
+    paso("obras-subtipo", "ayudaObras.subtipo", t("field.subtipo")),
+    paso("obras-estrellas", "ayudaObras.estrellas", t("obrasList.colCalificacion")),
+    paso("obras-etiquetas", "ayudaObras.etiquetas", t("obraForm.etiquetasLabel")),
+    paso("obras-obra", "ayudaObras.obra", t("obrasList.colObra")),
+  ];
+
   return (
     <div className="obras-list obras-list-grid-ancho">
       <div className="obras-encabezado-fijo">
       <div className="obras-list-header">
         <h1>{t("obrasList.title")}</h1>
         <div className="header-actions">
+          <AyudaSeccion pasos={pasosAyuda} />
           <button type="button" className="header-close-button" onClick={onBack} aria-label={t("common.back")} title={t("common.back")}>
             ✕
           </button>
@@ -429,28 +457,30 @@ export function ObrasList({
       <div className="obras-toolbar">
         <div className="obras-toolbar-fila">
           {obras.length > 0 && (
-            <div className="buscador-con-ayuda obras-list-buscador-fila-principal">
+            <div className="buscador-con-ayuda obras-list-buscador-fila-principal" data-recorrido="obras-buscar">
               <input type="search" className="obras-list-buscador" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
               <HelpIcon fieldKey="busqueda_general" />
             </div>
           )}
-          <button type="button" onClick={onNuevaObra}>
+          <button type="button" data-recorrido="obras-nueva" onClick={onNuevaObra}>
             {t("workspaceHome.nuevaObra")}
           </button>
           <button
             type="button"
+            data-recorrido="obras-galeria"
             onClick={() =>
               onVerGaleria({ selectedTags, selectedArtistaId, selectedCategoria, selectedSubtipo, calificacionFiltro })
             }
           >
             {t("workspaceHome.galeriaFotos")}
           </button>
-          <button type="button" onClick={onVerSelecciones}>
+          <button type="button" data-recorrido="obras-selecciones" onClick={onVerSelecciones}>
             {t("selecciones.boton")}
           </button>
           {obras.length > 0 && (
             <button
               type="button"
+              data-recorrido="obras-seleccionar"
               className={modoSeleccion ? "obras-vista-toggle-boton activo" : undefined}
               onClick={() => {
                 setModoSeleccion((m) => !m);
@@ -460,12 +490,12 @@ export function ObrasList({
             </button>
           )}
           {obras.length > 0 && (
-            <button type="button" onClick={handleAbrirInformesMenu} disabled={filteredObras.length === 0}>
+            <button type="button" data-recorrido="obras-informe" onClick={handleAbrirInformesMenu} disabled={filteredObras.length === 0}>
               {t("informesObras.generarInforme")}
             </button>
           )}
           {obras.length > 0 && (
-            <div className="obras-vista-toggle">
+            <div className="obras-vista-toggle" data-recorrido="obras-vista">
               <button
                 type="button"
                 className={vista === "columnas" ? "obras-vista-toggle-boton activo" : "obras-vista-toggle-boton"}
@@ -483,7 +513,9 @@ export function ObrasList({
             </div>
           )}
           {obras.length > 0 && (
-            <MiniaturasSizeSlider columnas={columnasGridActual} onChange={handleTamanoMiniaturasChange} />
+            <span className="obras-recorrido-envoltorio" data-recorrido="obras-tamano">
+              <MiniaturasSizeSlider columnas={columnasGridActual} onChange={handleTamanoMiniaturasChange} />
+            </span>
           )}
         </div>
 
@@ -533,7 +565,7 @@ export function ObrasList({
 
         {obras.length > 0 && (
           <div className="obras-toolbar-fila">
-            <label className="galeria-filtro-artista">
+            <label className="galeria-filtro-artista" data-recorrido="obras-orden">
               {t("obrasList.ordenarPorLabel")}
               <select value={ordenPor} onChange={(e) => setOrdenPor(e.target.value as "titulo" | "codigo_inventario" | "fecha_captura")}>
                 <option value="codigo_inventario">{t("obrasList.ordenarPorCodigoInventario")}</option>
@@ -543,7 +575,7 @@ export function ObrasList({
             </label>
 
             {esGaleria && allArtistas.length > 0 && (
-              <label className="galeria-filtro-artista">
+              <label className="galeria-filtro-artista" data-recorrido="obras-artista">
                 {t("obraForm.artistaLabel")}
                 <select value={selectedArtistaId ?? ""} onChange={(e) => setSelectedArtistaId(e.target.value === "" ? null : Number(e.target.value))}>
                   <option value="">{t("galeria.todosArtistas")}</option>
@@ -557,7 +589,7 @@ export function ObrasList({
             )}
 
             {seleccionesParaFiltro.length > 0 && (
-              <label className="galeria-filtro-artista">
+              <label className="galeria-filtro-artista" data-recorrido="obras-filtro-seleccion">
                 {t("selecciones.filtroLabel")}
                 <select
                   value={filtroSeleccionId ?? ""}
@@ -574,7 +606,7 @@ export function ObrasList({
             )}
 
             {allCategorias.length > 0 && (
-              <label className="galeria-filtro-artista">
+              <label className="galeria-filtro-artista" data-recorrido="obras-categoria">
                 {t("obraForm.categoriaLabel")}
                 <select value={selectedCategoria ?? ""} onChange={(e) => handleCategoriaChange(e.target.value)}>
                   <option value="">{t("galeria.todasCategorias")}</option>
@@ -588,7 +620,7 @@ export function ObrasList({
             )}
 
             {allSubtipos.length > 0 && (
-              <label className="galeria-filtro-artista">
+              <label className="galeria-filtro-artista" data-recorrido="obras-subtipo">
                 {t("field.subtipo")}
                 <select value={selectedSubtipo ?? ""} onChange={(e) => setSelectedSubtipo(e.target.value || null)}>
                   <option value="">{t("galeria.todosSubtipos")}</option>
@@ -601,13 +633,15 @@ export function ObrasList({
               </label>
             )}
 
-            <CalificacionFilterButton
-              calificacionFiltro={calificacionFiltro}
-              onChange={setCalificacionFiltro}
-              onQuitarATodas={handleQuitarCalificacionATodas}
-            />
+            <span className="obras-recorrido-envoltorio" data-recorrido="obras-estrellas">
+              <CalificacionFilterButton
+                calificacionFiltro={calificacionFiltro}
+                onChange={setCalificacionFiltro}
+                onQuitarATodas={handleQuitarCalificacionATodas}
+              />
+            </span>
             {allTags.length > 0 && (
-              <div className="obras-toolbar-etiquetas">
+              <div className="obras-toolbar-etiquetas" data-recorrido="obras-etiquetas">
                 <span className="galeria-filtro-etiquetas-label">
                   {t("obraForm.etiquetasLabel")} <HelpIcon fieldKey="filtro_etiquetas_multiple" />
                 </span>
@@ -637,8 +671,8 @@ export function ObrasList({
 
       {vista === "tarjetas" && (
       <div className="obras-grid" style={{ gridTemplateColumns: `repeat(${columnasGridTarjetas}, 1fr)` }}>
-        {filteredObras.map((obra) => (
-          <div className="obra-card-wrapper" key={obra.id}>
+        {filteredObras.map((obra, indice) => (
+          <div className="obra-card-wrapper" key={obra.id} data-recorrido={indice === 0 ? "obras-obra" : undefined}>
             {modoSeleccion && (
               <input
                 type="checkbox"
@@ -685,10 +719,10 @@ export function ObrasList({
               </tr>
             </thead>
             <tbody>
-              {filteredObras.map((obra) => {
+              {filteredObras.map((obra, indice) => {
                 const subtipoValor = obra.categoria_obra === "Fotografia" ? obra.subtipo_fotografia : obra.subtipo;
                 return (
-                  <tr key={obra.id} className="obras-tabla-fila" onClick={() => (modoSeleccion ? alternarElegida(obra.id) : onOpenObra(obra.id))}>
+                  <tr key={obra.id} className="obras-tabla-fila" data-recorrido={indice === 0 ? "obras-obra" : undefined} onClick={() => (modoSeleccion ? alternarElegida(obra.id) : onOpenObra(obra.id))}>
                     <td>
                       {modoSeleccion && <input type="checkbox" checked={idsEnActiva.has(obra.id)} readOnly />}
                       {thumbnails[obra.id] ? (
