@@ -25,6 +25,7 @@ import {
   type EdicionDetalleState,
 } from "./fields/EdicionDetalleFields.js";
 import { HelpIcon } from "../components/HelpIcon.js";
+import { AyudaSeccion, pasoAyuda } from "../components/AyudaSeccion.js";
 import { NotasLabel } from "../components/NotasLabel.js";
 import { ArtistaSelector } from "../components/ArtistaSelector.js";
 import { TagPicker } from "../components/TagPicker.js";
@@ -246,6 +247,17 @@ export function ObraForm({
   }, [esSeriada, cantidadEdicionesNum, cantidadPruebaAutorNum]);
 
   if (!context) return null;
+
+  // Recorrido de ayuda de la sección (botón "?" del encabezado).
+  const pasosAyuda = [
+    pasoAyuda(t, "form-artista", "ayudaObraForm.artista", t("obraForm.artistaLabel")),
+    pasoAyuda(t, "form-imagen", "ayudaObraForm.imagen", t("obraForm.imagenLabel")),
+    pasoAyuda(t, "form-titulo", "ayudaObraForm.titulo", t("obraForm.tituloLabel")),
+    pasoAyuda(t, "form-codigo", "ayudaObraForm.codigo", t("obraForm.codigoInventarioLabel")),
+    pasoAyuda(t, "form-categoria", "ayudaObraForm.categoria", t("obraForm.categoriaLabel")),
+    pasoAyuda(t, "form-etiquetas", "ayudaObraForm.etiquetas", t("obraForm.etiquetasLabel")),
+    pasoAyuda(t, "form-guardar", "ayudaObraForm.guardar", t("obraForm.guardarObra")),
+  ];
 
   const esFotografia = categoria === "Fotografia";
   const esFotografiaDigital = esFotografia && fotografia.subtipoFotografia === "DigitalFineArt";
@@ -562,15 +574,18 @@ export function ObraForm({
     <form className="obra-form" onSubmit={handleSubmit} onKeyDown={focusNextOnEnter}>
       <div className="obra-form-header">
         <h2>{t("obraForm.tituloNueva")}</h2>
-        <button
-          type="button"
-          className="header-close-button"
-          onClick={onCancel}
-          aria-label={t("obraForm.cancelarVolver")}
-          title={t("obraForm.cancelarVolver")}
-        >
-          ✕
-        </button>
+        <div className="header-actions">
+          <AyudaSeccion pasos={pasosAyuda} />
+          <button
+            type="button"
+            className="header-close-button"
+            onClick={onCancel}
+            aria-label={t("obraForm.cancelarVolver")}
+            title={t("obraForm.cancelarVolver")}
+          >
+            ✕
+          </button>
+        </div>
       </div>
 
       {precarga && <p className="field-note">{t("obraForm.desdeLightroom")}</p>}
@@ -587,13 +602,13 @@ export function ObraForm({
       )}
 
       {!esRegistroPersonal && (
-        <label>
+        <label data-recorrido="form-artista">
           {t("obraForm.artistaLabel")}
           <ArtistaSelector value={selectedArtistaId} onChange={setSelectedArtistaId} />
         </label>
       )}
 
-      <label>
+      <label data-recorrido="form-imagen">
         {imagePreviewUrl && <img src={imagePreviewUrl} alt="" className="obra-edit-imagen-actual" />}
         <div className="image-file-field-row">
           <span>
@@ -603,7 +618,7 @@ export function ObraForm({
         </div>
       </label>
 
-      <label>
+      <label data-recorrido="form-titulo">
         {t("obraForm.tituloLabel")}
         <input
           ref={tituloInputRef}
@@ -619,7 +634,7 @@ export function ObraForm({
         <input type="text" value={subtitulo} onChange={(e) => setSubtitulo(e.target.value)} />
       </label>
 
-      <label>
+      <label data-recorrido="form-codigo">
         {t("obraForm.codigoInventarioLabel")} <HelpIcon fieldKey="codigo_inventario" />
         <input type="text" value={codigoInventario} onChange={(e) => setCodigoInventario(e.target.value)} />
       </label>
@@ -663,7 +678,7 @@ export function ObraForm({
         <textarea rows={3} value={notas} onChange={(e) => setNotas(e.target.value)} />
       </label>
 
-      <label>
+      <label data-recorrido="form-categoria">
         {t("obraForm.categoriaLabel")} <HelpIcon fieldKey="categoria_obra" />
         <select
           required
@@ -711,7 +726,7 @@ export function ObraForm({
             />
           )}
 
-          <div className="campo-con-ayuda">
+          <div className="campo-con-ayuda" data-recorrido="form-etiquetas">
             {t("obraForm.etiquetasLabel")} <HelpIcon fieldKey="etiquetas_obra" />
             <TagPicker value={tags} onChange={setTags} />
           </div>
@@ -903,7 +918,7 @@ export function ObraForm({
       )}
 
       <div className="obra-form-saved-actions">
-        <button type="submit" disabled={submitting}>
+        <button type="submit" data-recorrido="form-guardar" disabled={submitting}>
           {submitting ? t("common.saving") : t("obraForm.guardarObra")}
         </button>
         <button type="button" onClick={onCancel} disabled={submitting}>

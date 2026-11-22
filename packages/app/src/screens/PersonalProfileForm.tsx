@@ -3,6 +3,7 @@ import { artistaFirmaPath, artistaFotoPath, artistaLogoPath } from "@registro/co
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { bytesToObjectUrl } from "../utils/imageObjectUrl.js";
 import { ImageFileField } from "../components/ImageFileField.js";
+import { AyudaSeccion, pasoAyuda } from "../components/AyudaSeccion.js";
 import { HelpIcon } from "../components/HelpIcon.js";
 import { CampoFecha, BotonCalendario } from "../components/CampoFecha.js";
 import { focusNextOnEnter } from "../utils/focusNextOnEnter.js";
@@ -141,6 +142,15 @@ export function PersonalProfileForm({ onExit }: { onExit: () => void }) {
   }, [context, existing?.firmaPath]);
 
   if (!context) return null;
+
+  // Recorrido de ayuda de la sección (botón "?" del encabezado).
+  const pasosAyuda = [
+    pasoAyuda(t, "perfil-foto", "ayudaPerfil.foto", t("artistas.foto")),
+    pasoAyuda(t, "perfil-logo", "ayudaPerfil.logo", t("profile.logo")),
+    pasoAyuda(t, "perfil-contacto", "ayudaPerfil.contacto", t("profile.contactoLegend")),
+    pasoAyuda(t, "perfil-guardar", "ayudaPerfil.guardar", t("profile.guardarMisDatos")),
+    pasoAyuda(t, "perfil-informe", "ayudaPerfil.informe", t("common.generarInforme")),
+  ];
 
   function handleFotoChange(file: File | null) {
     setFotoFile(file);
@@ -347,19 +357,22 @@ export function PersonalProfileForm({ onExit }: { onExit: () => void }) {
         <h2>
           {t("profile.tituloMisDatos")} <HelpIcon fieldKey="perfil_personal_nota" />
         </h2>
-        <button
-          type="button"
-          className="header-close-button"
-          onClick={handleSalir}
-          disabled={submitting}
-          aria-label={t("common.back")}
-          title={t("common.back")}
-        >
-          ✕
-        </button>
+        <div className="header-actions">
+          <AyudaSeccion pasos={pasosAyuda} />
+          <button
+            type="button"
+            className="header-close-button"
+            onClick={handleSalir}
+            disabled={submitting}
+            aria-label={t("common.back")}
+            title={t("common.back")}
+          >
+            ✕
+          </button>
+        </div>
       </div>
 
-      <div className="imagen-campo">
+      <div className="imagen-campo" data-recorrido="perfil-foto">
         <span className="field-label">{t("artistas.foto")}</span>
         {fotoPreviewUrl && (
           <button
@@ -379,7 +392,7 @@ export function PersonalProfileForm({ onExit }: { onExit: () => void }) {
       </div>
 
       <div className="form-row-2">
-        <div className="imagen-campo">
+        <div className="imagen-campo" data-recorrido="perfil-logo">
           <span className="field-label">{t("profile.logo")}</span>
           {logoPreviewUrl && (
             <button
@@ -442,7 +455,7 @@ export function PersonalProfileForm({ onExit }: { onExit: () => void }) {
         <textarea rows={3} value={notas} onChange={(e) => setNotas(e.target.value)} />
       </label>
 
-      <fieldset>
+      <fieldset data-recorrido="perfil-contacto">
         <legend>{t("profile.contactoLegend")}</legend>
         <label>
           {t("profile.mail")}
@@ -483,10 +496,10 @@ export function PersonalProfileForm({ onExit }: { onExit: () => void }) {
       </fieldset>
 
       <div className="obra-form-saved-actions">
-        <button type="submit" disabled={submitting}>
+        <button type="submit" data-recorrido="perfil-guardar" disabled={submitting}>
           {submitting ? t("common.saving") : t("profile.guardarMisDatos")}
         </button>
-        <button type="button" onClick={handleAbrirInformesMenu} disabled={generandoPdf}>
+        <button type="button" data-recorrido="perfil-informe" onClick={handleAbrirInformesMenu} disabled={generandoPdf}>
           {generandoPdf ? t("common.saving") : t("common.generarInforme")}
         </button>
         <button type="button" onClick={handleSalir} disabled={submitting}>

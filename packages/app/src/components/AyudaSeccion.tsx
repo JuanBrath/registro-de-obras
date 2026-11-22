@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLanguage } from "../i18n/LanguageContext.js";
+import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
 import { RecorridoInicial, type PasoRecorrido } from "./RecorridoInicial.js";
 
 /**
@@ -30,4 +30,14 @@ export function AyudaSeccion({ pasos }: { pasos: PasoRecorrido[] }) {
       {pasosActivos && <RecorridoInicial pasos={pasosActivos} onCerrar={() => setPasosActivos(null)} />}
     </>
   );
+}
+
+/** Paso del recorrido de ayuda que señala el elemento con `data-recorrido="<id>"`. */
+export function pasoAyuda(
+  t: (key: TranslationKey) => string,
+  id: string,
+  key: TranslationKey,
+  titulo: string,
+): PasoRecorrido {
+  return { targetSelector: `[data-recorrido="${id}"]`, titulo, texto: t(key) };
 }

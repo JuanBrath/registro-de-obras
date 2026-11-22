@@ -8,7 +8,7 @@ On the home screen click **Artworks**. You see a grid with one card per artwork.
 
 ## Section help
 
-At the top right, next to the close button ✕, is the **?** button (**Help for this section**). When you click it, the program takes a tour through the buttons and options on the screen, pointing at each one with a short explanation of what you can do with it. You move forward with **Next**, go back with **Back** and close with **Skip** or **Got it**. Only the options you can see at that moment are explained (for example, the tag filter appears when some artwork has tags).
+At the top right, next to the close button ✕, is the **?** button (**Help for this section**). The main screens have it: **Artworks**, **Artwork gallery**, **Selections**, **Clients**, **Artists**, **Sales**, the **Artwork sheet**, **New artwork** and **My info**. When you click it, the program takes a tour through the buttons and options on the screen, pointing at each one with a short explanation of what you can do with it. You move forward with **Next**, go back with **Back** and close with **Skip** or **Got it**. Only the options you can see at that moment are explained (for example, the tag filter appears when some artwork has tags).
 
 ## What each card shows
 

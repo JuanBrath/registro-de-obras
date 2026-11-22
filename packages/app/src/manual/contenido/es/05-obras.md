@@ -8,7 +8,7 @@ En la pantalla de inicio tocá **Obras**. Ves una grilla con una tarjeta por obr
 
 ## Ayuda de la sección
 
-Arriba a la derecha, al lado del botón de cierre ✕, está el botón **?** (**Ayuda de esta sección**). Al tocarlo, el programa hace un recorrido por los botones y opciones de la pantalla, señalando cada uno con una explicación breve de lo que podés hacer con él. Avanzás con **Siguiente**, volvés con **Atrás** y cerrás con **Saltar** o **Entendido**. Solo se explican las opciones que ves en ese momento (por ejemplo, los filtros de etiquetas aparecen cuando alguna obra tiene etiquetas).
+Arriba a la derecha, al lado del botón de cierre ✕, está el botón **?** (**Ayuda de esta sección**). Lo tienen las pantallas principales: **Obras**, **Galería de obras**, **Selecciones**, **Clientes**, **Artistas**, **Ventas**, la **Ficha de la obra**, **Nueva obra** y **Mis datos**. Al tocarlo, el programa hace un recorrido por los botones y opciones de la pantalla, señalando cada uno con una explicación breve de lo que podés hacer con él. Avanzás con **Siguiente**, volvés con **Atrás** y cerrás con **Saltar** o **Entendido**. Solo se explican las opciones que ves en ese momento (por ejemplo, los filtros de etiquetas aparecen cuando alguna obra tiene etiquetas).
 
 ## Qué muestra cada tarjeta
 

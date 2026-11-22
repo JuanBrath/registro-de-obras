@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { InformeListadoObrasModal, SQL_INFORME_OBRAS, type InformeObraRow } from "../components/InformeListadoObrasModal.js";
+import { AyudaSeccion, pasoAyuda } from "../components/AyudaSeccion.js";
 import { DossierModal } from "../components/DossierModal.js";
 import { DossiersGuardadosModal } from "../components/DossiersGuardadosModal.js";
 import { useWorkspace } from "../state/WorkspaceContext.js";
@@ -267,11 +268,26 @@ export function SeleccionesScreen({
   if (!context) return null;
   const activa = selecciones.find((s) => s.id === activaId) ?? null;
 
+  // Recorrido de ayuda de la sección (botón "?" del encabezado).
+  const pasosAyuda = [
+    pasoAyuda(t, "sel-crear", "ayudaSelecciones.crear", t("selecciones.crear")),
+    pasoAyuda(t, "sel-lista", "ayudaSelecciones.lista", t("selecciones.existentes")),
+    pasoAyuda(t, "sel-guardar", "ayudaSelecciones.guardar", t("common.save")),
+    pasoAyuda(t, "sel-dossier", "ayudaSelecciones.dossier", t("dossier.boton")),
+    pasoAyuda(t, "sel-guardados", "ayudaSelecciones.guardados", t("dossier.guardadosBoton", { cantidad: cantidadDossiers } as never)),
+    pasoAyuda(t, "sel-informes", "ayudaSelecciones.informes", t("selecciones.informesBoton")),
+    pasoAyuda(t, "sel-eliminar", "ayudaSelecciones.eliminar", t("selecciones.eliminar")),
+    pasoAyuda(t, "obras-vista", "ayudaSelecciones.vista", t("obrasList.vistaTarjetas") + " / " + t("obrasList.vistaColumnas")),
+    pasoAyuda(t, "obras-tamano", "ayudaObras.tamano", t("obrasList.tamanoMiniaturasLabel")),
+    pasoAyuda(t, "sel-obra", "ayudaSelecciones.obra", t("obrasList.colObra")),
+  ];
+
   return (
     <div className="obras-list obras-list-grid-ancho">
       <div className="obras-list-header">
         <h1>{t("selecciones.title")}</h1>
         <div className="header-actions">
+          <AyudaSeccion pasos={pasosAyuda} />
           <button type="button" className="header-close-button" onClick={onBack} aria-label={t("common.back")} title={t("common.back")}>
             ✕
           </button>
@@ -280,7 +296,7 @@ export function SeleccionesScreen({
       {error && <p className="error">{error}</p>}
 
       <div className="selecciones-bloque">
-        <button type="button" onClick={empezarNueva} disabled={nueva}>
+        <button type="button" data-recorrido="sel-crear" onClick={empezarNueva} disabled={nueva}>
           {t("selecciones.crear")}
         </button>
       </div>
@@ -300,7 +316,7 @@ export function SeleccionesScreen({
               {t("common.save")}
             </button>
             {!nueva && (
-              <button type="button" onClick={() => setDossierAbierto(true)} disabled={obras.length === 0}>
+              <button type="button" data-recorrido="sel-dossier" onClick={() => setDossierAbierto(true)} disabled={obras.length === 0}>
                 {t("dossier.boton")}
               </button>
             )}
@@ -316,7 +332,7 @@ export function SeleccionesScreen({
       <div className="selecciones-bloque">
         {selecciones.length === 0 && !nueva && <p>{t("selecciones.vacio")}</p>}
         {selecciones.length > 0 && <h2 className="selecciones-subtitulo">{t("selecciones.existentes")}</h2>}
-        <div className="obras-toolbar-fila">
+        <div className="obras-toolbar-fila" data-recorrido="sel-lista">
           {selecciones.map((s) => (
             <button
               key={s.id}
@@ -344,7 +360,7 @@ export function SeleccionesScreen({
             <textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2} />
           </label>
           <div className="form-actions">
-            <button type="button" onClick={guardarDatos} disabled={!nombre.trim()}>
+            <button type="button" data-recorrido="sel-guardar" onClick={guardarDatos} disabled={!nombre.trim()}>
               {t("common.save")}
             </button>
             {!nueva && (
@@ -353,12 +369,12 @@ export function SeleccionesScreen({
               </button>
             )}
             {!nueva && (
-              <button type="button" onClick={() => setGuardadosAbierto(true)}>
+              <button type="button" data-recorrido="sel-guardados" onClick={() => setGuardadosAbierto(true)}>
                 {t("dossier.guardadosBoton", { cantidad: cantidadDossiers })}
               </button>
             )}
             {!nueva && (
-              <button type="button" onClick={abrirInformes} disabled={obras.length === 0}>
+              <button type="button" data-recorrido="sel-informes" onClick={abrirInformes} disabled={obras.length === 0}>
                 {t("selecciones.informesBoton")}
               </button>
             )}
@@ -368,7 +384,7 @@ export function SeleccionesScreen({
               </button>
             )}
             {!nueva && !confirmarEliminar ? (
-              <button type="button" onClick={() => setConfirmarEliminar(true)}>
+              <button type="button" data-recorrido="sel-eliminar" onClick={() => setConfirmarEliminar(true)}>
                 {t("selecciones.eliminar")}
               </button>
             ) : !nueva ? (
@@ -396,7 +412,7 @@ export function SeleccionesScreen({
           {obras.length === 0 && <p>{t("selecciones.sinObras")}</p>}
           {obras.length > 0 && (
             <div className="obras-toolbar-fila selecciones-vista-barra">
-              <div className="obras-vista-toggle">
+              <div className="obras-vista-toggle" data-recorrido="obras-vista">
                 <button
                   type="button"
                   className={vista === "columnas" ? "obras-vista-toggle-boton activo" : "obras-vista-toggle-boton"}
@@ -412,7 +428,9 @@ export function SeleccionesScreen({
                   {t("obrasList.vistaTarjetas")}
                 </button>
               </div>
-              <MiniaturasSizeSlider columnas={columnasActual} onChange={cambiarTamano} />
+              <span className="obras-recorrido-envoltorio" data-recorrido="obras-tamano">
+                <MiniaturasSizeSlider columnas={columnasActual} onChange={cambiarTamano} />
+              </span>
             </div>
           )}
 
@@ -422,6 +440,7 @@ export function SeleccionesScreen({
                 <div
                   className="obra-card-wrapper"
                   key={obra.id}
+                  data-recorrido={i === 0 ? "sel-obra" : undefined}
                   draggable
                 onDragStart={(e) => {
                   setArrastrando(i);
@@ -500,6 +519,7 @@ export function SeleccionesScreen({
                     return (
                       <tr
                         key={obra.id}
+                        data-recorrido={i === 0 ? "sel-obra" : undefined}
                         className="obras-tabla-fila"
                         onClick={() => onOpenObra(obra.id, activaId)}
                         draggable

@@ -5,6 +5,7 @@ import { createArtista } from "../data/createArtista.js";
 import { leerMiniaturasPorIdEnParalelo } from "../utils/imageObjectUrl.js";
 import { ImageFileField } from "../components/ImageFileField.js";
 import { LinkField } from "../components/LinkField.js";
+import { AyudaSeccion, pasoAyuda } from "../components/AyudaSeccion.js";
 import { HelpIcon } from "../components/HelpIcon.js";
 import { CampoFecha, BotonCalendario } from "../components/CampoFecha.js";
 import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
@@ -635,13 +636,21 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
 
   if (!context) return null;
 
+  // Recorrido de ayuda de la sección (botón "?" del encabezado).
+  const pasosAyuda = [
+    pasoAyuda(t, "artistas-nuevo", "ayudaArtistas.nuevo", t("artistas.nuevoArtista")),
+    pasoAyuda(t, "artistas-buscar", "ayudaArtistas.buscar", t("obrasList.ayudaBuscar")),
+    pasoAyuda(t, "artistas-acciones", "ayudaArtistas.acciones", t("common.consultar") + " / " + t("common.edit") + " / " + t("common.delete")),
+  ];
+
   return (
     <div>
       <div className="obras-list-header">
         <h1>{t("artistas.title")}</h1>
         <div className="header-actions">
+          <AyudaSeccion pasos={pasosAyuda} />
           {!mostrandoAlta && (
-            <button type="button" onClick={() => setMostrandoAlta(true)}>
+            <button type="button" data-recorrido="artistas-nuevo" onClick={() => setMostrandoAlta(true)}>
               {t("artistas.nuevoArtista")}
             </button>
           )}
@@ -965,6 +974,7 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
         {artistas.length > 0 && fichaId === null && (
           <input
             type="search"
+            data-recorrido="artistas-buscar"
             className="obras-list-buscador"
             placeholder={t("artistas.buscarPlaceholder")}
             value={busqueda}
@@ -979,9 +989,10 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
         <div className="artistas-list">
           {filteredArtistas
             .filter((a) => fichaId === null || a.id === fichaId)
-            .map((a) => (
+            .map((a, indice) => (
               <ArtistaRowView
                 key={a.id}
+                esPrimero={indice === 0}
                 artista={a}
                 fotoUrl={thumbnails[a.id]}
                 modo={fichaId === a.id ? fichaModo : "compacto"}
@@ -1013,6 +1024,7 @@ export function ArtistasScreen({ onBack }: { onBack: () => void }) {
 
 function ArtistaRowView({
   artista,
+  esPrimero,
   fotoUrl,
   modo,
   onConsultar,
@@ -1022,6 +1034,7 @@ function ArtistaRowView({
   onSave,
 }: {
   artista: ArtistaRow;
+  esPrimero: boolean;
   fotoUrl: string | undefined;
   modo: "compacto" | "consultar" | "editar";
   onConsultar: () => void;
@@ -1586,7 +1599,7 @@ function ArtistaRowView({
       <strong>{artista.nombre_completo}</strong>
       {artista.telefono && <span>{t("artistas.telPrefix", { telefono: artista.telefono })}</span>}
 
-      <div className="obra-form-saved-actions cliente-compacto-acciones">
+      <div className="obra-form-saved-actions cliente-compacto-acciones" data-recorrido={esPrimero ? "artistas-acciones" : undefined}>
         <button type="button" onClick={onConsultar}>
           {t("common.consultar")}
         </button>
