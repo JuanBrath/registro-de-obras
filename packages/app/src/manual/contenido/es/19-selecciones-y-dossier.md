@@ -10,8 +10,8 @@ Una **selección** es un grupo de obras que elegís a mano, por ejemplo las que 
 
 1. En **Obras**, tocá **Selecciones**.
 2. Tocá **Crear selección**.
-3. Escribí el **Nombre de la selección** y, si querés, las **Notas**.
-4. Tocá **Guardar**. La selección aparece debajo, en **Selecciones armadas**.
+3. Escribí el **Nombre de la selección** y, si querés, las **Notas**. Debajo se muestran **todas** tus obras, sin filtros, con una casilla en cada una: tildá las que querés incluir (arriba ves cuántas llevás elegidas).
+4. Tocá **Guardar**. La selección aparece arriba, en **Selecciones armadas**, ya con esas obras. Si querés armarla a partir de un filtro, hacelo desde **Obras** (ver más abajo).
 
 ## Agregar obras a una selección
 
@@ -19,8 +19,8 @@ Hay dos formas. La más cómoda para muchas obras es desde **Obras**:
 
 1. Tocá **Seleccionar**. Aparece un panel con el desplegable **Selección**.
 2. Elegí una selección ya armada o **+ Nueva selección…** (escribí el nombre y tocá **Crear**).
-3. Tildá las obras, en tarjetas o en columnas. Cada obra se guarda en la selección al instante. Con **Agregar todas las filtradas** sumás todo lo que muestra el filtro, y con **Quitar las filtradas** lo sacás.
-4. Tocá **Terminar selección**. Lo que tildaste queda guardado.
+3. Tildá las obras que querés sumar, en tarjetas o en columnas (podés usar los filtros para encontrarlas). Arriba, bien visible, ves cuántas llevás elegidas. Las que ya están en la selección aparecen marcadas y no se pueden volver a tildar.
+4. Tocá **Agregar seleccionadas**. Las obras se suman a la selección. Cuando termines, tocá **Terminar selección**.
 
 La otra forma es desde la ficha de una obra: el botón **Agregar a selección…** te deja elegir una selección existente o crear una nueva. Ver [Ficha de la obra](cap:ficha-de-obra).
 

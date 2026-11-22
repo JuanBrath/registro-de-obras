@@ -1311,4 +1311,9 @@ export const en: Record<keyof typeof es, string> = {
   "exportarSeleccion.sinArchivo": "Not exported because they have no original file loaded: {{obras}}.",
   "exportarSeleccion.conError": "Could not be exported: {{obras}}.",
   "galeria.posicionFoto": "Position of the photo in the gallery",
+  "selecciones.contadorElegidas": "{{cantidad}} selected",
+  "selecciones.agregarSeleccionadas": "Add selected",
+  "selecciones.elegirObras": "Artworks in the selection",
+  "selecciones.elegirObrasContador": "{{cantidad}} selected of {{total}}",
+  "selecciones.elegirObrasAyuda": "All your artworks are shown, without filters. Tick the ones you want to include. To build a selection from a filter, do it from Artworks with “Select”.",
 };

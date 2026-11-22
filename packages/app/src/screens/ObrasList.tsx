@@ -29,7 +29,6 @@ import {
   crearSeleccion,
   listObraIdsDeSeleccion,
   listSelecciones,
-  quitarObraDeSeleccion,
   type Seleccion,
 } from "../data/selecciones.js";
 
@@ -117,11 +116,13 @@ export function ObrasList({
   const [informesMenuAbierto, setInformesMenuAbierto] = useState(false);
   // Modo "Seleccionar": tildar obras a mano para agregarlas a una selección (base de los dossiers).
   const [modoSeleccion, setModoSeleccion] = useState(false);
-  // Selección "activa": lo que se tilda se guarda en ella al instante (queda aunque se cierre el modo).
+  // Selección "activa": se tildan las obras que se quieren sumar y "Agregar seleccionadas" las guarda en ella.
   const [seleccionesLista, setSeleccionesLista] = useState<Seleccion[]>([]);
   const [seleccionActivaId, setSeleccionActivaId] = useState<number | "nueva" | null>(null);
   const [nombreNuevaSeleccion, setNombreNuevaSeleccion] = useState("");
   const [idsEnActiva, setIdsEnActiva] = useState<Set<number>>(new Set());
+  // Obras tildadas que todavía no se agregaron a la selección activa.
+  const [elegidas, setElegidas] = useState<Set<number>>(new Set());
   const [seleccionMensaje, setSeleccionMensaje] = useState<string | null>(null);
   // Filtro por selección: limita la lista (y por lo tanto los informes) a las obras de esa selección.
   const [filtroSeleccionId, setFiltroSeleccionId] = useState<number | null>(seleccionInicialId ?? null);
@@ -157,6 +158,7 @@ export function ObrasList({
 
   async function elegirSeleccion(valor: string) {
     setSeleccionMensaje(null);
+    setElegidas(new Set());
     if (valor === "nueva") {
       setSeleccionActivaId("nueva");
       setIdsEnActiva(new Set());
@@ -179,36 +181,41 @@ export function ObrasList({
       await recargarSelecciones();
       setSeleccionActivaId(id);
       setIdsEnActiva(new Set());
+      setElegidas(new Set());
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     }
   }
 
-  async function alternarElegida(id: number) {
-    if (!context) return;
+  // Tilda o destilda una obra. Las que ya están en la selección activa no se pueden volver a tildar.
+  function alternarElegida(id: number) {
     if (activaId === null) {
       setSeleccionMensaje(t("selecciones.primeroElegir"));
       return;
     }
+    if (idsEnActiva.has(id)) return;
     setSeleccionMensaje(null);
-    try {
-      if (idsEnActiva.has(id)) await quitarObraDeSeleccion(context.db, activaId, id);
-      else await agregarObrasASeleccion(context.db, activaId, [id]);
-      setIdsEnActiva(new Set(await listObraIdsDeSeleccion(context.db, activaId)));
-      await recargarSelecciones();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    }
+    setElegidas((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   }
 
-  async function agregarOQuitarFiltradas(agregar: boolean) {
-    if (!context || activaId === null) return;
+  async function agregarSeleccionadas() {
+    if (!context || activaId === null || elegidas.size === 0) return;
     try {
-      const ids = filteredObras.map((o) => o.id);
-      if (agregar) await agregarObrasASeleccion(context.db, activaId, ids);
-      else for (const id of ids) await quitarObraDeSeleccion(context.db, activaId, id);
+      const cantidad = elegidas.size;
+      // En el orden en que aparecen en la lista.
+      const ids = filteredObras.map((o) => o.id).filter((id) => elegidas.has(id));
+      const resto = Array.from(elegidas).filter((id) => !ids.includes(id));
+      await agregarObrasASeleccion(context.db, activaId, [...ids, ...resto]);
       setIdsEnActiva(new Set(await listObraIdsDeSeleccion(context.db, activaId)));
       await recargarSelecciones();
+      setElegidas(new Set());
+      const nombre = seleccionesLista.find((sel) => sel.id === activaId)?.nombre ?? "";
+      setSeleccionMensaje(t("selecciones.agregadas", { cantidad, nombre }));
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     }
@@ -486,6 +493,7 @@ export function ObrasList({
               className={modoSeleccion ? "obras-vista-toggle-boton activo" : undefined}
               onClick={() => {
                 setModoSeleccion((m) => !m);
+                setElegidas(new Set());
               }}
             >
               {modoSeleccion ? t("selecciones.terminarSeleccion") : t("selecciones.seleccionar")}
@@ -552,13 +560,13 @@ export function ObrasList({
             )}
             {activaId !== null && (
               <>
-                <span>{t("selecciones.enActiva", { cantidad: idsEnActiva.size })}</span>
-                <button type="button" onClick={() => agregarOQuitarFiltradas(true)} disabled={filteredObras.length === 0}>
-                  {t("selecciones.agregarFiltradas")}
+                <span className="selecciones-contador-grande" role="status">
+                  {t("selecciones.contadorElegidas", { cantidad: elegidas.size })}
+                </span>
+                <button type="button" onClick={agregarSeleccionadas} disabled={elegidas.size === 0}>
+                  {t("selecciones.agregarSeleccionadas")}
                 </button>
-                <button type="button" onClick={() => agregarOQuitarFiltradas(false)} disabled={filteredObras.length === 0}>
-                  {t("selecciones.quitarFiltradas")}
-                </button>
+                <span className="selecciones-ya-en">{t("selecciones.enActiva", { cantidad: idsEnActiva.size })}</span>
               </>
             )}
             {activaId === null && seleccionActivaId !== "nueva" && <span>{t("selecciones.primeroElegir")}</span>}
@@ -678,7 +686,8 @@ export function ObrasList({
             {modoSeleccion && (
               <input
                 type="checkbox"
-                checked={idsEnActiva.has(obra.id)}
+                checked={idsEnActiva.has(obra.id) || elegidas.has(obra.id)}
+                disabled={idsEnActiva.has(obra.id)}
                 onChange={() => alternarElegida(obra.id)}
                 style={{ position: "absolute", top: 8, left: 8, zIndex: 2, width: 22, height: 22 }}
               />
@@ -686,7 +695,13 @@ export function ObrasList({
             <button
               type="button"
               className="obra-card"
-              style={modoSeleccion && idsEnActiva.has(obra.id) ? { outline: "3px solid var(--azul-marino-borde)" } : undefined}
+              style={
+                modoSeleccion && elegidas.has(obra.id)
+                  ? { outline: "3px solid var(--azul-marino-borde)" }
+                  : modoSeleccion && idsEnActiva.has(obra.id)
+                    ? { outline: "2px dotted var(--azul-marino-borde)", opacity: 0.75 }
+                    : undefined
+              }
               onClick={() => (modoSeleccion ? alternarElegida(obra.id) : onOpenObra(obra.id))}
             >
             {thumbnails[obra.id] ? (
@@ -729,7 +744,9 @@ export function ObrasList({
                 return (
                   <tr key={obra.id} className="obras-tabla-fila" data-recorrido={indice === 0 ? "obras-obra" : undefined} onClick={() => (modoSeleccion ? alternarElegida(obra.id) : onOpenObra(obra.id))}>
                     <td>
-                      {modoSeleccion && <input type="checkbox" checked={idsEnActiva.has(obra.id)} readOnly />}
+                      {modoSeleccion && (
+                        <input type="checkbox" checked={idsEnActiva.has(obra.id) || elegidas.has(obra.id)} disabled={idsEnActiva.has(obra.id)} readOnly />
+                      )}
                       {thumbnails[obra.id] ? (
                         <img
                           src={thumbnails[obra.id]}

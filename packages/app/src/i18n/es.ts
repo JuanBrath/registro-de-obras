@@ -1310,4 +1310,9 @@ export const es = {
   "exportarSeleccion.sinArchivo": "No se exportaron por no tener archivo original cargado: {{obras}}.",
   "exportarSeleccion.conError": "No se pudieron exportar: {{obras}}.",
   "galeria.posicionFoto": "Posición de la foto dentro de la galería",
+  "selecciones.contadorElegidas": "{{cantidad}} seleccionadas",
+  "selecciones.agregarSeleccionadas": "Agregar seleccionadas",
+  "selecciones.elegirObras": "Obras de la selección",
+  "selecciones.elegirObrasContador": "{{cantidad}} seleccionadas de {{total}}",
+  "selecciones.elegirObrasAyuda": "Se muestran todas tus obras, sin filtros. Tildá las que querés incluir. Para armar una selección a partir de un filtro, hacelo desde Obras con «Seleccionar».",
 } as const;

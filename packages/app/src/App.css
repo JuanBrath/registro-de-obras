@@ -3440,3 +3440,30 @@ button[type="submit"]:disabled {
 .obras-encabezado-fijo.selecciones-encabezado {
   padding-bottom: 1.1rem;
 }
+
+/* Obras, modo Seleccionar: la cantidad de obras tildadas bien visible. */
+.selecciones-contador-grande {
+  padding: 0.2em 0.8em;
+  border-radius: 999px;
+  background: var(--azul-marino);
+  color: #fff;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.selecciones-ya-en {
+  opacity: 0.75;
+  font-size: 0.85rem;
+}
+
+.selector-obras {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+.selector-obras-titulo {
+  margin: 0;
+  font-size: 1.05rem;
+}

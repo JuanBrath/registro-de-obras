@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { InformeListadoObrasModal, SQL_INFORME_OBRAS, type InformeObraRow } from "../components/InformeListadoObrasModal.js";
+import { SelectorObras } from "../components/SelectorObras.js";
 import { useMenuExportarImagen } from "../components/useMenuExportarImagen.js";
 import { AyudaSeccion, pasoAyuda } from "../components/AyudaSeccion.js";
 import { ExportarSeleccionModal } from "../components/ExportarSeleccionModal.js";
@@ -18,6 +19,7 @@ import { sincronizarCalificacionConArchivo } from "../utils/calificacionArchivo.
 import type { TranslationKey } from "../i18n/LanguageContext.js";
 import {
   actualizarSeleccion,
+  agregarObrasASeleccion,
   crearSeleccion,
   contarDossiers,
   eliminarSeleccion,
@@ -69,6 +71,8 @@ export function SeleccionesScreen({
   const [nombre, setNombre] = useState("");
   const [notas, setNotas] = useState("");
   const [nueva, setNueva] = useState(false);
+  // Obras tildadas al crear una selección nueva (se muestran todas, sin filtros).
+  const [elegidasNueva, setElegidasNueva] = useState<number[]>([]);
   const [confirmarEliminar, setConfirmarEliminar] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { abrirMenu: abrirMenuImagen, elementos: elementosMenuImagen } = useMenuExportarImagen(setError);
@@ -179,6 +183,7 @@ export function SeleccionesScreen({
   const empezarNueva = () => {
     setActivaId(null);
     setNueva(true);
+    setElegidasNueva([]);
     setNombre("");
     setNotas("");
   };
@@ -188,6 +193,8 @@ export function SeleccionesScreen({
       if (!context || !nombre.trim()) return;
       if (nueva) {
         const id = await crearSeleccion(context.db, nombre, notas.trim() || null);
+        if (elegidasNueva.length > 0) await agregarObrasASeleccion(context.db, id, elegidasNueva);
+        setElegidasNueva([]);
         await recargarLista();
         setNueva(false);
         setActivaId(id);
@@ -371,6 +378,7 @@ export function SeleccionesScreen({
               </button>
             )}
           </div>
+          <SelectorObras elegidas={elegidasNueva} onChange={setElegidasNueva} />
         </section>
       )}
 

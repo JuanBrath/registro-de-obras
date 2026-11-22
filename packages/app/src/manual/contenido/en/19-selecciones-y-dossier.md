@@ -10,8 +10,8 @@ A **selection** is a group of artworks you pick by hand, for example the ones yo
 
 1. In **Artworks**, click **Selections**.
 2. Click **Create selection**.
-3. Type the **Selection name** and, if you want, the **Notes**.
-4. Click **Save**. The selection appears below, under **Existing selections**.
+3. Type the **Selection name** and, if you want, the **Notes**. Below, **all** your artworks are shown, without filters, each with a checkbox: tick the ones you want to include (above you see how many you have chosen).
+4. Click **Save**. The selection appears above, under **Existing selections**, already with those artworks. If you want to build it from a filter, do it from **Artworks** (see below).
 
 ## Add artworks to a selection
 
@@ -19,8 +19,8 @@ There are two ways. The most convenient for many artworks is from **Artworks**:
 
 1. Click **Select**. A panel with the **Selection** drop-down appears.
 2. Choose an existing selection or **+ New selection…** (type the name and click **Create**).
-3. Tick the artworks, in cards or in columns. Each artwork is saved to the selection immediately. **Add all filtered** adds everything the filter shows, and **Remove filtered** takes it out.
-4. Click **Done selecting**. What you ticked stays saved.
+3. Tick the artworks you want to add, in cards or in columns (you can use the filters to find them). Above, clearly visible, you see how many you have chosen. The ones already in the selection appear marked and cannot be ticked again.
+4. Click **Add selected**. The artworks are added to the selection. When you are done, click **Done selecting**.
 
 The other way is from an artwork's sheet: the **Add to selection…** button lets you choose an existing selection or create a new one. See [Artwork sheet](cap:ficha-de-obra).
 
