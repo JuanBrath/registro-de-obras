@@ -292,6 +292,7 @@ export function SeleccionesScreen({
 
   return (
     <div className="obras-list obras-list-grid-ancho">
+      <div className="obras-encabezado-fijo">
       <div className="obras-list-header">
         <h1>{t("selecciones.title")}</h1>
         <div className="header-actions">
@@ -307,6 +308,28 @@ export function SeleccionesScreen({
         <button type="button" data-recorrido="sel-crear" onClick={empezarNueva} disabled={nueva}>
           {t("selecciones.crear")}
         </button>
+      </div>
+
+
+      <div className="selecciones-bloque">
+        {selecciones.length === 0 && !nueva && <p>{t("selecciones.vacio")}</p>}
+        {selecciones.length > 0 && <h2 className="selecciones-subtitulo">{t("selecciones.existentes")}</h2>}
+        <div className="obras-toolbar-fila" data-recorrido="sel-lista">
+          {selecciones.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              className={s.id === activaId ? "obras-vista-toggle-boton activo" : "obras-vista-toggle-boton"}
+              onClick={() => {
+                setNueva(false);
+                setActivaId(s.id);
+              }}
+            >
+              {s.nombre} ({s.cantidad})
+            </button>
+          ))}
+        </div>
+      </div>
       </div>
 
       {nueva && (
@@ -336,26 +359,6 @@ export function SeleccionesScreen({
           </div>
         </section>
       )}
-
-      <div className="selecciones-bloque">
-        {selecciones.length === 0 && !nueva && <p>{t("selecciones.vacio")}</p>}
-        {selecciones.length > 0 && <h2 className="selecciones-subtitulo">{t("selecciones.existentes")}</h2>}
-        <div className="obras-toolbar-fila" data-recorrido="sel-lista">
-          {selecciones.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              className={s.id === activaId ? "obras-vista-toggle-boton activo" : "obras-vista-toggle-boton"}
-              onClick={() => {
-                setNueva(false);
-                setActivaId(s.id);
-              }}
-            >
-              {s.nombre} ({s.cantidad})
-            </button>
-          ))}
-        </div>
-      </div>
 
       {activa && (
         <section className="selecciones-bloque selecciones-formulario">

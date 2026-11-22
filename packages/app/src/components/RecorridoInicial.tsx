@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { useLanguage } from "../i18n/LanguageContext.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
@@ -30,6 +30,27 @@ export function RecorridoInicial({ pasos, onCerrar }: { pasos: PasoRecorrido[]; 
   const [indice, setIndice] = useState(0);
   const [rect, setRect] = useState<DOMRect | null>(null);
   useEscapeToDismiss(true, onCerrar);
+  const tarjetaRef = useRef<HTMLDivElement | null>(null);
+  const [altoTarjeta, setAltoTarjeta] = useState(ALTO_TARJETA_ESTIMADO_PX);
+
+  // Mientras el recorrido está abierto no se puede desplazar la pantalla de fondo: si se moviera, el recuadro
+  // y la tarjeta quedarían en una posición que ya no corresponde con lo que explican.
+  useEffect(() => {
+    const frenar = (e: Event) => e.preventDefault();
+    const frenarTeclas = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if ([" ", "PageUp", "PageDown", "Home", "End", "ArrowUp", "ArrowDown"].includes(e.key)) e.preventDefault();
+    };
+    window.addEventListener("wheel", frenar, { passive: false });
+    window.addEventListener("touchmove", frenar, { passive: false });
+    window.addEventListener("keydown", frenarTeclas);
+    return () => {
+      window.removeEventListener("wheel", frenar);
+      window.removeEventListener("touchmove", frenar);
+      window.removeEventListener("keydown", frenarTeclas);
+    };
+  }, []);
 
   useLayoutEffect(() => {
     window.dispatchEvent(new Event(EVENTO_MODAL_ABIERTO));
@@ -50,22 +71,42 @@ export function RecorridoInicial({ pasos, onCerrar }: { pasos: PasoRecorrido[]; 
     setRect(el ? el.getBoundingClientRect() : null);
   }, [paso]);
 
+  // Alto real de la tarjeta (varía con el largo del texto) para ubicarla sin salirse de la pantalla.
+  useLayoutEffect(() => {
+    if (tarjetaRef.current) setAltoTarjeta(tarjetaRef.current.offsetHeight);
+  }, [paso, rect]);
+
   if (!paso) return null;
 
   const esUltimo = indice === pasos.length - 1;
 
   let estiloTarjeta: CSSProperties;
   if (rect) {
-    const entraAbajo =
-      rect.bottom + SEPARACION_TARJETA_PX + ALTO_TARJETA_ESTIMADO_PX <= window.innerHeight - MARGEN_BORDE_VENTANA_PX;
-    const top = entraAbajo
-      ? rect.bottom + SEPARACION_TARJETA_PX
-      : Math.max(MARGEN_BORDE_VENTANA_PX, rect.top - SEPARACION_TARJETA_PX - ALTO_TARJETA_ESTIMADO_PX);
-    const left = Math.min(
-      Math.max(MARGEN_BORDE_VENTANA_PX, rect.left),
-      window.innerWidth - MARGEN_BORDE_VENTANA_PX - ANCHO_TARJETA_PX,
-    );
-    estiloTarjeta = { top, left, width: ANCHO_TARJETA_PX };
+    const ancho = window.innerWidth;
+    const alto = window.innerHeight;
+    const m = MARGEN_BORDE_VENTANA_PX;
+    const sep = SEPARACION_TARJETA_PX;
+    const limitar = (v: number, min: number, max: number) => Math.min(Math.max(v, min), Math.max(min, max));
+    const leftAlineado = limitar(rect.left, m, ancho - m - ANCHO_TARJETA_PX);
+    const topAlineado = limitar(rect.top, m, alto - m - altoTarjeta);
+    // Se prueba, en orden, abajo, arriba, a la derecha y a la izquierda del elemento señalado; la primera que
+    // entre entera en la pantalla (sin tapar lo que se explica) es la que se usa.
+    const candidatas = [
+      { top: rect.bottom + sep, left: leftAlineado, entra: rect.bottom + sep + altoTarjeta <= alto - m },
+      { top: rect.top - sep - altoTarjeta, left: leftAlineado, entra: rect.top - sep - altoTarjeta >= m },
+      { top: topAlineado, left: rect.right + sep, entra: rect.right + sep + ANCHO_TARJETA_PX <= ancho - m },
+      { top: topAlineado, left: rect.left - sep - ANCHO_TARJETA_PX, entra: rect.left - sep - ANCHO_TARJETA_PX >= m },
+    ];
+    const elegida = candidatas.find((c) => c.entra);
+    if (elegida) {
+      estiloTarjeta = { top: elegida.top, left: elegida.left, width: ANCHO_TARJETA_PX };
+    } else {
+      // Elemento muy grande (ocupa casi toda la pantalla): la tarjeta se acomoda en la mitad opuesta a su centro,
+      // para tapar lo menos posible de lo que se explica.
+      const centroY = rect.top + rect.height / 2;
+      const top = centroY < alto / 2 ? alto - m - altoTarjeta : m;
+      estiloTarjeta = { top, left: leftAlineado, width: ANCHO_TARJETA_PX };
+    }
   } else {
     estiloTarjeta = { top: "50%", left: "50%", width: ANCHO_TARJETA_PX, transform: "translate(-50%, -50%)" };
   }
@@ -88,7 +129,7 @@ export function RecorridoInicial({ pasos, onCerrar }: { pasos: PasoRecorrido[]; 
         // el fondo oscuro lo pone este div comun, sin recorte.
         <div className="recorrido-fondo-completo" />
       )}
-      <div className="recorrido-tarjeta" style={estiloTarjeta}>
+      <div className="recorrido-tarjeta" ref={tarjetaRef} style={estiloTarjeta}>
         <p className="recorrido-contador">{t("recorridoInicial.pasoContador", { n: indice + 1, total: pasos.length })}</p>
         <h2>{paso.titulo}</h2>
         <p>{paso.texto}</p>

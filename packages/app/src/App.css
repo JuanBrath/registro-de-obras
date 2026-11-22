@@ -3234,3 +3234,48 @@ button:not(:disabled):hover {
   min-width: min(520px, 100%);
   max-width: min(90vw, 760px);
 }
+
+/* Selecciones: el título, "Crear selección" y la lista quedan fijos al desplazarse (como en Obras). */
+.obras-encabezado-fijo .selecciones-bloque {
+  margin-top: 0.75rem;
+}
+
+.obras-encabezado-fijo .selecciones-subtitulo {
+  margin-bottom: 0.5rem;
+}
+
+/* Recorrido de ayuda: tarjeta azul marino oscuro para que se distinga del texto de fondo (y del azul del recuadro). */
+.recorrido-tarjeta {
+  background: #0f1f4d;
+  color: #fff;
+  border: 1px solid #4668c9;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+}
+
+.recorrido-tarjeta h2,
+.recorrido-tarjeta p {
+  color: #fff;
+}
+
+.recorrido-tarjeta button {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.recorrido-tarjeta .recorrido-saltar {
+  background: none;
+  border: none;
+  color: #fff;
+}
+
+.recorrido-tarjeta .recorrido-acciones-navegacion button:last-child {
+  background: #fff;
+  color: #0f1f4d;
+  border-color: #fff;
+  font-weight: 600;
+}
+
+.recorrido-tarjeta button:not(:disabled):hover {
+  outline-color: #fff;
+}
