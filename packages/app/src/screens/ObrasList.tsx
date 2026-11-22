@@ -684,7 +684,7 @@ export function ObrasList({
             <button
               type="button"
               className="obra-card"
-              style={modoSeleccion && idsEnActiva.has(obra.id) ? { outline: "3px solid var(--accent, #4a90e2)" } : undefined}
+              style={modoSeleccion && idsEnActiva.has(obra.id) ? { outline: "3px solid var(--azul-marino-borde)" } : undefined}
               onClick={() => (modoSeleccion ? alternarElegida(obra.id) : onOpenObra(obra.id))}
             >
             {thumbnails[obra.id] ? (

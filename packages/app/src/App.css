@@ -491,7 +491,7 @@ input[type="date"] {
   transform: translateY(-50%);
   width: 240px;
   padding: 0.5rem;
-  border: 1px solid #2f6fed;
+  border: 1px solid #6b7fa3;
   border-radius: 6px;
   background: #222;
   color: #fff;
@@ -1956,19 +1956,19 @@ input[type="date"] {
   /* Mismo azul que .obras-vista-toggle-boton.activo (no el violeta de
      --accent): a Juan no le gustaba ese violeta puntual, asi que los
      resaltados nuevos usan este azul en su lugar. */
-  outline: 2px solid #1a73e8;
+  outline: 2px solid var(--azul-resalte);
   outline-offset: 2px;
   pointer-events: none;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .recorrido-recuadro {
-    outline-color: #64b5f6;
+    outline-color: var(--azul-resalte);
   }
 }
 
 :root[data-theme="dark"] .recorrido-recuadro {
-  outline-color: #64b5f6;
+  outline-color: var(--azul-resalte);
 }
 
 .recorrido-tarjeta {
@@ -3246,9 +3246,9 @@ button:not(:disabled):hover {
 
 /* Recorrido de ayuda: tarjeta azul marino oscuro para que se distinga del texto de fondo (y del azul del recuadro). */
 .recorrido-tarjeta {
-  background: #0f1f4d;
+  background: #111a2c;
   color: #fff;
-  border: 1px solid #4668c9;
+  border: 1px solid #5a6e93;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
 }
 
@@ -3271,7 +3271,7 @@ button:not(:disabled):hover {
 
 .recorrido-tarjeta .recorrido-acciones-navegacion button:last-child {
   background: #fff;
-  color: #0f1f4d;
+  color: #111a2c;
   border-color: #fff;
   font-weight: 600;
 }
