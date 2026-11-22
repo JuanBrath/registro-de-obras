@@ -1258,7 +1258,7 @@ export const en: Record<keyof typeof es, string> = {
   "ayudaSelecciones.informes": "Generates a PDF list with only the artworks of this selection.",
   "ayudaSelecciones.eliminar": "Deletes the selection and its saved dossiers. The artworks are not deleted. It asks for confirmation first.",
   "ayudaSelecciones.vista": "Switches between seeing the selection's artworks as cards or as a list in columns.",
-  "ayudaSelecciones.obra": "Click an artwork to open its sheet. Drag it (or use the arrows) to change its order in the selection; Remove takes it out of the selection without deleting it.",
+  "ayudaSelecciones.obra": "Click an artwork to open its sheet. Below each one are the stars to rate it.",
   "ayudaClientes.nuevo": "Opens the form to add a new client: name, type, address, contact and tax details.",
   "ayudaClientes.informes": "Generates PDF reports of your clients: lists and data sheets.",
   "ayudaClientes.buscar": "Find a client by typing their name or another detail. It filters as you type.",
@@ -1297,4 +1297,7 @@ export const en: Record<keyof typeof es, string> = {
   "ayudaObraForm.categoria": "The artwork's category (photography, painting, sculpture…). Depending on which you choose, that category's own fields appear.",
   "ayudaObraForm.etiquetas": "Words to classify the artwork (for example \"landscape\"). They are later used to filter in Artworks and in the Gallery.",
   "ayudaObraForm.guardar": "Saves the artwork and takes you to its sheet, where you add the copies.",
+  "selecciones.ordenarQuitar": "Sort and remove",
+  "selecciones.terminarOrden": "Done",
+  "ayudaSelecciones.orden": "Turns on the mode to change the order of the artworks (by dragging them or with the arrows) and to remove them from the selection. While it is on, clicking an artwork does not open its sheet.",
 };

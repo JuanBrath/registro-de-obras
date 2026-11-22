@@ -28,7 +28,7 @@ La otra forma es desde la ficha de una obra: el botón **Agregar a selección…
 
 En **Selecciones**, tocá el nombre de una selección para abrirla. Ves sus obras con el mismo formato que en [Obras](cap:obras): podés alternar entre **Tarjetas** y **Columnas** y cambiar el **Tamaño de las miniaturas**. Las estrellas de calificación también se pueden cambiar desde acá.
 
-Para cambiar el orden, arrastrá una obra a su nueva posición o usá las flechas. **Quitar** saca la obra de la selección (no la borra). Si abrís la ficha de una obra desde la selección, al cerrarla volvés a esa misma selección.
+Para cambiar el orden o sacar obras, tocá **Ordenar y quitar**. Mientras el modo está activo podés arrastrar una obra a su nueva posición o usar las flechas, y **Quitar** saca la obra de la selección (no la borra); además, tocar una obra no abre su ficha, para que no se abra por error al arrastrar. Cuando termines, tocá **Terminar**. Fuera de ese modo, tocar una obra abre su ficha, y al cerrarla volvés a esa misma selección.
 
 ## Informes de una selección
 

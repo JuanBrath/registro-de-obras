@@ -28,7 +28,7 @@ The other way is from an artwork's sheet: the **Add to selection…** button let
 
 In **Selections**, click a selection's name to open it. You see its artworks in the same format as in [Artworks](cap:obras): you can switch between **Cards** and **Columns** and change the **Thumbnail size**. The star ratings can also be changed from here.
 
-To change the order, drag an artwork to its new position or use the arrows. **Remove** takes the artwork out of the selection (it does not delete it). If you open an artwork's sheet from the selection, closing it takes you back to that same selection.
+To change the order or take artworks out, click **Sort and remove**. While the mode is on you can drag an artwork to its new position or use the arrows, and **Remove** takes the artwork out of the selection (it does not delete it); also, clicking an artwork does not open its sheet, so it does not open by mistake while dragging. When you are done, click **Done**. Outside that mode, clicking an artwork opens its sheet, and closing it takes you back to that same selection.
 
 ## Reports for a selection
 

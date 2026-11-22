@@ -73,6 +73,9 @@ export function SeleccionesScreen({
   const [guardadosAbierto, setGuardadosAbierto] = useState(false);
   const [informeObras, setInformeObras] = useState<InformeObraRow[] | null>(null);
   const [cantidadDossiers, setCantidadDossiers] = useState(0);
+  // Modo "ordenar y quitar": solo mientras está activo se puede arrastrar, mover con flechas y quitar obras, y tocar una
+  // obra no abre su ficha (así no se abre por error al arrastrar).
+  const [modoOrden, setModoOrden] = useState(false);
   const [arrastrando, setArrastrando] = useState<number | null>(null);
   const [sobre, setSobre] = useState<number | null>(null);
   const objectUrlsRef = useRef<string[]>([]);
@@ -121,6 +124,7 @@ export function SeleccionesScreen({
   // Carga las obras y el conteo de dossiers al cambiar de selección.
   useEffect(() => {
     setConfirmarEliminar(false);
+    setModoOrden(false);
     if (activaId === null) {
       setObras([]);
       return;
@@ -279,6 +283,7 @@ export function SeleccionesScreen({
     pasoAyuda(t, "sel-eliminar", "ayudaSelecciones.eliminar", t("selecciones.eliminar")),
     pasoAyuda(t, "obras-vista", "ayudaSelecciones.vista", t("obrasList.vistaTarjetas") + " / " + t("obrasList.vistaColumnas")),
     pasoAyuda(t, "obras-tamano", "ayudaObras.tamano", t("obrasList.tamanoMiniaturasLabel")),
+    pasoAyuda(t, "sel-orden", "ayudaSelecciones.orden", t("selecciones.ordenarQuitar")),
     pasoAyuda(t, "sel-obra", "ayudaSelecciones.obra", t("obrasList.colObra")),
   ];
 
@@ -431,6 +436,14 @@ export function SeleccionesScreen({
               <span className="obras-recorrido-envoltorio" data-recorrido="obras-tamano">
                 <MiniaturasSizeSlider columnas={columnasActual} onChange={cambiarTamano} />
               </span>
+              <button
+                type="button"
+                data-recorrido="sel-orden"
+                className={modoOrden ? "obras-vista-toggle-boton activo" : undefined}
+                onClick={() => setModoOrden((m) => !m)}
+              >
+                {modoOrden ? t("selecciones.terminarOrden") : t("selecciones.ordenarQuitar")}
+              </button>
             </div>
           )}
 
@@ -441,7 +454,7 @@ export function SeleccionesScreen({
                   className="obra-card-wrapper"
                   key={obra.id}
                   data-recorrido={i === 0 ? "sel-obra" : undefined}
-                  draggable
+                  draggable={modoOrden}
                 onDragStart={(e) => {
                   setArrastrando(i);
                   e.dataTransfer.effectAllowed = "move";
@@ -463,11 +476,11 @@ export function SeleccionesScreen({
                 }}
                   style={{
                   opacity: arrastrando === i ? 0.4 : 1,
-                  outline: sobre === i && arrastrando !== null && arrastrando !== i ? "3px dashed var(--azul-marino-borde)" : undefined,
-                  cursor: "grab",
+                  outline: modoOrden && sobre === i && arrastrando !== null && arrastrando !== i ? "3px dashed var(--azul-marino-borde)" : undefined,
+                  cursor: modoOrden ? "grab" : undefined,
                 }}
                 >
-                  <button type="button" className="obra-card" onClick={() => onOpenObra(obra.id, activaId)}>
+                  <button type="button" className="obra-card" onClick={() => !modoOrden && onOpenObra(obra.id, activaId)}>
                     {thumbs[obra.id] ? (
                       <img src={thumbs[obra.id]} alt={obra.titulo} onLoad={(e) => marcarSiMiniaturaMuyVertical(e.currentTarget)} />
                     ) : (
@@ -476,23 +489,25 @@ export function SeleccionesScreen({
                     <ObraTarjetaInfo obra={obra} />
                   </button>
                   <StarRating value={obra.calificacion} onChange={(n) => calificar(obra.id, n)} />
-                  <div className="form-actions">
-                    <button type="button" onClick={() => mover(i, i - 1)} disabled={i === 0} aria-label={t("selecciones.subir")} title={t("selecciones.subir")}>
-                      ←
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => mover(i, i + 1)}
-                      disabled={i === obras.length - 1}
-                      aria-label={t("selecciones.bajar")}
-                      title={t("selecciones.bajar")}
-                    >
-                      →
-                    </button>
-                    <button type="button" onClick={() => quitar(obra.id)}>
-                      {t("selecciones.quitar")}
-                    </button>
-                  </div>
+                  {modoOrden && (
+                    <div className="form-actions">
+                      <button type="button" onClick={() => mover(i, i - 1)} disabled={i === 0} aria-label={t("selecciones.subir")} title={t("selecciones.subir")}>
+                        ←
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => mover(i, i + 1)}
+                        disabled={i === obras.length - 1}
+                        aria-label={t("selecciones.bajar")}
+                        title={t("selecciones.bajar")}
+                      >
+                        →
+                      </button>
+                      <button type="button" onClick={() => quitar(obra.id)}>
+                        {t("selecciones.quitar")}
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -510,7 +525,7 @@ export function SeleccionesScreen({
                     <th>{t("informesObras.colSubcategoria")}</th>
                     <th>{t("obrasList.colDisponibilidad")}</th>
                     <th>{t("obrasList.colCalificacion")}</th>
-                    <th />
+                    {modoOrden && <th />}
                   </tr>
                 </thead>
                 <tbody>
@@ -521,8 +536,8 @@ export function SeleccionesScreen({
                         key={obra.id}
                         data-recorrido={i === 0 ? "sel-obra" : undefined}
                         className="obras-tabla-fila"
-                        onClick={() => onOpenObra(obra.id, activaId)}
-                        draggable
+                        onClick={() => !modoOrden && onOpenObra(obra.id, activaId)}
+                        draggable={modoOrden}
                 onDragStart={(e) => {
                   setArrastrando(i);
                   e.dataTransfer.effectAllowed = "move";
@@ -544,8 +559,8 @@ export function SeleccionesScreen({
                 }}
                         style={{
                   opacity: arrastrando === i ? 0.4 : 1,
-                  outline: sobre === i && arrastrando !== null && arrastrando !== i ? "3px dashed var(--azul-marino-borde)" : undefined,
-                  cursor: "grab",
+                  outline: modoOrden && sobre === i && arrastrando !== null && arrastrando !== i ? "3px dashed var(--azul-marino-borde)" : undefined,
+                  cursor: modoOrden ? "grab" : undefined,
                 }}
                       >
                         <td>
@@ -582,25 +597,27 @@ export function SeleccionesScreen({
                         <td onClick={(e) => e.stopPropagation()}>
                           <StarRating value={obra.calificacion} onChange={(n) => calificar(obra.id, n)} />
                         </td>
-                        <td onClick={(e) => e.stopPropagation()}>
-                          <div className="form-actions">
-                            <button type="button" onClick={() => mover(i, i - 1)} disabled={i === 0} aria-label={t("selecciones.subir")} title={t("selecciones.subir")}>
-                              ↑
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => mover(i, i + 1)}
-                              disabled={i === obras.length - 1}
-                              aria-label={t("selecciones.bajar")}
-                              title={t("selecciones.bajar")}
-                            >
-                              ↓
-                            </button>
-                            <button type="button" onClick={() => quitar(obra.id)}>
-                              {t("selecciones.quitar")}
-                            </button>
-                          </div>
-                        </td>
+                        {modoOrden && (
+                          <td onClick={(e) => e.stopPropagation()}>
+                            <div className="form-actions">
+                              <button type="button" onClick={() => mover(i, i - 1)} disabled={i === 0} aria-label={t("selecciones.subir")} title={t("selecciones.subir")}>
+                                ↑
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => mover(i, i + 1)}
+                                disabled={i === obras.length - 1}
+                                aria-label={t("selecciones.bajar")}
+                                title={t("selecciones.bajar")}
+                              >
+                                ↓
+                              </button>
+                              <button type="button" onClick={() => quitar(obra.id)}>
+                                {t("selecciones.quitar")}
+                              </button>
+                            </div>
+                          </td>
+                        )}
                       </tr>
                     );
                   })}

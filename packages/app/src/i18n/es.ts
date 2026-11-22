@@ -1257,7 +1257,7 @@ export const es = {
   "ayudaSelecciones.informes": "Genera un listado en PDF solo con las obras de esta selección.",
   "ayudaSelecciones.eliminar": "Elimina la selección y sus dossiers guardados. Las obras no se borran. Antes te pide confirmación.",
   "ayudaSelecciones.vista": "Cambia entre ver las obras de la selección como tarjetas o como lista en columnas.",
-  "ayudaSelecciones.obra": "Tocá una obra para abrir su ficha. Arrastrala (o usá las flechas) para cambiar su orden en la selección; Quitar la saca de la selección sin borrarla.",
+  "ayudaSelecciones.obra": "Tocá una obra para abrir su ficha. Debajo de cada una están las estrellas para calificarla.",
   "ayudaClientes.nuevo": "Abre el formulario para cargar un cliente nuevo: nombre, tipo, domicilio, contacto y datos fiscales.",
   "ayudaClientes.informes": "Genera informes en PDF de tus clientes: listados y fichas.",
   "ayudaClientes.buscar": "Buscá un cliente escribiendo su nombre u otro dato. Filtra mientras escribís.",
@@ -1296,4 +1296,7 @@ export const es = {
   "ayudaObraForm.categoria": "La categoría de la obra (fotografía, pintura, escultura…). Según cuál elijas aparecen los campos propios de esa categoría.",
   "ayudaObraForm.etiquetas": "Palabras para clasificar la obra (por ejemplo \"paisaje\"). Después sirven para filtrar en Obras y en la Galería.",
   "ayudaObraForm.guardar": "Guarda la obra y te lleva a su ficha, donde cargás las copias.",
+  "selecciones.ordenarQuitar": "Ordenar y quitar",
+  "selecciones.terminarOrden": "Terminar",
+  "ayudaSelecciones.orden": "Activa el modo para cambiar el orden de las obras (arrastrándolas o con las flechas) y para quitarlas de la selección. Mientras está activo, tocar una obra no abre su ficha.",
 } as const;
