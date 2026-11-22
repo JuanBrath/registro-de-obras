@@ -2,6 +2,12 @@
 
 What Recer Studio is and how to get it ready the first time you open it.
 
+## What Recer means
+
+In Catalan, "recer" means shelter, refuge and protection ("estar a recer" is to be safe from the elements). Every work of art needs a space where it can be preserved, documented and valued over time. Recer was born with that purpose: to offer a solid digital infrastructure to safeguard the archive, the traceability and the history of every piece.
+
+That is why the program's motto is **Shelter · refuge · protection**. The first time you open the program you see this explanation on the Why Recer? screen, and you can read it again by clicking the logo on the start screen. Recer comes in two editions: Recer Studio, for artists and photographers, and Recer Space, for galleries.
+
 ## What is Recer Studio
 
 Recer Studio is the program where you keep the record of your work: each artwork with its photo and technical details, the numbered copies of each edition, sales, reservations and donations, your clients, and the documents generated from all of that (data sheets, quotes, receipts, certificates of authenticity, contracts).

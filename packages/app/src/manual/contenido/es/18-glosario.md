@@ -86,6 +86,10 @@ Un porcentaje de la reventa que le corresponde al artista o a sus herederos. Cad
 
 Un tipo de seguro que cubre la obra desde que sale de un lugar hasta que llega a otro, sin cortes.
 
+## Recer
+
+En catalán, "recer" significa resguardo, abrigo y protección. Es el nombre del programa y de su lema: **Resguardo · abrigo · protección**. Ver [Primeros pasos](cap:primeros-pasos).
+
 ## Selección
 
 Un grupo de obras elegidas a mano, con un orden propio. Una obra puede estar en varias selecciones. Es la base del dossier. Ver [Selecciones y dossier](cap:selecciones-y-dossier).
