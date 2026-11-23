@@ -47,55 +47,58 @@ export function CamposTamanoColor({
         <span>{t("exportarImagen.cambiarTamano")}</span>
       </label>
 
-      {valor.cambiarTamano && (
-        <>
-          <fieldset className="informes-fieldset">
-            <legend>{t("exportarImagen.ladoLegend")}</legend>
-            <div className="radio-row">
-              <label>
-                <input type="radio" name={`${nombre}Lado`} checked={valor.lado === "corto"} onChange={() => cambiar({ lado: "corto" })} />
-                {t("exportarImagen.ladoCorto")}
-              </label>
-              <label>
-                <input type="radio" name={`${nombre}Lado`} checked={valor.lado === "largo"} onChange={() => cambiar({ lado: "largo" })} />
-                {t("exportarImagen.ladoLargo")}
-              </label>
-            </div>
-          </fieldset>
-
-          <fieldset className="informes-fieldset">
-            <legend>{t("exportarImagen.unidadLegend")}</legend>
-            <div className="radio-row">
-              <label>
-                <input type="radio" name={`${nombre}Unidad`} checked={valor.unidad === "px"} onChange={() => cambiar({ unidad: "px" })} />
-                {t("exportarImagen.unidadPx")}
-              </label>
-              <label>
-                <input type="radio" name={`${nombre}Unidad`} checked={valor.unidad === "cm"} onChange={() => cambiar({ unidad: "cm" })} />
-                {t("exportarImagen.unidadCm")}
-              </label>
-            </div>
-          </fieldset>
-
+      <fieldset className="informes-fieldset" disabled={!valor.cambiarTamano}>
+        <legend>{t("exportarImagen.ladoLegend")}</legend>
+        <div className="radio-row">
           <label>
-            {valor.unidad === "px" ? t("exportarImagen.medidaLabel") : t("exportarImagen.medidaLabelCm")}
-            <input
-              type="number"
-              min={valor.unidad === "px" ? 1 : 0.1}
-              step={valor.unidad === "px" ? 1 : 0.1}
-              value={valor.medida}
-              onChange={(e) => cambiar({ medida: e.target.value })}
-            />
+            <input type="radio" name={`${nombre}Lado`} checked={valor.lado === "corto"} onChange={() => cambiar({ lado: "corto" })} />
+            {t("exportarImagen.ladoCorto")}
           </label>
-          {valor.unidad === "cm" && (
-            <label>
-              {t("exportarImagen.pppLabel")}
-              <input type="number" min={1} value={valor.ppp} onChange={(e) => cambiar({ ppp: e.target.value })} />
-            </label>
-          )}
-          <p className="field-note">{t("exportarImagen.medidaNota")}</p>
-        </>
-      )}
+          <label>
+            <input type="radio" name={`${nombre}Lado`} checked={valor.lado === "largo"} onChange={() => cambiar({ lado: "largo" })} />
+            {t("exportarImagen.ladoLargo")}
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset className="informes-fieldset" disabled={!valor.cambiarTamano}>
+        <legend>{t("exportarImagen.unidadLegend")}</legend>
+        <div className="radio-row">
+          <label>
+            <input type="radio" name={`${nombre}Unidad`} checked={valor.unidad === "px"} onChange={() => cambiar({ unidad: "px" })} />
+            {t("exportarImagen.unidadPx")}
+          </label>
+          <label>
+            <input type="radio" name={`${nombre}Unidad`} checked={valor.unidad === "cm"} onChange={() => cambiar({ unidad: "cm" })} />
+            {t("exportarImagen.unidadCm")}
+          </label>
+        </div>
+      </fieldset>
+
+      <div className="export-medida-fila" style={{ display: "flex", gap: "1.5rem", alignItems: "center", flexWrap: "nowrap" }}>
+        <label style={{ whiteSpace: "nowrap" }}>
+          {valor.unidad === "px" ? t("exportarImagen.medidaLabel") : t("exportarImagen.medidaLabelCm")}
+          <input
+            type="number"
+            min={valor.unidad === "px" ? 1 : 0.1}
+            step={valor.unidad === "px" ? 1 : 0.1}
+            value={valor.medida}
+            disabled={!valor.cambiarTamano}
+            onChange={(e) => cambiar({ medida: e.target.value })}
+          />
+        </label>
+        <label style={{ whiteSpace: "nowrap" }}>
+          {t("exportarImagen.pppLabel")}
+          <input
+            type="number"
+            min={1}
+            value={valor.ppp}
+            disabled={!valor.cambiarTamano || valor.unidad !== "cm"}
+            onChange={(e) => cambiar({ ppp: e.target.value })}
+          />
+        </label>
+      </div>
+      <p className="field-note">{t("exportarImagen.medidaNota")}</p>
     </>
   );
 }
