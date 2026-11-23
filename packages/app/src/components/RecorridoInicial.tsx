@@ -110,8 +110,9 @@ export function RecorridoInicial({ pasos, onCerrar }: { pasos: PasoRecorrido[]; 
 
   let estiloTarjeta: CSSProperties;
   if (rect) {
-    const ancho = window.innerWidth;
-    const alto = window.innerHeight;
+    // clientWidth/clientHeight excluyen la barra de desplazamiento (innerWidth la cuenta y la tarjeta quedaba tapada).
+    const ancho = document.documentElement.clientWidth;
+    const alto = document.documentElement.clientHeight;
     const m = MARGEN_BORDE_VENTANA_PX;
     const sep = SEPARACION_TARJETA_PX;
     const limitar = (v: number, min: number, max: number) => Math.min(Math.max(v, min), Math.max(min, max));
