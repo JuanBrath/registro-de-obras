@@ -15,13 +15,13 @@ A **selection** is a group of artworks you pick by hand, for example the ones yo
 
 ## Groups of selections
 
-If you have many selections, you can gather those on the same theme into a **group** (for example "Fairs 2026" or "Landscapes").
+The screen has two parts: **Groups** above and **Selections** below. A **group** gathers the selections on the same theme (for example "Fairs 2026" or "Landscapes").
 
-1. Above the list of selections click **+ New group**, type the name and click **Save**.
-2. Open a selection and choose its **Group** in the drop-down (or "No group"); click **Save**.
-3. Click a group's name to see only its selections, or **All** to see them all. With a group chosen you can **Rename group** or **Delete group**: deleting a group does not delete its selections, they just have no group.
+1. Under **Groups** click **+ New group**, type the name, tick the selections that make it up and click **Save**.
+2. To change a group, click its name: you can rename it, tick or untick its selections (saved at once) or **Delete group** (the selections are not deleted, they just have no group).
+3. You can also assign the group from a selection: open it, choose its **Group** in the drop-down (or "No group") and click **Save**. Each selection belongs to a single group.
 
-The list shows only two rows; if there are more, click **Show more** to unfold them all. When you choose one it goes back to two rows and the chosen one always stays in view.
+Under **Selections** the list shows only two rows; if there are more, click **Show more** to unfold them all. When you choose one it goes back to two rows and the chosen one always stays in view.
 
 ## Add artworks to a selection
 

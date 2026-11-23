@@ -34,6 +34,10 @@ export async function renombrarGrupo(db: DatabaseAdapter, id: number, nombre: st
   await db.execute("UPDATE seleccion_grupo SET nombre = ? WHERE id = ?", [nombre.trim(), id]);
 }
 
+export async function asignarGrupo(db: DatabaseAdapter, seleccionId: number, grupoId: number | null): Promise<void> {
+  await db.execute("UPDATE seleccion SET grupo_id = ? WHERE id = ?", [grupoId, seleccionId]);
+}
+
 /** Elimina el grupo; sus selecciones no se borran, quedan sin grupo. */
 export async function eliminarGrupo(db: DatabaseAdapter, id: number): Promise<void> {
   await db.transaction(async (tx) => {

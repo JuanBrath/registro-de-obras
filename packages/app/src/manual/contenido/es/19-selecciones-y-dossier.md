@@ -15,13 +15,13 @@ Una **selección** es un grupo de obras que elegís a mano, por ejemplo las que 
 
 ## Grupos de selecciones
 
-Si tenés muchas selecciones, podés reunir en un **grupo** las de una misma temática (por ejemplo "Ferias 2026" o "Paisajes").
+La pantalla tiene dos partes: **Grupos** arriba y **Selecciones** abajo. Un **grupo** reúne las selecciones de una misma temática (por ejemplo "Ferias 2026" o "Paisajes").
 
-1. Sobre la lista de selecciones tocá **+ Nuevo grupo**, escribí el nombre y tocá **Guardar**.
-2. Abrí una selección y elegí su **Grupo** en el desplegable (o "Sin grupo"); tocá **Guardar**.
-3. Tocá el nombre de un grupo para ver solo sus selecciones, o **Todas** para verlas todas. Con un grupo elegido podés **Renombrar grupo** o **Eliminar grupo**: borrar un grupo no borra sus selecciones, quedan sin grupo.
+1. En **Grupos** tocá **+ Nuevo grupo**, escribí el nombre, tildá las selecciones que lo componen y tocá **Guardar**.
+2. Para cambiar un grupo, tocá su nombre: podés renombrarlo, tildar o destildar sus selecciones (se guarda al instante) o **Eliminar grupo** (las selecciones no se borran, quedan sin grupo).
+3. También podés asignar el grupo desde una selección: abrila, elegí su **Grupo** en el desplegable (o "Sin grupo") y tocá **Guardar**. Cada selección pertenece a un solo grupo.
 
-La lista muestra solo dos renglones; si hay más, tocá **Mostrar más** para desplegarlas todas. Al elegir una, vuelve a dos renglones y la elegida queda siempre a la vista.
+En **Selecciones** la lista muestra solo dos renglones; si hay más, tocá **Mostrar más** para desplegarlas todas. Al elegir una, vuelve a dos renglones y la elegida queda siempre a la vista.
 
 ## Agregar obras a una selección
 

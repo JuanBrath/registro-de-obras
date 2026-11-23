@@ -21,6 +21,7 @@ import type { TranslationKey } from "../i18n/LanguageContext.js";
 import {
   actualizarSeleccion,
   agregarObrasASeleccion,
+  asignarGrupo,
   crearGrupo,
   crearSeleccion,
   eliminarGrupo,
@@ -141,12 +142,13 @@ export function SeleccionesScreen({
   const [selecciones, setSelecciones] = useState<Seleccion[]>([]);
   const [grupos, setGrupos] = useState<GrupoSelecciones[]>([]);
   // Filtro por grupo de la lista (null = todas) y estado de la lista plegable.
-  const [grupoFiltro, setGrupoFiltro] = useState<number | null>(null);
+  const [grupoActivoId, setGrupoActivoId] = useState<number | null>(null);
+  // Grupo nuevo en armado: nombre (nombreGrupo) y selecciones tildadas.
+  const [grupoNuevo, setGrupoNuevo] = useState(false);
+  const [elegidasGrupoNuevo, setElegidasGrupoNuevo] = useState<number[]>([]);
   const [listaExpandida, setListaExpandida] = useState(false);
   // Grupo de la selección que se está creando o editando.
   const [grupoId, setGrupoId] = useState<number | null>(null);
-  // Edición de grupos: "nuevo" para crear, "renombrar" para el filtrado actual.
-  const [edicionGrupo, setEdicionGrupo] = useState<null | "nuevo" | "renombrar">(null);
   const [nombreGrupo, setNombreGrupo] = useState("");
   const [confirmarEliminarGrupo, setConfirmarEliminarGrupo] = useState(false);
   const [activaId, setActivaId] = useState<number | null>(seleccionInicialId ?? null);
@@ -193,7 +195,7 @@ export function SeleccionesScreen({
     setSelecciones(rows);
     const gs = await listGrupos(context.db);
     setGrupos(gs);
-    setGrupoFiltro((actual) => (actual !== null && !gs.some((g) => g.id === actual) ? null : actual));
+    setGrupoActivoId((actual) => (actual !== null && !gs.some((g) => g.id === actual) ? null : actual));
     return rows;
   }, [context]);
 
@@ -271,26 +273,58 @@ export function SeleccionesScreen({
     }
   }
 
+  const abrirGrupo = (id: number) => {
+    setNueva(false);
+    setActivaId(null);
+    setGrupoNuevo(false);
+    setGrupoActivoId(id);
+    setConfirmarEliminarGrupo(false);
+    setNombreGrupo(grupos.find((g) => g.id === id)?.nombre ?? "");
+  };
+
+  const empezarNuevoGrupo = () => {
+    setNueva(false);
+    setActivaId(null);
+    setGrupoActivoId(null);
+    setGrupoNuevo(true);
+    setElegidasGrupoNuevo([]);
+    setNombreGrupo("");
+  };
+
   const guardarGrupo = () =>
     run(async () => {
       if (!context || !nombreGrupo.trim()) return;
-      if (edicionGrupo === "nuevo") {
+      if (grupoNuevo) {
         const id = await crearGrupo(context.db, nombreGrupo);
-        setGrupoFiltro(id);
-      } else if (edicionGrupo === "renombrar" && grupoFiltro !== null) {
-        await renombrarGrupo(context.db, grupoFiltro, nombreGrupo);
+        for (const selId of elegidasGrupoNuevo) await asignarGrupo(context.db, selId, id);
+        setGrupoNuevo(false);
+        setElegidasGrupoNuevo([]);
+        setGrupoActivoId(id);
+      } else if (grupoActivoId !== null) {
+        await renombrarGrupo(context.db, grupoActivoId, nombreGrupo);
       }
-      setEdicionGrupo(null);
-      setNombreGrupo("");
       await recargarLista();
     });
 
+  const alternarSeleccionEnGrupo = (selId: number, tildada: boolean) => {
+    if (grupoNuevo) {
+      setElegidasGrupoNuevo((prev) => (tildada ? [...prev, selId] : prev.filter((x) => x !== selId)));
+      return;
+    }
+    if (grupoActivoId === null) return;
+    return run(async () => {
+      if (!context) return;
+      await asignarGrupo(context.db, selId, tildada ? grupoActivoId : null);
+      await recargarLista();
+    });
+  };
+
   const quitarGrupo = () =>
     run(async () => {
-      if (!context || grupoFiltro === null) return;
-      await eliminarGrupo(context.db, grupoFiltro);
+      if (!context || grupoActivoId === null) return;
+      await eliminarGrupo(context.db, grupoActivoId);
       setConfirmarEliminarGrupo(false);
-      setGrupoFiltro(null);
+      setGrupoActivoId(null);
       await recargarLista();
     });
 
@@ -300,7 +334,9 @@ export function SeleccionesScreen({
     setElegidasNueva([]);
     setNombre("");
     setNotas("");
-    setGrupoId(grupoFiltro);
+    setGrupoId(null);
+    setGrupoActivoId(null);
+    setGrupoNuevo(false);
   };
 
   const guardarDatos = () =>
@@ -442,106 +478,107 @@ export function SeleccionesScreen({
       {error && <p className="error">{error}</p>}
 
       <div className="selecciones-bloque">
-        <button type="button" data-recorrido="sel-crear" onClick={empezarNueva} disabled={nueva}>
-          {t("selecciones.crear")}
-        </button>
-      </div>
-
-
-      <div className="selecciones-bloque">
-        {selecciones.length === 0 && !nueva && <p>{t("selecciones.vacio")}</p>}
-        {selecciones.length > 0 && <h2 className="selecciones-subtitulo">{t("selecciones.existentes")}</h2>}
+        <h2 className="selecciones-subtitulo">{t("selecciones.gruposTitulo")}</h2>
         <div className="obras-toolbar-fila selecciones-grupos" data-recorrido="sel-grupos">
-          <button
-            type="button"
-            className={grupoFiltro === null ? "obras-vista-toggle-boton activo" : "obras-vista-toggle-boton"}
-            onClick={() => {
-              setGrupoFiltro(null);
-              setEdicionGrupo(null);
-            }}
-          >
-            {t("selecciones.todas")}
-          </button>
           {grupos.map((g) => (
             <button
               key={g.id}
               type="button"
-              className={g.id === grupoFiltro ? "obras-vista-toggle-boton activo" : "obras-vista-toggle-boton"}
-              onClick={() => {
-                setGrupoFiltro(g.id);
-                setEdicionGrupo(null);
-                setConfirmarEliminarGrupo(false);
-              }}
+              className={g.id === grupoActivoId ? "obras-vista-toggle-boton activo" : "obras-vista-toggle-boton"}
+              onClick={() => abrirGrupo(g.id)}
             >
               {g.nombre} ({g.cantidad})
             </button>
           ))}
-          <button type="button" onClick={() => { setEdicionGrupo("nuevo"); setNombreGrupo(""); }}>
+          <button type="button" onClick={empezarNuevoGrupo} disabled={grupoNuevo}>
             {t("selecciones.nuevoGrupo")}
           </button>
-          {grupoFiltro !== null && (
-            <>
-              <button
-                type="button"
-                onClick={() => {
-                  setEdicionGrupo("renombrar");
-                  setNombreGrupo(grupos.find((g) => g.id === grupoFiltro)?.nombre ?? "");
-                }}
-              >
-                {t("selecciones.renombrarGrupo")}
-              </button>
-              <button type="button" onClick={() => setConfirmarEliminarGrupo(true)}>
-                {t("selecciones.eliminarGrupo")}
-              </button>
-            </>
-          )}
         </div>
-        {edicionGrupo && (
-          <div className="obras-toolbar-fila selecciones-grupo-edicion">
-            <input
-              type="text"
-              autoFocus
-              value={nombreGrupo}
-              placeholder={t("selecciones.nombreGrupo")}
-              onChange={(e) => setNombreGrupo(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") guardarGrupo();
-              }}
-            />
-            <button type="button" onClick={guardarGrupo} disabled={!nombreGrupo.trim()}>
-              {t("common.save")}
-            </button>
-            <button type="button" onClick={() => setEdicionGrupo(null)}>
-              {t("common.cancel")}
-            </button>
-          </div>
-        )}
-        {confirmarEliminarGrupo && grupoFiltro !== null && (
-          <div className="confirm-box" role="alertdialog">
-            <p>{t("selecciones.eliminarGrupoPregunta")}</p>
-            <div className="form-actions">
-              <button type="button" className="boton-peligro" onClick={quitarGrupo}>
-                {t("selecciones.eliminarGrupoConfirmar")}
-              </button>
-              <button type="button" onClick={() => setConfirmarEliminarGrupo(false)}>
-                {t("common.cancel")}
-              </button>
-            </div>
-          </div>
-        )}
+      </div>
+
+      <div className="selecciones-bloque">
+        <h2 className="selecciones-subtitulo">{t("selecciones.seleccionesTitulo")}</h2>
+        <div className="selecciones-bloque-crear">
+          <button type="button" data-recorrido="sel-crear" onClick={empezarNueva} disabled={nueva}>
+            {t("selecciones.crear")}
+          </button>
+        </div>
+        {selecciones.length === 0 && !nueva && <p>{t("selecciones.vacio")}</p>}
         <ListaSelecciones
-          selecciones={grupoFiltro === null ? selecciones : selecciones.filter((s) => s.grupo_id === grupoFiltro)}
+          selecciones={selecciones}
           activaId={activaId}
           expandida={listaExpandida}
           onToggle={() => setListaExpandida((v) => !v)}
           onElegir={(id) => {
             setNueva(false);
+            setGrupoActivoId(null);
+            setGrupoNuevo(false);
             setActivaId(id);
             setListaExpandida(false);
           }}
         />
       </div>
       </div>
+
+      {(grupoNuevo || grupoActivoId !== null) && (
+        <section className="selecciones-bloque selecciones-formulario">
+          <label>
+            <span className="field-label">{t("selecciones.nombreGrupoLabel")}</span>
+            <input type="text" value={nombreGrupo} onChange={(e) => setNombreGrupo(e.target.value)} />
+          </label>
+          <div>
+            <span className="field-label">{t("selecciones.seleccionesDelGrupo")}</span>
+            {selecciones.length === 0 && <p>{t("selecciones.vacio")}</p>}
+            <div className="selecciones-grupo-checklist">
+              {selecciones.map((sel) => {
+                const tildada = grupoNuevo ? elegidasGrupoNuevo.includes(sel.id) : sel.grupo_id === grupoActivoId;
+                const otroGrupo = grupos.find((g) => g.id === sel.grupo_id && g.id !== grupoActivoId);
+                return (
+                  <label key={sel.id} className="selecciones-grupo-opcion">
+                    <input type="checkbox" checked={tildada} onChange={(e) => alternarSeleccionEnGrupo(sel.id, e.target.checked)} />
+                    {sel.nombre} ({sel.cantidad})
+                    {otroGrupo && !tildada && (
+                      <span className="field-note"> — {t("selecciones.enOtroGrupo", { grupo: otroGrupo.nombre })}</span>
+                    )}
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+          <div className="form-actions">
+            <button type="button" onClick={guardarGrupo} disabled={!nombreGrupo.trim()}>
+              {t("common.save")}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setGrupoNuevo(false);
+                setGrupoActivoId(null);
+              }}
+            >
+              {grupoNuevo ? t("common.cancel") : t("common.close")}
+            </button>
+            {!grupoNuevo && !confirmarEliminarGrupo && (
+              <button type="button" onClick={() => setConfirmarEliminarGrupo(true)}>
+                {t("selecciones.eliminarGrupo")}
+              </button>
+            )}
+            {!grupoNuevo && confirmarEliminarGrupo && (
+              <div className="confirm-box selecciones-confirmar-eliminar" role="alertdialog">
+                <p>{t("selecciones.eliminarGrupoPregunta")}</p>
+                <div className="form-actions">
+                  <button type="button" className="boton-peligro" onClick={quitarGrupo}>
+                    {t("selecciones.eliminarGrupoConfirmar")}
+                  </button>
+                  <button type="button" onClick={() => setConfirmarEliminarGrupo(false)}>
+                    {t("common.cancel")}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {nueva && (
         <section className="selecciones-bloque selecciones-formulario">
