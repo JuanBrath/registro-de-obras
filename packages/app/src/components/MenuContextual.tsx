@@ -17,7 +17,10 @@ export function MenuContextual({
   y,
   items,
   onClose,
+  anclaDerecha,
 }: {
+  /** Si es true, `x` es el borde derecho del menú (se abre hacia la izquierda). */
+  anclaDerecha?: boolean;
   x: number;
   y: number;
   items: MenuContextualItem[];
@@ -37,7 +40,7 @@ export function MenuContextual({
   }, [onClose]);
 
   return createPortal(
-    <div ref={ref} className="menu-contextual" style={{ left: x, top: y }}>
+    <div ref={ref} className="menu-contextual" style={anclaDerecha ? { right: document.documentElement.clientWidth - x, top: y } : { left: x, top: y }}>
       {items.map((item, i) => (
         <button
           key={i}

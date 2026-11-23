@@ -23,7 +23,7 @@ export function AyudaSeccion({ pasos }: { pasos: PasoRecorrido[] }) {
 
   function abrirMenu() {
     const r = botonRef.current?.getBoundingClientRect();
-    setMenu({ x: r ? r.left : 0, y: r ? r.bottom + 4 : 0 });
+    setMenu({ x: r ? r.right : 0, y: r ? r.bottom + 4 : 0 });
   }
 
   const items = [
@@ -44,7 +44,7 @@ export function AyudaSeccion({ pasos }: { pasos: PasoRecorrido[] }) {
       >
         ?
       </button>
-      {menu && <MenuContextual x={menu.x} y={menu.y} onClose={() => setMenu(null)} items={items} />}
+      {menu && <MenuContextual anclaDerecha x={menu.x} y={menu.y} onClose={() => setMenu(null)} items={items} />}
       {pasosActivos && <RecorridoInicial pasos={pasosActivos} onCerrar={() => setPasosActivos(null)} />}
     </>
   );
