@@ -1322,6 +1322,5 @@ export const en: Record<keyof typeof es, string> = {
   "obrasList.sinLimiteVendidas": "No limit · {{n}} sold",
   "obraDetail.obraSinSerie": "Non-editioned artwork (sold without limit)",
   "obraDetail.obraSinSerieVendidas": "Non-editioned artwork (sold without limit) — {{n}} sold",
-  "obraDetail.sinLimiteCheckbox": "No sales limit (non-editioned artwork)",
-  "obraDetail.sinLimiteNoSePuedeQuitar": "It cannot stop being non-editioned while it has more than one copy.",
+  "obraDetail.seriadaASinSerieNota": "An edition artwork cannot be switched directly to non-editioned: first convert it to a unique artwork.",
 };

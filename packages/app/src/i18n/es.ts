@@ -1321,6 +1321,5 @@ export const es = {
   "obrasList.sinLimiteVendidas": "Sin límite · {{n}} vendidas",
   "obraDetail.obraSinSerie": "Obra sin serie (se vende sin límite)",
   "obraDetail.obraSinSerieVendidas": "Obra sin serie (se vende sin límite) — {{n}} vendidas",
-  "obraDetail.sinLimiteCheckbox": "Sin límite de ventas (obra sin serie)",
-  "obraDetail.sinLimiteNoSePuedeQuitar": "No se puede dejar de ser sin serie mientras haya más de una copia.",
+  "obraDetail.seriadaASinSerieNota": "Una obra seriada no se puede pasar directamente a sin serie: primero convertila en obra única.",
 } as const;

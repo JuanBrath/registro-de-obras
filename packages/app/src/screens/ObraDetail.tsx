@@ -1685,7 +1685,10 @@ export function ObraDetail({
   }) {
     if (!context || !obra) return;
     const eraSeriada = Number(obra.es_seriada) === 1;
-    const cambiaSeriada = eraSeriada !== fields.esSeriada;
+    const eraSinLimite = Number(obra.sin_limite) === 1;
+    // Pasar una obra sin serie a única o a seriada reduce sus copias a una sola, con el mismo criterio que
+    // convertir entre única y seriada (evaluarDeshacerSerie): solo si como mucho una copia tiene historial propio.
+    const cambiaSeriada = eraSeriada !== fields.esSeriada || (eraSinLimite && !fields.sinLimite && !fields.esSeriada);
     const cambiaCategoria = obra.categoria_obra !== fields.categoria;
 
     const resultadoDeshacer = evaluarDeshacerSerie(
@@ -1774,6 +1777,19 @@ export function ObraDetail({
 
       for (const tag of fields.tags) {
         await tx.execute("INSERT OR IGNORE INTO etiqueta (nombre) VALUES (?)", [tag]);
+      }
+
+      // Obra única que pasa a sin serie: su copia pasa a numerarse "1" (sin total) y desde ahora se genera una nueva
+      // cada vez que se vende.
+      if (!eraSinLimite && !eraSeriada && fields.sinLimite && !fields.esSeriada) {
+        await tx.execute(
+          "UPDATE ejemplar SET numero = CAST(indice AS TEXT), total_ediciones = indice WHERE obra_id = ? AND tipo = 'edicion'",
+          [obraId],
+        );
+        await tx.execute(`INSERT INTO historial_evento (obra_id, tipo, descripcion) VALUES (?, 'edicion', ?)`, [
+          obraId,
+          "Obra convertida a sin serie (venta sin límite)",
+        ]);
       }
 
       if (cambiaSeriada) {
@@ -3644,15 +3660,48 @@ function ObraEditForm({
       {permiteCambiarSeriada && (
         <>
           <div className="serie-checkbox-cantidad-fila">
-            <label>
-              <input
-                type="checkbox"
-                checked={esSeriada}
-                disabled={eraSeriada && !puedeDesconvertir}
-                onChange={(e) => setEsSeriada(e.target.checked)}
-              />
-              {t("field.esSeriada")} <HelpIcon fieldKey="es_seriada" />
-            </label>
+            <div className="radio-row">
+              <label>
+                <input
+                  type="radio"
+                  name="modalidadObraEdicion"
+                  checked={!esSeriada && !sinLimite}
+                  disabled={(eraSeriada || eraSinLimite) && !puedeDesconvertir}
+                  onChange={() => {
+                    setEsSeriada(false);
+                    setSinLimite(false);
+                  }}
+                />
+                {t("obraForm.obraUnicaOpcion")}
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="modalidadObraEdicion"
+                  checked={esSeriada}
+                  disabled={eraSinLimite && !puedeDesconvertir}
+                  onChange={() => {
+                    setEsSeriada(true);
+                    setSinLimite(false);
+                  }}
+                />
+                {t("obraForm.obraSeriadaOpcion")}
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="modalidadObraEdicion"
+                  checked={sinLimite && !esSeriada}
+                  disabled={eraSeriada}
+                  onChange={() => {
+                    setEsSeriada(false);
+                    setSinLimite(true);
+                  }}
+                />
+                {t("obraForm.obraSinSerieOpcion")}
+              </label>
+              <HelpIcon fieldKey="es_seriada" />
+            </div>
             {!eraSeriada && esSeriada && (
               <label className="cantidad-ediciones-compacta">
                 {t("obraForm.cantidadEdicionesLabel")} <span className="cantidad-ediciones-ayuda"><HelpIcon fieldKey="pruebas_artista" /></span>
@@ -3677,23 +3726,10 @@ function ObraEditForm({
               </label>
             )}
           </div>
-          {!esSeriadaCalculada && (
-            <label>
-              <input
-                type="checkbox"
-                checked={sinLimite}
-                disabled={eraSinLimite && cantidadEdicionesActual > 1}
-                onChange={(e) => setSinLimite(e.target.checked)}
-              />
-              {t("obraDetail.sinLimiteCheckbox")} <HelpIcon fieldKey="es_seriada" />
-            </label>
-          )}
-          {eraSinLimite && !esSeriadaCalculada && cantidadEdicionesActual > 1 && (
-            <p className="field-note">{t("obraDetail.sinLimiteNoSePuedeQuitar")}</p>
-          )}
-          {eraSeriada && !puedeDesconvertir && (
+          {(eraSeriada || eraSinLimite) && !puedeDesconvertir && (
             <p className="field-note">{mensajeNoSePuedeDeshacer}</p>
           )}
+          {eraSeriada && <p className="field-note">{t("obraDetail.seriadaASinSerieNota")}</p>}
           {!eraSeriada && esSeriada && (
             <>
               <label>

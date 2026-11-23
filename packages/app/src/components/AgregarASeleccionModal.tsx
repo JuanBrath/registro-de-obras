@@ -27,7 +27,6 @@ export function AgregarASeleccionModal({
     listSelecciones(context.db)
       .then((rows) => {
         setSelecciones(rows);
-        if (rows.length > 0) setDestinoId(rows[0].id);
       })
       .catch((err) => setError(err instanceof Error ? err.message : String(err)));
   }, [context]);
@@ -62,12 +61,12 @@ export function AgregarASeleccionModal({
       <label>
         <span className="field-label">{t("selecciones.destino")}</span>
         <select value={destinoId} onChange={(e) => setDestinoId(e.target.value === "nueva" ? "nueva" : Number(e.target.value))}>
+          <option value="nueva">{t("selecciones.nuevaOpcion")}</option>
           {selecciones.map((s) => (
             <option key={s.id} value={s.id}>
               {s.nombre} ({s.cantidad})
             </option>
           ))}
-          <option value="nueva">{t("selecciones.nuevaOpcion")}</option>
         </select>
       </label>
       {destinoId === "nueva" && (
