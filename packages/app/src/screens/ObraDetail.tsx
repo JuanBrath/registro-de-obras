@@ -2379,7 +2379,7 @@ export function ObraDetail({
   const primeraOfrecible = edicionesEjemplares.find((ej) => ESTADOS_OFRECIBLES.has(ej.estado));
   // Obra sin serie: se muestran todas las copias ofrecibles (puede haber varias a la vez).
   const edicionesColapsadas =
-    Number(obra.sin_limite) === 1
+    Number(obra?.sin_limite) === 1
       ? edicionesEjemplares.filter((ej) => ESTADOS_OFRECIBLES.has(ej.estado)).length > 0
         ? edicionesEjemplares.filter((ej) => ESTADOS_OFRECIBLES.has(ej.estado))
         : edicionesEjemplares.slice(-1)
