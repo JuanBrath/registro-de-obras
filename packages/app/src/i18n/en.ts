@@ -1271,7 +1271,7 @@ export const en: Record<keyof typeof es, string> = {
   "ayudaObras.obra": "Click an artwork to open its sheet. Below each one are the stars to rate it.",
   "ayudaGaleria.foto": "Click a photo to see it full screen and move to the next one with the arrows. Right-click opens a menu to export the image or open it in Photoshop or Lightroom. Below it are the stars to rate it.",
   "ayudaSelecciones.crear": "Starts a new selection: you type its name and, if you want, notes, and save it.",
-  "ayudaSelecciones.grupos": ""Selections" lets you see and create your selections. "Groups" gathers the selections on the same theme: when you choose a group you see the selections in it and can add more.",
+  "ayudaSelecciones.grupos": "“Selections” lets you see and create your selections. “Groups” gathers the selections on the same theme: when you choose a group you see the selections in it and can add more.",
   "ayudaSelecciones.lista": "Your existing selections, with the number of artworks in each. Click one to open it.",
   "ayudaSelecciones.guardar": "Saves the name and notes of the selection you have open.",
   "ayudaSelecciones.dossier": "Builds a PDF dossier with this selection's artworks: cover, biography, texts and each artwork's caption.",

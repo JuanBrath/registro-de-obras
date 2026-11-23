@@ -1270,7 +1270,7 @@ export const es = {
   "ayudaObras.obra": "Tocá una obra para abrir su ficha. Debajo de cada una están las estrellas para calificarla.",
   "ayudaGaleria.foto": "Tocá una foto para verla en pantalla completa y pasar a la siguiente con las flechas. Con click derecho aparece un menú para exportar la imagen o abrirla en Photoshop o Lightroom. Debajo están las estrellas para calificarla.",
   "ayudaSelecciones.crear": "Empieza una selección nueva: escribís su nombre y, si querés, notas, y la guardás.",
-  "ayudaSelecciones.grupos": "Con "Selecciones" ves y creás tus selecciones. Con "Grupos" reunís las selecciones de un mismo tema: al elegir un grupo ves las selecciones que lo componen y podés agregarle más.",
+  "ayudaSelecciones.grupos": "Con «Selecciones» ves y creás tus selecciones. Con «Grupos» reunís las selecciones de un mismo tema: al elegir un grupo ves las selecciones que lo componen y podés agregarle más.",
   "ayudaSelecciones.lista": "Tus selecciones ya armadas, con la cantidad de obras de cada una. Tocá una para abrirla.",
   "ayudaSelecciones.guardar": "Guarda el nombre y las notas de la selección que tenés abierta.",
   "ayudaSelecciones.dossier": "Arma un dossier en PDF con las obras de esta selección: portada, biografía, textos y la ficha de cada obra.",
