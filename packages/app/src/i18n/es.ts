@@ -1324,6 +1324,7 @@ export const es = {
   "obraDetail.copiaSobranteSi": "Sí, anular la copia nueva",
   "obraDetail.copiaSobranteNo": "No, conservar las dos",
   "obraDetail.agregarCopia": "+ Agregar otra copia",
+  "obraDetail.confirmarEliminarCopia": "¿Eliminar la copia {{numero}}? Se pierden los datos cargados en ella. Si no queda ninguna copia lista para vender, el programa genera una nueva en blanco.",
   "obraDetail.obraSinSerieVendidas": "Obra sin serie (se vende sin límite) — {{n}} copias vendidas o dadas de baja",
   "obraDetail.seriadaASinSerieNota": "Una obra seriada no se puede pasar directamente a sin serie: primero convertila en obra única.",
 } as const;

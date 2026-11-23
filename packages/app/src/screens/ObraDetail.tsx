@@ -818,6 +818,7 @@ export function ObraDetail({
   const [exportarImagenAbierto, setExportarImagenAbierto] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   // Obra sin serie: copia nueva en blanco que quedo de mas porque otra copia volvio a estar ofrecible.
+  const [copiaAEliminar, setCopiaAEliminar] = useState<{ id: number; numero: string } | null>(null);
   const [copiaSobrante, setCopiaSobrante] = useState<{ id: number; numero: string; restaurada: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [anulandoVenta, setAnulandoVenta] = useState(false);
@@ -2265,6 +2266,24 @@ export function ObraDetail({
     }
   }
 
+  async function handleEliminarCopia() {
+    if (!context || !copiaAEliminar) return;
+    const { id, numero } = copiaAEliminar;
+    setCopiaAEliminar(null);
+    try {
+      await context.db.transaction(async (tx) => {
+        await tx.execute("DELETE FROM ejemplar WHERE id = ? AND venta_id IS NULL", [id]);
+        await tx.execute("INSERT INTO historial_evento (obra_id, tipo, descripcion) VALUES (?, 'edicion', ?)", [
+          obraId,
+          `Copia ${numero} eliminada`,
+        ]);
+      });
+      await reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  }
+
   async function handleAnularCopiaSobrante() {
     if (!context || !copiaSobrante) return;
     const { id, numero } = copiaSobrante;
@@ -2582,6 +2601,19 @@ export function ObraDetail({
                 ✅ {fichaPdfMensaje}
               </p>
             )}
+            {copiaAEliminar && (
+              <div className="confirm-box">
+                <p>{t("obraDetail.confirmarEliminarCopia", { numero: copiaAEliminar.numero })}</p>
+                <div className="obra-form-saved-actions">
+                  <button type="button" onClick={handleEliminarCopia}>
+                    {t("common.siEliminar")}
+                  </button>
+                  <button type="button" onClick={() => setCopiaAEliminar(null)}>
+                    {t("common.cancel")}
+                  </button>
+                </div>
+              </div>
+            )}
             {copiaSobrante && (
               <div className="confirm-box">
                 <p>
@@ -2657,6 +2689,7 @@ export function ObraDetail({
               onConfirmarVenta={(venta) => handleConfirmarVenta(venta, ej.id)}
               anulando={anulandoVenta}
               onAbrirInformes={() => handleAbrirInformesVenta(ej)}
+              onEliminar={Number(obra.sin_limite) === 1 ? () => setCopiaAEliminar({ id: ej.id, numero: ej.numero }) : undefined}
               onAbrirCertificado={() => handleCertificadoBotonClick(ej, ej.venta_id ? ventas[ej.venta_id] : undefined)}
               abriendoCertificado={abriendoCertificado}
             />
@@ -2710,6 +2743,7 @@ export function ObraDetail({
                   onConfirmarVenta={(venta) => handleConfirmarVenta(venta, ej.id)}
                   anulando={anulandoVenta}
                   onAbrirInformes={() => handleAbrirInformesVenta(ej)}
+                  onEliminar={Number(obra.sin_limite) === 1 ? () => setCopiaAEliminar({ id: ej.id, numero: ej.numero }) : undefined}
                   onAbrirCertificado={() => handleCertificadoBotonClick(ej, ej.venta_id ? ventas[ej.venta_id] : undefined)}
                   abriendoCertificado={abriendoCertificado}
                 />
@@ -4040,6 +4074,7 @@ function EjemplarRowView({
   onConfirmarVenta,
   anulando,
   onAbrirInformes,
+  onEliminar,
   onAbrirCertificado,
   abriendoCertificado,
 }: {
@@ -4094,6 +4129,8 @@ function EjemplarRowView({
   onConfirmarVenta: (venta: VentaRow) => void;
   anulando: boolean;
   onAbrirInformes: () => void;
+  /** Obra sin serie: elimina esta copia (solo si no tiene venta). */
+  onEliminar?: () => void;
   /** Abre la pantalla del certificado de autenticidad (solo se ofrece si la copia tiene venta). */
   onAbrirCertificado: () => void;
   abriendoCertificado: boolean;
@@ -4669,6 +4706,11 @@ function EjemplarRowView({
         >
           {t("common.edit")}
         </button>
+        {onEliminar && !venta && (
+          <button type="button" onClick={onEliminar}>
+            {t("common.delete")}
+          </button>
+        )}
         {!venta &&
           ejemplar.estado !== "descartada" &&
           ejemplar.estado !== "destruida" &&
