@@ -26,6 +26,7 @@ import { GaleriaProfileForm } from "./screens/GaleriaProfileForm.js";
 import { ClientesScreen } from "./screens/ClientesScreen.js";
 import { BienvenidaRecer, bienvenidaYaVista } from "./components/BienvenidaRecer.js";
 import { ManualScreen } from "./manual/ManualScreen.js";
+import { EVENTO_ABRIR_MANUAL } from "./components/AyudaSeccion.js";
 import { isTauri } from "./adapters/detectPlatform.js";
 import { borrarEnvioLightroom, leerEnvioLightroom, type RecibidoDeLightroom } from "./lightroom/lightroom.js";
 
@@ -239,6 +240,13 @@ function AppShell() {
   useForceReflowOnResize();
   useAutoScrollToAlerts();
 
+  // El botón "?" de cada sección puede pedir abrir el manual (ver AyudaSeccion).
+  useEffect(() => {
+    const abrir = () => setShowManual(true);
+    window.addEventListener(EVENTO_ABRIR_MANUAL, abrir);
+    return () => window.removeEventListener(EVENTO_ABRIR_MANUAL, abrir);
+  }, []);
+
   // La edicion depende de la licencia activa (ver EdicionContext.tsx): si
   // cambia mientras hay un workspace abierto (por ejemplo, se cargo una
   // licencia distinta desde Configuracion al renovar o cambiar de plan),
@@ -262,17 +270,19 @@ function AppShell() {
           ⚙
         </button>
       </div>
-      {showManual ? (
-        <ManualScreen onBack={() => setShowManual(false)} />
-      ) : estadoLicencia.estado === "cargando" ? null : estadoLicencia.estado !== "valida" ? (
-        <ActivarLicencia />
-      ) : context ? (
-        <WorkspaceScreens key={context.workspace} onManual={() => setShowManual(true)} />
-      ) : !bienvenidaVista ? (
-        <BienvenidaRecer onContinuar={() => setBienvenidaVista(true)} />
-      ) : (
-        <WorkspacePicker onManual={() => setShowManual(true)} />
-      )}
+      {showManual && <ManualScreen onBack={() => setShowManual(false)} />}
+      {/* Con el manual abierto la pantalla de abajo sigue montada (solo oculta), así al cerrarlo se vuelve a ella tal cual estaba. */}
+      <div style={{ display: showManual ? "none" : "contents" }}>
+        {estadoLicencia.estado === "cargando" ? null : estadoLicencia.estado !== "valida" ? (
+          <ActivarLicencia />
+        ) : context ? (
+          <WorkspaceScreens key={context.workspace} onManual={() => setShowManual(true)} />
+        ) : !bienvenidaVista ? (
+          <BienvenidaRecer onContinuar={() => setBienvenidaVista(true)} />
+        ) : (
+          <WorkspacePicker onManual={() => setShowManual(true)} />
+        )}
+      </div>
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
     </>
   );

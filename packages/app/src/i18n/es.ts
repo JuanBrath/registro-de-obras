@@ -1252,6 +1252,8 @@ export const es = {
   "dossier.nombreArtistaFicha": "Nombre del artista en cada ficha",
   "bienvenida.comenzar": "Comenzar",
   "bienvenida.pie": "Después elegís tu registro y te mostramos un breve recorrido por el programa. Podés volver a leer esto tocando el logo de Recer en la pantalla de inicio.",
+  "ayudaSeccion.recorrido": "Recorrido visual",
+  "ayudaSeccion.manual": "Buscar en el manual",
   "ayudaSeccion.boton": "Ayuda de esta sección",
   "obrasList.ayudaBuscar": "Buscar",
   "ayudaObras.buscar": "Escribí acá para buscar obras por título, número o código de inventario. Busca mientras escribís.",

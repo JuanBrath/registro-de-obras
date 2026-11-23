@@ -1253,6 +1253,8 @@ export const en: Record<keyof typeof es, string> = {
   "dossier.nombreArtistaFicha": "Artist name in each caption",
   "bienvenida.comenzar": "Get started",
   "bienvenida.pie": "Next you choose your records and we show you a short tour of the program. You can read this again by clicking the Recer logo on the start screen.",
+  "ayudaSeccion.recorrido": "Visual tour",
+  "ayudaSeccion.manual": "Search the manual",
   "ayudaSeccion.boton": "Help for this section",
   "obrasList.ayudaBuscar": "Search",
   "ayudaObras.buscar": "Type here to search artworks by title, number or inventory code. It searches as you type.",
