@@ -1,0 +1,784 @@
+%PDF-1.3
+%ºß¬à
+3 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 4 0 R
+>>
+endobj
+4 0 obj
+<<
+/Length 7055
+>>
+stream
+0.5670000000000001 w
+0 G
+BT
+/F2 20 Tf
+23. TL
+0.11 0.165 0.267 rg
+56.6929133858267775 771.0238582677164914 Td
+(Recer - Novedades de la versión 0.1.0) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.431 g
+56.6929133858267775 748.346692913385823 Td
+(23 de noviembre de 2026) Tj
+ET
+BT
+/F2 13 Tf
+14.9499999999999993 TL
+0.11 0.165 0.267 rg
+56.6929133858267775 720.0002362204724022 Td
+(Obras sin serie \(venta sin límite\)) Tj
+ET
+0.79 0.64 0.28 RG
+56.6929133858267775 711.4962992125983874 m
+538.5826771653544256 711.4962992125983874 l
+S
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 702.9923622047243725 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 702.9923622047243725 Td
+(Nueva tercera modalidad junto a Única y Seriada: la obra se vende sin límite y siempre hay una) Tj
+T* (copia lista para vender; al venderla, el programa crea la siguiente con los datos de impresión,) Tj
+T* (enmarcado y precio de la anterior.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 654.8033858267716596 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 654.8033858267716596 Td
+(Las copias se numeran 1, 2, 3... sin total \(nunca 1/10\).) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 634.9608661417322537 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 634.9608661417322537 Td
+(Descartada, Destruida o Colección del autor se comportan igual que una venta: la copia sale y se) Tj
+T* (genera la siguiente.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 600.9451181102361943 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 600.9451181102361943 Td
+(Se pueden tener varias copias activas a la vez \(disponibles, en stock, en exhibición...\) con el botón) Tj
+T* (+ Agregar otra copia, y eliminar las copias que no tengan venta.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 566.9293700787401349 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 566.9293700787401349 Td
+(Si se anula una venta y ya existe la copia nueva en blanco, el programa pregunta si se quiere anular) Tj
+T* (esa copia; nunca lo hace solo.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 532.9136220472440755 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 532.9136220472440755 Td
+(Al editar la obra se puede pasar de sin serie a única o seriada, de única a sin serie y de seriada) Tj
+T* (directamente a sin serie, siempre con el mismo criterio: como mucho una copia con historial propio.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 498.8978740157479592 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 498.8978740157479592 Td
+(Las pruebas de autor se pueden agregar y editar también en obras sin serie \(PA 1, PA 2...\) y volver) Tj
+T* (a generar en obras únicas y seriadas aunque se hayan eliminado todas.) Tj
+ET
+BT
+/F2 13 Tf
+14.9499999999999993 TL
+0.11 0.165 0.267 rg
+56.6929133858267775 453.5435433070865656 Td
+(Selecciones y grupos) Tj
+ET
+0.79 0.64 0.28 RG
+56.6929133858267775 445.0396062992125508 m
+538.5826771653544256 445.0396062992125508 l
+S
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 436.5356692913385359 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 436.5356692913385359 Td
+(Una selección es un grupo de obras elegidas a mano \(para una feria, una galería, una página) Tj
+T* (web...\). Se crean desde Selecciones o desde Obras con el botón Seleccionar; una obra puede estar) Tj
+T* (en varias selecciones.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 388.3466929133857661 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 388.3466929133857661 Td
+(Arriba hay dos botones, Grupos y Selecciones, y cada uno muestra solo lo suyo. La lista de) Tj
+T* (selecciones se pliega a dos renglones con Mostrar más, y la elegida queda siempre a la vista.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 354.3309448818897067 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 354.3309448818897067 Td
+(Los grupos reúnen las selecciones de una misma temática: se crean con + Nuevo grupo, se abren) Tj
+T* (para ver sus selecciones y con Agregar selecciones al grupo se eligen las que lo componen. Cada) Tj
+T* (selección también tiene un desplegable Grupo junto al nombre.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 306.1419685039369369 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 306.1419685039369369 Td
+(Las obras de una selección se ven como Columnas, Tarjetas o Imágenes, con control de tamaño; se) Tj
+T* (pueden ordenar arrastrando o con flechas y quitar con el modo Ordenar y quitar. Las notas tienen) Tj
+T* (Ver completo.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 257.952992125984224 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 257.952992125984224 Td
+(Desde una selección se pueden generar informes limitados a sus obras, exportar todas sus fotos) Tj
+T* (\(con el mismo criterio que la ficha, sin pisar archivos\) y generar dossiers.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 223.9372440944881646 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 223.9372440944881646 Td
+(Solo el título queda fijo arriba; el resto de la pantalla se desplaza.) Tj
+ET
+BT
+/F2 13 Tf
+14.9499999999999993 TL
+0.11 0.165 0.267 rg
+56.6929133858267775 192.7561417322833677 Td
+(Dossier en PDF) Tj
+ET
+0.79 0.64 0.28 RG
+56.6929133858267775 184.2522047244093528 m
+538.5826771653544256 184.2522047244093528 l
+S
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 175.748267716535338 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 175.748267716535338 Td
+(Se genera a partir de una selección: portada \(con el nombre de la selección y un texto adicional a) Tj
+T* (elección\), biografía y texto del artista editables, y las obras con su ficha.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 141.7325196850392786 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 141.7325196850392786 Td
+(Idioma español, inglés o ambos; tamaño A4 u Oficio; orientación vertical u horizontal; cantidad de) Tj
+T* (obras por página, con excepciones en páginas puntuales.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 107.7167716535432191 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 107.7167716535432191 Td
+(En obras seriadas o sin serie, los datos de la ficha salen de la primera copia que se puede ofrecer) Tj
+T* (\(disponible, en stock, en exhibición, consignación o en producción\). Recer Studio no incluye el) Tj
+T* (nombre del artista en los epígrafes; Recer Space sí.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 6 0 R
+>>
+endobj
+6 0 obj
+<<
+/Length 5730
+>>
+stream
+0.5670000000000001 w
+0.79 0.64 0.28 RG
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 771.0238582677164914 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 771.0238582677164914 Td
+(Los dossiers quedan guardados y numerados por selección, con un botón para volver a verlos; al) Tj
+T* (eliminar una selección el programa avisa que también se borran sus dossiers.) Tj
+ET
+BT
+/F2 13 Tf
+14.9499999999999993 TL
+0.11 0.165 0.267 rg
+56.6929133858267775 725.6695275590550409 Td
+(Obras: vista Imágenes) Tj
+ET
+0.79 0.64 0.28 RG
+56.6929133858267775 717.1655905511810261 m
+538.5826771653544256 717.1655905511810261 l
+S
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 708.6616535433070112 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 708.6616535433070112 Td
+(Junto a Columnas y Tarjetas hay un tercer modo, Imágenes, que reemplaza a la antigua Galería de) Tj
+T* (obras \(que dejó de ser una pantalla aparte\). También existe en Selecciones.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 674.6459055118109518 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 674.6459055118109518 Td
+(Un clic en la foto la amplía; la ficha se abre desde el visor con Ver esta obra o con clic derecho,) Tj
+T* (Abrir ficha. En Columnas y Tarjetas el clic sigue abriendo la ficha.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 640.6301574803148924 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 640.6301574803148924 Td
+(El visor tiene flechas, contador, calificación, información de la obra y de su primera copia disponible,) Tj
+T* (y permite registrar una venta o reserva.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 606.614409448818833 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 606.614409448818833 Td
+(Debajo de cada foto se ve el nombre de la obra y su calificación como un número y una estrella; un) Tj
+T* (clic despliega las cinco estrellas y un segundo clic elige cuántas.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 572.5986614173227736 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 572.5986614173227736 Td
+(Clic derecho sobre cualquier imagen: Abrir ficha, Exportar imagen..., Abrir en Photoshop y Abrir en) Tj
+T* (Lightroom. El selector de vista y el tamaño de las miniaturas están juntos, a la derecha.) Tj
+ET
+BT
+/F2 13 Tf
+14.9499999999999993 TL
+0.11 0.165 0.267 rg
+56.6929133858267775 527.2443307086614368 Td
+(Ayuda y manual) Tj
+ET
+0.79 0.64 0.28 RG
+56.6929133858267775 518.7403937007873083 m
+538.5826771653544256 518.7403937007873083 l
+S
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 510.2364566929133503 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 510.2364566929133503 Td
+(El botón ? \(en rojo\) de cada sección despliega dos opciones: Recorrido visual o Buscar en el) Tj
+T* (manual.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 476.2207086614172908 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 476.2207086614172908 Td
+(El recorrido señala cada botón con una explicación breve, sin desplazar la pantalla de fondo; incluye) Tj
+T* (la vista Imágenes y su tarjeta no se sale de la ventana.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 442.2049606299212314 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 442.2049606299212314 Td
+(El manual se abre sobre la pantalla actual, que queda tal cual estaba al cerrarlo. Está en español e) Tj
+T* (inglés, con capítulos nuevos y actualizados \(obras sin serie, selecciones y grupos, vista Imágenes,) Tj
+T* (dossier\).) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 394.0159842519684616 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 394.0159842519684616 Td
+(La primera vez que se abre el programa aparece la pantalla ¿Por qué Recer?, que explica el) Tj
+T* (significado de RECER y su lema; también está en el manual.) Tj
+ET
+BT
+/F2 13 Tf
+14.9499999999999993 TL
+0.11 0.165 0.267 rg
+56.6929133858267775 348.6616535433070112 Td
+(Aspecto y detalles) Tj
+ET
+0.79 0.64 0.28 RG
+56.6929133858267775 340.1577165354329964 m
+538.5826771653544256 340.1577165354329964 l
+S
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 331.6537795275589815 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 331.6537795275589815 Td
+(Azules más oscuros y neutros en toda la aplicación \(botones, foco, controles\).) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 311.8112598425195756 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 311.8112598425195756 Td
+(Las ventanas se ajustan al contenido; en Mi perfil y en el perfil de galería los datos se distribuyen en) Tj
+T* (columnas para aprovechar el ancho.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 277.7955118110235162 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 277.7955118110235162 Td
+(En Selecciones, los botones, campos y etiquetas usan el mismo tamaño de letra que Obras.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 257.952992125984224 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 257.952992125984224 Td
+(Nueva obra: las opciones Única, Seriada y Sin serie se muestran sin recuadro ni título. Al agregar) Tj
+T* (una obra a una selección, la ventana arranca en + Nueva selección.) Tj
+ET
+endstream
+endobj
+1 0 obj
+<</Type /Pages
+/Kids [3 0 R 5 0 R ]
+/Count 2
+>>
+endobj
+7 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+8 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica-Bold
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+9 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica-Oblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+10 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica-BoldOblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+11 0 obj
+<<
+/Type /Font
+/BaseFont /Courier
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+12 0 obj
+<<
+/Type /Font
+/BaseFont /Courier-Bold
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+13 0 obj
+<<
+/Type /Font
+/BaseFont /Courier-Oblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+14 0 obj
+<<
+/Type /Font
+/BaseFont /Courier-BoldOblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+15 0 obj
+<<
+/Type /Font
+/BaseFont /Times-Roman
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+16 0 obj
+<<
+/Type /Font
+/BaseFont /Times-Bold
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+17 0 obj
+<<
+/Type /Font
+/BaseFont /Times-Italic
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+18 0 obj
+<<
+/Type /Font
+/BaseFont /Times-BoldItalic
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+19 0 obj
+<<
+/Type /Font
+/BaseFont /ZapfDingbats
+/Subtype /Type1
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+20 0 obj
+<<
+/Type /Font
+/BaseFont /Symbol
+/Subtype /Type1
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+2 0 obj
+<<
+/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
+/Font <<
+/F1 7 0 R
+/F2 8 0 R
+/F3 9 0 R
+/F4 10 0 R
+/F5 11 0 R
+/F6 12 0 R
+/F7 13 0 R
+/F8 14 0 R
+/F9 15 0 R
+/F10 16 0 R
+/F11 17 0 R
+/F12 18 0 R
+/F13 19 0 R
+/F14 20 0 R
+>>
+/XObject <<
+>>
+>>
+endobj
+21 0 obj
+<<
+/Producer (jsPDF 4.2.1)
+/CreationDate (D:20261123173628-03'00')
+>>
+endobj
+22 0 obj
+<<
+/Type /Catalog
+/Pages 1 0 R
+/OpenAction [3 0 R /FitH null]
+/PageLayout /OneColumn
+>>
+endobj
+xref
+0 23
+0000000000 65535 f 
+0000013178 00000 n 
+0000015003 00000 n 
+0000000015 00000 n 
+0000000152 00000 n 
+0000007259 00000 n 
+0000007396 00000 n 
+0000013241 00000 n 
+0000013366 00000 n 
+0000013496 00000 n 
+0000013629 00000 n 
+0000013767 00000 n 
+0000013891 00000 n 
+0000014020 00000 n 
+0000014152 00000 n 
+0000014288 00000 n 
+0000014416 00000 n 
+0000014543 00000 n 
+0000014672 00000 n 
+0000014805 00000 n 
+0000014907 00000 n 
+0000015253 00000 n 
+0000015339 00000 n 
+trailer
+<<
+/Size 23
+/Root 22 0 R
+/Info 21 0 R
+/ID [ <AC2EA2BEFE36405DF919A1711D626797> <AC2EA2BEFE36405DF919A1711D626797> ]
+>>
+startxref
+15443
+%%EOF
