@@ -142,12 +142,21 @@ fn exif_copyright(texto: &str) -> Vec<u8> {
     tiff
 }
 
-fn a_jpeg_con_copyright(ancho: usize, alto: usize, rgb: &[u8], copyright: Option<&str>) -> Result<Vec<u8>, String> {
+fn a_jpeg_con_copyright(
+    ancho: usize,
+    alto: usize,
+    rgb: &[u8],
+    copyright: Option<&str>,
+    ppp: Option<u16>,
+) -> Result<Vec<u8>, String> {
     let ancho16 = u16::try_from(ancho).map_err(|_| "imagen demasiado ancha")?;
     let alto16 = u16::try_from(alto).map_err(|_| "imagen demasiado alta")?;
     let mut salida = Vec::new();
     let mut codificador = jpeg_encoder::Encoder::new(&mut salida, imagen::CALIDAD_JPEG);
     codificador.set_sampling_factor(jpeg_encoder::SamplingFactor::R_4_4_4);
+    if let Some(ppp) = ppp {
+        codificador.set_density(jpeg_encoder::PixelDensity { density: (ppp, ppp), unit: jpeg_encoder::PixelDensityUnit::Inches });
+    }
     if let Some(texto) = copyright.filter(|t| !t.trim().is_empty()) {
         codificador
             .add_exif_metadata(&exif_copyright(texto))
@@ -159,33 +168,60 @@ fn a_jpeg_con_copyright(ancho: usize, alto: usize, rgb: &[u8], copyright: Option
     Ok(salida)
 }
 
-fn a_tiff_con_copyright(ancho: usize, alto: usize, rgb: &[u8], copyright: Option<&str>) -> Result<Vec<u8>, String> {
-    use tiff::encoder::{colortype, TiffEncoder};
-    use tiff::tags::Tag;
+/// Datos de pixeles de un TIFF a exportar: 8 o 16 bits por canal.
+enum DatosTiff<'a> {
+    Ocho(&'a [u8]),
+    Dieciseis(&'a [u16]),
+}
 
-    let mut bytes = Vec::new();
-    {
-        let mut codificador =
-            TiffEncoder::new(std::io::Cursor::new(&mut bytes)).map_err(|e| format!("no se pudo iniciar el TIFF: {e}"))?;
-        let mut imagen_tiff = codificador
-            .new_image::<colortype::RGB8>(ancho as u32, alto as u32)
-            .map_err(|e| format!("no se pudo iniciar el TIFF: {e}"))?;
-        if let Some(texto) = copyright.filter(|t| !t.trim().is_empty()) {
-            imagen_tiff
-                .encoder()
-                .write_tag(Tag::Copyright, texto)
-                .map_err(|e| format!("no se pudo escribir el copyright: {e}"))?;
-        }
-        imagen_tiff.write_data(rgb).map_err(|e| format!("no se pudo generar el TIFF: {e}"))?;
+fn a_tiff_con_copyright(
+    ancho: usize,
+    alto: usize,
+    datos: DatosTiff,
+    copyright: Option<&str>,
+    ppp: Option<u16>,
+) -> Result<Vec<u8>, String> {
+    use tiff::encoder::{colortype, Rational, TiffEncoder};
+    use tiff::tags::{ResolutionUnit, Tag};
+
+    // Los dos tipos de color (8 y 16 bits) comparten el resto de la logica; una macro evita duplicarla.
+    macro_rules! escribir {
+        ($color:ty, $datos:expr) => {{
+            let mut bytes = Vec::new();
+            {
+                let mut codificador = TiffEncoder::new(std::io::Cursor::new(&mut bytes))
+                    .map_err(|e| format!("no se pudo iniciar el TIFF: {e}"))?;
+                let mut imagen_tiff = codificador
+                    .new_image::<$color>(ancho as u32, alto as u32)
+                    .map_err(|e| format!("no se pudo iniciar el TIFF: {e}"))?;
+                if let Some(ppp) = ppp {
+                    imagen_tiff.resolution(ResolutionUnit::Inch, Rational { n: ppp as u32, d: 1 });
+                }
+                if let Some(texto) = copyright.filter(|t| !t.trim().is_empty()) {
+                    imagen_tiff
+                        .encoder()
+                        .write_tag(Tag::Copyright, texto)
+                        .map_err(|e| format!("no se pudo escribir el copyright: {e}"))?;
+                }
+                imagen_tiff.write_data($datos).map_err(|e| format!("no se pudo generar el TIFF: {e}"))?;
+            }
+            bytes
+        }};
     }
-    Ok(bytes)
+
+    Ok(match datos {
+        DatosTiff::Ocho(rgb) => escribir!(colortype::RGB8, rgb),
+        DatosTiff::Dieciseis(rgb) => escribir!(colortype::RGB16, rgb),
+    })
 }
 
 /// Exporta una copia nueva de la imagen de una obra, a partir de su archivo original.
 ///
 /// Con `formato = "original"` se copia el archivo tal cual (bytes identicos) y no se usan ni
 /// `lado` ni `medida` ni `copyright`. Con `"jpg"` o `"tiff"` se decodifica el archivo, se lo
-/// achica si hace falta (nunca se agranda) y se guarda con el copyright indicado, si se cargo uno.
+/// achica si se pidio una `medida` (nunca se agranda; sin `medida` sale con el tamano original) y
+/// se guarda con el copyright indicado, si se cargo uno. `profundidad` (8 o 16 bits por canal)
+/// solo cambia el TIFF: el JPG siempre es de 8 bits. `ppp` es la resolucion que se anota en el archivo.
 fn exportar_imagen(
     ruta_original: &str,
     ruta_destino: &str,
@@ -193,6 +229,8 @@ fn exportar_imagen(
     lado: Option<&str>,
     medida: Option<u32>,
     copyright: Option<&str>,
+    profundidad: Option<u32>,
+    ppp: Option<u32>,
 ) -> Result<(), String> {
     let formato = formato_desde_texto(formato)?;
     let origen = Path::new(ruta_original);
@@ -202,15 +240,33 @@ fn exportar_imagen(
         return std::fs::copy(origen, destino).map(|_| ()).map_err(|e| format!("no se pudo copiar el archivo: {e}"));
     }
 
-    let lado = lado_desde_texto(lado.unwrap_or_default())?;
-    let medida = medida.ok_or_else(|| "falta la medida en pixeles".to_string())?;
+    // Sin medida no se achica nada: sale con el tamano original (un tope que ninguna imagen alcanza).
+    let (lado, medida) = match medida {
+        Some(m) => (lado_desde_texto(lado.unwrap_or("largo"))?, m),
+        None => (Lado::Largo, u32::MAX),
+    };
     let copyright = copyright.map(a_ascii_seguro);
+    let ppp = ppp.and_then(|p| u16::try_from(p).ok()).filter(|p| *p > 0);
+    let diecis_bits = match profundidad {
+        None | Some(8) => false,
+        Some(16) => true,
+        Some(otra) => return Err(format!("profundidad de color no reconocida: {otra}")),
+    };
 
     let reducida = leer_para_exportar(origen, medida, lado)?;
-    let rgb = imagen::a_srgb(&reducida)?;
     let bytes = match formato {
-        Formato::Jpg => a_jpeg_con_copyright(reducida.ancho, reducida.alto, &rgb, copyright.as_deref())?,
-        Formato::Tiff => a_tiff_con_copyright(reducida.ancho, reducida.alto, &rgb, copyright.as_deref())?,
+        Formato::Jpg => {
+            let rgb = imagen::a_srgb(&reducida)?;
+            a_jpeg_con_copyright(reducida.ancho, reducida.alto, &rgb, copyright.as_deref(), ppp)?
+        }
+        Formato::Tiff if diecis_bits => {
+            let rgb = imagen::a_srgb16(&reducida)?;
+            a_tiff_con_copyright(reducida.ancho, reducida.alto, DatosTiff::Dieciseis(&rgb), copyright.as_deref(), ppp)?
+        }
+        Formato::Tiff => {
+            let rgb = imagen::a_srgb(&reducida)?;
+            a_tiff_con_copyright(reducida.ancho, reducida.alto, DatosTiff::Ocho(&rgb), copyright.as_deref(), ppp)?
+        }
         Formato::Original => unreachable!(),
     };
     std::fs::write(destino, bytes).map_err(|e| format!("no se pudo guardar el archivo: {e}"))
@@ -226,9 +282,20 @@ pub async fn exportar_imagen_obra(
     lado: Option<String>,
     medida: Option<u32>,
     copyright: Option<String>,
+    profundidad: Option<u32>,
+    ppp: Option<u32>,
 ) -> Result<(), String> {
     tauri::async_runtime::spawn_blocking(move || {
-        exportar_imagen(&ruta_original, &ruta_destino, &formato, lado.as_deref(), medida, copyright.as_deref())
+        exportar_imagen(
+            &ruta_original,
+            &ruta_destino,
+            &formato,
+            lado.as_deref(),
+            medida,
+            copyright.as_deref(),
+            profundidad,
+            ppp,
+        )
     })
     .await
     .map_err(|e| e.to_string())?
@@ -300,6 +367,8 @@ mod pruebas {
             None,
             None,
             None,
+            None,
+            None,
         )
         .unwrap();
 
@@ -320,7 +389,7 @@ mod pruebas {
         }
         let destino = std::env::temp_dir().join(format!("recer_export_{}_destino.jpg", std::process::id()));
 
-        exportar_imagen(&origen.to_string_lossy(), &destino.to_string_lossy(), "jpg", Some("largo"), Some(30), Some("© Juan Brath 2026"))
+        exportar_imagen(&origen.to_string_lossy(), &destino.to_string_lossy(), "jpg", Some("largo"), Some(30), Some("© Juan Brath 2026"), None, None)
             .unwrap();
 
         let bytes = std::fs::read(&destino).unwrap();
@@ -346,13 +415,41 @@ mod pruebas {
         }
         let destino = std::env::temp_dir().join(format!("recer_export_{}_destino2.tif", std::process::id()));
 
-        exportar_imagen(&origen.to_string_lossy(), &destino.to_string_lossy(), "tiff", Some("largo"), Some(10), Some("© Juan Brath 2026"))
+        exportar_imagen(&origen.to_string_lossy(), &destino.to_string_lossy(), "tiff", Some("largo"), Some(10), Some("© Juan Brath 2026"), None, None)
             .unwrap();
 
         let mut decodificador = Decoder::new(std::fs::File::open(&destino).unwrap()).unwrap();
         assert_eq!(decodificador.dimensions().unwrap(), (10, 5)); // lado largo (20) llevado a 10: el corto queda en 5
         let copyright = decodificador.get_tag_ascii_string(Tag::Copyright).unwrap();
         assert_eq!(copyright, "(c) Juan Brath 2026"); // el "©" se pasa a ASCII antes de escribirlo
+
+        std::fs::remove_file(&origen).ok();
+        std::fs::remove_file(&destino).ok();
+    }
+
+    #[test]
+    fn sin_medida_exporta_a_tiff_de_16_bits_con_el_tamano_original() {
+        use tiff::decoder::{Decoder, DecodingResult};
+        use tiff::encoder::{colortype, TiffEncoder};
+
+        let origen = std::env::temp_dir().join(format!("recer_export_{}_origen3.tif", std::process::id()));
+        {
+            let archivo = std::fs::File::create(&origen).unwrap();
+            let mut codificador = TiffEncoder::new(archivo).unwrap();
+            let datos: Vec<u16> = (0..(20 * 10)).flat_map(|_| [10000u16, 20000, 30000]).collect();
+            codificador.write_image::<colortype::RGB16>(20, 10, &datos).unwrap();
+        }
+        let destino = std::env::temp_dir().join(format!("recer_export_{}_destino3.tif", std::process::id()));
+
+        exportar_imagen(&origen.to_string_lossy(), &destino.to_string_lossy(), "tiff", None, None, None, Some(16), Some(300))
+            .unwrap();
+
+        let mut decodificador = Decoder::new(std::fs::File::open(&destino).unwrap()).unwrap();
+        assert_eq!(decodificador.dimensions().unwrap(), (20, 10)); // sin medida: tamano original
+        match decodificador.read_image().unwrap() {
+            DecodingResult::U16(v) => assert_eq!(&v[0..3], &[10000, 20000, 30000]), // 16 bits, sin perder precision
+            _ => panic!("se esperaba un TIFF de 16 bits"),
+        }
 
         std::fs::remove_file(&origen).ok();
         std::fs::remove_file(&destino).ok();

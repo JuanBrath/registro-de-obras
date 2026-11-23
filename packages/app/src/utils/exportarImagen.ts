@@ -4,6 +4,44 @@ import { save } from "@tauri-apps/plugin-dialog";
 export type FormatoExportacion = "jpg" | "tiff" | "original";
 export type LadoExportacion = "corto" | "largo";
 
+export type Profundidad = 8 | 16;
+export type UnidadExportacion = "px" | "cm";
+
+/** Opciones de tamaño y color de la exportación (las mismas en "Exportar imagen…" y "Exportar fotos"). */
+export interface OpcionesTamanoColor {
+  /** Si no se tilda, la imagen sale con su tamaño original. */
+  cambiarTamano: boolean;
+  lado: LadoExportacion;
+  unidad: UnidadExportacion;
+  medida: string;
+  /** Resolución en píxeles por pulgada: pasa los centímetros a píxeles y queda anotada en el archivo. */
+  ppp: string;
+  /** Solo cambia el TIFF; el JPG siempre es de 8 bits. */
+  profundidad: Profundidad;
+}
+
+export const OPCIONES_TAMANO_COLOR_POR_DEFECTO: OpcionesTamanoColor = {
+  cambiarTamano: false,
+  lado: "largo",
+  unidad: "px",
+  medida: "3000",
+  ppp: "300",
+  profundidad: 8,
+};
+
+/** Pasa las opciones elegidas a lo que entiende el exportador, o devuelve la clave del error si algo no es válido. */
+export function resolverOpcionesTamanoColor(
+  o: OpcionesTamanoColor,
+): { medida?: number; ppp?: number; profundidad: Profundidad } | { error: "medida" | "ppp" } {
+  if (!o.cambiarTamano) return { profundidad: o.profundidad };
+  const valor = Number(o.medida);
+  if (!valor || valor <= 0) return { error: "medida" };
+  if (o.unidad === "px") return { medida: Math.round(valor), profundidad: o.profundidad };
+  const ppp = Number(o.ppp);
+  if (!ppp || ppp <= 0) return { error: "ppp" };
+  return { medida: Math.max(1, Math.round((valor / 2.54) * ppp)), ppp: Math.round(ppp), profundidad: o.profundidad };
+}
+
 function extensionDe(ruta: string): string {
   const punto = ruta.lastIndexOf(".");
   return punto >= 0 ? ruta.slice(punto + 1) : "";
@@ -23,10 +61,13 @@ export async function exportarImagenConDialogo(opciones: {
   nombreSugerido: string;
   formato: FormatoExportacion;
   lado?: LadoExportacion;
+  /** Medida en píxeles del lado de referencia; sin ella la imagen sale con su tamaño original. */
   medida?: number;
   copyright?: string | null;
+  profundidad?: Profundidad;
+  ppp?: number;
 }): Promise<string | null> {
-  const { rutaOriginal, nombreSugerido, formato, lado, medida, copyright } = opciones;
+  const { rutaOriginal, nombreSugerido, formato, lado, medida, copyright, profundidad, ppp } = opciones;
   const extension = formato === "original" ? extensionDe(rutaOriginal) : formato === "tiff" ? "tif" : "jpg";
 
   const destino = await save({
@@ -39,9 +80,11 @@ export async function exportarImagenConDialogo(opciones: {
     rutaOriginal,
     rutaDestino: destino,
     formato,
-    lado: formato === "original" ? null : lado,
-    medida: formato === "original" ? null : medida,
+    lado: formato === "original" || !medida ? null : lado,
+    medida: formato === "original" ? null : medida ?? null,
     copyright: formato === "original" ? null : copyright || null,
+    profundidad: formato === "tiff" ? profundidad ?? 8 : null,
+    ppp: formato === "original" ? null : ppp ?? null,
   });
   return destino;
 }
@@ -75,12 +118,15 @@ export async function exportarImagenesEnLote(opciones: {
   obras: ObraParaExportar[];
   formato: FormatoExportacion;
   lado?: LadoExportacion;
+  /** Medida en píxeles del lado de referencia; sin ella cada imagen sale con su tamaño original. */
   medida?: number;
   /** Texto fijo de copyright, o null para "© <artista> <año>" en cada obra. */
   copyright: string | null;
+  profundidad?: Profundidad;
+  ppp?: number;
   onProgreso?: (hechas: number, total: number) => void;
 }): Promise<ResultadoExportacionLote | null> {
-  const { obras, formato, lado, medida, copyright, onProgreso } = opciones;
+  const { obras, formato, lado, medida, copyright, profundidad, ppp, onProgreso } = opciones;
   const { open } = await import("@tauri-apps/plugin-dialog");
   const elegida = await open({ directory: true, multiple: false });
   if (!elegida || Array.isArray(elegida)) return null;
@@ -118,12 +164,14 @@ export async function exportarImagenesEnLote(opciones: {
         rutaOriginal: original,
         rutaDestino: destino,
         formato,
-        lado: formato === "original" ? null : lado,
-        medida: formato === "original" ? null : medida,
+        lado: formato === "original" || !medida ? null : lado,
+        medida: formato === "original" ? null : medida ?? null,
         copyright:
           formato === "original"
             ? null
             : (copyright ?? (obra.nombreArtista ? `© ${obra.nombreArtista} ${anio}` : `© ${anio}`)) || null,
+        profundidad: formato === "tiff" ? profundidad ?? 8 : null,
+        ppp: formato === "original" ? null : ppp ?? null,
       });
       resultado.exportadas++;
     } catch (err) {

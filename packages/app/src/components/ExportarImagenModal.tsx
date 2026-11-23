@@ -4,11 +4,12 @@ import { useLanguage } from "../i18n/LanguageContext.js";
 import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
 import {
   exportarImagenConDialogo,
+  OPCIONES_TAMANO_COLOR_POR_DEFECTO,
+  resolverOpcionesTamanoColor,
   type FormatoExportacion,
-  type LadoExportacion,
+  type OpcionesTamanoColor,
 } from "../utils/exportarImagen.js";
-
-const MEDIDA_POR_DEFECTO = 3000;
+import { CamposTamanoColor } from "./OpcionesTamanoColor.js";
 
 /**
  * Ventana de "Exportar imagen…" (ver el menú contextual de la miniatura y de la vista de
@@ -29,8 +30,7 @@ export function ExportarImagenModal({
 }) {
   const { t } = useLanguage();
   const [formato, setFormato] = useState<FormatoExportacion>("jpg");
-  const [lado, setLado] = useState<LadoExportacion>("largo");
-  const [medida, setMedida] = useState(String(MEDIDA_POR_DEFECTO));
+  const [opciones, setOpciones] = useState<OpcionesTamanoColor>(OPCIONES_TAMANO_COLOR_POR_DEFECTO);
   const [copyright, setCopyright] = useState(
     nombreArtista ? `© ${nombreArtista} ${new Date().getFullYear()}` : `© ${new Date().getFullYear()}`,
   );
@@ -45,9 +45,9 @@ export function ExportarImagenModal({
     setError(null);
     setMensaje(null);
 
-    const medidaNum = Number(medida);
-    if (formato !== "original" && (!medidaNum || medidaNum <= 0)) {
-      setError(t("exportarImagen.errorMedidaInvalida"));
+    const resuelta = resolverOpcionesTamanoColor(opciones);
+    if ("error" in resuelta) {
+      setError(t(resuelta.error === "ppp" ? "exportarImagen.errorPppInvalida" : "exportarImagen.errorMedidaInvalida"));
       return;
     }
 
@@ -57,8 +57,10 @@ export function ExportarImagenModal({
         rutaOriginal,
         nombreSugerido,
         formato,
-        lado,
-        medida: medidaNum,
+        lado: opciones.lado,
+        medida: resuelta.medida,
+        profundidad: resuelta.profundidad,
+        ppp: resuelta.ppp,
         copyright,
       });
       if (destino) setMensaje(t("exportarImagen.exportadoMensaje"));
@@ -96,28 +98,10 @@ export function ExportarImagenModal({
         </div>
       </fieldset>
 
+      <CamposTamanoColor formato={formato} valor={opciones} onChange={setOpciones} nombre="exportar" />
+
       {formato !== "original" && (
         <>
-          <fieldset className="informes-fieldset">
-            <legend>{t("exportarImagen.ladoLegend")}</legend>
-            <div className="radio-row">
-              <label>
-                <input type="radio" name="exportarLado" checked={lado === "corto"} onChange={() => setLado("corto")} />
-                {t("exportarImagen.ladoCorto")}
-              </label>
-              <label>
-                <input type="radio" name="exportarLado" checked={lado === "largo"} onChange={() => setLado("largo")} />
-                {t("exportarImagen.ladoLargo")}
-              </label>
-            </div>
-          </fieldset>
-
-          <label>
-            {t("exportarImagen.medidaLabel")}
-            <input type="number" min={1} value={medida} onChange={(e) => setMedida(e.target.value)} />
-          </label>
-          <p className="field-note">{t("exportarImagen.medidaNota")}</p>
-
           <label>
             {t("exportarImagen.copyrightLabel")}
             <input type="text" value={copyright} onChange={(e) => setCopyright(e.target.value)} />

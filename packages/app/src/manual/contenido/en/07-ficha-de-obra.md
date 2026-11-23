@@ -26,7 +26,7 @@ Right-clicking the image (the thumbnail or the large view) opens a menu with thr
 - If the artwork doesn't have the **Original file location** loaded, the notice "Can't export: this artwork doesn't have the original file loaded (see "Original file location" in Edit artwork)." appears and nothing opens.
 - If it does, a window opens where you choose:
   - **Format**: **JPG**, **TIFF** or **Original (exact copy of the file, unchanged)**.
-  - For JPG or TIFF, also: the **Reference side** (**Short side** or **Long side**) and the **Size (in pixels)** of that side. It won't be enlarged: if the original file is smaller than this size, it's exported at its real size.
+  - For JPG or TIFF, also: the **Color depth** (TIFF only: **8 bits** or **16 bits per channel**; JPG is always 8 bits) and the **Resize** checkbox. If you leave it unticked, the image comes out at its **original size**. If you tick it, you choose the **Reference side** (**Short side** or **Long side**), the **Unit of measure** (**Pixels** or **Centimeters**) and the **Size** of that side; in centimeters also the **Resolution (ppi)**, used to convert centimeters to pixels (for example, 30 cm at 300 ppi is 3543 pixels) and written into the file. It won't be enlarged: if the original file is smaller than this size, it's exported at its real size.
   - A **Copyright (optional)** field, suggested as "© [artist's name] [current year]"; you can delete or change it, and it's saved as metadata inside the exported file.
 - Click **Export…**: it first asks where to save the new file (folder and name), and only then generates it.
 

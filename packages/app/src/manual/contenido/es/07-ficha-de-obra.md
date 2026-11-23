@@ -26,7 +26,7 @@ Con click derecho sobre la imagen (la miniatura o la vista en grande) aparece un
 - Si la obra no tiene cargada la **Ubicación del archivo original**, aparece el aviso "No se puede exportar: esta obra no tiene cargado el archivo original (ver "Ubicación del archivo original" en Editar obra)." y no se abre nada.
 - Si lo tiene, se abre una ventana donde elegís:
   - **Formato**: **JPG**, **TIFF** u **Original (copia exacta del archivo, sin cambios)**.
-  - Para JPG o TIFF, además: el **Lado de referencia** (**Lado corto** o **Lado largo**) y la **Medida (en píxeles)** de ese lado. No se va a ampliar: si el archivo original es más chico que esta medida, se exporta en su tamaño real.
+  - Para JPG o TIFF, además: la **Profundidad de color** (solo en TIFF: **8 bits** o **16 bits por canal**; el JPG siempre es de 8 bits) y la casilla **Cambiar el tamaño**. Si no la tildás, la imagen sale con su **tamaño original**. Si la tildás, elegís el **Lado de referencia** (**Lado corto** o **Lado largo**), la **Unidad de medida** (**Píxeles** o **Centímetros**) y la **Medida** de ese lado; en centímetros también la **Resolución (ppp)**, que sirve para pasar los centímetros a píxeles (por ejemplo, 30 cm a 300 ppp son 3543 píxeles) y queda anotada en el archivo. No se va a ampliar: si el archivo original es más chico que esta medida, se exporta en su tamaño real.
   - Un **Copyright (opcional)**, que sale sugerido como "© [nombre del artista] [año actual]"; se puede borrar o cambiar, y queda guardado como metadato dentro del archivo exportado.
 - Tocá **Exportar…**: primero preguntá dónde guardar el archivo nuevo (carpeta y nombre) y recién ahí lo genera.
 

@@ -49,7 +49,7 @@ In a selection, **Generate selection reports** directly opens the reports window
 **Export photos** exports the photos of the whole selection at once, using the same criteria as **Export image** on an artwork's sheet: it always starts from each artwork's original file.
 
 1. Open the selection and click **Export photos**.
-2. Choose the **Format** (**JPG**, **TIFF** or **Original**), the **Reference side**, the **Size (in pixels)** and the copyright. By default the copyright is automatic: "© artist name and year" of each artwork; if you untick it, you type your own for all of them.
+2. Choose the **Format** (**JPG**, **TIFF** or **Original**), the **Color depth** (TIFF only), the **Resize** checkbox (unticked, the photos come out at their original size; ticked, you choose reference side, unit —pixels or centimeters, with its resolution in ppi— and size) and the copyright. By default the copyright is automatic: "© artist name and year" of each artwork; if you untick it, you type your own for all of them.
 3. Click **Choose folder and export…** and choose the folder where the photos are saved.
 
 Each photo is saved with the artwork's title as its name, and never overwrites a file that is already in the folder (if the name exists, it adds `_2`, `_3`…). Artworks without an original file loaded cannot be exported: when it finishes, the program tells you which ones were left out.

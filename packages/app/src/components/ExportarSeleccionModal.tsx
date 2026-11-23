@@ -3,13 +3,14 @@ import { Modal } from "./Modal.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
 import {
   exportarImagenesEnLote,
+  OPCIONES_TAMANO_COLOR_POR_DEFECTO,
+  resolverOpcionesTamanoColor,
   type FormatoExportacion,
-  type LadoExportacion,
   type ObraParaExportar,
+  type OpcionesTamanoColor,
   type ResultadoExportacionLote,
 } from "../utils/exportarImagen.js";
-
-const MEDIDA_POR_DEFECTO = 3000;
+import { CamposTamanoColor } from "./OpcionesTamanoColor.js";
 
 /**
  * "Exportar fotos" de una selección: las mismas opciones que "Exportar imagen…" de la ficha de una obra
@@ -27,8 +28,7 @@ export function ExportarSeleccionModal({
 }) {
   const { t } = useLanguage();
   const [formato, setFormato] = useState<FormatoExportacion>("jpg");
-  const [lado, setLado] = useState<LadoExportacion>("largo");
-  const [medida, setMedida] = useState(String(MEDIDA_POR_DEFECTO));
+  const [opciones, setOpciones] = useState<OpcionesTamanoColor>(OPCIONES_TAMANO_COLOR_POR_DEFECTO);
   const [copyrightAutomatico, setCopyrightAutomatico] = useState(true);
   const [copyright, setCopyright] = useState(`© ${new Date().getFullYear()}`);
   const [exportando, setExportando] = useState(false);
@@ -41,9 +41,9 @@ export function ExportarSeleccionModal({
   async function exportar() {
     setError(null);
     setResultado(null);
-    const medidaNum = Number(medida);
-    if (formato !== "original" && (!medidaNum || medidaNum <= 0)) {
-      setError(t("exportarImagen.errorMedidaInvalida"));
+    const resuelta = resolverOpcionesTamanoColor(opciones);
+    if (formato !== "original" && "error" in resuelta) {
+      setError(t(resuelta.error === "ppp" ? "exportarImagen.errorPppInvalida" : "exportarImagen.errorMedidaInvalida"));
       return;
     }
     setExportando(true);
@@ -51,8 +51,10 @@ export function ExportarSeleccionModal({
       const res = await exportarImagenesEnLote({
         obras,
         formato,
-        lado,
-        medida: medidaNum,
+        lado: opciones.lado,
+        medida: "error" in resuelta ? undefined : resuelta.medida,
+        profundidad: "error" in resuelta ? undefined : resuelta.profundidad,
+        ppp: "error" in resuelta ? undefined : resuelta.ppp,
         copyright: copyrightAutomatico ? null : copyright,
         onProgreso: (hechas, total) => setProgreso({ hechas, total }),
       });
@@ -94,28 +96,10 @@ export function ExportarSeleccionModal({
           </div>
         </fieldset>
 
+        <CamposTamanoColor formato={formato} valor={opciones} onChange={setOpciones} nombre="expSel" />
+
         {formato !== "original" && (
           <>
-            <fieldset className="informes-fieldset">
-              <legend>{t("exportarImagen.ladoLegend")}</legend>
-              <div className="radio-row">
-                <label>
-                  <input type="radio" name="expSelLado" checked={lado === "corto"} onChange={() => setLado("corto")} />
-                  {t("exportarImagen.ladoCorto")}
-                </label>
-                <label>
-                  <input type="radio" name="expSelLado" checked={lado === "largo"} onChange={() => setLado("largo")} />
-                  {t("exportarImagen.ladoLargo")}
-                </label>
-              </div>
-            </fieldset>
-
-            <label>
-              {t("exportarImagen.medidaLabel")}
-              <input type="number" min={1} value={medida} onChange={(e) => setMedida(e.target.value)} />
-            </label>
-            <p className="field-note">{t("exportarImagen.medidaNota")}</p>
-
             <label className="dossier-check">
               <input type="checkbox" checked={copyrightAutomatico} onChange={(e) => setCopyrightAutomatico(e.target.checked)} />
               <span>{t("exportarSeleccion.copyrightAutomatico")}</span>

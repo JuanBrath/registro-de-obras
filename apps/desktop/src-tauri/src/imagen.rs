@@ -470,8 +470,8 @@ fn a_ocho_bits(v: u16) -> u8 {
     ((v as u32 + 128) / 257) as u8
 }
 
-/// Los pixeles de la imagen achicada como RGB de 8 bits en sRGB (los tres valores de cada pixel seguidos).
-pub(crate) fn a_srgb(reducida: &Reducida) -> Result<Vec<u8>, String> {
+/// Los pixeles de la imagen achicada como RGB de 16 bits en sRGB (los tres valores de cada pixel seguidos).
+pub(crate) fn a_srgb16(reducida: &Reducida) -> Result<Vec<u16>, String> {
     let pixeles = reducida.ancho * reducida.alto;
     let canales = reducida.modo.canales();
     let mut intercalado = vec![0u16; pixeles * canales];
@@ -502,7 +502,12 @@ pub(crate) fn a_srgb(reducida: &Reducida) -> Result<Vec<u8>, String> {
     } else {
         sin_perfil(reducida.modo, &intercalado, pixeles)
     };
-    Ok(rgb16.into_iter().map(a_ocho_bits).collect())
+    Ok(rgb16)
+}
+
+/// Los pixeles de la imagen achicada como RGB de 8 bits en sRGB (los tres valores de cada pixel seguidos).
+pub(crate) fn a_srgb(reducida: &Reducida) -> Result<Vec<u8>, String> {
+    Ok(a_srgb16(reducida)?.into_iter().map(a_ocho_bits).collect())
 }
 
 /// Sin perfil de color (o con uno que no se pudo usar) se asume que ya esta en sRGB.

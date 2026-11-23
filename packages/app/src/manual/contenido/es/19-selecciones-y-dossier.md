@@ -49,7 +49,7 @@ En una selección, **Generar informes de la selección** abre directamente la ve
 **Exportar fotos** exporta las fotos de toda la selección de una vez, con el mismo criterio que **Exportar imagen…** de la ficha de una obra: siempre parte del archivo original de cada obra.
 
 1. Abrí la selección y tocá **Exportar fotos**.
-2. Elegí el **Formato** (**JPG**, **TIFF** u **Original**), el **Lado de referencia**, la **Medida (en píxeles)** y el copyright. Por defecto el copyright es automático: "© nombre del artista y año" de cada obra; si lo destildás, escribís uno propio para todas.
+2. Elegí el **Formato** (**JPG**, **TIFF** u **Original**), la **Profundidad de color** (solo TIFF), la casilla **Cambiar el tamaño** (sin tildar, las fotos salen con su tamaño original; tildada, elegís lado de referencia, unidad —píxeles o centímetros, con su resolución en ppp— y medida) y el copyright. Por defecto el copyright es automático: "© nombre del artista y año" de cada obra; si lo destildás, escribís uno propio para todas.
 3. Tocá **Elegir carpeta y exportar…** y elegí la carpeta donde se guardan las fotos.
 
 Cada foto se guarda con el título de la obra como nombre, y nunca pisa un archivo que ya esté en la carpeta (si el nombre existe, agrega `_2`, `_3`…). Las obras sin archivo original cargado no se pueden exportar: al terminar, el programa te dice cuáles quedaron afuera.
