@@ -1700,8 +1700,11 @@ export function ObraDetail({
     const cambiaSeriada = eraSeriada !== fields.esSeriada || (eraSinLimite && !fields.sinLimite && !fields.esSeriada);
     const cambiaCategoria = obra.categoria_obra !== fields.categoria;
 
+    // Serie -> sin serie: solo cuentan las copias de la edicion (las pruebas de autor se conservan).
+    const aSinSerieDesdeSeriada = eraSeriada && fields.sinLimite && !fields.esSeriada;
+    const listaDeshacer = aSinSerieDesdeSeriada ? ejemplares.filter((ej) => ej.tipo === "edicion") : ejemplares;
     const resultadoDeshacer = evaluarDeshacerSerie(
-      ejemplares.map((ej) => ({ estado: ej.estado, tieneDatosCargados: tieneDatosCargados(ej) })),
+      listaDeshacer.map((ej) => ({ estado: ej.estado, tieneDatosCargados: tieneDatosCargados(ej) })),
     );
     // El mismo chequeo aplica en las dos direcciones: tanto para deshacer
     // una serie (volverla pieza unica) como para convertir una pieza unica
@@ -1714,7 +1717,7 @@ export function ObraDetail({
       throw new Error(
         fields.esSeriada
           ? describirNoSePuedeConvertirASeriada(ejemplares, resultadoDeshacer.indicesBloqueantes, t, idioma)
-          : describirNoSePuedeDeshacerSerie(ejemplares, resultadoDeshacer.indicesBloqueantes, t, idioma),
+          : describirNoSePuedeDeshacerSerie(listaDeshacer, resultadoDeshacer.indicesBloqueantes, t, idioma),
       );
     }
 
@@ -1841,6 +1844,32 @@ export function ObraDetail({
               [obraId, ejemplar.tipo, ejemplar.indice, ejemplar.totalEdiciones, ejemplar.numero],
             );
           }
+        } else if (aSinSerieDesdeSeriada) {
+          // Serie -> sin serie: se conserva una sola copia (la que tenga historial, si la hay) numerada "1", se
+          // eliminan las demas copias en blanco y las pruebas de autor se mantienen (PA 1, PA 2…).
+          const idAConservar =
+            resultadoDeshacer.permitido && resultadoDeshacer.indiceAConservar !== null
+              ? listaDeshacer[resultadoDeshacer.indiceAConservar].id
+              : -1;
+          await tx.execute(`DELETE FROM ejemplar WHERE obra_id = ? AND tipo = 'edicion' AND id != ?`, [
+            obraId,
+            idAConservar,
+          ]);
+          if (idAConservar !== -1) {
+            await tx.execute(`UPDATE ejemplar SET indice = 1, total_ediciones = 1, numero = '1' WHERE id = ?`, [
+              idAConservar,
+            ]);
+          } else {
+            await tx.execute(
+              `INSERT INTO ejemplar (obra_id, tipo, indice, total_ediciones, numero) VALUES (?, 'edicion', 1, 1, '1')`,
+              [obraId],
+            );
+          }
+          const cantidadPA = ejemplares.filter((ej) => ej.tipo === "prueba_artista").length;
+          await tx.execute(
+            `UPDATE ejemplar SET numero = 'PA ' || indice, total_ediciones = ? WHERE obra_id = ? AND tipo = 'prueba_artista'`,
+            [cantidadPA, obraId],
+          );
         } else {
           const unico = generarEjemplarUnico();
           const idAConservar =
@@ -1868,7 +1897,9 @@ export function ObraDetail({
           obraId,
           fields.esSeriada
             ? `Obra convertida a seriada (${fields.cantidadTotalEdiciones} ediciones)`
-            : "Obra convertida a pieza única",
+            : aSinSerieDesdeSeriada
+              ? "Obra convertida de seriada a sin serie (venta sin límite)"
+              : "Obra convertida a pieza única",
         ]);
       } else {
         if (reduceEdiciones) {
@@ -3319,6 +3350,15 @@ function ObraEditForm({
     ejemplares.map((ej) => ({ estado: ej.estado, tieneDatosCargados: tieneDatosCargados(ej) })),
   );
   const puedeDesconvertir = resultadoDeshacer.permitido;
+  // Serie -> sin serie: solo cuentan las copias de la edicion (las pruebas de autor se conservan).
+  const edicionesParaSinSerie = ejemplares.filter((ej) => ej.tipo === "edicion");
+  const resultadoASinSerie = evaluarDeshacerSerie(
+    edicionesParaSinSerie.map((ej) => ({ estado: ej.estado, tieneDatosCargados: tieneDatosCargados(ej) })),
+  );
+  const puedeASinSerie = resultadoASinSerie.permitido;
+  const mensajeNoSePuedeASinSerie = resultadoASinSerie.permitido
+    ? null
+    : describirNoSePuedeDeshacerSerie(edicionesParaSinSerie, resultadoASinSerie.indicesBloqueantes, t, idioma);
   const mensajeNoSePuedeDeshacer = resultadoDeshacer.permitido
     ? null
     : describirNoSePuedeDeshacerSerie(ejemplares, resultadoDeshacer.indicesBloqueantes, t, idioma);
@@ -3855,7 +3895,7 @@ function ObraEditForm({
                   type="radio"
                   name="modalidadObraEdicion"
                   checked={sinLimite && !esSeriada}
-                  disabled={eraSeriada}
+                  disabled={eraSeriada && !puedeASinSerie}
                   onChange={() => {
                     setEsSeriada(false);
                     setSinLimite(true);
@@ -3917,7 +3957,10 @@ function ObraEditForm({
           {(eraSeriada || eraSinLimite) && !puedeDesconvertir && (
             <p className="field-note">{mensajeNoSePuedeDeshacer}</p>
           )}
-          {eraSeriada && <p className="field-note">{t("obraDetail.seriadaASinSerieNota")}</p>}
+          {eraSeriada && !puedeASinSerie && <p className="field-note">{mensajeNoSePuedeASinSerie}</p>}
+          {eraSeriada && puedeASinSerie && sinLimite && !esSeriada && (
+            <p className="field-note">{t("obraDetail.seriadaASinSerieNota")}</p>
+          )}
           {!eraSeriada && esSeriada && (
             <>
               <label>

@@ -1326,5 +1326,5 @@ export const es = {
   "obraDetail.agregarCopia": "+ Agregar otra copia",
   "obraDetail.confirmarEliminarCopia": "¿Eliminar la copia {{numero}}? Se pierden los datos cargados en ella. Si no queda ninguna copia lista para vender, el programa genera una nueva en blanco.",
   "obraDetail.obraSinSerieVendidas": "Obra sin serie (se vende sin límite) — {{n}} copias vendidas o dadas de baja",
-  "obraDetail.seriadaASinSerieNota": "Una obra seriada no se puede pasar directamente a sin serie: primero convertila en obra única.",
+  "obraDetail.seriadaASinSerieNota": "Al pasar la serie a sin serie queda una sola copia (la que tenga historial, si la hay) y se eliminan las demás copias en blanco. Las pruebas de autor se conservan.",
 } as const;
