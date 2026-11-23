@@ -142,6 +142,10 @@ export function SeleccionesScreen({
   const [selecciones, setSelecciones] = useState<Seleccion[]>([]);
   const [grupos, setGrupos] = useState<GrupoSelecciones[]>([]);
   // Filtro por grupo de la lista (null = todas) y estado de la lista plegable.
+  // Pestaña superior: "selecciones" (lista y alta de selecciones) o "grupos" (grupos y las selecciones de cada uno).
+  const [modo, setModo] = useState<"selecciones" | "grupos">("selecciones");
+  // Panel para armar el grupo abierto: nombre y selecciones que lo componen.
+  const [panelGrupoAbierto, setPanelGrupoAbierto] = useState(false);
   const [grupoActivoId, setGrupoActivoId] = useState<number | null>(null);
   // Grupo nuevo en armado: nombre (nombreGrupo) y selecciones tildadas.
   const [grupoNuevo, setGrupoNuevo] = useState(false);
@@ -278,6 +282,7 @@ export function SeleccionesScreen({
     setActivaId(null);
     setGrupoNuevo(false);
     setGrupoActivoId(id);
+    setPanelGrupoAbierto(false);
     setConfirmarEliminarGrupo(false);
     setNombreGrupo(grupos.find((g) => g.id === id)?.nombre ?? "");
   };
@@ -449,7 +454,7 @@ export function SeleccionesScreen({
   // Recorrido de ayuda de la sección (botón "?" del encabezado).
   const pasosAyuda = [
     pasoAyuda(t, "sel-crear", "ayudaSelecciones.crear", t("selecciones.crear")),
-    pasoAyuda(t, "sel-grupos", "ayudaSelecciones.grupos", t("selecciones.nuevoGrupo")),
+    pasoAyuda(t, "sel-modos", "ayudaSelecciones.grupos", t("selecciones.gruposTitulo") + " / " + t("selecciones.seleccionesTitulo")),
     pasoAyuda(t, "sel-lista", "ayudaSelecciones.lista", t("selecciones.existentes")),
     pasoAyuda(t, "sel-guardar", "ayudaSelecciones.guardar", t("common.save")),
     pasoAyuda(t, "sel-dossier", "ayudaSelecciones.dossier", t("dossier.boton")),
@@ -478,49 +483,105 @@ export function SeleccionesScreen({
       {error && <p className="error">{error}</p>}
 
       <div className="selecciones-bloque">
-        <h2 className="selecciones-subtitulo">{t("selecciones.gruposTitulo")}</h2>
-        <div className="obras-toolbar-fila selecciones-grupos" data-recorrido="sel-grupos">
-          {grupos.map((g) => (
-            <button
-              key={g.id}
-              type="button"
-              className={g.id === grupoActivoId ? "obras-vista-toggle-boton activo" : "obras-vista-toggle-boton"}
-              onClick={() => abrirGrupo(g.id)}
-            >
-              {g.nombre} ({g.cantidad})
+        <div className="obras-toolbar-fila selecciones-modos" data-recorrido="sel-modos">
+          <button
+            type="button"
+            className={modo === "grupos" ? "obras-vista-toggle-boton activo" : "obras-vista-toggle-boton"}
+            onClick={() => {
+              setModo("grupos");
+              setNueva(false);
+            }}
+          >
+            {t("selecciones.gruposTitulo")}
+          </button>
+          <button
+            type="button"
+            className={modo === "selecciones" ? "obras-vista-toggle-boton activo" : "obras-vista-toggle-boton"}
+            onClick={() => {
+              setModo("selecciones");
+              setGrupoNuevo(false);
+              setGrupoActivoId(null);
+              setPanelGrupoAbierto(false);
+            }}
+          >
+            {t("selecciones.seleccionesTitulo")}
+          </button>
+        </div>
+      </div>
+
+      {modo === "grupos" && (
+        <div className="selecciones-bloque">
+          <div className="obras-toolbar-fila selecciones-grupos" data-recorrido="sel-grupos">
+            {grupos.map((g) => (
+              <button
+                key={g.id}
+                type="button"
+                className={g.id === grupoActivoId ? "obras-vista-toggle-boton activo" : "obras-vista-toggle-boton"}
+                onClick={() => abrirGrupo(g.id)}
+              >
+                {g.nombre} ({g.cantidad})
+              </button>
+            ))}
+            <button type="button" onClick={empezarNuevoGrupo} disabled={grupoNuevo}>
+              {t("selecciones.nuevoGrupo")}
             </button>
-          ))}
-          <button type="button" onClick={empezarNuevoGrupo} disabled={grupoNuevo}>
-            {t("selecciones.nuevoGrupo")}
-          </button>
+          </div>
+          {grupos.length === 0 && !grupoNuevo && <p>{t("selecciones.sinGrupos")}</p>}
+          {grupoActivoId !== null && (
+            <>
+              <h2 className="selecciones-subtitulo">
+                {t("selecciones.deGrupo", { grupo: grupos.find((g) => g.id === grupoActivoId)?.nombre ?? "" })}
+              </h2>
+              <div className="selecciones-bloque-crear">
+                <button type="button" onClick={() => setPanelGrupoAbierto((v) => !v)}>
+                  {t("selecciones.agregarAlGrupo")}
+                </button>
+              </div>
+              {selecciones.some((x) => x.grupo_id === grupoActivoId) ? (
+                <ListaSelecciones
+                  selecciones={selecciones.filter((x) => x.grupo_id === grupoActivoId)}
+                  activaId={activaId}
+                  expandida={listaExpandida}
+                  onToggle={() => setListaExpandida((v) => !v)}
+                  onElegir={(id) => {
+                    setNueva(false);
+                    setPanelGrupoAbierto(false);
+                    setActivaId(id);
+                    setListaExpandida(false);
+                  }}
+                />
+              ) : (
+                <p>{t("selecciones.grupoVacio")}</p>
+              )}
+            </>
+          )}
         </div>
+      )}
+
+      {modo === "selecciones" && (
+        <div className="selecciones-bloque">
+          <div className="selecciones-bloque-crear">
+            <button type="button" data-recorrido="sel-crear" onClick={empezarNueva} disabled={nueva}>
+              {t("selecciones.crear")}
+            </button>
+          </div>
+          {selecciones.length === 0 && !nueva && <p>{t("selecciones.vacio")}</p>}
+          <ListaSelecciones
+            selecciones={selecciones}
+            activaId={activaId}
+            expandida={listaExpandida}
+            onToggle={() => setListaExpandida((v) => !v)}
+            onElegir={(id) => {
+              setNueva(false);
+              setActivaId(id);
+              setListaExpandida(false);
+            }}
+          />
+        </div>
+      )}
       </div>
 
-      <div className="selecciones-bloque">
-        <h2 className="selecciones-subtitulo">{t("selecciones.seleccionesTitulo")}</h2>
-        <div className="selecciones-bloque-crear">
-          <button type="button" data-recorrido="sel-crear" onClick={empezarNueva} disabled={nueva}>
-            {t("selecciones.crear")}
-          </button>
-        </div>
-        {selecciones.length === 0 && !nueva && <p>{t("selecciones.vacio")}</p>}
-        <ListaSelecciones
-          selecciones={selecciones}
-          activaId={activaId}
-          expandida={listaExpandida}
-          onToggle={() => setListaExpandida((v) => !v)}
-          onElegir={(id) => {
-            setNueva(false);
-            setGrupoActivoId(null);
-            setGrupoNuevo(false);
-            setActivaId(id);
-            setListaExpandida(false);
-          }}
-        />
-      </div>
-      </div>
-
-      {(grupoNuevo || grupoActivoId !== null) && (
+      {modo === "grupos" && (grupoNuevo || (grupoActivoId !== null && panelGrupoAbierto)) && (
         <section className="selecciones-bloque selecciones-formulario">
           <label>
             <span className="field-label">{t("selecciones.nombreGrupoLabel")}</span>
