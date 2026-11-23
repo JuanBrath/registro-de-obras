@@ -1738,11 +1738,13 @@ export function ObraDetail({
 
     const cantidadPruebasArtistaActual = ejemplares.filter((ej) => ej.tipo === "prueba_artista").length;
     const mantieneSinLimite = eraSinLimite && fields.sinLimite && !fields.esSeriada;
+    const mantieneUnica = !eraSeriada && !eraSinLimite && !fields.esSeriada && !fields.sinLimite;
+    // Se pueden agregar y quitar pruebas de autor cuando la obra no cambia de modalidad.
+    const gestionaPruebas = (eraSeriada && fields.esSeriada) || mantieneSinLimite || mantieneUnica;
     const reducePruebasAutor =
-      !cambiaSeriada &&
-      ((eraSeriada && fields.esSeriada) || mantieneSinLimite) &&
-      fields.cantidadPruebaArtista < cantidadPruebasArtistaActual;
-    const aumentaPruebasSinLimite = !cambiaSeriada && mantieneSinLimite && fields.cantidadPruebaArtista > cantidadPruebasArtistaActual;
+      !cambiaSeriada && gestionaPruebas && fields.cantidadPruebaArtista < cantidadPruebasArtistaActual;
+    const aumentaPruebasAutor =
+      !cambiaSeriada && gestionaPruebas && fields.cantidadPruebaArtista > cantidadPruebasArtistaActual;
     const resultadoReducirPruebas = reducePruebasAutor
       ? evaluarReducirSerie(
           ejemplares.map((ej) => ({
@@ -1893,13 +1895,24 @@ export function ObraDetail({
             `Cantidad de ediciones de la serie reducida de ${cantidadEdicionesActual} a ${nuevaCantidad}`,
           ]);
         }
-        if (aumentaPruebasSinLimite) {
-          // Obra sin serie: las pruebas de autor se numeran "PA 1", "PA 2"… (sin total) y se pueden agregar cuando se quiera.
-          for (let i = cantidadPruebasArtistaActual + 1; i <= fields.cantidadPruebaArtista; i++) {
+        if (aumentaPruebasAutor) {
+          // Se agregan pruebas de autor nuevas (en blanco) y se renumera el total en las que ya existian.
+          // Obra sin serie: "PA 1", "PA 2"… (sin total); el resto: "PA i/N".
+          const nuevoTotal = fields.cantidadPruebaArtista;
+          for (let i = cantidadPruebasArtistaActual + 1; i <= nuevoTotal; i++) {
             await tx.execute(
               `INSERT INTO ejemplar (obra_id, tipo, indice, total_ediciones, numero) VALUES (?, 'prueba_artista', ?, ?, ?)`,
-              [obraId, i, fields.cantidadPruebaArtista, `PA ${i}`],
+              [obraId, i, nuevoTotal, mantieneSinLimite ? `PA ${i}` : formatearNumeroPruebaArtista(i, nuevoTotal)],
             );
+          }
+          for (const ej of ejemplares) {
+            if (ej.tipo === "prueba_artista") {
+              await tx.execute(`UPDATE ejemplar SET total_ediciones = ?, numero = ? WHERE id = ?`, [
+                nuevoTotal,
+                mantieneSinLimite ? `PA ${ej.indice}` : formatearNumeroPruebaArtista(ej.indice, nuevoTotal),
+                ej.id,
+              ]);
+            }
           }
           await tx.execute(`INSERT INTO historial_evento (obra_id, tipo, descripcion) VALUES (?, 'edicion', ?)`, [
             obraId,
@@ -3219,7 +3232,7 @@ function ObraEditForm({
   // (para poder bajarla desde aca); si se esta por convertir de unica a
   // seriada recien ahora, arranca en "1" como valor inicial sugerido.
   const [cantidadPruebaAutor, setCantidadPruebaAutor] = useState(() =>
-    eraSeriada || eraSinLimite ? String(ejemplares.filter((ej) => ej.tipo === "prueba_artista").length) : "1",
+    String(ejemplares.filter((ej) => ej.tipo === "prueba_artista").length),
   );
   const [advertenciaPruebaAutorVista, setAdvertenciaPruebaAutorVista] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -3346,7 +3359,8 @@ function ObraEditForm({
   // directamente vale como la nueva cantidad (se puede bajar, igual que la
   // cantidad de ediciones).
   const cantidadPruebasArtistaActual = ejemplares.filter((ej) => ej.tipo === "prueba_artista").length;
-  const cantidadPruebaAutorNum = eraSeriada || eraSinLimite
+  const mantieneUnica = !eraSeriada && !eraSinLimite && !esSeriadaCalculada && !sinLimite;
+  const cantidadPruebaAutorNum = eraSeriada || eraSinLimite || mantieneUnica
     ? Math.max(0, parseInt(cantidadPruebaAutor, 10) || 0)
     : hayPruebaAutor
       ? Math.max(0, parseInt(cantidadPruebaAutor, 10) || 0)
@@ -3358,8 +3372,8 @@ function ObraEditForm({
     cantidadPruebaAutorNum > nuevaCantidadEdicionesNum * 0.1 &&
     !advertenciaPruebaAutorVista;
   const mantieneSinLimite = eraSinLimite && sinLimite && !esSeriadaCalculada;
-  const reducePruebasAutor =
-    ((eraSeriada && esSeriadaCalculada) || mantieneSinLimite) && cantidadPruebaAutorNum < cantidadPruebasArtistaActual;
+  const gestionaPruebas = (eraSeriada && esSeriadaCalculada) || mantieneSinLimite || mantieneUnica;
+  const reducePruebasAutor = gestionaPruebas && cantidadPruebaAutorNum < cantidadPruebasArtistaActual;
   // Se pasa cantidadEdicionesActual (sin cambios) como primer umbral para que
   // esta evaluacion, al reusar evaluarReducirSerie, no marque ninguna edicion
   // como bloqueante — solo interesan las pruebas de artista aca.
@@ -3725,6 +3739,7 @@ function ObraEditForm({
                   checked={hayPruebaAutor}
                   onChange={(e) => {
                     setHayPruebaAutor(e.target.checked);
+                    if (e.target.checked && !(parseInt(cantidadPruebaAutor, 10) > 0)) setCantidadPruebaAutor("1");
                     setAdvertenciaPruebaAutorVista(false);
                   }}
                 />
@@ -3778,7 +3793,6 @@ function ObraEditForm({
                 <input
                   type="number"
                   min={0}
-                  max={cantidadPruebasArtistaActual}
                   value={cantidadPruebaAutor}
                   onChange={(e) => setCantidadPruebaAutor(e.target.value)}
                 />
@@ -3851,7 +3865,7 @@ function ObraEditForm({
               </label>
               <HelpIcon fieldKey="es_seriada" />
             </div>
-            {mantieneSinLimite && (
+            {(mantieneSinLimite || mantieneUnica) && (
               <>
                 <label className="cantidad-ediciones-compacta">
                   {t("obraForm.cantidadPruebaAutorLabel")} <HelpIcon fieldKey="pruebas_artista" />
@@ -3912,6 +3926,7 @@ function ObraEditForm({
                   checked={hayPruebaAutor}
                   onChange={(e) => {
                     setHayPruebaAutor(e.target.checked);
+                    if (e.target.checked && !(parseInt(cantidadPruebaAutor, 10) > 0)) setCantidadPruebaAutor("1");
                     setAdvertenciaPruebaAutorVista(false);
                   }}
                 />
@@ -3955,7 +3970,6 @@ function ObraEditForm({
                 <input
                   type="number"
                   min={0}
-                  max={cantidadPruebasArtistaActual}
                   value={cantidadPruebaAutor}
                   onChange={(e) => setCantidadPruebaAutor(e.target.value)}
                 />
