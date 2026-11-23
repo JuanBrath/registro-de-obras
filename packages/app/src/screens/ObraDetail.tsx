@@ -1758,8 +1758,10 @@ export function ObraDetail({
     const mantieneUnica = !eraSeriada && !eraSinLimite && !fields.esSeriada && !fields.sinLimite;
     // Se pueden agregar y quitar pruebas de autor cuando la obra no cambia de modalidad.
     const gestionaPruebas = (eraSeriada && fields.esSeriada) || mantieneSinLimite || mantieneUnica;
+    // Al pasar de seriada a sin serie tambien se puede cambiar la cantidad de pruebas de autor en el mismo guardado.
     const reducePruebasAutor =
-      !cambiaSeriada && gestionaPruebas && fields.cantidadPruebaArtista < cantidadPruebasArtistaActual;
+      ((!cambiaSeriada && gestionaPruebas) || aSinSerieDesdeSeriada) &&
+      fields.cantidadPruebaArtista < cantidadPruebasArtistaActual;
     const aumentaPruebasAutor =
       !cambiaSeriada && gestionaPruebas && fields.cantidadPruebaArtista > cantidadPruebasArtistaActual;
     const resultadoReducirPruebas = reducePruebasAutor
@@ -1879,10 +1881,22 @@ export function ObraDetail({
               [obraId],
             );
           }
-          const cantidadPA = ejemplares.filter((ej) => ej.tipo === "prueba_artista").length;
+          // Pruebas de autor: se aplica la cantidad pedida (se quitan las de indice mayor o se agregan nuevas) y
+          // todas quedan numeradas "PA 1", "PA 2"…
+          const nuevaCantidadPA = fields.cantidadPruebaArtista;
+          await tx.execute(
+            `DELETE FROM ejemplar WHERE obra_id = ? AND tipo = 'prueba_artista' AND indice > ?`,
+            [obraId, nuevaCantidadPA],
+          );
+          for (let i = cantidadPruebasArtistaActual + 1; i <= nuevaCantidadPA; i++) {
+            await tx.execute(
+              `INSERT INTO ejemplar (obra_id, tipo, indice, total_ediciones, numero) VALUES (?, 'prueba_artista', ?, ?, ?)`,
+              [obraId, i, nuevaCantidadPA, `PA ${i}`],
+            );
+          }
           await tx.execute(
             `UPDATE ejemplar SET numero = 'PA ' || indice, total_ediciones = ? WHERE obra_id = ? AND tipo = 'prueba_artista'`,
-            [cantidadPA, obraId],
+            [nuevaCantidadPA, obraId],
           );
         } else {
           const unico = generarEjemplarUnico();
@@ -3434,7 +3448,9 @@ function ObraEditForm({
     cantidadPruebaAutorNum > nuevaCantidadEdicionesNum * 0.1 &&
     !advertenciaPruebaAutorVista;
   const mantieneSinLimite = eraSinLimite && sinLimite && !esSeriadaCalculada;
-  const gestionaPruebas = (eraSeriada && esSeriadaCalculada) || mantieneSinLimite || mantieneUnica;
+  // Seriada que se pasa a sin serie: las pruebas de autor se pueden cambiar en el mismo paso.
+  const aSinSerieConPruebas = eraSeriada && sinLimite && !esSeriadaCalculada;
+  const gestionaPruebas = (eraSeriada && esSeriadaCalculada) || mantieneSinLimite || mantieneUnica || aSinSerieConPruebas;
   const reducePruebasAutor = gestionaPruebas && cantidadPruebaAutorNum < cantidadPruebasArtistaActual;
   // Se pasa cantidadEdicionesActual (sin cambios) como primer umbral para que
   // esta evaluacion, al reusar evaluarReducirSerie, no marque ninguna edicion
@@ -3927,7 +3943,7 @@ function ObraEditForm({
               </label>
               <HelpIcon fieldKey="es_seriada" />
             </div>
-            {(mantieneSinLimite || mantieneUnica) && (
+            {(mantieneSinLimite || mantieneUnica || aSinSerieConPruebas) && (
               <>
                 <label className="cantidad-ediciones-compacta">
                   {t("obraForm.cantidadPruebaAutorLabel")} <HelpIcon fieldKey="pruebas_artista" />
