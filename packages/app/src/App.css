@@ -3484,3 +3484,15 @@ button[type="submit"]:disabled {
   align-items: baseline;
   gap: 0.75rem;
 }
+
+/* Selecciones: grupos temáticos y lista plegable (dos renglones + "Mostrar más"). */
+.selecciones-grupos,
+.selecciones-grupo-edicion {
+  margin-bottom: 0.9rem;
+}
+.selecciones-lista-plegable {
+  margin-bottom: 0.5rem;
+}
+.selecciones-mostrar-mas {
+  margin-top: 0.4rem;
+}

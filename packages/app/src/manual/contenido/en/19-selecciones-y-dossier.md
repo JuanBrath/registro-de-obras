@@ -13,6 +13,16 @@ A **selection** is a group of artworks you pick by hand, for example the ones yo
 3. Type the **Selection name** and, if you want, the **Notes**. Below, **all** your artworks are shown, without filters, each with a checkbox: tick the ones you want to include (above you see how many you have chosen).
 4. Click **Save**. The selection appears above, under **Existing selections**, already with those artworks. If you want to build it from a filter, do it from **Artworks** (see below).
 
+## Groups of selections
+
+If you have many selections, you can gather those on the same theme into a **group** (for example "Fairs 2026" or "Landscapes").
+
+1. Above the list of selections click **+ New group**, type the name and click **Save**.
+2. Open a selection and choose its **Group** in the drop-down (or "No group"); click **Save**.
+3. Click a group's name to see only its selections, or **All** to see them all. With a group chosen you can **Rename group** or **Delete group**: deleting a group does not delete its selections, they just have no group.
+
+The list shows only two rows; if there are more, click **Show more** to unfold them all. When you choose one it goes back to two rows and the chosen one always stays in view.
+
 ## Add artworks to a selection
 
 There are two ways. The most convenient for many artworks is from **Artworks**:

@@ -4,12 +4,47 @@ export interface Seleccion {
   id: number;
   nombre: string;
   notas: string | null;
+  grupo_id: number | null;
   cantidad: number;
+}
+
+export interface GrupoSelecciones {
+  id: number;
+  nombre: string;
+  cantidad: number;
+}
+
+const ORDEN_NOMBRE = (a: { nombre: string }, b: { nombre: string }) =>
+  a.nombre.localeCompare(b.nombre, undefined, { numeric: true, sensitivity: "base" });
+
+export async function listGrupos(db: DatabaseAdapter): Promise<GrupoSelecciones[]> {
+  const filas = await db.query<GrupoSelecciones>(
+    `SELECT g.id, g.nombre, (SELECT COUNT(*) FROM seleccion s WHERE s.grupo_id = g.id) AS cantidad FROM seleccion_grupo g`,
+  );
+  return filas.sort(ORDEN_NOMBRE);
+}
+
+export async function crearGrupo(db: DatabaseAdapter, nombre: string): Promise<number> {
+  const res = await db.execute("INSERT INTO seleccion_grupo (nombre) VALUES (?)", [nombre.trim()]);
+  if (res.lastInsertId == null) throw new Error("No se pudo crear el grupo");
+  return res.lastInsertId;
+}
+
+export async function renombrarGrupo(db: DatabaseAdapter, id: number, nombre: string): Promise<void> {
+  await db.execute("UPDATE seleccion_grupo SET nombre = ? WHERE id = ?", [nombre.trim(), id]);
+}
+
+/** Elimina el grupo; sus selecciones no se borran, quedan sin grupo. */
+export async function eliminarGrupo(db: DatabaseAdapter, id: number): Promise<void> {
+  await db.transaction(async (tx) => {
+    await tx.execute("UPDATE seleccion SET grupo_id = NULL WHERE grupo_id = ?", [id]);
+    await tx.execute("DELETE FROM seleccion_grupo WHERE id = ?", [id]);
+  });
 }
 
 export async function listSelecciones(db: DatabaseAdapter): Promise<Seleccion[]> {
   const filas = await db.query<Seleccion>(
-    `SELECT s.id, s.nombre, s.notas,
+    `SELECT s.id, s.nombre, s.notas, s.grupo_id,
             (SELECT COUNT(*) FROM seleccion_obra so WHERE so.seleccion_id = s.id) AS cantidad
      FROM seleccion s`,
   );
@@ -17,14 +52,25 @@ export async function listSelecciones(db: DatabaseAdapter): Promise<Seleccion[]>
   return filas.sort((a, b) => a.nombre.localeCompare(b.nombre, undefined, { numeric: true, sensitivity: "base" }));
 }
 
-export async function crearSeleccion(db: DatabaseAdapter, nombre: string, notas: string | null = null): Promise<number> {
-  const res = await db.execute("INSERT INTO seleccion (nombre, notas) VALUES (?, ?)", [nombre.trim(), notas]);
+export async function crearSeleccion(
+  db: DatabaseAdapter,
+  nombre: string,
+  notas: string | null = null,
+  grupoId: number | null = null,
+): Promise<number> {
+  const res = await db.execute("INSERT INTO seleccion (nombre, notas, grupo_id) VALUES (?, ?, ?)", [nombre.trim(), notas, grupoId]);
   if (res.lastInsertId == null) throw new Error("No se pudo crear la selección");
   return res.lastInsertId;
 }
 
-export async function actualizarSeleccion(db: DatabaseAdapter, id: number, nombre: string, notas: string | null): Promise<void> {
-  await db.execute("UPDATE seleccion SET nombre = ?, notas = ? WHERE id = ?", [nombre.trim(), notas, id]);
+export async function actualizarSeleccion(
+  db: DatabaseAdapter,
+  id: number,
+  nombre: string,
+  notas: string | null,
+  grupoId: number | null = null,
+): Promise<void> {
+  await db.execute("UPDATE seleccion SET nombre = ?, notas = ?, grupo_id = ? WHERE id = ?", [nombre.trim(), notas, grupoId, id]);
 }
 
 export async function eliminarSeleccion(db: DatabaseAdapter, id: number): Promise<void> {

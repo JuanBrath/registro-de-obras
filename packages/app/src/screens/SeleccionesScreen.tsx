@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { InformeListadoObrasModal, SQL_INFORME_OBRAS, type InformeObraRow } from "../components/InformeListadoObrasModal.js";
 import { NotasLabel } from "../components/NotasLabel.js";
 import { SelectorObras } from "../components/SelectorObras.js";
@@ -21,7 +21,12 @@ import type { TranslationKey } from "../i18n/LanguageContext.js";
 import {
   actualizarSeleccion,
   agregarObrasASeleccion,
+  crearGrupo,
   crearSeleccion,
+  eliminarGrupo,
+  listGrupos,
+  renombrarGrupo,
+  type GrupoSelecciones,
   contarDossiers,
   eliminarSeleccion,
   listDossiers,
@@ -48,6 +53,77 @@ function cargarVista(): Vista {
   return "tarjetas";
 }
 
+/** Lista de selecciones que muestra solo dos renglones y un botón para desplegarlas todas. Plegada, la selección
+ * elegida va primero para que siempre quede a la vista. */
+function ListaSelecciones({
+  selecciones,
+  activaId,
+  expandida,
+  onToggle,
+  onElegir,
+}: {
+  selecciones: Seleccion[];
+  activaId: number | null;
+  expandida: boolean;
+  onToggle: () => void;
+  onElegir: (id: number) => void;
+}) {
+  const { t } = useLanguage();
+  const contenedorRef = useRef<HTMLDivElement | null>(null);
+  const [altoPlegado, setAltoPlegado] = useState<number | null>(null);
+
+  const ordenadas = expandida
+    ? selecciones
+    : [...selecciones].sort((a, b) => Number(b.id === activaId) - Number(a.id === activaId));
+
+  // Mide cuántos renglones ocupan los nombres: si pasan de dos, se ofrece "Mostrar más" y plegado se recorta al segundo.
+  useLayoutEffect(() => {
+    const el = contenedorRef.current;
+    if (!el) return;
+    const medir = () => {
+      const tops = [...new Set(Array.from(el.children).map((c) => (c as HTMLElement).offsetTop))].sort((a, b) => a - b);
+      if (tops.length <= 2) {
+        setAltoPlegado(null);
+        return;
+      }
+      const gap = parseFloat(getComputedStyle(el).rowGap) || 0;
+      setAltoPlegado(tops[2] - tops[0] - gap);
+    };
+    medir();
+    const observador = new ResizeObserver(medir);
+    observador.observe(el);
+    return () => observador.disconnect();
+  }, [selecciones, expandida, activaId]);
+
+  const hayDesborde = altoPlegado !== null;
+  return (
+    <>
+      <div
+        ref={contenedorRef}
+        className="obras-toolbar-fila selecciones-lista-plegable"
+        data-recorrido="sel-lista"
+        style={!expandida && hayDesborde ? { maxHeight: altoPlegado, overflow: "hidden" } : undefined}
+      >
+        {ordenadas.map((s) => (
+          <button
+            key={s.id}
+            type="button"
+            className={s.id === activaId ? "obras-vista-toggle-boton activo" : "obras-vista-toggle-boton"}
+            onClick={() => onElegir(s.id)}
+          >
+            {s.nombre} ({s.cantidad})
+          </button>
+        ))}
+      </div>
+      {(hayDesborde || expandida) && (
+        <button type="button" className="selecciones-mostrar-mas" onClick={onToggle}>
+          {expandida ? t("selecciones.mostrarMenos") : t("selecciones.mostrarMas")}
+        </button>
+      )}
+    </>
+  );
+}
+
 /** Selecciones: grupos de obras elegidos a mano (base de los dossiers en PDF). */
 export function SeleccionesScreen({
   onBack,
@@ -63,6 +139,16 @@ export function SeleccionesScreen({
   const { context } = useWorkspace();
   const { t } = useLanguage();
   const [selecciones, setSelecciones] = useState<Seleccion[]>([]);
+  const [grupos, setGrupos] = useState<GrupoSelecciones[]>([]);
+  // Filtro por grupo de la lista (null = todas) y estado de la lista plegable.
+  const [grupoFiltro, setGrupoFiltro] = useState<number | null>(null);
+  const [listaExpandida, setListaExpandida] = useState(false);
+  // Grupo de la selección que se está creando o editando.
+  const [grupoId, setGrupoId] = useState<number | null>(null);
+  // Edición de grupos: "nuevo" para crear, "renombrar" para el filtrado actual.
+  const [edicionGrupo, setEdicionGrupo] = useState<null | "nuevo" | "renombrar">(null);
+  const [nombreGrupo, setNombreGrupo] = useState("");
+  const [confirmarEliminarGrupo, setConfirmarEliminarGrupo] = useState(false);
   const [activaId, setActivaId] = useState<number | null>(seleccionInicialId ?? null);
   const [obras, setObras] = useState<ObraRow[]>([]);
   const [vista, setVista] = useState<Vista>(cargarVista);
@@ -105,6 +191,9 @@ export function SeleccionesScreen({
     if (!context) return [];
     const rows = await listSelecciones(context.db);
     setSelecciones(rows);
+    const gs = await listGrupos(context.db);
+    setGrupos(gs);
+    setGrupoFiltro((actual) => (actual !== null && !gs.some((g) => g.id === actual) ? null : actual));
     return rows;
   }, [context]);
 
@@ -170,6 +259,7 @@ export function SeleccionesScreen({
     camposCargadosPara.current = activaId;
     setNombre(s.nombre);
     setNotas(s.notas ?? "");
+    setGrupoId(s.grupo_id);
   }, [activaId, selecciones]);
 
   async function run(fn: () => Promise<void>) {
@@ -181,19 +271,43 @@ export function SeleccionesScreen({
     }
   }
 
+  const guardarGrupo = () =>
+    run(async () => {
+      if (!context || !nombreGrupo.trim()) return;
+      if (edicionGrupo === "nuevo") {
+        const id = await crearGrupo(context.db, nombreGrupo);
+        setGrupoFiltro(id);
+      } else if (edicionGrupo === "renombrar" && grupoFiltro !== null) {
+        await renombrarGrupo(context.db, grupoFiltro, nombreGrupo);
+      }
+      setEdicionGrupo(null);
+      setNombreGrupo("");
+      await recargarLista();
+    });
+
+  const quitarGrupo = () =>
+    run(async () => {
+      if (!context || grupoFiltro === null) return;
+      await eliminarGrupo(context.db, grupoFiltro);
+      setConfirmarEliminarGrupo(false);
+      setGrupoFiltro(null);
+      await recargarLista();
+    });
+
   const empezarNueva = () => {
     setActivaId(null);
     setNueva(true);
     setElegidasNueva([]);
     setNombre("");
     setNotas("");
+    setGrupoId(grupoFiltro);
   };
 
   const guardarDatos = () =>
     run(async () => {
       if (!context || !nombre.trim()) return;
       if (nueva) {
-        const id = await crearSeleccion(context.db, nombre, notas.trim() || null);
+        const id = await crearSeleccion(context.db, nombre, notas.trim() || null, grupoId);
         if (elegidasNueva.length > 0) await agregarObrasASeleccion(context.db, id, elegidasNueva);
         setElegidasNueva([]);
         await recargarLista();
@@ -202,7 +316,7 @@ export function SeleccionesScreen({
         return;
       }
       if (activaId === null) return;
-      await actualizarSeleccion(context.db, activaId, nombre, notas.trim() || null);
+      await actualizarSeleccion(context.db, activaId, nombre, notas.trim() || null, grupoId);
       await recargarLista();
     });
 
@@ -299,6 +413,7 @@ export function SeleccionesScreen({
   // Recorrido de ayuda de la sección (botón "?" del encabezado).
   const pasosAyuda = [
     pasoAyuda(t, "sel-crear", "ayudaSelecciones.crear", t("selecciones.crear")),
+    pasoAyuda(t, "sel-grupos", "ayudaSelecciones.grupos", t("selecciones.nuevoGrupo")),
     pasoAyuda(t, "sel-lista", "ayudaSelecciones.lista", t("selecciones.existentes")),
     pasoAyuda(t, "sel-guardar", "ayudaSelecciones.guardar", t("common.save")),
     pasoAyuda(t, "sel-dossier", "ayudaSelecciones.dossier", t("dossier.boton")),
@@ -336,21 +451,95 @@ export function SeleccionesScreen({
       <div className="selecciones-bloque">
         {selecciones.length === 0 && !nueva && <p>{t("selecciones.vacio")}</p>}
         {selecciones.length > 0 && <h2 className="selecciones-subtitulo">{t("selecciones.existentes")}</h2>}
-        <div className="obras-toolbar-fila" data-recorrido="sel-lista">
-          {selecciones.map((s) => (
+        <div className="obras-toolbar-fila selecciones-grupos" data-recorrido="sel-grupos">
+          <button
+            type="button"
+            className={grupoFiltro === null ? "obras-vista-toggle-boton activo" : "obras-vista-toggle-boton"}
+            onClick={() => {
+              setGrupoFiltro(null);
+              setEdicionGrupo(null);
+            }}
+          >
+            {t("selecciones.todas")}
+          </button>
+          {grupos.map((g) => (
             <button
-              key={s.id}
+              key={g.id}
               type="button"
-              className={s.id === activaId ? "obras-vista-toggle-boton activo" : "obras-vista-toggle-boton"}
+              className={g.id === grupoFiltro ? "obras-vista-toggle-boton activo" : "obras-vista-toggle-boton"}
               onClick={() => {
-                setNueva(false);
-                setActivaId(s.id);
+                setGrupoFiltro(g.id);
+                setEdicionGrupo(null);
+                setConfirmarEliminarGrupo(false);
               }}
             >
-              {s.nombre} ({s.cantidad})
+              {g.nombre} ({g.cantidad})
             </button>
           ))}
+          <button type="button" onClick={() => { setEdicionGrupo("nuevo"); setNombreGrupo(""); }}>
+            {t("selecciones.nuevoGrupo")}
+          </button>
+          {grupoFiltro !== null && (
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  setEdicionGrupo("renombrar");
+                  setNombreGrupo(grupos.find((g) => g.id === grupoFiltro)?.nombre ?? "");
+                }}
+              >
+                {t("selecciones.renombrarGrupo")}
+              </button>
+              <button type="button" onClick={() => setConfirmarEliminarGrupo(true)}>
+                {t("selecciones.eliminarGrupo")}
+              </button>
+            </>
+          )}
         </div>
+        {edicionGrupo && (
+          <div className="obras-toolbar-fila selecciones-grupo-edicion">
+            <input
+              type="text"
+              autoFocus
+              value={nombreGrupo}
+              placeholder={t("selecciones.nombreGrupo")}
+              onChange={(e) => setNombreGrupo(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") guardarGrupo();
+              }}
+            />
+            <button type="button" onClick={guardarGrupo} disabled={!nombreGrupo.trim()}>
+              {t("common.save")}
+            </button>
+            <button type="button" onClick={() => setEdicionGrupo(null)}>
+              {t("common.cancel")}
+            </button>
+          </div>
+        )}
+        {confirmarEliminarGrupo && grupoFiltro !== null && (
+          <div className="confirm-box" role="alertdialog">
+            <p>{t("selecciones.eliminarGrupoPregunta")}</p>
+            <div className="form-actions">
+              <button type="button" className="boton-peligro" onClick={quitarGrupo}>
+                {t("selecciones.eliminarGrupoConfirmar")}
+              </button>
+              <button type="button" onClick={() => setConfirmarEliminarGrupo(false)}>
+                {t("common.cancel")}
+              </button>
+            </div>
+          </div>
+        )}
+        <ListaSelecciones
+          selecciones={grupoFiltro === null ? selecciones : selecciones.filter((s) => s.grupo_id === grupoFiltro)}
+          activaId={activaId}
+          expandida={listaExpandida}
+          onToggle={() => setListaExpandida((v) => !v)}
+          onElegir={(id) => {
+            setNueva(false);
+            setActivaId(id);
+            setListaExpandida(false);
+          }}
+        />
       </div>
       </div>
 
@@ -367,6 +556,17 @@ export function SeleccionesScreen({
               </NotasLabel>
             </div>
             <textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2} />
+          </label>
+          <label>
+            <span className="field-label">{t("selecciones.grupoLabel")}</span>
+            <select value={grupoId ?? ""} onChange={(e) => setGrupoId(e.target.value === "" ? null : Number(e.target.value))}>
+              <option value="">{t("selecciones.sinGrupo")}</option>
+              {grupos.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.nombre}
+                </option>
+              ))}
+            </select>
           </label>
           <div className="form-actions">
             <button type="button" onClick={guardarDatos} disabled={!nombre.trim()}>
@@ -400,6 +600,17 @@ export function SeleccionesScreen({
               </NotasLabel>
             </div>
             <textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2} />
+          </label>
+          <label>
+            <span className="field-label">{t("selecciones.grupoLabel")}</span>
+            <select value={grupoId ?? ""} onChange={(e) => setGrupoId(e.target.value === "" ? null : Number(e.target.value))}>
+              <option value="">{t("selecciones.sinGrupo")}</option>
+              {grupos.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.nombre}
+                </option>
+              ))}
+            </select>
           </label>
           <div className="form-actions">
             <button type="button" data-recorrido="sel-guardar" onClick={guardarDatos} disabled={!nombre.trim()}>

@@ -13,6 +13,16 @@ Una **selección** es un grupo de obras que elegís a mano, por ejemplo las que 
 3. Escribí el **Nombre de la selección** y, si querés, las **Notas**. Debajo se muestran **todas** tus obras, sin filtros, con una casilla en cada una: tildá las que querés incluir (arriba ves cuántas llevás elegidas).
 4. Tocá **Guardar**. La selección aparece arriba, en **Selecciones armadas**, ya con esas obras. Si querés armarla a partir de un filtro, hacelo desde **Obras** (ver más abajo).
 
+## Grupos de selecciones
+
+Si tenés muchas selecciones, podés reunir en un **grupo** las de una misma temática (por ejemplo "Ferias 2026" o "Paisajes").
+
+1. Sobre la lista de selecciones tocá **+ Nuevo grupo**, escribí el nombre y tocá **Guardar**.
+2. Abrí una selección y elegí su **Grupo** en el desplegable (o "Sin grupo"); tocá **Guardar**.
+3. Tocá el nombre de un grupo para ver solo sus selecciones, o **Todas** para verlas todas. Con un grupo elegido podés **Renombrar grupo** o **Eliminar grupo**: borrar un grupo no borra sus selecciones, quedan sin grupo.
+
+La lista muestra solo dos renglones; si hay más, tocá **Mostrar más** para desplegarlas todas. Al elegir una, vuelve a dos renglones y la elegida queda siempre a la vista.
+
 ## Agregar obras a una selección
 
 Hay dos formas. La más cómoda para muchas obras es desde **Obras**:

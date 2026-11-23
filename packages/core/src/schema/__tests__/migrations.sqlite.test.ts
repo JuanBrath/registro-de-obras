@@ -214,6 +214,7 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
       "0088_selecciones",
       "0089_seleccion_dossier",
       "0090_obra_sin_limite",
+      "0091_seleccion_grupo",
     ]);
   });
 
