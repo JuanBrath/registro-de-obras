@@ -2338,13 +2338,44 @@ export function ObraDetail({
     }
   }
 
+  /** Obra sin serie: una copia solo se puede eliminar si esta disponible; si no, se explica que hay que cambiarle el estado antes. */
+  function solicitarEliminarCopia(ej: EjemplarRow) {
+    if (ej.estado !== "disponible" || ej.venta_id) {
+      setError(
+        t("obraDetail.noSePuedeEliminarCopia", {
+          numero: ej.numero,
+          estado: t(`estado.${ej.estado}`) ?? ej.estado,
+        }),
+      );
+      return;
+    }
+    setError(null);
+    setCopiaAEliminar({ id: ej.id, numero: ej.numero });
+  }
+
   async function handleEliminarCopia() {
     if (!context || !copiaAEliminar) return;
     const { id, numero } = copiaAEliminar;
     setCopiaAEliminar(null);
     try {
       await context.db.transaction(async (tx) => {
-        await tx.execute("DELETE FROM ejemplar WHERE id = ? AND venta_id IS NULL", [id]);
+        await tx.execute("DELETE FROM ejemplar WHERE id = ? AND estado = 'disponible' AND venta_id IS NULL", [id]);
+        // Las copias que quedan se renumeran sin huecos (1, 2, 3… y PA 1, PA 2…), en el mismo orden que tenian.
+        for (const tipo of ["edicion", "prueba_artista"] as const) {
+          const restantes = await tx.query<{ id: number }>(
+            "SELECT id FROM ejemplar WHERE obra_id = ? AND tipo = ? ORDER BY indice",
+            [obraId, tipo],
+          );
+          for (let i = 0; i < restantes.length; i++) {
+            const nuevo = i + 1;
+            await tx.execute("UPDATE ejemplar SET indice = ?, total_ediciones = ?, numero = ? WHERE id = ?", [
+              nuevo,
+              tipo === "edicion" ? nuevo : restantes.length,
+              tipo === "edicion" ? String(nuevo) : `PA ${nuevo}`,
+              restantes[i].id,
+            ]);
+          }
+        }
         await tx.execute("INSERT INTO historial_evento (obra_id, tipo, descripcion) VALUES (?, 'edicion', ?)", [
           obraId,
           `Copia ${numero} eliminada`,
@@ -2766,7 +2797,7 @@ export function ObraDetail({
               onConfirmarVenta={(venta) => handleConfirmarVenta(venta, ej.id)}
               anulando={anulandoVenta}
               onAbrirInformes={() => handleAbrirInformesVenta(ej)}
-              onEliminar={Number(obra.sin_limite) === 1 ? () => setCopiaAEliminar({ id: ej.id, numero: ej.numero }) : undefined}
+              onEliminar={Number(obra.sin_limite) === 1 ? () => solicitarEliminarCopia(ej) : undefined}
               onAbrirCertificado={() => handleCertificadoBotonClick(ej, ej.venta_id ? ventas[ej.venta_id] : undefined)}
               abriendoCertificado={abriendoCertificado}
             />
@@ -2822,7 +2853,7 @@ export function ObraDetail({
                   onConfirmarVenta={(venta) => handleConfirmarVenta(venta, ej.id)}
                   anulando={anulandoVenta}
                   onAbrirInformes={() => handleAbrirInformesVenta(ej)}
-                  onEliminar={Number(obra.sin_limite) === 1 ? () => setCopiaAEliminar({ id: ej.id, numero: ej.numero }) : undefined}
+                  onEliminar={Number(obra.sin_limite) === 1 ? () => solicitarEliminarCopia(ej) : undefined}
                   onAbrirCertificado={() => handleCertificadoBotonClick(ej, ej.venta_id ? ventas[ej.venta_id] : undefined)}
                   abriendoCertificado={abriendoCertificado}
                 />

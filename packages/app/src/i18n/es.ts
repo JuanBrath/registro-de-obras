@@ -1366,7 +1366,8 @@ export const es = {
   "obraDetail.copiaSobranteSi": "Sí, anular la copia nueva",
   "obraDetail.copiaSobranteNo": "No, conservar las dos",
   "obraDetail.agregarCopia": "+ Agregar otra copia",
-  "obraDetail.confirmarEliminarCopia": "¿Eliminar la copia {{numero}}? Se pierden los datos cargados en ella. Si no queda ninguna copia lista para vender, el programa genera una nueva en blanco.",
+  "obraDetail.noSePuedeEliminarCopia": "La copia {{numero}} no se puede eliminar porque su estado es «{{estado}}». Solo se pueden eliminar copias disponibles: para eliminarla, primero cambiale el estado a «Disponible».",
+  "obraDetail.confirmarEliminarCopia": "¿Eliminar la copia {{numero}}? Se pierden los datos cargados en ella. Las copias que quedan se renumeran sin huecos. Si no queda ninguna copia lista para vender, el programa genera una nueva en blanco.",
   "obraDetail.obraSinSerieVendidas": "Obra sin serie (se vende sin límite) — {{n}} copias vendidas o dadas de baja",
   "obraDetail.seriadaASinSerieNota": "Al pasar la serie a sin serie queda una sola copia (la que tenga historial, si la hay) y se eliminan las demás copias en blanco. Las pruebas de autor se conservan.",
 } as const;
