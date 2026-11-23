@@ -1030,6 +1030,15 @@ export const en: Record<keyof typeof es, string> = {
   "obraDetail.exportarImagen": "Export image…",
   "obraDetail.errorExportarSinArchivo":
     "Can't export: this artwork doesn't have the original file loaded (see \"Original file location\" in Edit artwork).",
+  "obraDetail.rehacerImagen": "Rebuild the images from the original file",
+  "obraDetail.imagenRehecha": "Done: the image and the thumbnail were rebuilt from the original file.",
+  "obraDetail.errorRehacerSinArchivo": "Couldn't rebuild: the work has no image file registered or it isn't on this computer.",
+  "obraDetail.errorRehacer": "Couldn't rebuild the image from the original file.",
+  "obrasList.rehacerImagenes": "Update images",
+  "obrasList.rehacerImagenesAyuda": "Rebuilds the thumbnail and the sheet image of the works whose original file was modified after they were generated (for example, edited in Lightroom or Photoshop).",
+  "obrasList.rehaciendo": "Updating images…",
+  "obrasList.rehechasResumen": "Images updated: {{rehechas}}. Unchanged: {{sinCambios}}.",
+  "obrasList.rehechasProblemas": " Couldn't update: {{problemas}} (no original file or error).",
   "obraDetail.abrirEnPhotoshop": "Open in Photoshop",
   "obraDetail.errorAbrirPhotoshopSinArchivo":
     "Can't open in Photoshop: this artwork doesn't have the original file loaded (see \"Original file location\" in Edit artwork).",

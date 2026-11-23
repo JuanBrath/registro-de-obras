@@ -32,6 +32,10 @@ Con click derecho sobre la imagen (la miniatura o la vista en grande) aparece un
 
 > Con **Original** se exporta el archivo tal cual está, sea el formato que sea. Con JPG o TIFF, el programa necesita poder leer el archivo original: por ahora funciona con PSD, PSB, TIFF, JPG y RAW de cámara (CR2, NEF, ARW, ORF, DNG).
 
+### Rehacer las imágenes desde el archivo original
+
+Con el botón **⟳** (al lado de **Ps**) o con el click derecho sobre la imagen, Recer vuelve a generar la imagen de la ficha y la miniatura a partir del archivo original. Usalo después de editarlo en Lightroom o Photoshop.
+
 ### Abrir en Photoshop
 
 Abre el archivo original en Adobe Photoshop (la copia más nueva, si hay varias versiones instaladas en el equipo).

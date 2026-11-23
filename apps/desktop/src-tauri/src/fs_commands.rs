@@ -127,6 +127,14 @@ pub fn fs_read_absolute(path: String, max_bytes: Option<u64>) -> Result<Vec<u8>,
     }
 }
 
+/// Cuando se modifico por ultima vez un archivo (milisegundos desde 1970), o None si no existe o no se puede leer.
+/// Sirve para saber si el archivo original cambio despues de generada su miniatura.
+#[tauri::command]
+pub fn fs_modificado_ms(path: String) -> Option<u64> {
+    let modificado = fs::metadata(path).ok()?.modified().ok()?;
+    modificado.duration_since(std::time::UNIX_EPOCH).ok().map(|d| d.as_millis() as u64)
+}
+
 #[derive(Clone, Serialize)]
 struct ProgresoCopiaCarpeta {
     copiados: usize,
@@ -316,6 +324,15 @@ mod tests {
         let bytes = fs_read_absolute(target.to_string_lossy().to_string(), Some(4)).unwrap();
 
         assert_eq!(bytes, vec![1, 2, 3, 4]);
+    }
+
+    #[test]
+    fn modificado_ms_da_la_fecha_del_archivo_y_none_si_no_existe() {
+        let root = temp_root("modificado_ms");
+        let target = root.join("a.jpg");
+        fs::write(&target, vec![1]).unwrap();
+        assert!(fs_modificado_ms(target.to_string_lossy().to_string()).unwrap() > 0);
+        assert_eq!(fs_modificado_ms(root.join("no_existe.jpg").to_string_lossy().to_string()), None);
     }
 
     #[test]

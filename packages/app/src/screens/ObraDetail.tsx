@@ -57,6 +57,7 @@ import { InformesModal } from "../components/InformesModal.js";
 import { MenuContextual } from "../components/MenuContextual.js";
 import { ExportarImagenModal } from "../components/ExportarImagenModal.js";
 import { abrirEnPhotoshop } from "../utils/photoshop.js";
+import { rehacerImagenesDeObra } from "../utils/rehacerImagenes.js";
 import { tInforme, type InformeIdioma } from "../reports/informeIdioma.js";
 import { resolveFirmaBytes, resolveMembreteLogoBytes, resolveLocalidad } from "../reports/reportBranding.js";
 import { buildObraSeriesDetalladoPdfBytes, type ObraEjemplarDetalle } from "../reports/obraReports.js";
@@ -1023,6 +1024,19 @@ export function ObraDetail({
     }
     setError(null);
     setExportarImagenAbierto(true);
+  }
+
+  async function handleRehacerImagenes() {
+    if (!context || !obra) return;
+    setError(null);
+    setFichaPdfMensaje(null);
+    const resultado = await rehacerImagenesDeObra(context, obra, { forzar: true });
+    if (resultado === "rehecha") {
+      await reload();
+      setFichaPdfMensaje(t("obraDetail.imagenRehecha"));
+    } else {
+      setError(t(resultado === "sin_archivo" ? "obraDetail.errorRehacerSinArchivo" : "obraDetail.errorRehacer"));
+    }
   }
 
   async function handleAbrirEnPhotoshopClick() {
@@ -2629,6 +2643,17 @@ export function ObraDetail({
                   Ps
                 </button>
               )}
+              {mostrarBotonPhotoshopVista && (
+                <button
+                  type="button"
+                  className="link-icon-button"
+                  onClick={handleRehacerImagenes}
+                  aria-label={t("obraDetail.rehacerImagen")}
+                  title={t("obraDetail.rehacerImagen")}
+                >
+                  ⟳
+                </button>
+              )}
             </div>
             {agregarSeleccionAbierto && (
               <AgregarASeleccionModal
@@ -3074,6 +3099,7 @@ export function ObraDetail({
             { label: t("obraDetail.exportarImagen"), onClick: handleExportarImagenClick },
             { label: t("obraDetail.abrirEnPhotoshop"), onClick: handleAbrirEnPhotoshopClick },
             { label: t("obraDetail.abrirEnLightroom"), onClick: handleAbrirEnLightroomDesdeVista },
+            { label: t("obraDetail.rehacerImagen"), onClick: handleRehacerImagenes },
           ]}
         />
       )}

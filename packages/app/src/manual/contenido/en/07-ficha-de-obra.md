@@ -32,6 +32,10 @@ Right-clicking the image (the thumbnail or the large view) opens a menu with thr
 
 > With **Original** the file is exported exactly as it is, whatever format it's in. With JPG or TIFF, the program needs to be able to read the original file: for now it works with PSD, PSB, TIFF, JPG and camera RAW (CR2, NEF, ARW, ORF, DNG).
 
+### Rebuild the images from the original file
+
+With the **⟳** button (next to **Ps**) or the right-click on the image, Recer regenerates the sheet image and the thumbnail from the original file. Use it after editing the file in Lightroom or Photoshop.
+
 ### Open in Photoshop
 
 Opens the original file in Adobe Photoshop (the newest copy, if there are several versions installed on the computer).

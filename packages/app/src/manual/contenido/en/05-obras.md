@@ -67,6 +67,10 @@ The **Thumbnail size** slider (next to the search box) changes how many artworks
 
 Click one of the five stars under an artwork to rate it. The rating is saved in Recer and, if the artwork has an **Original file location**, it is also written into that file (inside the JPG, or in an auxiliary **.xmp** file next to it if it's RAW, TIFF, PSD or another format) so that programs like Lightroom or Bridge can see it. If that second part fails, the rating is still saved in Recer and a notice is shown.
 
+## Updating the images
+
+If you edited an artwork's original file (for example in Lightroom or Photoshop), click **Update images**. Recer checks all the artworks and, from the original file (the one in **Original file location**), rebuilds the thumbnail and the sheet image of those modified after they were generated. It works for all three views (columns, cards and images). Unchanged ones are left alone. When it finishes it shows how many were updated and warns you if any has no original file or couldn't be read.
+
 ## Generating a PDF list
 
 1. Filter what you want to include (the list comes out with the artworks you are viewing).

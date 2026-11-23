@@ -1029,6 +1029,15 @@ export const es = {
   "obraDetail.exportarImagen": "Exportar imagen…",
   "obraDetail.errorExportarSinArchivo":
     "No se puede exportar: esta obra no tiene cargado el archivo original (ver \"Ubicación del archivo original\" en Editar obra).",
+  "obraDetail.rehacerImagen": "Rehacer las imágenes desde el archivo original",
+  "obraDetail.imagenRehecha": "Listo: se rehicieron la imagen y la miniatura a partir del archivo original.",
+  "obraDetail.errorRehacerSinArchivo": "No se pudo rehacer: la obra no tiene un archivo de imagen registrado o no se encuentra en este equipo.",
+  "obraDetail.errorRehacer": "No se pudo rehacer la imagen a partir del archivo original.",
+  "obrasList.rehacerImagenes": "Actualizar imágenes",
+  "obrasList.rehacerImagenesAyuda": "Rehace la miniatura y la imagen de la ficha de las obras cuyo archivo original se modificó después de generarlas (por ejemplo, editado en Lightroom o Photoshop).",
+  "obrasList.rehaciendo": "Actualizando imágenes…",
+  "obrasList.rehechasResumen": "Imágenes actualizadas: {{rehechas}}. Sin cambios: {{sinCambios}}.",
+  "obrasList.rehechasProblemas": " No se pudieron actualizar: {{problemas}} (sin archivo original o con error).",
   "obraDetail.abrirEnPhotoshop": "Abrir en Photoshop",
   "obraDetail.errorAbrirPhotoshopSinArchivo":
     "No se puede abrir en Photoshop: esta obra no tiene cargado el archivo original (ver \"Ubicación del archivo original\" en Editar obra).",
