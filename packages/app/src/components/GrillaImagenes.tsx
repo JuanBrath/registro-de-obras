@@ -82,6 +82,7 @@ export function GrillaImagenes({
                 <img src={thumbs[obra.id]} alt={obra.titulo} onLoad={(e) => marcarSiMiniaturaMuyVertical(e.currentTarget)} />
               </button>
               <StarRating value={obra.calificacion} onChange={(n) => onCalificar(obra.id, n)} />
+              <span className="galeria-foto-titulo">{obra.titulo}</span>
             </div>
           );
         })}

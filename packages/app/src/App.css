@@ -3525,3 +3525,22 @@ button[type="submit"]:disabled {
 }
 
 .selecciones-encabezado + .selecciones-bloque { margin-top: 0.75rem; }
+
+/* Obras: selector de vista con el tamaño de miniaturas justo debajo, a la derecha. */
+.obras-vista-columna {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+/* Vista Imágenes: nombre de la obra debajo de las estrellas. */
+.galeria-foto-titulo {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.8rem;
+  text-align: center;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}

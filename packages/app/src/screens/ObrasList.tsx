@@ -502,6 +502,7 @@ export function ObrasList({
             </button>
           )}
           {obras.length > 0 && (
+            <div className="obras-vista-columna">
             <div className="obras-vista-toggle" data-recorrido="obras-vista">
               <button
                 type="button"
@@ -525,11 +526,10 @@ export function ObrasList({
                 {t("selecciones.vistaImagenes")}
               </button>
             </div>
-          )}
-          {obras.length > 0 && (
             <span className="obras-recorrido-envoltorio" data-recorrido="obras-tamano">
               <MiniaturasSizeSlider columnas={columnasGridActual} onChange={handleTamanoMiniaturasChange} />
             </span>
+            </div>
           )}
         </div>
 
