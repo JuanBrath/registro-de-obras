@@ -222,7 +222,10 @@ export function ObraForm({
   const cantidadEdicionesNum = Math.max(1, parseInt(cantidadTotalEdiciones, 10) || 1);
   const cantidadPruebaAutorNum = hayPruebaAutor ? Math.max(0, parseInt(cantidadPruebaAutor, 10) || 0) : 0;
   const excedePruebaAutor =
-    hayPruebaAutor && cantidadPruebaAutorNum > cantidadEdicionesNum * 0.1 && !advertenciaPruebaAutorVista;
+    hayPruebaAutor &&
+    !sinLimite &&
+    cantidadPruebaAutorNum > cantidadEdicionesNum * 0.1 &&
+    !advertenciaPruebaAutorVista;
   useEscapeToDismiss(excedePruebaAutor, () => setAdvertenciaPruebaAutorVista(true));
 
   // Mantiene un bloque de detalle por cada edicion y prueba de autor,
@@ -461,7 +464,15 @@ export function ObraForm({
 
         // Obra sin serie: una sola copia para empezar, numerada "1" (sin total); al venderla se genera la siguiente.
         const ejemplares = sinLimite
-          ? [{ ...generarEjemplarUnico(), numero: "1" }]
+          ? [
+              { ...generarEjemplarUnico(), numero: "1" },
+              ...Array.from({ length: hayPruebaAutor ? cantidadPruebaAutorNum : 0 }, (_, i) => ({
+                tipo: "prueba_artista" as const,
+                indice: i + 1,
+                totalEdiciones: cantidadPruebaAutorNum,
+                numero: `PA ${i + 1}`,
+              })),
+            ]
           : esSeriada
           ? generarEjemplares(cantidad, cantidadPruebaAutorNum)
           : hayPruebaAutor
@@ -834,7 +845,7 @@ export function ObraForm({
             </label>
           )}
 
-          {esSeriada !== null && !sinLimite && (
+          {esSeriada !== null && (
             <label>
               <input
                 type="checkbox"

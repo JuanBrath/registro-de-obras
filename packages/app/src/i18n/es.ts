@@ -1323,6 +1323,7 @@ export const es = {
   "obraDetail.copiaSobranteSinSerie": "La copia {{numero}} vuelve a estar disponible y ya hay otra copia nueva en blanco ({{sobrante}}), generada para la próxima venta. ¿Querés anular esa copia nueva?",
   "obraDetail.copiaSobranteSi": "Sí, anular la copia nueva",
   "obraDetail.copiaSobranteNo": "No, conservar las dos",
+  "obraDetail.agregarCopia": "+ Agregar otra copia",
   "obraDetail.obraSinSerieVendidas": "Obra sin serie (se vende sin límite) — {{n}} copias vendidas o dadas de baja",
   "obraDetail.seriadaASinSerieNota": "Una obra seriada no se puede pasar directamente a sin serie: primero convertila en obra única.",
 } as const;

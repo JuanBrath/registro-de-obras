@@ -1324,6 +1324,7 @@ export const en: Record<keyof typeof es, string> = {
   "obraDetail.copiaSobranteSinSerie": "Copy {{numero}} is available again and there is already a new blank copy ({{sobrante}}), created for the next sale. Do you want to cancel that new copy?",
   "obraDetail.copiaSobranteSi": "Yes, cancel the new copy",
   "obraDetail.copiaSobranteNo": "No, keep both",
+  "obraDetail.agregarCopia": "+ Add another copy",
   "obraDetail.obraSinSerieVendidas": "Non-editioned artwork (sold without limit) — {{n}} copies sold or written off",
   "obraDetail.seriadaASinSerieNota": "An edition artwork cannot be switched directly to non-editioned: first convert it to a unique artwork.",
 };

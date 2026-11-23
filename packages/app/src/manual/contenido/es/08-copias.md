@@ -8,7 +8,7 @@ Cada obra tiene una o más copias, que en el programa aparecen como **Ejemplares
 
 - Una **obra única** tiene una sola copia.
 - Una **obra seriada** tiene tantas copias como ediciones: la número **1/10**, la **2/10**… hasta la **10/10**.
-- Una obra **sin serie** no tiene límite de ventas: sus copias se numeran **1**, **2**, **3**… y siempre hay una disponible; cuando se vende, el programa crea la siguiente. Se comporta igual si la copia pasa a **Descartada**, **Destruida** o **Colección del autor**. Si anulás una venta (o una copia vuelve a estar disponible) y ya existe la copia nueva en blanco, el programa te pregunta si querés anularla; no lo hace solo.
+- Una obra **sin serie** no tiene límite de ventas: sus copias se numeran **1**, **2**, **3**… y siempre hay una disponible; cuando se vende, el programa crea la siguiente. Podés tener varias copias activas a la vez (disponibles, en stock, en exhibición…): usá **+ Agregar otra copia**. Las pruebas de autor se pueden agregar y editar como en cualquier obra y se numeran **PA 1**, **PA 2**… Se comporta igual si la copia pasa a **Descartada**, **Destruida** o **Colección del autor**. Si anulás una venta (o una copia vuelve a estar disponible) y ya existe la copia nueva en blanco, el programa te pregunta si querés anularla; no lo hace solo.
 - Las **pruebas de autor** (**PA**) son copias adicionales que van fuera de la numeración comercial: **PA 1/2**, **PA 2/2**. Aparecen en una lista aparte, **Pruebas de autor**.
 
 Por convención, las pruebas de autor **no se venden**: se conservan, se donan o se usan para difusión. De todos modos, el programa te deja registrar su venta si decidís venderlas; es una decisión tuya. Por eso, en una prueba de autor el botón se llama **Venta / Reserva / Donación**.
