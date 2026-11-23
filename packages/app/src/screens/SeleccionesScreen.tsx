@@ -194,7 +194,10 @@ function ListaSelecciones({
   expandida,
   onToggle,
   onElegir,
+  extra,
 }: {
+  /** Botón que va a continuación de los de las selecciones, en el mismo renglón. */
+  extra?: React.ReactNode;
   selecciones: Seleccion[];
   activaId: number | null;
   expandida: boolean;
@@ -247,6 +250,7 @@ function ListaSelecciones({
             {s.nombre} ({s.cantidad})
           </button>
         ))}
+        {extra}
       </div>
       {(hayDesborde || expandida) && (
         <button type="button" className="selecciones-mostrar-mas" onClick={onToggle}>
@@ -672,14 +676,6 @@ export function SeleccionesScreen({
           {grupos.length === 0 && !grupoNuevo && <p>{t("selecciones.sinGrupos")}</p>}
           {grupoActivoId !== null && (
             <>
-              <h2 className="selecciones-subtitulo">
-                {t("selecciones.deGrupo", { grupo: grupos.find((g) => g.id === grupoActivoId)?.nombre ?? "" })}
-              </h2>
-              <div className="selecciones-bloque-crear">
-                <button type="button" onClick={() => setPanelGrupoAbierto((v) => !v)}>
-                  {t("selecciones.agregarAlGrupo")}
-                </button>
-              </div>
               {selecciones.some((x) => x.grupo_id === grupoActivoId) ? (
                 <ListaSelecciones
                   selecciones={selecciones.filter((x) => x.grupo_id === grupoActivoId)}
@@ -692,9 +688,21 @@ export function SeleccionesScreen({
                     setActivaId(id);
                     setListaExpandida(false);
                   }}
+                  extra={
+                    <button type="button" onClick={() => setPanelGrupoAbierto((v) => !v)}>
+                      {t("selecciones.agregarAlGrupo")}
+                    </button>
+                  }
                 />
               ) : (
-                <p>{t("selecciones.grupoVacio")}</p>
+                <>
+                  <p>{t("selecciones.grupoVacio")}</p>
+                  <div className="selecciones-bloque-crear">
+                    <button type="button" onClick={() => setPanelGrupoAbierto((v) => !v)}>
+                      {t("selecciones.agregarAlGrupo")}
+                    </button>
+                  </div>
+                </>
               )}
             </>
           )}
