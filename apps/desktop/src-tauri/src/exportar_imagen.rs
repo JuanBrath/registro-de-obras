@@ -92,7 +92,48 @@ fn leer_raw_o_jpeg(ruta: &Path, lado_maximo: u32, lado: Lado) -> Result<Reducida
         .into_iter()
         .map(|plano| imagen::reducir_plano(&plano, ancho, alto, nuevo_ancho, nuevo_alto))
         .collect();
-    Ok(Reducida { ancho: nuevo_ancho, alto: nuevo_alto, modo: Modo::Rgb, planos, icc: None })
+    // imagepipe no conserva el perfil de color: si el archivo es un JPG, se lo toma de sus segmentos APP2.
+    let icc = icc_de_jpeg(ruta);
+    Ok(Reducida { ancho: nuevo_ancho, alto: nuevo_alto, modo: Modo::Rgb, planos, icc })
+}
+
+/// El perfil ICC incrustado en un JPG (puede venir partido en varios segmentos APP2 "ICC_PROFILE").
+fn icc_de_jpeg(ruta: &Path) -> Option<Vec<u8>> {
+    let ext = ruta.extension().and_then(|e| e.to_str()).map(|e| e.to_lowercase())?;
+    if ext != "jpg" && ext != "jpeg" {
+        return None;
+    }
+    let datos = std::fs::read(ruta).ok()?;
+    if datos.len() < 4 || datos[0] != 0xFF || datos[1] != 0xD8 {
+        return None;
+    }
+    let mut trozos: Vec<(u8, Vec<u8>)> = Vec::new();
+    let mut i = 2;
+    while i + 4 <= datos.len() && datos[i] == 0xFF {
+        let marcador = datos[i + 1];
+        if marcador == 0xDA || marcador == 0xD9 {
+            break;
+        }
+        if marcador == 0xFF {
+            i += 1;
+            continue;
+        }
+        let largo = u16::from_be_bytes([datos[i + 2], datos[i + 3]]) as usize;
+        let fin = i + 2 + largo;
+        if largo < 2 || fin > datos.len() {
+            break;
+        }
+        let cuerpo = &datos[i + 4..fin];
+        if marcador == 0xE2 && cuerpo.len() > 14 && &cuerpo[..12] == b"ICC_PROFILE\0" {
+            trozos.push((cuerpo[12], cuerpo[14..].to_vec()));
+        }
+        i = fin;
+    }
+    if trozos.is_empty() {
+        return None;
+    }
+    trozos.sort_by_key(|(n, _)| *n);
+    Some(trozos.into_iter().flat_map(|(_, d)| d).collect())
 }
 
 /// Decodifica (segun la extension) y achica el archivo original para exportarlo a JPG o TIFF.
@@ -148,6 +189,7 @@ fn a_jpeg_con_copyright(
     rgb: &[u8],
     copyright: Option<&str>,
     ppp: Option<u16>,
+    icc: &[u8],
 ) -> Result<Vec<u8>, String> {
     let ancho16 = u16::try_from(ancho).map_err(|_| "imagen demasiado ancha")?;
     let alto16 = u16::try_from(alto).map_err(|_| "imagen demasiado alta")?;
@@ -157,6 +199,7 @@ fn a_jpeg_con_copyright(
     if let Some(ppp) = ppp {
         codificador.set_density(jpeg_encoder::PixelDensity { density: (ppp, ppp), unit: jpeg_encoder::PixelDensityUnit::Inches });
     }
+    codificador.add_icc_profile(icc).map_err(|e| format!("no se pudo incrustar el perfil de color: {e}"))?;
     if let Some(texto) = copyright.filter(|t| !t.trim().is_empty()) {
         codificador
             .add_exif_metadata(&exif_copyright(texto))
@@ -180,6 +223,7 @@ fn a_tiff_con_copyright(
     datos: DatosTiff,
     copyright: Option<&str>,
     ppp: Option<u16>,
+    icc: &[u8],
 ) -> Result<Vec<u8>, String> {
     use tiff::encoder::{colortype, Rational, TiffEncoder};
     use tiff::tags::{ResolutionUnit, Tag};
@@ -197,6 +241,10 @@ fn a_tiff_con_copyright(
                 if let Some(ppp) = ppp {
                     imagen_tiff.resolution(ResolutionUnit::Inch, Rational { n: ppp as u32, d: 1 });
                 }
+                imagen_tiff
+                    .encoder()
+                    .write_tag(Tag::IccProfile, icc)
+                    .map_err(|e| format!("no se pudo incrustar el perfil de color: {e}"))?;
                 if let Some(texto) = copyright.filter(|t| !t.trim().is_empty()) {
                     imagen_tiff
                         .encoder()
@@ -256,16 +304,16 @@ fn exportar_imagen(
     let reducida = leer_para_exportar(origen, medida, lado)?;
     let bytes = match formato {
         Formato::Jpg => {
-            let rgb = imagen::a_srgb(&reducida)?;
-            a_jpeg_con_copyright(reducida.ancho, reducida.alto, &rgb, copyright.as_deref(), ppp)?
+            let (rgb, icc) = imagen::a_rgb8_con_perfil(&reducida)?;
+            a_jpeg_con_copyright(reducida.ancho, reducida.alto, &rgb, copyright.as_deref(), ppp, &icc)?
         }
         Formato::Tiff if diecis_bits => {
-            let rgb = imagen::a_srgb16(&reducida)?;
-            a_tiff_con_copyright(reducida.ancho, reducida.alto, DatosTiff::Dieciseis(&rgb), copyright.as_deref(), ppp)?
+            let (rgb, icc) = imagen::a_rgb16_con_perfil(&reducida)?;
+            a_tiff_con_copyright(reducida.ancho, reducida.alto, DatosTiff::Dieciseis(&rgb), copyright.as_deref(), ppp, &icc)?
         }
         Formato::Tiff => {
-            let rgb = imagen::a_srgb(&reducida)?;
-            a_tiff_con_copyright(reducida.ancho, reducida.alto, DatosTiff::Ocho(&rgb), copyright.as_deref(), ppp)?
+            let (rgb, icc) = imagen::a_rgb8_con_perfil(&reducida)?;
+            a_tiff_con_copyright(reducida.ancho, reducida.alto, DatosTiff::Ocho(&rgb), copyright.as_deref(), ppp, &icc)?
         }
         Formato::Original => unreachable!(),
     };
@@ -375,6 +423,41 @@ mod pruebas {
         assert_eq!(std::fs::read(&destino).unwrap(), contenido);
         std::fs::remove_file(&origen).ok();
         std::fs::remove_file(&destino).ok();
+    }
+
+    #[test]
+    fn la_exportacion_incrusta_el_perfil_de_color_del_original_sin_tocar_los_pixeles() {
+        use tiff::decoder::{Decoder, DecodingResult};
+        use tiff::encoder::{colortype, TiffEncoder};
+        use tiff::tags::Tag;
+
+        let perfil = moxcms::ColorProfile::new_display_p3().encode().unwrap();
+        let origen = std::env::temp_dir().join(format!("recer_export_{}_icc.tif", std::process::id()));
+        {
+            let archivo = std::fs::File::create(&origen).unwrap();
+            let mut codificador = TiffEncoder::new(archivo).unwrap();
+            let datos: Vec<u16> = (0..(8 * 8)).flat_map(|_| [10000u16, 20000, 30000]).collect();
+            let mut imagen = codificador.new_image::<colortype::RGB16>(8, 8).unwrap();
+            imagen.encoder().write_tag(Tag::IccProfile, &perfil[..]).unwrap();
+            imagen.write_data(&datos).unwrap();
+        }
+        let destino = std::env::temp_dir().join(format!("recer_export_{}_icc_out.tif", std::process::id()));
+        exportar_imagen(&origen.to_string_lossy(), &destino.to_string_lossy(), "tiff", None, None, None, Some(16), None).unwrap();
+
+        let mut dec = Decoder::new(std::fs::File::open(&destino).unwrap()).unwrap();
+        assert_eq!(dec.get_tag_u8_vec(Tag::IccProfile).unwrap(), perfil);
+        match dec.read_image().unwrap() {
+            DecodingResult::U16(v) => assert_eq!(&v[..3], &[10000, 20000, 30000]),
+            _ => panic!("se esperaba 16 bits"),
+        }
+
+        let destino_jpg = std::env::temp_dir().join(format!("recer_export_{}_icc_out.jpg", std::process::id()));
+        exportar_imagen(&origen.to_string_lossy(), &destino_jpg.to_string_lossy(), "jpg", None, None, None, None, None).unwrap();
+        assert!(std::fs::read(&destino_jpg).unwrap().windows(11).any(|w| w == b"ICC_PROFILE"));
+
+        for f in [origen, destino, destino_jpg] {
+            std::fs::remove_file(f).ok();
+        }
     }
 
     #[test]

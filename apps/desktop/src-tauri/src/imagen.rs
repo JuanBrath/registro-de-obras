@@ -505,6 +505,35 @@ pub(crate) fn a_srgb16(reducida: &Reducida) -> Result<Vec<u16>, String> {
     Ok(rgb16)
 }
 
+/// Pixeles RGB de 16 bits junto con el perfil ICC que hay que incrustar en el archivo exportado.
+/// Si la imagen es RGB y trae un perfil valido, los pixeles no se tocan y se devuelve ese mismo
+/// perfil. En cualquier otro caso (gris, CMYK, sin perfil o perfil ilegible) se convierte a sRGB y
+/// se devuelve un perfil sRGB.
+pub(crate) fn a_rgb16_con_perfil(reducida: &Reducida) -> Result<(Vec<u16>, Vec<u8>), String> {
+    if reducida.modo == Modo::Rgb {
+        if let Some(icc) = reducida.icc.as_ref() {
+            if ColorProfile::new_from_slice(icc).is_ok() {
+                let pixeles = reducida.ancho * reducida.alto;
+                let mut rgb = vec![0u16; pixeles * 3];
+                for (c, plano) in reducida.planos.iter().enumerate().take(3) {
+                    for (i, v) in plano.iter().enumerate() {
+                        rgb[i * 3 + c] = *v;
+                    }
+                }
+                return Ok((rgb, icc.clone()));
+            }
+        }
+    }
+    let srgb = ColorProfile::new_srgb().encode().map_err(|e| format!("perfil sRGB: {e}"))?;
+    Ok((a_srgb16(reducida)?, srgb))
+}
+
+/// Igual que `a_rgb16_con_perfil`, con los pixeles en 8 bits.
+pub(crate) fn a_rgb8_con_perfil(reducida: &Reducida) -> Result<(Vec<u8>, Vec<u8>), String> {
+    let (rgb16, icc) = a_rgb16_con_perfil(reducida)?;
+    Ok((rgb16.into_iter().map(a_ocho_bits).collect(), icc))
+}
+
 /// Los pixeles de la imagen achicada como RGB de 8 bits en sRGB (los tres valores de cada pixel seguidos).
 pub(crate) fn a_srgb(reducida: &Reducida) -> Result<Vec<u8>, String> {
     Ok(a_srgb16(reducida)?.into_iter().map(a_ocho_bits).collect())
