@@ -2339,18 +2339,17 @@ export function ObraDetail({
   }
 
   /** Obra sin serie: una copia solo se puede eliminar si esta disponible; si no, se explica que hay que cambiarle el estado antes. */
-  function solicitarEliminarCopia(ej: EjemplarRow) {
+  function solicitarEliminarCopia(ej: EjemplarRow): string | null {
     if (ej.estado !== "disponible" || ej.venta_id) {
-      setError(
-        t("obraDetail.noSePuedeEliminarCopia", {
-          numero: ej.numero,
-          estado: t(`estado.${ej.estado}` as TranslationKey),
-        }),
-      );
-      return;
+      // El aviso se muestra en la propia copia (ver ventaBloqueada en EjemplarCard), no arriba de la pantalla.
+      return t("obraDetail.noSePuedeEliminarCopia", {
+        numero: ej.numero,
+        estado: t(`estado.${ej.estado}` as TranslationKey),
+      });
     }
     setError(null);
     setCopiaAEliminar({ id: ej.id, numero: ej.numero });
+    return null;
   }
 
   async function handleEliminarCopia() {
@@ -4255,8 +4254,8 @@ function EjemplarRowView({
   onConfirmarVenta: (venta: VentaRow) => void;
   anulando: boolean;
   onAbrirInformes: () => void;
-  /** Obra sin serie: elimina esta copia (solo si no tiene venta). */
-  onEliminar?: () => void;
+  /** Obra sin serie: pide eliminar esta copia. Devuelve el motivo si no se puede (se muestra en la propia copia). */
+  onEliminar?: () => string | null;
   /** Abre la pantalla del certificado de autenticidad (solo se ofrece si la copia tiene venta). */
   onAbrirCertificado: () => void;
   abriendoCertificado: boolean;
@@ -4833,7 +4832,12 @@ function EjemplarRowView({
           {t("common.edit")}
         </button>
         {onEliminar && !venta && (
-          <button type="button" onClick={onEliminar}>
+          <button
+            type="button"
+            onClick={() => {
+              setVentaBloqueada(onEliminar());
+            }}
+          >
             {t("common.delete")}
           </button>
         )}
