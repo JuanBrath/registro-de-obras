@@ -1,7 +1,7 @@
-// Contenido del PDF de novedades de la versión 0.1.0 (23 de noviembre de 2026).
+// Contenido del PDF de novedades de la versión 1.0.0 (23 de noviembre de 2026).
 // Es la base de los próximos PDF de novedades: ver README.md.
 export default {
-  version: "0.1.0",
+  version: "1.0.0",
   fecha: "23 de noviembre de 2026",
   secciones: [
     {
