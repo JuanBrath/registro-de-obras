@@ -2344,7 +2344,7 @@ export function ObraDetail({
       setError(
         t("obraDetail.noSePuedeEliminarCopia", {
           numero: ej.numero,
-          estado: t(`estado.${ej.estado}`) ?? ej.estado,
+          estado: t(`estado.${ej.estado}` as TranslationKey),
         }),
       );
       return;
