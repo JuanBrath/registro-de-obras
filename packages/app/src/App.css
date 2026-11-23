@@ -3571,3 +3571,18 @@ button[type="submit"]:disabled {
   border-radius: 8px;
   box-shadow: var(--shadow);
 }
+
+/* Selecciones: botones, campos y etiquetas con el mismo tamaño de letra y de relleno que la barra de Obras
+   (.obras-toolbar). Quedan afuera el encabezado (título, ?, ✕), las tarjetas y las estrellas. */
+.selecciones-pantalla
+  :is(button, input, select, textarea, label, .field-label):not(.obra-card):not(.galeria-foto-thumb-button):not(
+    .star-rating-star
+  ):not(.obras-list-header *):not(.obra-card *):not(.obras-tabla *) {
+  font-size: max(14.4px, 0.72rem);
+}
+.selecciones-pantalla :is(.obras-toolbar-fila, .form-actions) > button:not(.obra-card) {
+  padding: 0.28em 0.97em;
+}
+.selecciones-pantalla select {
+  padding: 0.21em 0.42em;
+}
