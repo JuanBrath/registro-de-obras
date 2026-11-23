@@ -1261,7 +1261,7 @@ export const en: Record<keyof typeof es, string> = {
   "ayudaObras.selecciones": "Opens your selections: groups of hand-picked artworks you can use to build a PDF dossier.",
   "ayudaObras.seleccionar": "Turns on a checkbox on each artwork so you can tick them and save them to a selection.",
   "ayudaObras.informe": "Generates a PDF list of the artworks you are viewing, with or without thumbnails.",
-  "ayudaObras.vista": "Switches between seeing the artworks as cards or as a list in columns.",
+  "ayudaObras.vista": "Switches between seeing the artworks as columns, cards or just images (with an enlarged viewer, info and sales).",
   "ayudaObras.tamano": "Makes the thumbnails larger or smaller. The program remembers your choice.",
   "ayudaObras.orden": "Choose how artworks are sorted: by inventory number, title or capture date.",
   "ayudaObras.artista": "Shows only the artworks of one artist.",

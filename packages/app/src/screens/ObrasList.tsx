@@ -21,6 +21,7 @@ import { AyudaSeccion } from "../components/AyudaSeccion.js";
 import type { PasoRecorrido } from "../components/RecorridoInicial.js";
 import { CalificacionFilterButton } from "../components/CalificacionFilterButton.js";
 import { StarRating } from "../components/StarRating.js";
+import { GrillaImagenes } from "../components/GrillaImagenes.js";
 import { cargarColumnasGridInicial, guardarColumnasGrid } from "../utils/columnasGrid.js";
 import { marcarSiMiniaturaMuyVertical } from "../utils/miniaturaVertical.js";
 import { sincronizarCalificacionConArchivo } from "../utils/calificacionArchivo.js";
@@ -42,12 +43,13 @@ const COLUMNAS_OBRAS_TARJETAS_STORAGE_KEY = "obrasListColumnasGrid";
 const COLUMNAS_OBRAS_COLUMNAS_STORAGE_KEY = "obrasListColumnasGridVistaColumnas";
 const VISTA_OBRAS_STORAGE_KEY = "obrasListVista";
 
-type VistaObras = "tarjetas" | "columnas";
+type VistaObras = "tarjetas" | "columnas" | "imagenes";
+const COLUMNAS_OBRAS_IMAGENES_STORAGE_KEY = "galeriaFotosColumnasGrid";
 
 function cargarVistaInicial(): VistaObras {
   try {
     const guardada = localStorage.getItem(VISTA_OBRAS_STORAGE_KEY);
-    if (guardada === "tarjetas" || guardada === "columnas") return guardada;
+    if (guardada === "tarjetas" || guardada === "columnas" || guardada === "imagenes") return guardada;
   } catch {
     // localStorage puede no estar disponible (o bloqueado); se usa el valor por defecto.
   }
@@ -76,14 +78,12 @@ export function ObrasList({
   onBack,
   onOpenObra,
   onNuevaObra,
-  onVerGaleria,
   onVerSelecciones,
   seleccionInicialId,
 }: {
   onBack: () => void;
   onOpenObra: (obraId: number) => void;
   onNuevaObra: () => void;
-  onVerGaleria: (filtros: ObrasListFiltros) => void;
   onVerSelecciones: () => void;
   /** Si viene, la lista arranca limitada a las obras de esa selección (para generar informes de ellas). */
   seleccionInicialId?: number;
@@ -109,8 +109,12 @@ export function ObrasList({
   const [columnasGridColumnas, setColumnasGridColumnas] = useState<number>(() =>
     cargarColumnasGridInicial(COLUMNAS_OBRAS_COLUMNAS_STORAGE_KEY, COLUMNAS_OBRAS_POR_DEFECTO),
   );
+  const [columnasGridImagenes, setColumnasGridImagenes] = useState<number>(() =>
+    cargarColumnasGridInicial(COLUMNAS_OBRAS_IMAGENES_STORAGE_KEY, COLUMNAS_OBRAS_POR_DEFECTO),
+  );
   const [vista, setVista] = useState<VistaObras>(cargarVistaInicial);
-  const columnasGridActual = vista === "tarjetas" ? columnasGridTarjetas : columnasGridColumnas;
+  const columnasGridActual =
+    vista === "tarjetas" ? columnasGridTarjetas : vista === "imagenes" ? columnasGridImagenes : columnasGridColumnas;
   const objectUrlsRef = useRef<string[]>([]);
 
   const [informesMenuAbierto, setInformesMenuAbierto] = useState(false);
@@ -405,7 +409,10 @@ export function ObrasList({
   }
 
   function handleTamanoMiniaturasChange(columnas: number) {
-    if (vista === "tarjetas") {
+    if (vista === "imagenes") {
+      setColumnasGridImagenes(columnas);
+      guardarColumnasGrid(COLUMNAS_OBRAS_IMAGENES_STORAGE_KEY, columnas);
+    } else if (vista === "tarjetas") {
       setColumnasGridTarjetas(columnas);
       guardarColumnasGrid(COLUMNAS_OBRAS_TARJETAS_STORAGE_KEY, columnas);
     } else {
@@ -434,7 +441,6 @@ export function ObrasList({
   const pasosAyuda: PasoRecorrido[] = [
     paso("obras-buscar", "ayudaObras.buscar", t("obrasList.ayudaBuscar")),
     paso("obras-nueva", "ayudaObras.nueva", t("workspaceHome.nuevaObra")),
-    paso("obras-galeria", "ayudaObras.galeria", t("workspaceHome.galeriaFotos")),
     paso("obras-selecciones", "ayudaObras.selecciones", t("selecciones.boton")),
     paso("obras-seleccionar", "ayudaObras.seleccionar", t("selecciones.seleccionar")),
     paso("obras-informe", "ayudaObras.informe", t("informesObras.generarInforme")),
@@ -474,15 +480,6 @@ export function ObrasList({
           <button type="button" data-recorrido="obras-nueva" onClick={onNuevaObra}>
             {t("workspaceHome.nuevaObra")}
           </button>
-          <button
-            type="button"
-            data-recorrido="obras-galeria"
-            onClick={() =>
-              onVerGaleria({ selectedTags, selectedArtistaId, selectedCategoria, selectedSubtipo, calificacionFiltro })
-            }
-          >
-            {t("workspaceHome.galeriaFotos")}
-          </button>
           <button type="button" data-recorrido="obras-selecciones" onClick={onVerSelecciones}>
             {t("selecciones.boton")}
           </button>
@@ -519,6 +516,13 @@ export function ObrasList({
                 onClick={() => handleVistaChange("tarjetas")}
               >
                 {t("obrasList.vistaTarjetas")}
+              </button>
+              <button
+                type="button"
+                className={vista === "imagenes" ? "obras-vista-toggle-boton activo" : "obras-vista-toggle-boton"}
+                onClick={() => handleVistaChange("imagenes")}
+              >
+                {t("selecciones.vistaImagenes")}
               </button>
             </div>
           )}
@@ -678,6 +682,20 @@ export function ObrasList({
         </p>
       )}
       {!loading && obras.length > 0 && filteredObras.length === 0 && <p>{t("obrasList.sinResultados")}</p>}
+
+      {vista === "imagenes" && (
+        <GrillaImagenes
+          obras={filteredObras}
+          thumbs={thumbnails}
+          columnas={columnasGridImagenes}
+          onCalificar={handleSetCalificacion}
+          onAbrirFicha={(id) => onOpenObra(id)}
+          onError={setError}
+          seleccion={
+            modoSeleccion ? { elegidas, yaEnSeleccion: idsEnActiva, alternar: alternarElegida } : undefined
+          }
+        />
+      )}
 
       {vista === "tarjetas" && (
       <div className="obras-grid" style={{ gridTemplateColumns: `repeat(${columnasGridTarjetas}, 1fr)` }}>

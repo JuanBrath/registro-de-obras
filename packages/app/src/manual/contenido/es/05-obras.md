@@ -8,7 +8,7 @@ En la pantalla de inicio tocá **Obras**. Ves una grilla con una tarjeta por obr
 
 ## Ayuda de la sección
 
-Arriba a la derecha, al lado del botón de cierre ✕, está el botón **?** (**Ayuda de esta sección**). Lo tienen las pantallas principales: **Obras**, **Galería de obras**, **Selecciones**, **Clientes**, **Artistas**, **Ventas**, la **Ficha de la obra**, **Nueva obra** y **Mis datos**. Al tocarlo, el programa hace un recorrido por los botones y opciones de la pantalla, señalando cada uno con una explicación breve de lo que podés hacer con él. Avanzás con **Siguiente**, volvés con **Atrás** y cerrás con **Saltar** o **Entendido**. Solo se explican las opciones que ves en ese momento (por ejemplo, los filtros de etiquetas aparecen cuando alguna obra tiene etiquetas).
+Arriba a la derecha, al lado del botón de cierre ✕, está el botón **?** (**Ayuda de esta sección**). Lo tienen las pantallas principales: **Obras**, **Selecciones**, **Clientes**, **Artistas**, **Ventas**, la **Ficha de la obra**, **Nueva obra** y **Mis datos**. Al tocarlo, el programa hace un recorrido por los botones y opciones de la pantalla, señalando cada uno con una explicación breve de lo que podés hacer con él. Avanzás con **Siguiente**, volvés con **Atrás** y cerrás con **Saltar** o **Entendido**. Solo se explican las opciones que ves en ese momento (por ejemplo, los filtros de etiquetas aparecen cuando alguna obra tiene etiquetas).
 
 ## Qué muestra cada tarjeta
 
@@ -56,7 +56,7 @@ Algunas cosas para tener en cuenta:
 - El filtro de etiquetas se combina con los demás filtros (categoría, subtipo, estrellas y el cuadro de búsqueda), y ahí sí se restringe: una obra tiene que cumplir todos esos filtros a la vez y, además, tener alguna de las etiquetas elegidas.
 - Hoy no existe una opción para pedir "solo las obras que tengan todas las etiquetas". Si necesitás ver las que tienen dos etiquetas a la vez, elegí una de las dos y buscá la otra a ojo en la ficha, o usá una etiqueta más específica.
 - Las etiquetas son propias de Recer: sirven para clasificar y buscar dentro del programa, pero no se graban en el archivo original. Si el archivo trae palabras clave (por ejemplo, cargadas en Lightroom), se leen solas la primera vez que indicás su ubicación; desde ahí viven solo en Recer: cambiarlas acá no modifica el archivo, ni al revés.
-- La **Galería de obras** usa exactamente el mismo filtro y la misma regla. Ver [Galería de obras](cap:galeria-de-obras).
+- La vista **Imágenes** usa exactamente el mismo filtro y la misma regla. Ver [Vista Imágenes](cap:galeria-de-obras).
 - En Recer Space, el cuadro de búsqueda además busca dentro de las etiquetas.
 
 ## Cambiar el tamaño de las miniaturas
@@ -80,6 +80,6 @@ El listado incluye: nombre de la obra, autor, categoría, subcategoría, cantida
 ## Otros botones
 
 - **Nueva obra**: abre el formulario para cargar una obra. Ver [Cargar una obra nueva](cap:nueva-obra).
-- **Galería de obras**: abre la vista de fotos grandes, respetando los filtros que tengas puestos. Ver [Galería de obras](cap:galeria-de-obras).
+- **Imágenes** (junto a Columnas y Tarjetas): muestra solo las fotos, en grande, respetando los filtros que tengas puestos. Ver [Vista Imágenes](cap:galeria-de-obras).
 - **Selecciones**: abre tus grupos de obras elegidas a mano, base de los dossiers en PDF. Ver [Selecciones y dossier](cap:selecciones-y-dossier).
 - **Seleccionar**: activa las casillas para tildar obras y guardarlas en una selección. Ver [Selecciones y dossier](cap:selecciones-y-dossier).

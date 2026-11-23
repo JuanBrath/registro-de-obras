@@ -7,11 +7,10 @@ import { AyudaSeccion, pasoAyuda } from "../components/AyudaSeccion.js";
 import { ExportarSeleccionModal } from "../components/ExportarSeleccionModal.js";
 import { DossierModal } from "../components/DossierModal.js";
 import { DossiersGuardadosModal } from "../components/DossiersGuardadosModal.js";
-import { Modal } from "../components/Modal.js";
+import { GrillaImagenes } from "../components/GrillaImagenes.js";
 import { useWorkspace } from "../state/WorkspaceContext.js";
-import { useMasonryGrid } from "../utils/useMasonryGrid.js";
 import { useLanguage } from "../i18n/LanguageContext.js";
-import { bytesToObjectUrl, leerMiniaturasPorIdEnParalelo } from "../utils/imageObjectUrl.js";
+import { leerMiniaturasPorIdEnParalelo } from "../utils/imageObjectUrl.js";
 import { ObraDisponibilidad, ObraTarjetaInfo, SQL_OBRA_ROWS, anchoMiniaturaTabla, type ObraRow } from "../components/ObraVista.js";
 import { MiniaturasSizeSlider } from "../components/MiniaturasSizeSlider.js";
 import { StarRating } from "../components/StarRating.js";
@@ -55,135 +54,6 @@ function cargarVista(): Vista {
     // localStorage no disponible: se usa el valor por defecto.
   }
   return "tarjetas";
-}
-
-/** Vista "Imágenes": mismo criterio que la Galería de obras (grilla de fotos sin texto y visor ampliado con flechas). */
-function GaleriaImagenes({
-  obras,
-  thumbs,
-  columnas,
-  onCalificar,
-  onAbrirFicha,
-  onMenuImagen,
-}: {
-  obras: ObraRow[];
-  thumbs: Record<number, string>;
-  columnas: number;
-  onCalificar: (obraId: number, n: number) => void;
-  onAbrirFicha: (obraId: number) => void;
-  onMenuImagen: (e: React.MouseEvent, obra: ObraRow) => void;
-}) {
-  const { context } = useWorkspace();
-  const { t } = useLanguage();
-  const gridRef = useRef<HTMLDivElement>(null);
-  useMasonryGrid(gridRef);
-  const [indice, setIndice] = useState<number | null>(null);
-  const [url, setUrl] = useState<string | null>(null);
-  const [cargando, setCargando] = useState(false);
-  const urlRef = useRef<string | null>(null);
-  const visibles = obras.filter((o) => thumbs[o.id]);
-
-  useEffect(() => {
-    if (indice === null || !context) return;
-    const obra = visibles[indice];
-    if (!obra) return;
-    let cancelado = false;
-    setCargando(true);
-    (async () => {
-      const [fila] = await context.db.query<{ imagen_alta_resolucion_path: string | null }>(
-        "SELECT imagen_alta_resolucion_path FROM obra WHERE id = ?",
-        [obra.id],
-      );
-      const ruta = fila?.imagen_alta_resolucion_path || obra.miniatura_path;
-      if (!ruta) return;
-      const bytes = await context.fs.readFile(ruta);
-      if (cancelado) return;
-      if (urlRef.current) URL.revokeObjectURL(urlRef.current);
-      urlRef.current = bytesToObjectUrl(bytes);
-      setUrl(urlRef.current);
-    })()
-      .catch(() => {})
-      .finally(() => {
-        if (!cancelado) setCargando(false);
-      });
-    return () => {
-      cancelado = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [indice, context]);
-
-  useEffect(
-    () => () => {
-      if (urlRef.current) URL.revokeObjectURL(urlRef.current);
-    },
-    [],
-  );
-
-  const cerrar = () => {
-    setIndice(null);
-    setUrl(null);
-  };
-  const mover = (d: number) => setIndice((i) => (i === null || visibles.length === 0 ? null : (i + d + visibles.length) % visibles.length));
-  const actual = indice !== null ? visibles[indice] : null;
-
-  return (
-    <>
-      <div className="obras-grid galeria-fotos-grid" ref={gridRef} style={{ gridTemplateColumns: `repeat(${columnas}, 1fr)` }}>
-        {visibles.map((obra, i) => (
-          <div className="galeria-foto-thumb-wrapper" key={obra.id}>
-            <button
-              type="button"
-              className="galeria-foto-thumb-button"
-              onClick={() => setIndice(i)}
-              onContextMenu={(e) => onMenuImagen(e, obra)}
-            >
-              <img src={thumbs[obra.id]} alt={obra.titulo} onLoad={(e) => marcarSiMiniaturaMuyVertical(e.currentTarget)} />
-            </button>
-            <StarRating value={obra.calificacion} onChange={(n) => onCalificar(obra.id, n)} />
-          </div>
-        ))}
-      </div>
-      {actual && indice !== null && (
-        <Modal onClose={cerrar} wide className="modal-content-image">
-          <span className="lightbox-contador" aria-label={t("galeria.posicionFoto")}>
-            {indice + 1} / {visibles.length}
-          </span>
-          {visibles.length > 1 && (
-            <button type="button" className="lightbox-arrow lightbox-arrow-left" onClick={() => mover(-1)} aria-label={t("galeria.anterior")}>
-              ‹
-            </button>
-          )}
-          {visibles.length > 1 && (
-            <button type="button" className="lightbox-arrow lightbox-arrow-right" onClick={() => mover(1)} aria-label={t("galeria.siguiente")}>
-              ›
-            </button>
-          )}
-          <div className="lightbox-content">
-            {cargando && !url && <p>{t("common.loading")}</p>}
-            {url && (
-              <img src={url} alt={actual.titulo} className="obra-full-image" onContextMenu={(e) => onMenuImagen(e, actual)} />
-            )}
-            <p className="lightbox-caption">
-              <StarRating value={actual.calificacion} onChange={(n) => onCalificar(actual.id, n)} className="star-rating-lightbox" />
-              {actual.titulo}
-              <button
-                type="button"
-                className="lightbox-info-button"
-                onClick={() => {
-                  cerrar();
-                  onAbrirFicha(actual.id);
-                }}
-                aria-label={t("selecciones.abrirFicha")}
-                title={t("selecciones.abrirFicha")}
-              >
-                ⓘ
-              </button>
-            </p>
-          </div>
-        </Modal>
-      )}
-    </>
-  );
 }
 
 /** Lista de selecciones que muestra solo dos renglones y un botón para desplegarlas todas. Plegada, la selección
@@ -962,13 +832,13 @@ export function SeleccionesScreen({
           )}
 
           {vista === "imagenes" && obras.length > 0 && (
-            <GaleriaImagenes
+            <GrillaImagenes
               obras={obras}
               thumbs={thumbs}
               columnas={columnasImagenes}
               onCalificar={calificar}
               onAbrirFicha={(id) => onOpenObra(id, activaId)}
-              onMenuImagen={abrirMenuImagen}
+              onError={setError}
             />
           )}
 

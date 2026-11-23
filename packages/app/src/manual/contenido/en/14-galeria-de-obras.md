@@ -1,25 +1,29 @@
-# Artwork gallery
+# Images view (artwork gallery)
 
 A view of your artworks as large photos, to look at them, rate them and quickly check their availability.
 
-## Opening the gallery
+## Opening the Images view
 
-In **Artworks**, click **Artwork gallery**. It opens with the same filters you had on in the list (category, subtype, stars, tags). If no photos have been added yet, "No photos added yet." appears.
+In **Artworks**, next to **Columns** and **Cards**, click **Images**. It is the same screen and the same filters you had on; only how the artworks are shown changes: just the photos, without text. It also exists in **Selections**, with the artworks of the open selection. Artworks that have no photo yet do not appear in this view.
 
 ## Filtering
 
-At the top you have the same filters as in the list, in a bar that stays pinned while you scroll through the photos: **All categories**, subtype, star rating and tags. The filters work the same way as in the list: they combine with each other and, with several tags, the photos that have **at least one** of them are shown. See [Filtering by tags](cap:obras). If no photo matches, "No photo has that tag." appears.
+At the top you have the list's filters, in a bar that stays pinned while you scroll through the photos: **All categories**, subtype, star rating and tags. The filters work the same way as in the list: they combine with each other and, with several tags, the photos that have **at least one** of them are shown. See [Filtering by tags](cap:obras).
 
 ## Viewing a photo large
 
-1. Click a thumbnail: the photo opens enlarged.
+1. Click a thumbnail: the photo opens enlarged. In this view a click does **not** open the sheet (in Columns and Cards it does).
 2. With the arrows **‹** and **›** you go to the previous or the next one. At the bottom you see the title and where you are ("3 / 25").
 3. You can **rate with stars** the photo you're viewing.
 4. Click the **✕** or press **Esc** to close.
 
 ## The right-click menu on the photo
 
-Right-clicking a photo (the thumbnail in the grid or the enlarged view) opens a menu with three options, instead of the system's default menu.
+Right-clicking a photo (the thumbnail in the grid or the enlarged view) opens a menu with four options, instead of the system's default menu.
+
+### Open sheet
+
+Opens the artwork's full sheet without having to enlarge the photo first.
 
 ### Export image…
 
@@ -42,4 +46,4 @@ With the photo open, click the **ⓘ** button (**View artwork info**). A small w
 - The availability ("3/10 available") and how many copies there are in each status.
 - If the artwork is an edition, the **First available copy**: its **Copy number**, **Print date**, **Medium**, **Size (mm)** and **Current location of this copy**. If none is left, it says "There is no available copy right now."
 
-It's a quick look-up. If you need more (to edit it, generate reports, record a sale), click **View this artwork**: its full sheet opens. There the back button reads **Back to the gallery** and takes you back to this same enlarged photo, not to the list. See [Artwork sheet](cap:ficha-de-obra).
+It's a quick look-up. If you need more (to edit it, generate reports, record a sale), click **View this artwork**: its full sheet opens. To go back, use the **✕** or the button at the bottom. See [Artwork sheet](cap:ficha-de-obra).

@@ -1260,7 +1260,7 @@ export const es = {
   "ayudaObras.selecciones": "Abre tus selecciones: grupos de obras elegidas a mano, con los que podés armar un dossier en PDF.",
   "ayudaObras.seleccionar": "Activa una casilla en cada obra para tildarlas y guardarlas en una selección.",
   "ayudaObras.informe": "Genera un listado en PDF de las obras que estás viendo, con o sin miniatura.",
-  "ayudaObras.vista": "Cambia entre ver las obras como tarjetas o como una lista en columnas.",
+  "ayudaObras.vista": "Cambia entre ver las obras como columnas, tarjetas o solo imágenes (con visor ampliado, información y venta).",
   "ayudaObras.tamano": "Agranda o achica las miniaturas. El programa recuerda tu elección.",
   "ayudaObras.orden": "Elegí cómo se ordenan las obras: por número de inventario, título o fecha de captura.",
   "ayudaObras.artista": "Muestra solo las obras de un artista.",

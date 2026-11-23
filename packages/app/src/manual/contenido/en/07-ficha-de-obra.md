@@ -4,7 +4,7 @@ Everything you see and can do when you open an artwork: view it, edit it, produc
 
 ## Opening an artwork
 
-In **Artworks**, click the artwork's card. The title is at the top; to go back use the **✕** or the button at the bottom, which returns to wherever you opened the artwork from: **Back to artworks** from the list, or **Back to the gallery** (to the same photo) if you opened it with **View this artwork** from [Artwork gallery](cap:galeria-de-obras).
+In **Artworks**, click the artwork's card. The title is at the top; to go back use the **✕** or the button at the bottom, which returns to wherever you opened the artwork from: **Back to artworks** from the list, or **Back to the selection** if you opened it from a selection. From the [Images](cap:galeria-de-obras) view you can also open it with **View this artwork** or with right-click → **Open sheet**.
 
 ## What the sheet shows
 

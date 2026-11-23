@@ -8,7 +8,7 @@ On the home screen click **Artworks**. You see a grid with one card per artwork.
 
 ## Section help
 
-At the top right, next to the close button ✕, is the **?** button (**Help for this section**). The main screens have it: **Artworks**, **Artwork gallery**, **Selections**, **Clients**, **Artists**, **Sales**, the **Artwork sheet**, **New artwork** and **My info**. When you click it, the program takes a tour through the buttons and options on the screen, pointing at each one with a short explanation of what you can do with it. You move forward with **Next**, go back with **Back** and close with **Skip** or **Got it**. Only the options you can see at that moment are explained (for example, the tag filter appears when some artwork has tags).
+At the top right, next to the close button ✕, is the **?** button (**Help for this section**). The main screens have it: **Artworks**, **Selections**, **Clients**, **Artists**, **Sales**, the **Artwork sheet**, **New artwork** and **My info**. When you click it, the program takes a tour through the buttons and options on the screen, pointing at each one with a short explanation of what you can do with it. You move forward with **Next**, go back with **Back** and close with **Skip** or **Got it**. Only the options you can see at that moment are explained (for example, the tag filter appears when some artwork has tags).
 
 ## What each card shows
 
@@ -56,7 +56,7 @@ A few things to keep in mind:
 - The tag filter combines with the other filters (category, subtype, stars and the search box), and there it does narrow things down: an artwork has to meet all those filters at once and, in addition, have some of the chosen tags.
 - Right now there is no option to ask for "only the artworks that have all the tags". If you need to see those that have two tags at once, choose one of them and look for the other by eye in the sheet, or use a more specific tag.
 - Tags belong to Recer: they are used to classify and search inside the program, but they are not written into the original file. If the file carries keywords (for example, entered in Lightroom), they are read automatically the first time you indicate its location; from then on they live only in Recer: changing them here doesn't modify the file, nor the other way around.
-- The **Artwork gallery** uses exactly the same filter and the same rule. See [Artwork gallery](cap:galeria-de-obras).
+- The **Images** view uses exactly the same filter and the same rule. See [Images view](cap:galeria-de-obras).
 - In Recer Space, the search box also searches inside the tags.
 
 ## Changing the thumbnail size
@@ -80,6 +80,6 @@ The list includes: artwork name, author, category, subcategory, number of availa
 ## Other buttons
 
 - **New artwork**: opens the form to add an artwork. See [Adding a new artwork](cap:nueva-obra).
-- **Artwork gallery**: opens the large-photo view, respecting the filters you have on. See [Artwork gallery](cap:galeria-de-obras).
+- **Images** (next to Columns and Cards): shows only the photos, large, respecting the filters you have on. See [Images view](cap:galeria-de-obras).
 - **Selections**: opens your hand-picked groups of artworks, the basis of the PDF dossiers. See [Selections and dossier](cap:selecciones-y-dossier).
 - **Select**: turns on the checkboxes so you can tick artworks and save them to a selection. See [Selections and dossier](cap:selecciones-y-dossier).
