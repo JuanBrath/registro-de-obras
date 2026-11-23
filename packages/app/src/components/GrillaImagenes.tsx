@@ -1,4 +1,4 @@
-import { useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
+import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { useLanguage } from "../i18n/LanguageContext.js";
 import { useMasonryGrid } from "../utils/useMasonryGrid.js";
 import { marcarSiMiniaturaMuyVertical } from "../utils/miniaturaVertical.js";
@@ -9,6 +9,49 @@ import { MenuContextual } from "./MenuContextual.js";
 import { ExportarImagenModal } from "./ExportarImagenModal.js";
 import { VisorObras } from "./VisorObras.js";
 import type { ObraRow } from "./ObraVista.js";
+
+/** Nombre de la obra y, en la misma línea, su calificación como "3 ★". Un clic despliega las cinco estrellas y un
+ * segundo clic elige cuántas (tocar la misma cantidad otra vez la quita). */
+function PieObra({ titulo, calificacion, onCalificar }: { titulo: string; calificacion: number; onCalificar: (n: number) => void }) {
+  const { t } = useLanguage();
+  const [abierto, setAbierto] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!abierto) return;
+    const cerrar = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setAbierto(false);
+    };
+    document.addEventListener("mousedown", cerrar);
+    return () => document.removeEventListener("mousedown", cerrar);
+  }, [abierto]);
+  return (
+    <div className="galeria-foto-pie" ref={ref}>
+      <span className="galeria-foto-titulo" title={titulo}>
+        {titulo}
+      </span>
+      <button
+        type="button"
+        className="galeria-foto-calificacion"
+        onClick={() => setAbierto((v) => !v)}
+        aria-label={t("galeria.calificarConEstrellas", { n: calificacion })}
+        title={t("galeria.calificarConEstrellas", { n: calificacion })}
+      >
+        {calificacion} ★
+      </button>
+      {abierto && (
+        <div className="galeria-foto-estrellas-desplegadas">
+          <StarRating
+            value={calificacion}
+            onChange={(n) => {
+              onCalificar(n);
+              setAbierto(false);
+            }}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
 
 /**
  * Modo de visualización "Imágenes" (el de la antigua Galería): grilla de fotos sin texto. Un clic amplía la foto en el
@@ -81,8 +124,7 @@ export function GrillaImagenes({
               >
                 <img src={thumbs[obra.id]} alt={obra.titulo} onLoad={(e) => marcarSiMiniaturaMuyVertical(e.currentTarget)} />
               </button>
-              <StarRating value={obra.calificacion} onChange={(n) => onCalificar(obra.id, n)} />
-              <span className="galeria-foto-titulo">{obra.titulo}</span>
+              <PieObra titulo={obra.titulo} calificacion={obra.calificacion} onCalificar={(n) => onCalificar(obra.id, n)} />
             </div>
           );
         })}

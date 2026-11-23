@@ -4,7 +4,7 @@ Una vista de tus obras en fotos grandes, para mirarlas, calificarlas y consultar
 
 ## Abrir la vista Imágenes
 
-En **Obras**, junto a **Columnas** y **Tarjetas**, tocá **Imágenes**. Es la misma pantalla y los mismos filtros que tenías puestos; solo cambia cómo se muestran las obras: solo las fotos, sin textos. También existe en **Selecciones**, con las obras de la selección abierta. Las obras que todavía no tienen foto no aparecen en esta vista.
+En **Obras**, junto a **Columnas** y **Tarjetas**, tocá **Imágenes**. Es la misma pantalla y los mismos filtros que tenías puestos; solo cambia cómo se muestran las obras: solo las fotos, sin textos. También existe en **Selecciones**, con las obras de la selección abierta. Debajo de cada foto ves el nombre de la obra y su calificación en una sola línea ("3 ★", o "0 ★" si no tiene). Para calificar, tocá ese número: se despliegan las cinco estrellas y un segundo toque elige cuántas (tocar la misma cantidad otra vez la quita). Las obras que todavía no tienen foto no aparecen en esta vista.
 
 ## Filtrar
 

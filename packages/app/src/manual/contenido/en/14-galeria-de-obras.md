@@ -4,7 +4,7 @@ A view of your artworks as large photos, to look at them, rate them and quickly 
 
 ## Opening the Images view
 
-In **Artworks**, next to **Columns** and **Cards**, click **Images**. It is the same screen and the same filters you had on; only how the artworks are shown changes: just the photos, without text. It also exists in **Selections**, with the artworks of the open selection. Artworks that have no photo yet do not appear in this view.
+In **Artworks**, next to **Columns** and **Cards**, click **Images**. It is the same screen and the same filters you had on; only how the artworks are shown changes: just the photos, without text. It also exists in **Selections**, with the artworks of the open selection. Under each photo you see the artwork's name and its rating on a single line ("3 ★", or "0 ★" if it has none). To rate, click that number: the five stars unfold and a second click chooses how many (clicking the same amount again removes it). Artworks that have no photo yet do not appear in this view.
 
 ## Filtering
 

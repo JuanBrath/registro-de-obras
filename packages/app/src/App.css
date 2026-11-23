@@ -3535,12 +3535,39 @@ button[type="submit"]:disabled {
   gap: 0.5rem;
 }
 
-/* Vista Imágenes: nombre de la obra debajo de las estrellas. */
-.galeria-foto-titulo {
-  display: block;
-  margin-top: 0.15rem;
+/* Vista Imágenes: nombre de la obra y calificación ("3 ★") en la misma línea; un clic despliega las 5 estrellas. */
+.galeria-foto-pie {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  margin-top: 0.2rem;
   font-size: 0.8rem;
-  text-align: center;
+}
+.galeria-foto-titulo {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
   color: var(--text);
-  overflow-wrap: anywhere;
+}
+.galeria-foto-calificacion {
+  flex: 0 0 auto;
+  padding: 0.05em 0.5em;
+  font-size: inherit;
+  white-space: nowrap;
+}
+.galeria-foto-estrellas-desplegadas {
+  position: absolute;
+  right: 0;
+  bottom: 100%;
+  z-index: 5;
+  padding: 0.2rem 0.4rem;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
 }
