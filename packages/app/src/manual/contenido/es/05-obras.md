@@ -67,10 +67,6 @@ El deslizador **Tamaño de las miniaturas** (junto al cuadro de búsqueda) cambi
 
 Tocá una de las cinco estrellas debajo de una obra para calificarla. La calificación se guarda en Recer y, si la obra tiene indicada la **Ubicación del archivo original**, también se escribe en ese archivo (dentro del JPG, o en un archivo auxiliar **.xmp** al lado si es RAW, TIFF, PSD u otro formato) para que la vean programas como Lightroom o Bridge. Si esa segunda parte falla, la calificación igual queda guardada en Recer y se muestra un aviso.
 
-## Actualizar las imágenes
-
-Si editaste el archivo original de una obra (por ejemplo en Lightroom o Photoshop), tocá **Actualizar imágenes**. Recer revisa todas las obras y rehace, a partir del archivo original (el de **Ubicación del archivo original**), la miniatura y la imagen de la ficha de las que se modificaron después de generarlas. Sirve para las tres vistas (columnas, tarjetas e imágenes). Las que no cambiaron no se tocan. Al terminar muestra cuántas se actualizaron y, si alguna no tiene archivo original o no se pudo leer, te lo avisa.
-
 ## Generar un listado en PDF
 
 1. Filtrá lo que querés incluir (el listado sale con las obras que estás viendo).

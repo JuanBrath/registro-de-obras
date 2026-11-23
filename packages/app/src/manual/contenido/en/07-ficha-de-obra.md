@@ -34,7 +34,7 @@ Right-clicking the image (the thumbnail or the large view) opens a menu with thr
 
 ### Rebuild the images from the original file
 
-With the **⟳** button (next to **Ps**) or the right-click on the image, Recer regenerates the sheet image and the thumbnail from the original file. Use it after editing the file in Lightroom or Photoshop.
+With the **Rebuild images** button (next to **Delete artwork**) or the right-click on the image, Recer regenerates the sheet image and the thumbnail from the original file. Use it after editing the file in Lightroom or Photoshop.
 
 ### Open in Photoshop
 

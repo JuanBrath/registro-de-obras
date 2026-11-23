@@ -17,7 +17,6 @@ import { HelpIcon } from "../components/HelpIcon.js";
 import { MiniaturasSizeSlider } from "../components/MiniaturasSizeSlider.js";
 import { TagFilterPicker } from "../components/TagFilterPicker.js";
 import { useMenuExportarImagen } from "../components/useMenuExportarImagen.js";
-import { rehacerImagenesDeObra } from "../utils/rehacerImagenes.js";
 import { AyudaSeccion } from "../components/AyudaSeccion.js";
 import type { PasoRecorrido } from "../components/RecorridoInicial.js";
 import { CalificacionFilterButton } from "../components/CalificacionFilterButton.js";
@@ -117,36 +116,6 @@ export function ObrasList({
   const columnasGridActual =
     vista === "tarjetas" ? columnasGridTarjetas : vista === "imagenes" ? columnasGridImagenes : columnasGridColumnas;
   const objectUrlsRef = useRef<string[]>([]);
-  // Se sube cada vez que se rehacen imagenes, para que la lista las vuelva a leer.
-  const [recarga, setRecarga] = useState(0);
-  const [rehaciendo, setRehaciendo] = useState(false);
-  const [rehacerMensaje, setRehacerMensaje] = useState<string | null>(null);
-
-  async function handleRehacerImagenes() {
-    if (!context) return;
-    setRehaciendo(true);
-    setRehacerMensaje(null);
-    let rehechas = 0;
-    let sinCambios = 0;
-    let problemas = 0;
-    try {
-      for (const obra of obras) {
-        const resultado = await rehacerImagenesDeObra(context, obra, { forzar: false });
-        if (resultado === "rehecha") rehechas++;
-        else if (resultado === "sin_cambios") sinCambios++;
-        else if (obra.ubicacion_fisica_actual) problemas++;
-      }
-      setRehacerMensaje(
-        t("obrasList.rehechasResumen", { rehechas, sinCambios }) +
-          (problemas > 0 ? t("obrasList.rehechasProblemas", { problemas }) : ""),
-      );
-      if (rehechas > 0) setRecarga((n) => n + 1);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setRehaciendo(false);
-    }
-  }
 
   const [informesMenuAbierto, setInformesMenuAbierto] = useState(false);
   // Modo "Seleccionar": tildar obras a mano para agregarlas a una selección (base de los dossiers).
@@ -293,7 +262,7 @@ export function ObrasList({
       for (const url of objectUrlsRef.current) URL.revokeObjectURL(url);
       objectUrlsRef.current = [];
     };
-  }, [context, recarga]);
+  }, [context]);
 
   const allTags = useMemo(() => {
     const set = new Set<string>();
@@ -528,11 +497,6 @@ export function ObrasList({
             </button>
           )}
           {obras.length > 0 && (
-            <button type="button" onClick={() => void handleRehacerImagenes()} disabled={rehaciendo} title={t("obrasList.rehacerImagenesAyuda")}>
-              {rehaciendo ? t("obrasList.rehaciendo") : t("obrasList.rehacerImagenes")}
-            </button>
-          )}
-          {obras.length > 0 && (
             <button type="button" data-recorrido="obras-informe" onClick={handleAbrirInformesMenu} disabled={filteredObras.length === 0}>
               {t("informesObras.generarInforme")}
             </button>
@@ -707,12 +671,6 @@ export function ObrasList({
       {error && (
         <p className="error" role="alert">
           ⚠️ {error}
-        </p>
-      )}
-
-      {rehacerMensaje && (
-        <p className="success" role="status">
-          ✅ {rehacerMensaje}
         </p>
       )}
 

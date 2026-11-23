@@ -2616,6 +2616,11 @@ export function ObraDetail({
               <button type="button" data-recorrido="obra-seleccion" onClick={() => setAgregarSeleccionAbierto(true)}>
                 {t("selecciones.agregarABoton")}
               </button>
+              {mostrarBotonPhotoshopVista && (
+                <button type="button" onClick={handleRehacerImagenes} title={t("obraDetail.rehacerImagenAyuda")}>
+                  {t("obraDetail.rehacerImagenBoton")}
+                </button>
+              )}
               <button type="button" data-recorrido="obra-eliminar" onClick={() => setConfirmingDelete(true)}>
                 {t("obraDetail.eliminarObra")}
               </button>
@@ -2641,17 +2646,6 @@ export function ObraDetail({
                   title={t("obraDetail.abrirEnPhotoshop")}
                 >
                   Ps
-                </button>
-              )}
-              {mostrarBotonPhotoshopVista && (
-                <button
-                  type="button"
-                  className="link-icon-button"
-                  onClick={handleRehacerImagenes}
-                  aria-label={t("obraDetail.rehacerImagen")}
-                  title={t("obraDetail.rehacerImagen")}
-                >
-                  ⟳
                 </button>
               )}
             </div>

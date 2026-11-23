@@ -34,7 +34,7 @@ Con click derecho sobre la imagen (la miniatura o la vista en grande) aparece un
 
 ### Rehacer las imágenes desde el archivo original
 
-Con el botón **⟳** (al lado de **Ps**) o con el click derecho sobre la imagen, Recer vuelve a generar la imagen de la ficha y la miniatura a partir del archivo original. Usalo después de editarlo en Lightroom o Photoshop.
+Con el botón **Rehacer imágenes** (junto a **Eliminar obra**) o con el click derecho sobre la imagen, Recer vuelve a generar la imagen de la ficha y la miniatura a partir del archivo original. Usalo después de editarlo en Lightroom o Photoshop.
 
 ### Abrir en Photoshop
 
