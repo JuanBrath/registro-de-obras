@@ -481,6 +481,7 @@ export function SeleccionesScreen({
         </div>
       </div>
       {error && <p className="error">{error}</p>}
+      </div>
 
       <div className="selecciones-bloque">
         <div className="obras-toolbar-fila selecciones-modos" data-recorrido="sel-modos">
@@ -490,6 +491,10 @@ export function SeleccionesScreen({
             onClick={() => {
               setModo("grupos");
               setNueva(false);
+              setActivaId(null);
+              setGrupoActivoId(null);
+              setGrupoNuevo(false);
+              setPanelGrupoAbierto(false);
             }}
           >
             {t("selecciones.gruposTitulo")}
@@ -579,7 +584,6 @@ export function SeleccionesScreen({
           />
         </div>
       )}
-      </div>
 
       {modo === "grupos" && (grupoNuevo || (grupoActivoId !== null && panelGrupoAbierto)) && (
         <section className="selecciones-bloque selecciones-formulario">
@@ -643,17 +647,10 @@ export function SeleccionesScreen({
 
       {nueva && (
         <section className="selecciones-bloque selecciones-formulario">
+          <div className="selecciones-nombre-grupo">
           <label>
             <span className="field-label">{t("selecciones.nombreLabel")}</span>
             <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} />
-          </label>
-          <label>
-            <div className="selecciones-notas-cabecera">
-              <NotasLabel texto={notas} onChange={setNotas}>
-                <span>{t("selecciones.notasLabel")}</span>
-              </NotasLabel>
-            </div>
-            <textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2} />
           </label>
           <label>
             <span className="field-label">{t("selecciones.grupoLabel")}</span>
@@ -665,6 +662,15 @@ export function SeleccionesScreen({
                 </option>
               ))}
             </select>
+          </label>
+          </div>
+          <label>
+            <div className="selecciones-notas-cabecera">
+              <NotasLabel texto={notas} onChange={setNotas}>
+                <span>{t("selecciones.notasLabel")}</span>
+              </NotasLabel>
+            </div>
+            <textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2} />
           </label>
           <div className="form-actions">
             <button type="button" onClick={guardarDatos} disabled={!nombre.trim()}>
@@ -687,17 +693,10 @@ export function SeleccionesScreen({
 
       {activa && (
         <section className="selecciones-bloque selecciones-formulario">
+          <div className="selecciones-nombre-grupo">
           <label>
             <span className="field-label">{t("selecciones.nombreLabel")}</span>
             <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} />
-          </label>
-          <label>
-            <div className="selecciones-notas-cabecera">
-              <NotasLabel texto={notas} onChange={setNotas}>
-                <span>{t("selecciones.notasLabel")}</span>
-              </NotasLabel>
-            </div>
-            <textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2} />
           </label>
           <label>
             <span className="field-label">{t("selecciones.grupoLabel")}</span>
@@ -709,6 +708,15 @@ export function SeleccionesScreen({
                 </option>
               ))}
             </select>
+          </label>
+          </div>
+          <label>
+            <div className="selecciones-notas-cabecera">
+              <NotasLabel texto={notas} onChange={setNotas}>
+                <span>{t("selecciones.notasLabel")}</span>
+              </NotasLabel>
+            </div>
+            <textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2} />
           </label>
           <div className="form-actions">
             <button type="button" data-recorrido="sel-guardar" onClick={guardarDatos} disabled={!nombre.trim()}>

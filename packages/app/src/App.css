@@ -3507,3 +3507,23 @@ button[type="submit"]:disabled {
   overflow-y: auto;
 }
 .selecciones-grupo-opcion { display: flex; align-items: center; gap: 0.5rem; text-align: left; }
+
+/* Selección abierta: nombre y grupo en la misma línea. */
+.selecciones-nombre-grupo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+}
+.selecciones-nombre-grupo > label:first-child {
+  flex: 1 1 18rem;
+}
+.selecciones-nombre-grupo > label:last-child {
+  flex: 0 1 16rem;
+}
+.selecciones-nombre-grupo input,
+.selecciones-nombre-grupo select {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.selecciones-encabezado + .selecciones-bloque { margin-top: 0.75rem; }
