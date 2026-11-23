@@ -30,6 +30,8 @@ export interface Obra {
   estado: EstadoObra;
   ubicacionFisicaActual: string | null;
   esSeriada: boolean;
+  /** Obra sin serie: se puede vender sin limite (cada venta usa una copia propia; ver copiasSinLimite). */
+  sinLimite: boolean;
   codigoInventario: string | null;
   subtitulo: string | null;
   anioPeriodo: string | null;

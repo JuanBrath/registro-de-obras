@@ -8,6 +8,8 @@ export interface ObraRow {
   categoria_obra: CategoriaObra;
   estado: string;
   es_seriada: number;
+  /** 1 si es una obra sin serie (venta sin límite). */
+  sin_limite: number;
   miniatura_path: string | null;
   codigo_inventario: string | null;
   tags: string | null;
@@ -65,7 +67,7 @@ export function anchoMiniaturaTabla(columnas: number): number {
  * Consulta de las filas de obra que muestran Obras y Selecciones (con conteo de ejemplares por estado).
  * `where` es opcional (ej. "WHERE obra.id IN (?, ?)").
  */
-export const SQL_OBRA_ROWS = (where = "") => `SELECT obra.id, obra.titulo, obra.categoria_obra, obra.estado, obra.es_seriada, obra.miniatura_path,
+export const SQL_OBRA_ROWS = (where = "") => `SELECT obra.id, obra.titulo, obra.categoria_obra, obra.estado, obra.es_seriada, obra.sin_limite, obra.miniatura_path,
                   obra.codigo_inventario, obra.tags,
                   obra.calificacion, obra.ubicacion_fisica_actual, obra.artista_id, artista.nombre_completo,
                   obra_fotografia.subtipo_fotografia, obra_detalle.subtipo,
@@ -105,14 +107,22 @@ export function ObraTarjetaInfo({ obra }: { obra: ObraRow }) {
         <span>
           {t(`categoria.${obra.categoria_obra}` as TranslationKey)}
           {" — "}
-          {Number(obra.es_seriada) === 1 ? t("obrasList.seriada") : t("obrasList.unica")}
+          {Number(obra.sin_limite) === 1
+            ? t("obrasList.sinSerie")
+            : Number(obra.es_seriada) === 1
+              ? t("obrasList.seriada")
+              : t("obrasList.unica")}
         </span>
         {Number(obra.tiene_prueba_artista) === 1 && (
           <span className="obra-card-estado obra-card-estado-prueba-artista">
             {t("obrasList.conPruebaAutor")}
           </span>
         )}
-        {Number(obra.es_seriada) === 1 ? (
+        {Number(obra.sin_limite) === 1 ? (
+          <span className="obra-card-estado obra-card-estado-disponible">
+            {t("obrasList.sinLimiteVendidas", { n: Number(obra.ejemplares_vendida) || 0 })}
+          </span>
+        ) : Number(obra.es_seriada) === 1 ? (
           (() => {
             const disponibles = Number(obra.ejemplares_disponible) || 0;
             const total = Number(obra.total_ejemplares) || 0;
@@ -157,7 +167,11 @@ export function ObraDisponibilidad({ obra }: { obra: ObraRow }) {
               <br />
             </>
           )}
-          {Number(obra.es_seriada) === 1 ? (
+          {Number(obra.sin_limite) === 1 ? (
+            <span className="obra-card-estado obra-card-estado-disponible">
+              {t("obrasList.sinLimiteVendidas", { n: Number(obra.ejemplares_vendida) || 0 })}
+            </span>
+          ) : Number(obra.es_seriada) === 1 ? (
             (() => {
               const disponibles = Number(obra.ejemplares_disponible) || 0;
               const total = Number(obra.total_ejemplares) || 0;

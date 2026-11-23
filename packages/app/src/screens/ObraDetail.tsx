@@ -11,6 +11,7 @@ import {
   ESTADOS_SIN_COMPROMISO_PROPIO,
   evaluarDeshacerSerie,
   evaluarReducirSerie,
+  asegurarCopiaOfrecible,
   obraOriginalPath,
   parseTags,
   type CategoriaObra,
@@ -78,6 +79,7 @@ interface ObraRow {
   categoria_obra: CategoriaObra;
   estado: string;
   es_seriada: number;
+  sin_limite: number;
   ubicacion_fisica_actual: string | null;
   miniatura_path: string | null;
   imagen_alta_resolucion_path: string | null;
@@ -467,7 +469,13 @@ function buildObraDescripcionLineas(
       lineas.push(t("obraDetail.subtipoNoEditable", { subtipo: tEs(labelKey) }));
     }
   }
-  lineas.push(Number(obra.es_seriada) === 1 ? tEs("obraDetail.obraSeriada") : tEs("obraDetail.obraUnica"));
+  lineas.push(
+    Number(obra.sin_limite) === 1
+      ? tEs("obraDetail.obraSinSerie")
+      : Number(obra.es_seriada) === 1
+        ? tEs("obraDetail.obraSeriada")
+        : tEs("obraDetail.obraUnica"),
+  );
   if (ext?.tecnica_material) {
     lineas.push(t("obraDetail.tecnica", { valor: tEs(`fields.pintura.tecnicaMaterial${ext.tecnica_material}` as TranslationKey) }));
   }
@@ -866,7 +874,7 @@ export function ObraDetail({
     setMostrarTodasPruebas(false);
     try {
       const obraRows = await context.db.query<ObraRow>(
-        `SELECT obra.id, obra.titulo, obra.categoria_obra, obra.estado, obra.es_seriada,
+        `SELECT obra.id, obra.titulo, obra.categoria_obra, obra.estado, obra.es_seriada, obra.sin_limite,
                 obra.ubicacion_fisica_actual, obra.miniatura_path, obra.imagen_alta_resolucion_path, obra.tags,
                 obra.artista_id, artista.nombre_completo, obra.subtitulo, obra.codigo_inventario,
                 obra.anio_periodo, obra.regimen_ingreso, obra.historial_procedencia_exhibiciones, obra.notas,
@@ -932,6 +940,8 @@ export function ObraDetail({
       }
 
       if (obraRow) {
+        // Obra sin serie: si ya no queda ninguna copia lista para vender (se vendió, se reservó…), se genera la siguiente.
+        await asegurarCopiaOfrecible(context.db, obraId);
         const ejemplarRows = await context.db.query<EjemplarRow>(
           `SELECT id, tipo, indice, numero, estado, venta_id, fecha_impresion, tipo_impresion, soporte_impresion, tipo_tintas, taller_impresion, ubicacion_actual, dimensiones, tipo_enmarcado, tamano_final_enmarcado, ubicacion_firma, sello_seco_holograma, fecha_limite, notas, precio_venta, moneda_venta,
                   coa_numero, coa_emisor, coa_fecha, valor_seguro, moneda_seguro, vidrio_proteccion_frontal, sistema_cuelgue,
@@ -1643,7 +1653,7 @@ export function ObraDetail({
       // mantenemos obra.estado reflejando ese unico ejemplar para que el
       // resto de las pantallas (listado, etc.) lo sigan leyendo sin tener
       // que consultar ejemplares para obras unicas.
-      if (obra && Number(obra.es_seriada) !== 1) {
+      if (obra && Number(obra.es_seriada) !== 1 && Number(obra.sin_limite) !== 1) {
         await tx.execute(`UPDATE obra SET estado = ? WHERE id = ?`, [fields.estado, obraId]);
       }
     });
@@ -1665,6 +1675,7 @@ export function ObraDetail({
     categoria: CategoriaObra;
     ext: ObraExtRow;
     esSeriada: boolean;
+    sinLimite: boolean;
     cantidadTotalEdiciones: number;
     cantidadPruebaArtista: number;
     imageFile: File | null;
@@ -1737,7 +1748,7 @@ export function ObraDetail({
     await context.db.transaction(async (tx) => {
       await tx.execute(
         `UPDATE obra SET
-           titulo = ?, categoria_obra = ?, ubicacion_fisica_actual = ?, tags = ?, es_seriada = ?, artista_id = ?,
+           titulo = ?, categoria_obra = ?, ubicacion_fisica_actual = ?, tags = ?, es_seriada = ?, sin_limite = ?, artista_id = ?,
            subtitulo = ?, codigo_inventario = ?, anio_periodo = ?, regimen_ingreso = ?,
            historial_procedencia_exhibiciones = ?, notas = ?, statement = ?, calificacion = ?
          WHERE id = ?`,
@@ -1747,6 +1758,7 @@ export function ObraDetail({
           esRegistroPersonal ? fields.ubicacion || null : obra.ubicacion_fisica_actual,
           formatTags(fields.tags) || null,
           fields.esSeriada ? 1 : 0,
+          fields.sinLimite && !fields.esSeriada ? 1 : 0,
           esRegistroPersonal ? obra.artista_id : fields.artistaId,
           fields.subtitulo || null,
           fields.codigoInventario || null,
@@ -2185,7 +2197,7 @@ export function ObraDetail({
             nuevoEstado,
             ejemplarId,
           ]);
-          if (Number(obra?.es_seriada) !== 1) {
+          if (Number(obra?.es_seriada) !== 1 && Number(obra?.sin_limite) !== 1) {
             await tx.execute("UPDATE obra SET estado = ? WHERE id = ?", [nuevoEstado, obraId]);
           }
         } else {
@@ -2231,7 +2243,7 @@ export function ObraDetail({
 
         if (ejemplarId) {
           await tx.execute("UPDATE ejemplar SET estado = 'vendida' WHERE id = ?", [ejemplarId]);
-          if (Number(obra?.es_seriada) !== 1) {
+          if (Number(obra?.es_seriada) !== 1 && Number(obra?.sin_limite) !== 1) {
             await tx.execute("UPDATE obra SET estado = 'vendida' WHERE id = ?", [obraId]);
           }
         } else {
@@ -2361,11 +2373,15 @@ export function ObraDetail({
                 return labelKey ? <p>{t("obraDetail.subtipoNoEditable", { subtipo: t(labelKey) })}</p> : null;
               })()}
             <p>
-              {Number(obra.es_seriada) === 1
-                ? t("obraDetail.obraSeriadaCantidad", {
-                    cantidad: ejemplares.filter((ej) => ej.tipo === "edicion").length,
+              {Number(obra.sin_limite) === 1
+                ? t("obraDetail.obraSinSerieVendidas", {
+                    n: ejemplares.filter((ej) => ej.tipo === "edicion" && ej.estado === "vendida").length,
                   })
-                : t("obraDetail.obraUnica")}
+                : Number(obra.es_seriada) === 1
+                  ? t("obraDetail.obraSeriadaCantidad", {
+                      cantidad: ejemplares.filter((ej) => ej.tipo === "edicion").length,
+                    })
+                  : t("obraDetail.obraUnica")}
             </p>
             {ext?.tecnica_material && (
               <p>{t("obraDetail.tecnica", { valor: t(`fields.pintura.tecnicaMaterial${ext.tecnica_material}` as TranslationKey) })}</p>
@@ -2896,6 +2912,7 @@ function ObraEditForm({
     categoria: CategoriaObra;
     ext: ObraExtRow;
     esSeriada: boolean;
+    sinLimite: boolean;
     cantidadTotalEdiciones: number;
     cantidadPruebaArtista: number;
     imageFile: File | null;
@@ -3028,6 +3045,8 @@ function ObraEditForm({
   });
   const eraSeriada = Number(obra.es_seriada) === 1;
   const [esSeriada, setEsSeriada] = useState(eraSeriada);
+  const eraSinLimite = Number(obra.sin_limite) === 1;
+  const [sinLimite, setSinLimite] = useState(eraSinLimite);
   const [cantidadTotalEdiciones, setCantidadTotalEdiciones] = useState(() =>
     eraSeriada ? String(ejemplares.filter((ej) => ej.tipo === "edicion").length || 1) : "1",
   );
@@ -3061,6 +3080,7 @@ function ObraEditForm({
       tags,
       categoriaObra,
       esSeriada,
+      sinLimite,
       cantidadTotalEdiciones,
       hayPruebaAutor,
       cantidadPruebaAutor,
@@ -3084,6 +3104,7 @@ function ObraEditForm({
       tags,
       categoriaObra,
       esSeriada,
+      sinLimite,
       cantidadTotalEdiciones,
       hayPruebaAutor,
       cantidadPruebaAutor,
@@ -3272,6 +3293,7 @@ function ObraEditForm({
         tags,
         categoria: categoriaObra,
         esSeriada: esSeriadaCalculada,
+        sinLimite: sinLimite && !esSeriadaCalculada,
         cantidadTotalEdiciones: Math.max(1, parseInt(cantidadTotalEdiciones, 10) || 1),
         cantidadPruebaArtista: cantidadPruebaAutorNum,
         ext:
@@ -3655,6 +3677,20 @@ function ObraEditForm({
               </label>
             )}
           </div>
+          {!esSeriadaCalculada && (
+            <label>
+              <input
+                type="checkbox"
+                checked={sinLimite}
+                disabled={eraSinLimite && cantidadEdicionesActual > 1}
+                onChange={(e) => setSinLimite(e.target.checked)}
+              />
+              {t("obraDetail.sinLimiteCheckbox")} <HelpIcon fieldKey="es_seriada" />
+            </label>
+          )}
+          {eraSinLimite && !esSeriadaCalculada && cantidadEdicionesActual > 1 && (
+            <p className="field-note">{t("obraDetail.sinLimiteNoSePuedeQuitar")}</p>
+          )}
           {eraSeriada && !puedeDesconvertir && (
             <p className="field-note">{mensajeNoSePuedeDeshacer}</p>
           )}

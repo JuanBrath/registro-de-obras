@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
-import { parseTags, type CategoriaObra } from "@registro/core";
+import { asegurarCopiaOfrecible, parseTags, type CategoriaObra } from "@registro/core";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { bytesToObjectUrl, leerMiniaturasPorIdEnParalelo } from "../utils/imageObjectUrl.js";
 import { Modal } from "../components/Modal.js";
@@ -58,6 +58,7 @@ interface FotoRow {
   ubicacion_fisica_actual: string | null;
   estado: string;
   es_seriada: number;
+  sin_limite: number;
   total_ejemplares: number;
   ejemplares_disponible: number;
   ejemplares_en_stock: number;
@@ -76,7 +77,7 @@ interface FotoRow {
 // de informacion, para no duplicar esta consulta larga en dos lugares.
 const FOTOS_QUERY_SELECT = `
   SELECT obra.id, obra.titulo, obra.codigo_inventario, obra.miniatura_path, obra.imagen_alta_resolucion_path, obra.tags, obra.artista_id,
-         obra.categoria_obra, obra.calificacion, obra.ubicacion_fisica_actual, obra.estado, obra.es_seriada, artista.nombre_completo,
+         obra.categoria_obra, obra.calificacion, obra.ubicacion_fisica_actual, obra.estado, obra.es_seriada, obra.sin_limite, artista.nombre_completo,
          obra_fotografia.subtipo_fotografia, obra_detalle.subtipo,
          obra_fotografia.fecha_captura,
          obra_fotografia.dimensiones, obra_fotografia.escala_por_tamanos,
@@ -484,6 +485,8 @@ export function GaleriaFotos({
   async function handleVentaDone(obraId: number) {
     setVentaTarget(null);
     if (context) {
+      // Obra sin serie: si la venta dejó sin copia disponible, se genera la siguiente.
+      await asegurarCopiaOfrecible(context.db, obraId);
       const rows = await context.db.query<FotoRow>(
         `${FOTOS_QUERY_SELECT} WHERE obra.id = ? GROUP BY obra.id`,
         [obraId],
@@ -723,7 +726,11 @@ export function GaleriaFotos({
             <span>
               {t(`categoria.${filteredFotos[lightboxIndex].categoria_obra}` as TranslationKey)}
               {" — "}
-              {Number(filteredFotos[lightboxIndex].es_seriada) === 1 ? t("obrasList.seriada") : t("obrasList.unica")}
+              {Number(filteredFotos[lightboxIndex].sin_limite) === 1
+                ? t("obrasList.sinSerie")
+                : Number(filteredFotos[lightboxIndex].es_seriada) === 1
+                  ? t("obrasList.seriada")
+                  : t("obrasList.unica")}
             </span>
             {Number(filteredFotos[lightboxIndex].es_seriada) === 1 && filteredFotos[lightboxIndex].escala_por_tamanos === "Si" && (
               <span>{t("obraDetail.escalaPorTamanos")}</span>

@@ -8,7 +8,7 @@ An artistic piece registered in the program: with its image, its category and it
 
 ## Unique artwork and edition artwork
 
-A **unique artwork** is one of a kind and has a single copy. An **edition artwork** has several numbered copies: an edition.
+A **unique artwork** is one of a kind and has a single copy. An **edition artwork** has several numbered copies: an edition. A **non-editioned** artwork has no sales limit: each sale uses one copy and a new one is generated for the next sale.
 
 ## Edition
 

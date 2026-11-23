@@ -8,7 +8,7 @@ Una pieza artística registrada en el programa: con su imagen, su categoría y s
 
 ## Obra única y obra seriada
 
-Una **obra única** es irrepetible y tiene una sola copia. Una **obra seriada** tiene varias copias numeradas: una edición.
+Una **obra única** es irrepetible y tiene una sola copia. Una **obra seriada** tiene varias copias numeradas: una edición. Una obra **sin serie** no tiene límite de ventas: cada venta usa una copia y se genera una nueva para la siguiente.
 
 ## Edición
 

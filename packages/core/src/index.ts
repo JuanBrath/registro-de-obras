@@ -19,6 +19,7 @@ export * from "./schema/migrations/0001_init.js";
 export * from "./schema/migrationRunner.js";
 
 export * from "./business/ejemplares.js";
+export * from "./business/copiasSinLimite.js";
 export * from "./business/obraGrafica.js";
 export * from "./business/venta.js";
 export * from "./business/paths.js";

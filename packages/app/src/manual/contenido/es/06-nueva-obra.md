@@ -55,12 +55,12 @@ En **Etiquetas** elegí una existente o escribí una nueva. Las etiquetas son pr
 
 ## Paso 5: obra única o seriada
 
-1. En **Es seriada** elegí **Obra única** o **Obra seriada**. (En Obra Gráfica esto se decide solo según el subtipo: por ejemplo, el monotipo es único y las demás técnicas son seriadas.)
+1. En **Es seriada** elegí **Obra única**, **Obra seriada** o **Sin serie (se vende sin límite)**. (En Obra Gráfica esto se decide solo según el subtipo: por ejemplo, el monotipo es único y las demás técnicas son seriadas.)
 2. Si es seriada, completá la **Cantidad total de ediciones**. El programa crea automáticamente las copias numeradas 1/N, 2/N… N/N.
 3. Solo si es seriada aparece el tamaño de referencia de la edición: en Fotografía, primero **Escala por tamaños** (si la edición se divide en distintos tamaños, se deja constancia acá; si elegís **No**, completá el **Tamaño de la imagen (mm)**); en las demás categorías, directamente **Dimensiones**. Para una obra única no hace falta: alcanza con el tamaño de su única copia, que se completa en el paso siguiente.
 4. Tildá **¿Hay prueba de autor?** si corresponde y poné la **Cantidad de pruebas de autor**. Las pruebas de autor (PA) van fuera de la numeración comercial. La regla habitual es el 10 % de la edición, redondeado hacia arriba: para 7 obras corresponde 1 PA y para 25 obras, 3 PA. Si ponés más que eso, el programa muestra una advertencia. Por convención las PA no se venden. Ver [Copias y estados](cap:copias).
 
-Una obra única es, por dentro, una serie de una sola copia.
+Una obra única es, por dentro, una serie de una sola copia. Una obra **sin serie** se puede vender todas las veces que se quiera: se carga el detalle de una copia y, cada vez que esa copia se vende (o se reserva), el programa genera automáticamente la siguiente, disponible y lista para la próxima venta, con los datos de impresión, enmarcado, tamaño y precio de la anterior. Así queda el detalle de cada venta en su propia copia (1, 2, 3…). Las obras sin serie no llevan pruebas de autor, y esta opción no está en Obra Gráfica.
 
 ## Paso 6: los datos de cada copia (opcional)
 

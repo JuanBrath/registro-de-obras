@@ -8,6 +8,7 @@ Each artwork has one or more copies, which appear in the program as **Copies** (
 
 - A **unique artwork** has a single copy.
 - An **edition artwork** has as many copies as editions: number **1/10**, **2/10**… up to **10/10**.
+- A **non-editioned** artwork has no sales limit: its copies are numbered **1**, **2**, **3**… and there is always one available; when it is sold, the program creates the next one.
 - **Artist's proofs** (**AP**) are additional copies that sit outside the commercial numbering: **AP 1/2**, **AP 2/2**. They appear in a separate list, **Artist's proofs**.
 
 By convention, artist's proofs are **not sold**: they are kept, donated or used for promotion. Even so, the program lets you record their sale if you decide to sell them; that's your decision. That's why, on an artist's proof, the button is called **Sale / Reservation / Donation**.

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { applyMigrations } from "../migrationRunner.js";
 import { ALL_MIGRATIONS, migration0001Init } from "../migrations/0001_init.js";
 import type { DatabaseAdapter, ExecuteResult } from "../../adapters/DatabaseAdapter.js";
+import { asegurarCopiaOfrecible } from "../../business/copiasSinLimite.js";
 
 function adaptNodeSqlite(sqliteDb: DatabaseSync): DatabaseAdapter {
   const adapter: DatabaseAdapter = {
@@ -212,6 +213,7 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
       "0087_limpiar_dimensiones_ejemplar_series",
       "0088_selecciones",
       "0089_seleccion_dossier",
+      "0090_obra_sin_limite",
     ]);
   });
 
@@ -226,6 +228,34 @@ describe("ALL_MIGRATIONS against real SQLite", () => {
     await db.execute("DELETE FROM seleccion WHERE id = 1");
     const filas = await db.query("SELECT * FROM seleccion_obra");
     expect(filas).toHaveLength(0);
+  });
+
+  it("obra sin serie: al vender la unica copia se genera una nueva disponible, con numero siguiente y los datos heredados", async () => {
+    const db = adaptNodeSqlite(new DatabaseSync(":memory:"));
+    await applyMigrations(db, ALL_MIGRATIONS);
+    await db.execute("INSERT INTO artista (nombre_completo) VALUES ('A')");
+    await db.execute("INSERT INTO obra (titulo, categoria_obra, artista_id, sin_limite) VALUES ('Sin serie', 'Fotografia', 1, 1)");
+    await db.execute("INSERT INTO obra (titulo, categoria_obra, artista_id) VALUES ('Unica', 'Fotografia', 1)");
+    await db.execute(
+      "INSERT INTO ejemplar (obra_id, tipo, indice, total_ediciones, numero, estado, precio_venta, moneda_venta, dimensiones, notas) VALUES (1, 'edicion', 1, 1, '1', 'disponible', 900, 'USD', '300 x 450 mm', 'nota propia')",
+    );
+    await db.execute("INSERT INTO ejemplar (obra_id, tipo, indice, total_ediciones, numero, estado) VALUES (2, 'edicion', 1, 1, '1/1', 'vendida')");
+
+    // Con una copia ofrecible no hace nada.
+    expect(await asegurarCopiaOfrecible(db, 1)).toBe(false);
+
+    // Se vende: ya no hay ninguna copia ofrecible, asi que aparece la siguiente.
+    await db.execute("UPDATE ejemplar SET estado = 'vendida' WHERE obra_id = 1");
+    expect(await asegurarCopiaOfrecible(db, 1)).toBe(true);
+    const copias = await db.query<Record<string, unknown>>("SELECT * FROM ejemplar WHERE obra_id = 1 ORDER BY indice");
+    expect(copias).toHaveLength(2);
+    expect(copias[1]).toMatchObject({ indice: 2, numero: "2", estado: "disponible", precio_venta: 900, moneda_venta: "USD", dimensiones: "300 x 450 mm" });
+    expect(copias[1].notas).toBeNull();
+
+    // Idempotente, y una obra que no es "sin serie" nunca genera copias.
+    expect(await asegurarCopiaOfrecible(db, 1)).toBe(false);
+    expect(await asegurarCopiaOfrecible(db, 2)).toBe(false);
+    expect(await db.query("SELECT id FROM ejemplar WHERE obra_id = 2")).toHaveLength(1);
   });
 
   it("la ayuda de las pruebas de artista aclara que por convencion no se venden pero el programa permite registrar su venta", async () => {

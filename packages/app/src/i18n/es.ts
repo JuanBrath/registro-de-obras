@@ -1315,4 +1315,12 @@ export const es = {
   "selecciones.elegirObras": "Obras de la selección",
   "selecciones.elegirObrasContador": "{{cantidad}} seleccionadas de {{total}}",
   "selecciones.elegirObrasAyuda": "Se muestran todas tus obras, sin filtros. Tildá las que querés incluir. Para armar una selección a partir de un filtro, hacelo desde Obras con «Seleccionar».",
+  "obraForm.obraSinSerieOpcion": "Sin serie (se vende sin límite)",
+  "obraForm.obraSinSerieNota": "Se puede vender todas las veces que quieras. Se carga el detalle de una copia y, cada vez que se vende, se genera automáticamente una copia nueva lista para la siguiente venta.",
+  "obrasList.sinSerie": "sin serie",
+  "obrasList.sinLimiteVendidas": "Sin límite · {{n}} vendidas",
+  "obraDetail.obraSinSerie": "Obra sin serie (se vende sin límite)",
+  "obraDetail.obraSinSerieVendidas": "Obra sin serie (se vende sin límite) — {{n}} vendidas",
+  "obraDetail.sinLimiteCheckbox": "Sin límite de ventas (obra sin serie)",
+  "obraDetail.sinLimiteNoSePuedeQuitar": "No se puede dejar de ser sin serie mientras haya más de una copia.",
 } as const;

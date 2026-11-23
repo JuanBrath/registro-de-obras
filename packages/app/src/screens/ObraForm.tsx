@@ -80,6 +80,8 @@ export function ObraForm({
 
   const [cantidadTotalEdiciones, setCantidadTotalEdiciones] = useState("1");
   const [hayPruebaAutor, setHayPruebaAutor] = useState(false);
+  // Obra sin serie (venta sin límite): esSeriada queda en false y esto marca la tercera modalidad.
+  const [sinLimite, setSinLimite] = useState(false);
   const [cantidadPruebaAutor, setCantidadPruebaAutor] = useState("1");
   // La advertencia de "excede el 10%" es solo informativa: una vez que el
   // usuario cargo la cantidad (no bien toca el campo), se deja de mostrar en
@@ -171,6 +173,7 @@ export function ObraForm({
   }, []);
 
   function resetForm() {
+    setSinLimite(false);
     setTitulo("");
     setSubtitulo("");
     setCodigoInventario("");
@@ -200,6 +203,7 @@ export function ObraForm({
   }
 
   function setEsSeriadaChoice(value: boolean) {
+    setSinLimite(false);
     if (categoria === "Fotografia") setFotografia((prev) => ({ ...prev, esSeriada: value }));
     else setObraDetalle((prev) => ({ ...prev, esSeriada: value }));
   }
@@ -295,17 +299,18 @@ export function ObraForm({
       const obraId = await db.transaction(async (tx) => {
         const insertObra = await tx.execute(
           `INSERT INTO obra (
-             titulo, categoria_obra, artista_id, estado, ubicacion_fisica_actual, es_seriada, tags,
+             titulo, categoria_obra, artista_id, estado, ubicacion_fisica_actual, es_seriada, sin_limite, tags,
              subtitulo, codigo_inventario, anio_periodo, regimen_ingreso, historial_procedencia_exhibiciones, notas, statement,
              calificacion
            )
-           VALUES (?, ?, ?, 'disponible', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           VALUES (?, ?, ?, 'disponible', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             titulo,
             categoria,
             artistaId,
             ubicacion || null,
             esSeriada ? 1 : 0,
+            sinLimite && !esSeriada && categoria !== "ObraGrafica" ? 1 : 0,
             formatTags(tags) || null,
             subtitulo || null,
             codigoInventario || null,
@@ -454,7 +459,10 @@ export function ObraForm({
           );
         }
 
-        const ejemplares = esSeriada
+        // Obra sin serie: una sola copia para empezar, numerada "1" (sin total); al venderla se genera la siguiente.
+        const ejemplares = sinLimite
+          ? [{ ...generarEjemplarUnico(), numero: "1" }]
+          : esSeriada
           ? generarEjemplares(cantidad, cantidadPruebaAutorNum)
           : hayPruebaAutor
             ? generarEjemplares(1, cantidadPruebaAutorNum)
@@ -747,7 +755,7 @@ export function ObraForm({
                   <input
                     type="radio"
                     name="esSeriadaChoice"
-                    checked={esSeriada === false}
+                    checked={esSeriada === false && !sinLimite}
                     onChange={() => setEsSeriadaChoice(false)}
                   />
                   {t("obraForm.obraUnicaOpcion")}
@@ -761,7 +769,21 @@ export function ObraForm({
                   />
                   {t("obraForm.obraSeriadaOpcion")}
                 </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="esSeriadaChoice"
+                    checked={sinLimite}
+                    onChange={() => {
+                      setEsSeriadaChoice(false);
+                      setSinLimite(true);
+                      setHayPruebaAutor(false);
+                    }}
+                  />
+                  {t("obraForm.obraSinSerieOpcion")}
+                </label>
               </div>
+              {sinLimite && <p className="field-note">{t("obraForm.obraSinSerieNota")}</p>}
             </fieldset>
           )}
 
@@ -814,7 +836,7 @@ export function ObraForm({
             </label>
           )}
 
-          {esSeriada !== null && (
+          {esSeriada !== null && !sinLimite && (
             <label>
               <input
                 type="checkbox"

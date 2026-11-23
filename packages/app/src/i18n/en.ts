@@ -1316,4 +1316,12 @@ export const en: Record<keyof typeof es, string> = {
   "selecciones.elegirObras": "Artworks in the selection",
   "selecciones.elegirObrasContador": "{{cantidad}} selected of {{total}}",
   "selecciones.elegirObrasAyuda": "All your artworks are shown, without filters. Tick the ones you want to include. To build a selection from a filter, do it from Artworks with “Select”.",
+  "obraForm.obraSinSerieOpcion": "Non-editioned (sold without limit)",
+  "obraForm.obraSinSerieNota": "It can be sold as many times as you want. You enter the details of one copy and, every time it is sold, a new copy is generated automatically, ready for the next sale.",
+  "obrasList.sinSerie": "non-editioned",
+  "obrasList.sinLimiteVendidas": "No limit · {{n}} sold",
+  "obraDetail.obraSinSerie": "Non-editioned artwork (sold without limit)",
+  "obraDetail.obraSinSerieVendidas": "Non-editioned artwork (sold without limit) — {{n}} sold",
+  "obraDetail.sinLimiteCheckbox": "No sales limit (non-editioned artwork)",
+  "obraDetail.sinLimiteNoSePuedeQuitar": "It cannot stop being non-editioned while it has more than one copy.",
 };

@@ -24,6 +24,7 @@ interface FilaObra {
   nombre_completo: string | null;
   nombre_artistico: string | null;
   es_seriada: number;
+  sin_limite: number;
   bio: string | null;
   bio_en: string | null;
   tecnica: string | null;
@@ -135,7 +136,7 @@ export function DossierModal({
         }
         const ph = ids.map(() => "?").join(",");
         const rows = await context.db.query<FilaObra>(
-          `SELECT obra.id, obra.titulo, obra.anio_periodo, obra.artista_id, obra.es_seriada,
+          `SELECT obra.id, obra.titulo, obra.anio_periodo, obra.artista_id, obra.es_seriada, obra.sin_limite,
                   artista.nombre_completo, artista.nombre_artistico, artista.bio, artista.bio_en,
                   COALESCE(obra_fotografia.tecnica, obra_detalle.tecnica) AS tecnica,
                   COALESCE(obra_fotografia.dimensiones, obra_detalle.dimensiones) AS dimensiones_obra,
@@ -198,7 +199,8 @@ export function DossierModal({
   // estado se pueda ofrecer. Las vendidas, reservadas, descartadas, destruidas o de colección del autor se descartan.
   const elegidoPorObra = useMemo(() => {
     const mapa = new Map<number, FilaEjemplar>();
-    const seriada = new Map(filas.map((f) => [f.id, Number(f.es_seriada) === 1]));
+    // Obras seriadas y sin serie tienen varias copias: se toma la primera que se pueda ofrecer.
+    const seriada = new Map(filas.map((f) => [f.id, Number(f.es_seriada) === 1 || Number(f.sin_limite) === 1]));
     for (const e of ejemplares) {
       if (e.tipo !== "edicion" || mapa.has(e.obra_id)) continue;
       if (!seriada.get(e.obra_id) || ESTADOS_OFRECIBLES.has(e.estado)) mapa.set(e.obra_id, e);
