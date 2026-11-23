@@ -3515,10 +3515,10 @@ button[type="submit"]:disabled {
   gap: 0.75rem 1rem;
 }
 .selecciones-nombre-grupo > label:first-child {
-  flex: 1 1 18rem;
+  flex: 0 1 20rem;
 }
 .selecciones-nombre-grupo > label:last-child {
-  flex: 0 1 16rem;
+  flex: 1 1 24rem;
 }
 .selecciones-nombre-grupo input,
 .selecciones-nombre-grupo select {

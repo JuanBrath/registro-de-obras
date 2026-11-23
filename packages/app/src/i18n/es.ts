@@ -1205,6 +1205,8 @@ export const es = {
   "selecciones.deGrupo": "Selecciones del grupo {{grupo}}",
   "selecciones.agregarAlGrupo": "Agregar selecciones al grupo",
   "selecciones.grupoVacio": "Este grupo todavía no tiene selecciones.",
+  "selecciones.vistaImagenes": "Imágenes",
+  "selecciones.abrirFicha": "Abrir la ficha de la obra",
   "selecciones.existentes": "Selecciones armadas",
   "dossier.seccionFormato": "Formato",
   "dossier.seccionPortada": "Portada",

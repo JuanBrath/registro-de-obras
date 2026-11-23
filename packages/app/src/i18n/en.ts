@@ -1206,6 +1206,8 @@ export const en: Record<keyof typeof es, string> = {
   "selecciones.deGrupo": "Selections in group {{grupo}}",
   "selecciones.agregarAlGrupo": "Add selections to the group",
   "selecciones.grupoVacio": "This group has no selections yet.",
+  "selecciones.vistaImagenes": "Images",
+  "selecciones.abrirFicha": "Open the artwork record",
   "selecciones.existentes": "Existing selections",
   "dossier.seccionFormato": "Format",
   "dossier.seccionPortada": "Cover",
