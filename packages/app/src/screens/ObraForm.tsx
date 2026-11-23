@@ -746,10 +746,7 @@ export function ObraForm({
             </p>
           )}
           {categoria && categoria !== "ObraGrafica" && (
-            <fieldset>
-              <legend>
-                {t("field.esSeriada")} <HelpIcon fieldKey="es_seriada" />
-              </legend>
+            <div className="modalidad-obra">
               <div className="radio-row">
                 <label>
                   <input
@@ -782,9 +779,10 @@ export function ObraForm({
                   />
                   {t("obraForm.obraSinSerieOpcion")}
                 </label>
+                <HelpIcon fieldKey="es_seriada" />
               </div>
               {sinLimite && <p className="field-note">{t("obraForm.obraSinSerieNota")}</p>}
-            </fieldset>
+            </div>
           )}
 
           {esSeriada === true && (
