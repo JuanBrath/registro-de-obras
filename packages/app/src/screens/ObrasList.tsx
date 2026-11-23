@@ -444,7 +444,7 @@ export function ObrasList({
     paso("obras-selecciones", "ayudaObras.selecciones", t("selecciones.boton")),
     paso("obras-seleccionar", "ayudaObras.seleccionar", t("selecciones.seleccionar")),
     paso("obras-informe", "ayudaObras.informe", t("informesObras.generarInforme")),
-    paso("obras-vista", "ayudaObras.vista", t("obrasList.vistaTarjetas") + " / " + t("obrasList.vistaColumnas")),
+    paso("obras-vista", "ayudaObras.vista", t("obrasList.vistaColumnas") + " / " + t("obrasList.vistaTarjetas") + " / " + t("selecciones.vistaImagenes")),
     paso("obras-tamano", "ayudaObras.tamano", t("obrasList.tamanoMiniaturasLabel")),
     paso("obras-orden", "ayudaObras.orden", t("obrasList.ordenarPorLabel")),
     paso("obras-artista", "ayudaObras.artista", t("obraForm.artistaLabel")),

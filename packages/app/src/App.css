@@ -3586,3 +3586,9 @@ button[type="submit"]:disabled {
 .selecciones-pantalla select {
   padding: 0.21em 0.42em;
 }
+
+/* Recorrido de ayuda: el ancho de la tarjeta incluye su relleno, así que nunca se sale por el borde derecho. */
+.recorrido-tarjeta {
+  box-sizing: border-box;
+  max-width: calc(100vw - 16px);
+}
