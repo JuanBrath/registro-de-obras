@@ -1318,8 +1318,11 @@ export const es = {
   "obraForm.obraSinSerieOpcion": "Sin serie (se vende sin límite)",
   "obraForm.obraSinSerieNota": "Se puede vender todas las veces que quieras. Se carga el detalle de una copia y, cada vez que se vende, se genera automáticamente una copia nueva lista para la siguiente venta.",
   "obrasList.sinSerie": "sin serie",
-  "obrasList.sinLimiteVendidas": "Sin límite · {{n}} vendidas",
+  "obrasList.sinLimiteVendidas": "Sin límite · {{n}} con salida",
   "obraDetail.obraSinSerie": "Obra sin serie (se vende sin límite)",
-  "obraDetail.obraSinSerieVendidas": "Obra sin serie (se vende sin límite) — {{n}} vendidas",
+  "obraDetail.copiaSobranteSinSerie": "La copia {{numero}} vuelve a estar disponible y ya hay otra copia nueva en blanco ({{sobrante}}), generada para la próxima venta. ¿Querés anular esa copia nueva?",
+  "obraDetail.copiaSobranteSi": "Sí, anular la copia nueva",
+  "obraDetail.copiaSobranteNo": "No, conservar las dos",
+  "obraDetail.obraSinSerieVendidas": "Obra sin serie (se vende sin límite) — {{n}} copias vendidas o dadas de baja",
   "obraDetail.seriadaASinSerieNota": "Una obra seriada no se puede pasar directamente a sin serie: primero convertila en obra única.",
 } as const;

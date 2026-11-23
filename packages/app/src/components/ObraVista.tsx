@@ -93,6 +93,16 @@ export const SQL_OBRA_ROWS = (where = "") => `SELECT obra.id, obra.titulo, obra.
            GROUP BY obra.id
            ORDER BY obra.titulo COLLATE NOCASE ASC`;
 
+/** Copias de una obra sin serie que ya "salieron": vendidas, en la coleccion del autor, descartadas o destruidas. */
+export function salidasSinSerie(obra: ObraRow): number {
+  return (
+    (Number(obra.ejemplares_vendida) || 0) +
+    (Number(obra.ejemplares_coleccion_autor) || 0) +
+    (Number(obra.ejemplares_descartada) || 0) +
+    (Number(obra.ejemplares_destruida) || 0)
+  );
+}
+
 /** Texto de la tarjeta de una obra: título, SKU, categoría, estado y disponibilidad. */
 export function ObraTarjetaInfo({ obra }: { obra: ObraRow }) {
   const { t } = useLanguage();
@@ -120,7 +130,7 @@ export function ObraTarjetaInfo({ obra }: { obra: ObraRow }) {
         )}
         {Number(obra.sin_limite) === 1 ? (
           <span className="obra-card-estado obra-card-estado-disponible">
-            {t("obrasList.sinLimiteVendidas", { n: Number(obra.ejemplares_vendida) || 0 })}
+            {t("obrasList.sinLimiteVendidas", { n: salidasSinSerie(obra) })}
           </span>
         ) : Number(obra.es_seriada) === 1 ? (
           (() => {
@@ -169,7 +179,7 @@ export function ObraDisponibilidad({ obra }: { obra: ObraRow }) {
           )}
           {Number(obra.sin_limite) === 1 ? (
             <span className="obra-card-estado obra-card-estado-disponible">
-              {t("obrasList.sinLimiteVendidas", { n: Number(obra.ejemplares_vendida) || 0 })}
+              {t("obrasList.sinLimiteVendidas", { n: salidasSinSerie(obra) })}
             </span>
           ) : Number(obra.es_seriada) === 1 ? (
             (() => {

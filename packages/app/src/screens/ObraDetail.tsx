@@ -246,6 +246,9 @@ const CAMPOS_DATOS_CARGADOS_EJEMPLAR = [
   "informe_conservacion",
 ] as const;
 
+/** En una obra sin serie, estados que se comportan como "vendida": la copia ya salio y se genera la siguiente. */
+const ESTADOS_SALIDA_SIN_SERIE: ReadonlySet<string> = new Set(["vendida", "coleccion_autor", "descartada", "destruida"]);
+
 /** Si esta copia ya tiene datos cargados a mano (fecha de impresion, notas, COA, etc.). */
 function tieneDatosCargados(ej: EjemplarRow): boolean {
   return CAMPOS_DATOS_CARGADOS_EJEMPLAR.some((campo) => ej[campo] != null && ej[campo] !== "");
@@ -813,6 +816,8 @@ export function ObraDetail({
   const [menuImagenPos, setMenuImagenPos] = useState<{ x: number; y: number } | null>(null);
   const [exportarImagenAbierto, setExportarImagenAbierto] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  // Obra sin serie: copia nueva en blanco que quedo de mas porque otra copia volvio a estar ofrecible.
+  const [copiaSobrante, setCopiaSobrante] = useState<{ id: number; numero: string; restaurada: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [anulandoVenta, setAnulandoVenta] = useState(false);
   const [generandoFichaPdf, setGenerandoFichaPdf] = useState(false);
@@ -1658,6 +1663,8 @@ export function ObraDetail({
       }
     });
     setEditingEjemplarId(null);
+    const estadoPrevio = ejemplares.find((ej) => ej.id === ejemplarId)?.estado;
+    if (estadoPrevio && !ESTADOS_OFRECIBLES.has(estadoPrevio)) await revisarCopiaSobrante(ejemplarId);
     await reload();
   }
 
@@ -2202,6 +2209,52 @@ export function ObraDetail({
     }
   }
 
+  /** Obra sin serie: si una copia vuelve a estar ofrecible (se anulo la venta, etc.) y ya existe la copia nueva en
+   * blanco generada para la proxima venta, ofrece anularla (no lo hace sola). */
+  async function revisarCopiaSobrante(restauradaId: number | null) {
+    if (!context || !restauradaId || Number(obra?.sin_limite) !== 1) return;
+    const copias = await context.db.query<{
+      id: number;
+      indice: number;
+      numero: string;
+      estado: string;
+      venta_id: number | null;
+      propios: number;
+    }>(
+      `SELECT id, indice, numero, estado, venta_id,
+              (fecha_impresion IS NOT NULL OR ubicacion_actual IS NOT NULL OR ubicacion_firma IS NOT NULL
+               OR sello_seco_holograma IS NOT NULL OR notas IS NOT NULL OR coa_numero IS NOT NULL OR coa_emisor IS NOT NULL
+               OR coa_fecha IS NOT NULL OR valor_seguro IS NOT NULL OR informe_conservacion IS NOT NULL) AS propios
+       FROM ejemplar WHERE obra_id = ? AND tipo = 'edicion' ORDER BY indice`,
+      [obraId],
+    );
+    const restaurada = copias.find((c) => c.id === restauradaId);
+    if (!restaurada || !ESTADOS_OFRECIBLES.has(restaurada.estado)) return;
+    const sobrantes = copias.filter(
+      (c) => c.id !== restauradaId && c.estado === "disponible" && c.venta_id == null && Number(c.propios) === 0,
+    );
+    const sobrante = sobrantes[sobrantes.length - 1];
+    if (sobrante) setCopiaSobrante({ id: sobrante.id, numero: sobrante.numero, restaurada: restaurada.numero });
+  }
+
+  async function handleAnularCopiaSobrante() {
+    if (!context || !copiaSobrante) return;
+    const { id, numero } = copiaSobrante;
+    setCopiaSobrante(null);
+    try {
+      await context.db.transaction(async (tx) => {
+        await tx.execute("DELETE FROM ejemplar WHERE id = ? AND venta_id IS NULL", [id]);
+        await tx.execute("INSERT INTO historial_evento (obra_id, tipo, descripcion) VALUES (?, 'cambio_estado', ?)", [
+          obraId,
+          `Copia ${numero} anulada (obra sin serie: otra copia volvió a estar disponible)`,
+        ]);
+      });
+      await reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  }
+
   async function handleAnularVenta(venta: VentaRow, ejemplarId: number | null, nuevoEstado: string) {
     if (!context) return;
     setAnulandoVenta(true);
@@ -2232,6 +2285,7 @@ export function ObraDetail({
           `${venta.tipo === "venta" ? "Venta" : venta.tipo === "donacion" ? "Donación" : "Reserva"} anulada (comprador: ${venta.comprador_nombre})`,
         ]);
       });
+      await revisarCopiaSobrante(ejemplarId);
       await reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -2391,7 +2445,7 @@ export function ObraDetail({
             <p>
               {Number(obra.sin_limite) === 1
                 ? t("obraDetail.obraSinSerieVendidas", {
-                    n: ejemplares.filter((ej) => ej.tipo === "edicion" && ej.estado === "vendida").length,
+                    n: ejemplares.filter((ej) => ej.tipo === "edicion" && ESTADOS_SALIDA_SIN_SERIE.has(ej.estado)).length,
                   })
                 : Number(obra.es_seriada) === 1
                   ? t("obraDetail.obraSeriadaCantidad", {
@@ -2491,6 +2545,24 @@ export function ObraDetail({
               <p className="success" role="status">
                 ✅ {fichaPdfMensaje}
               </p>
+            )}
+            {copiaSobrante && (
+              <div className="confirm-box">
+                <p>
+                  {t("obraDetail.copiaSobranteSinSerie", {
+                    numero: copiaSobrante.restaurada,
+                    sobrante: copiaSobrante.numero,
+                  })}
+                </p>
+                <div className="obra-form-saved-actions">
+                  <button type="button" onClick={handleAnularCopiaSobrante}>
+                    {t("obraDetail.copiaSobranteSi")}
+                  </button>
+                  <button type="button" onClick={() => setCopiaSobrante(null)}>
+                    {t("obraDetail.copiaSobranteNo")}
+                  </button>
+                </div>
+              </div>
             )}
             {confirmingDelete && (
               <div className="confirm-box">
