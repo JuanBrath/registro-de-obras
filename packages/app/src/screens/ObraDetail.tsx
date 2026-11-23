@@ -2759,7 +2759,9 @@ export function ObraDetail({
 
           {pruebasEjemplares.length > 0 && (
             <>
-              <h2>{t("obraDetail.pruebasDeAutorTitulo")}</h2>
+              <h2>
+                {t("obraDetail.pruebasDeAutorTitulo")} <HelpIcon fieldKey="prueba_artista_info" />
+              </h2>
               {(pruebasEjemplares.length > pruebasColapsadas.length
                 ? mostrarTodasPruebas
                   ? pruebasEjemplares
@@ -4269,7 +4271,7 @@ function EjemplarRowView({
       <div className="ejemplar-row ejemplar-row-editing" onKeyDown={focusNextOnEnter}>
         <strong>
           {ejemplar.numero}
-          {ejemplar.tipo === "prueba_artista" && <HelpIcon fieldKey="prueba_artista_info" />}
+          
         </strong>
         <label>
           <span className="field-label">
@@ -4622,7 +4624,7 @@ function EjemplarRowView({
     <div className="ejemplar-row">
       <strong>
         {ejemplar.numero}
-        {ejemplar.tipo === "prueba_artista" && <HelpIcon fieldKey="prueba_artista_info" />}
+        
       </strong>
       <span className={`obra-card-estado obra-card-estado-${ejemplar.estado}`}>
         {t(`estado.${ejemplar.estado}` as TranslationKey)}
