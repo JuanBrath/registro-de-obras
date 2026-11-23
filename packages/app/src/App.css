@@ -3592,3 +3592,10 @@ button[type="submit"]:disabled {
   box-sizing: border-box;
   max-width: calc(100vw - 16px);
 }
+
+/* Botón "?" de ayuda del recorrido: en rojo para que se distinga. */
+.header-help-button {
+  color: #e5484d;
+  border-color: #e5484d;
+  font-weight: 700;
+}
