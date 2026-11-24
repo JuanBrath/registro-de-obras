@@ -610,18 +610,29 @@ export function SeleccionesScreen({
           <div>
             <span className="field-label">{t("selecciones.seleccionesDelGrupo")}</span>
             {selecciones.length === 0 && <p>{t("selecciones.vacio")}</p>}
+            <p className="field-note">{t("selecciones.grupoAyudaElegir")}</p>
             <div className="selecciones-grupo-checklist">
               {selecciones.map((sel) => {
                 const tildada = grupoNuevo ? elegidasGrupoNuevo.includes(sel.id) : sel.grupo_id === grupoActivoId;
                 const otroGrupo = grupos.find((g) => g.id === sel.grupo_id && g.id !== grupoActivoId);
                 return (
-                  <label key={sel.id} className="selecciones-grupo-opcion">
-                    <input type="checkbox" checked={tildada} onChange={(e) => alternarSeleccionEnGrupo(sel.id, e.target.checked)} />
-                    {sel.nombre} ({sel.cantidad})
-                    {otroGrupo && !tildada && (
-                      <span className="field-note"> — {t("selecciones.enOtroGrupo", { grupo: otroGrupo.nombre })}</span>
-                    )}
-                  </label>
+                  <button
+                    key={sel.id}
+                    type="button"
+                    aria-pressed={tildada}
+                    className={tildada ? "selecciones-grupo-opcion activa" : "selecciones-grupo-opcion"}
+                    onClick={() => alternarSeleccionEnGrupo(sel.id, !tildada)}
+                  >
+                    <span className="selecciones-grupo-marca" aria-hidden="true">
+                      {tildada ? "✓" : "+"}
+                    </span>
+                    <span className="selecciones-grupo-nombre">
+                      {sel.nombre} ({sel.cantidad})
+                      {otroGrupo && !tildada && (
+                        <span className="selecciones-grupo-otro">{t("selecciones.enOtroGrupo", { grupo: otroGrupo.nombre })}</span>
+                      )}
+                    </span>
+                  </button>
                 );
               })}
             </div>

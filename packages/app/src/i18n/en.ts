@@ -1240,6 +1240,7 @@ export const en: Record<keyof typeof es, string> = {
   "selecciones.seleccionesTitulo": "Selections",
   "selecciones.nombreGrupoLabel": "Group name",
   "selecciones.seleccionesDelGrupo": "Selections in this group",
+  "selecciones.grupoAyudaElegir": "Click the selections you want in this group: the ones in blue with ✓ are already part of it.",
   "selecciones.enOtroGrupo": "currently in group {{grupo}}",
   "selecciones.sinGrupos": "There are no groups yet. Create one with \"+ New group\".",
   "selecciones.deGrupo": "Selections in group {{grupo}}",
