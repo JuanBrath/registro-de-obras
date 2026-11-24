@@ -5,6 +5,7 @@ import { leerMiniaturasPorIdEnParalelo } from "../utils/imageObjectUrl.js";
 import { marcarSiMiniaturaMuyVertical } from "../utils/miniaturaVertical.js";
 import { ObraDisponibilidad, ObraTarjetaInfo, SQL_OBRA_ROWS, anchoMiniaturaTabla, type ObraRow } from "./ObraVista.js";
 import { GrillaImagenes } from "./GrillaImagenes.js";
+import { VisorObras } from "./VisorObras.js";
 import { sincronizarCalificacionConArchivo } from "../utils/calificacionArchivo.js";
 import { MiniaturasSizeSlider } from "./MiniaturasSizeSlider.js";
 import { cargarColumnasGridInicial, guardarColumnasGrid } from "../utils/columnasGrid.js";
@@ -40,8 +41,8 @@ export function SelectorObras({ elegidas, onChange }: { elegidas: number[]; onCh
   const [columnasTarjetas, setColumnasTarjetas] = useState(() => cargarColumnasGridInicial(COLUMNAS_KEY, 5));
   const [columnasLista, setColumnasLista] = useState(() => cargarColumnasGridInicial(COLUMNAS_LISTA_KEY, 5));
   const [columnasImagenes, setColumnasImagenes] = useState(() => cargarColumnasGridInicial(COLUMNAS_IMAGENES_KEY, 5));
-  // Pantalla completa: el mismo selector, pero ocupando toda la ventana para ver muchas obras a la vez.
-  const [completa, setCompleta] = useState(false);
+  // Pantalla completa: recorre las fotos de a una, en grande, y permite elegir o quitar la que se ve.
+  const [visorEn, setVisorEn] = useState<number | null>(null);
   const urlsRef = useRef<string[]>([]);
 
   useEffect(() => {
@@ -72,16 +73,6 @@ export function SelectorObras({ elegidas, onChange }: { elegidas: number[]; onCh
       urlsRef.current = [];
     };
   }, [context]);
-
-  // Con la pantalla completa abierta, Esc la cierra.
-  useEffect(() => {
-    if (!completa) return;
-    const alPulsar = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setCompleta(false);
-    };
-    document.addEventListener("keydown", alPulsar);
-    return () => document.removeEventListener("keydown", alPulsar);
-  }, [completa]);
 
   const cambiarVista = (v: Vista) => {
     setVista(v);
@@ -137,7 +128,7 @@ export function SelectorObras({ elegidas, onChange }: { elegidas: number[]; onCh
   );
 
   return (
-    <div className={completa ? "selector-obras selector-obras-completa" : "selector-obras"}>
+    <div className="selector-obras">
       <h3 className="selector-obras-titulo">{t("selecciones.elegirObras")}</h3>
       <p className="dossier-nota">{t("selecciones.elegirObrasAyuda")}</p>
       <div className="obras-toolbar-fila selector-obras-barra">
@@ -152,8 +143,8 @@ export function SelectorObras({ elegidas, onChange }: { elegidas: number[]; onCh
               {boton("imagenes", t("selecciones.vistaImagenes"))}
             </div>
             <MiniaturasSizeSlider columnas={columnas} onChange={cambiarTamano} />
-            <button type="button" onClick={() => setCompleta((v) => !v)}>
-              {completa ? t("selecciones.salirPantallaCompleta") : t("selecciones.pantallaCompleta")}
+            <button type="button" onClick={() => setVisorEn(0)}>
+              {t("selecciones.pantallaCompleta")}
             </button>
           </>
         )}
@@ -172,9 +163,21 @@ export function SelectorObras({ elegidas, onChange }: { elegidas: number[]; onCh
         />
       )}
 
+      {visorEn !== null && (
+        <VisorObras
+          items={obras}
+          indiceInicial={visorEn}
+          onCerrar={() => setVisorEn(null)}
+          onAbrirFicha={() => {}}
+          onCalificar={calificar}
+          onMenuImagen={(e) => e.preventDefault()}
+          seleccion={{ elegidas: marcadas, alternar }}
+        />
+      )}
+
       {vista === "tarjetas" && (
         <div className="obras-grid" style={{ gridTemplateColumns: `repeat(${columnasTarjetas}, 1fr)` }}>
-          {obras.map((obra) => {
+          {obras.map((obra, i) => {
             const marcada = marcadas.has(obra.id);
             return (
               <div className="obra-card-wrapper" key={obra.id}>
@@ -184,6 +187,9 @@ export function SelectorObras({ elegidas, onChange }: { elegidas: number[]; onCh
                   onChange={() => alternar(obra.id)}
                   style={{ position: "absolute", top: 8, left: 8, zIndex: 2, width: 22, height: 22 }}
                 />
+                <button type="button" className="selector-ampliar" onClick={() => setVisorEn(i)} aria-label={t("selecciones.ampliar")} title={t("selecciones.ampliar")}>
+                  ⤢
+                </button>
                 <button
                   type="button"
                   className="obra-card"
@@ -216,7 +222,7 @@ export function SelectorObras({ elegidas, onChange }: { elegidas: number[]; onCh
               </tr>
             </thead>
             <tbody>
-              {obras.map((obra) => {
+              {obras.map((obra, i) => {
                 const marcada = marcadas.has(obra.id);
                 return (
                   <tr
@@ -226,6 +232,18 @@ export function SelectorObras({ elegidas, onChange }: { elegidas: number[]; onCh
                   >
                     <td>
                       <input type="checkbox" checked={marcada} onChange={() => alternar(obra.id)} onClick={(e) => e.stopPropagation()} />
+                      <button
+                        type="button"
+                        className="selector-ampliar selector-ampliar-fila"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setVisorEn(i);
+                        }}
+                        aria-label={t("selecciones.ampliar")}
+                        title={t("selecciones.ampliar")}
+                      >
+                        ⤢
+                      </button>
                     </td>
                     <td>
                       {thumbs[obra.id] ? (

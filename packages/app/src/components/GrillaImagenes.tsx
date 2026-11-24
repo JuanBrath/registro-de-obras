@@ -116,6 +116,17 @@ export function GrillaImagenes({
                   style={{ position: "absolute", top: 8, left: 8, zIndex: 2, width: 22, height: 22 }}
                 />
               )}
+              {seleccion && (
+                <button
+                  type="button"
+                  className="selector-ampliar"
+                  onClick={() => setIndice(i)}
+                  aria-label={t("selecciones.ampliar")}
+                  title={t("selecciones.ampliar")}
+                >
+                  ⤢
+                </button>
+              )}
               <button
                 type="button"
                 className="galeria-foto-thumb-button"
@@ -139,6 +150,7 @@ export function GrillaImagenes({
           onAbrirFicha={onAbrirFicha ?? (() => {})}
           onCalificar={onCalificar}
           onCambio={onCambio}
+          seleccion={seleccion}
           onMenuImagen={(e, id) => {
             const obra = visibles.find((o) => o.id === id);
             if (obra) abrirMenu(e, obra);
