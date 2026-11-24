@@ -72,7 +72,8 @@ export function GrillaImagenes({
   thumbs: Record<number, string>;
   columnas: number;
   onCalificar: (obraId: number, n: number) => void;
-  onAbrirFicha: (obraId: number) => void;
+  /** Sin esto (ej. al armar una selección nueva) no se ofrece "Abrir ficha": no hay a dónde ir sin perder lo elegido. */
+  onAbrirFicha?: (obraId: number) => void;
   onError: (mensaje: string) => void;
   onCambio?: (obraId: number) => void;
   seleccion?: { elegidas: Set<number>; yaEnSeleccion: Set<number>; alternar: (obraId: number) => void };
@@ -115,6 +116,17 @@ export function GrillaImagenes({
                   style={{ position: "absolute", top: 8, left: 8, zIndex: 2, width: 22, height: 22 }}
                 />
               )}
+              {seleccion && (
+                <button
+                  type="button"
+                  className="selector-ampliar"
+                  onClick={() => setIndice(i)}
+                  aria-label={t("selecciones.ampliar")}
+                  title={t("selecciones.ampliar")}
+                >
+                  ⤢
+                </button>
+              )}
               <button
                 type="button"
                 className="galeria-foto-thumb-button"
@@ -135,9 +147,10 @@ export function GrillaImagenes({
           items={visibles}
           indiceInicial={indice}
           onCerrar={() => setIndice(null)}
-          onAbrirFicha={onAbrirFicha}
+          onAbrirFicha={onAbrirFicha ?? (() => {})}
           onCalificar={onCalificar}
           onCambio={onCambio}
+          seleccion={seleccion}
           onMenuImagen={(e, id) => {
             const obra = visibles.find((o) => o.id === id);
             if (obra) abrirMenu(e, obra);
@@ -151,7 +164,7 @@ export function GrillaImagenes({
           y={menu.y}
           onClose={() => setMenu(null)}
           items={[
-            { label: t("selecciones.abrirFicha"), onClick: () => onAbrirFicha(menu.obra.id) },
+            ...(onAbrirFicha ? [{ label: t("selecciones.abrirFicha"), onClick: () => onAbrirFicha(menu.obra.id) }] : []),
             {
               label: t("obraDetail.exportarImagen"),
               onClick: () => conArchivo(menu.obra, t("obraDetail.errorExportarSinArchivo"), () => setExportar(menu.obra)),

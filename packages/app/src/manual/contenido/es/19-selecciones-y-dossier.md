@@ -11,7 +11,8 @@ Una **selección** es un grupo de obras que elegís a mano, por ejemplo las que 
 1. En **Obras**, tocá **Selecciones**.
 2. Tocá **Crear selección**.
 3. Escribí el **Nombre de la selección** y, si querés, las **Notas**. Debajo se muestran **todas** tus obras, sin filtros, con una casilla en cada una: tildá las que querés incluir (arriba ves cuántas llevás elegidas).
-4. Tocá **Guardar**. La selección aparece arriba, en **Selecciones armadas**, ya con esas obras. Si querés armarla a partir de un filtro, hacelo desde **Obras** (ver más abajo).
+4. Para verlas mejor, alterná entre **Columnas**, **Tarjetas** e **Imágenes** y cambiá el **Tamaño de las miniaturas** (el control está al final de la barra). Con **Pantalla completa**, o con el botón **⤢** de cada obra, se abre cada foto en grande y de a una: pasás a la anterior o a la siguiente con las flechas (de la pantalla o del teclado) y la elegís o la quitás con **Elegir esta obra** (o con la barra espaciadora). Al cerrar, lo elegido queda tildado.
+5. Tocá **Guardar**. La selección aparece arriba, en **Selecciones armadas**, ya con esas obras. Si querés armarla a partir de un filtro, hacelo desde **Obras** (ver más abajo).
 
 ## Grupos de selecciones
 

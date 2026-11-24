@@ -11,7 +11,8 @@ A **selection** is a group of artworks you pick by hand, for example the ones yo
 1. In **Artworks**, click **Selections**.
 2. Click **Create selection**.
 3. Type the **Selection name** and, if you want, the **Notes**. Below, **all** your artworks are shown, without filters, each with a checkbox: tick the ones you want to include (above you see how many you have chosen).
-4. Click **Save**. The selection appears above, under **Existing selections**, already with those artworks. If you want to build it from a filter, do it from **Artworks** (see below).
+4. To see them better, switch between **Columns**, **Cards** and **Images** and change the **Thumbnail size** (the control is at the end of the bar). With **Full screen**, or with the **⤢** button on each artwork, every photo opens large, one at a time: move to the previous or next with the arrows (on screen or on the keyboard) and choose or remove it with **Choose this artwork** (or with the space bar). When you close it, what you chose stays ticked.
+5. Click **Save**. The selection appears above, under **Existing selections**, already with those artworks. If you want to build it from a filter, do it from **Artworks** (see below).
 
 ## Groups of selections
 

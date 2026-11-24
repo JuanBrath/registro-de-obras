@@ -97,7 +97,10 @@ export function VisorObras({
   onCalificar,
   onMenuImagen,
   onCambio,
+  seleccion,
 }: {
+  /** Al armar una selección: el visor muestra un botón (y la barra espaciadora) para elegir o quitar la foto que se ve. */
+  seleccion?: { elegidas: Set<number>; alternar: (obraId: number) => void };
   items: ItemVisor[];
   indiceInicial: number;
   onCerrar: () => void;
@@ -164,6 +167,22 @@ export function VisorObras({
     setInfoAbierta(false);
   };
 
+  // Flechas para pasar de foto y, al elegir obras, barra espaciadora para elegir o quitar la que se ve.
+  useEffect(() => {
+    if (infoAbierta || ventaTarget) return;
+    const alPulsar = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft" && items.length > 1) mover(-1);
+      else if (e.key === "ArrowRight" && items.length > 1) mover(1);
+      else if (e.key === " " && seleccion && actual) {
+        e.preventDefault();
+        seleccion.alternar(actual.id);
+      }
+    };
+    document.addEventListener("keydown", alPulsar);
+    return () => document.removeEventListener("keydown", alPulsar);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [infoAbierta, ventaTarget, items.length, seleccion, actual?.id]);
+
   async function abrirInfo(obraId: number) {
     if (!context) return;
     setInfoAbierta(true);
@@ -218,6 +237,15 @@ export function VisorObras({
           )}
           {cargando && !url && <p>{t("common.loading")}</p>}
           {url && <img src={url} alt={actual.titulo} className="obra-full-image" onContextMenu={(e) => onMenuImagen(e, actual.id)} />}
+          {seleccion && (
+            <button
+              type="button"
+              className={`lightbox-elegir${seleccion.elegidas.has(actual.id) ? " activo" : ""}`}
+              onClick={() => seleccion.alternar(actual.id)}
+            >
+              {seleccion.elegidas.has(actual.id) ? t("selecciones.visorElegida") : t("selecciones.visorElegir")}
+            </button>
+          )}
           <p className="lightbox-caption">
             <StarRating value={actual.calificacion} onChange={(n) => onCalificar(actual.id, n)} className="star-rating-lightbox" />
             {actual.titulo}
