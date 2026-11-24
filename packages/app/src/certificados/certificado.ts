@@ -11,6 +11,8 @@ export type TamanoHoja = "a4" | "carta" | "a5";
 /** Idioma de los titulos de cada campo (los datos van como estan cargados). */
 export type Idioma = "es" | "en" | "ambos";
 export type GuiasCorte = "ninguna" | "esquinas" | "recuadro";
+/** Hoja doble: que va en la mitad izquierda (la derecha es el certificado del modelo elegido). */
+export type LadoIzquierdo = "imagen" | "texto";
 
 /**
  * Todos los datos de un certificado. Los tres modelos comparten la mayoria de
@@ -22,6 +24,17 @@ export interface Certificado {
   idioma: Idioma;
   /** Para imprimir en un papel mas grande o en bobina y cortar al tamaño elegido. */
   guiasCorte: GuiasCorte;
+
+  /**
+   * Hoja doble (solo A4 y Carta, apaisada): la mitad derecha es el certificado del
+   * modelo elegido y la izquierda lleva la foto de la obra o un texto.
+   */
+  hojaDoble: boolean;
+  ladoIzquierdo: LadoIzquierdo;
+  /** Hoja doble con texto a la izquierda: el texto (puede tener varios renglones). */
+  textoIzquierdo: string;
+  /** Hoja doble con foto a la izquierda: girarla un cuarto de vuelta a la izquierda (para fotos apaisadas). */
+  girarFotoIzquierda: boolean;
 
   imagen: Uint8Array | null;
   titulo: string;
@@ -80,6 +93,10 @@ export function certificadoVacio(idioma: Idioma = "es"): Certificado {
     tamanoHoja: "a4",
     idioma,
     guiasCorte: "ninguna",
+    hojaDoble: false,
+    ladoIzquierdo: "imagen",
+    textoIzquierdo: "",
+    girarFotoIzquierda: true,
     imagen: null,
     titulo: "",
     artista: "",
@@ -119,4 +136,17 @@ export function copiaConPA(c: Pick<Certificado, "copia" | "pruebasAutor"> & { id
     return `${c.copia} + ${pa} ${c.idioma === "en" ? "AP" : "PA"}`;
   }
   return c.copia;
+}
+
+/**
+ * La hoja doble vale solo en A4 y Carta (en A5 no entran dos paginas); en A5
+ * se ignora y se imprime una hoja simple.
+ */
+export function esHojaDoble(c: Pick<Certificado, "hojaDoble" | "tamanoHoja">): boolean {
+  return c.hojaDoble && c.tamanoHoja !== "a5";
+}
+
+/** La foto que va dentro del certificado (mitad derecha): ninguna si en la hoja doble ya esta a la izquierda. */
+export function imagenDelCertificado(c: Pick<Certificado, "hojaDoble" | "tamanoHoja" | "ladoIzquierdo" | "imagen">): Uint8Array | null {
+  return esHojaDoble(c) && c.ladoIzquierdo === "imagen" ? null : c.imagen;
 }

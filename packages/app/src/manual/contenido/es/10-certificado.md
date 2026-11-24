@@ -34,6 +34,12 @@ En la sección **Formato**:
 - **Idioma de los títulos**: **Español**, **English** o **Ambos**. Solo cambia los títulos de cada campo; los datos salen como están cargados.
 - **Guías de corte**: **Ninguna**, **Esquinas** (marcas de corte) o **Recuadro** (línea fina). Sirven para imprimir en un papel más grande o en bobina: el PDF sale un poco más grande, con las guías por fuera de la hoja elegida. Imprimilo a tamaño real (100 %) y cortá por las guías.
 
+- **Páginas**: **Hoja simple** (un certificado en una página vertical) u **Hoja doble**. La hoja doble es una hoja apaisada (A4 o Carta) con dos páginas lado a lado, como un díptico: a la **derecha** va el certificado del modelo elegido y a la **izquierda**, a elección:
+  - **Foto de la obra**: la imagen de la obra, grande y centrada. Con **Girar la foto a la izquierda** se da un cuarto de vuelta (lo de arriba queda a la izquierda) para que una foto apaisada llene esa mitad, que es vertical. En este caso la foto ya no se repite dentro del certificado.
+  - **Texto**: lo que escribas (un statement, un poema, un texto de sala). Se centra y se achica solo si es largo; podés escribir varios renglones.
+
+  La hoja doble solo existe en **A4** y **Carta**: en **A5** no entran dos páginas y esa opción queda desactivada. Con la hoja doble, arriba de la vista previa aparecen tres botones, **Hoja izquierda**, **Ambas hojas** y **Hoja derecha**, para revisar cada página en grande; solo cambian lo que ves, y el PDF que guardás siempre lleva las dos. Imprimila a tamaño real (100 %) en una hoja horizontal.
+
 ## Los datos en gris y los habilitados
 
 En **Datos del certificado**:

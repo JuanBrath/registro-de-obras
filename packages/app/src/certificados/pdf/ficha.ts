@@ -1,4 +1,4 @@
-import { copiaConPA, type Certificado } from "../certificado.js";
+import { copiaConPA, imagenDelCertificado, type Certificado } from "../certificado.js";
 import { altoRenglon, formatoImagen, medidaAjustada, nuevoDocumento, rotulo } from "./base.js";
 import { dibujarSinCopyright } from "./sinCopyright.js";
 
@@ -11,6 +11,7 @@ import { dibujarSinCopyright } from "./sinCopyright.js";
  */
 export async function generarFicha(c: Certificado): Promise<Uint8Array> {
   const { doc, W, H, k } = await nuevoDocumento(c);
+  const imagenObra = imagenDelCertificado(c);
   // Titulo de un campo: "Autor:", "Author:" o "Autor | Author:".
   const r = (es: string, en: string) => {
     const t = rotulo(c.idioma, es, en, " | ");
@@ -150,12 +151,12 @@ export async function generarFicha(c: Certificado): Promise<Uint8Array> {
   const contacto = [c.galeriaNombre, c.galeriaTelefono, c.galeriaEmail].filter(Boolean).join("  |  ");
   if (contacto) doc.text(contacto, contactoX, footerY + 12 * k);
 
-  if (c.imagen) {
-    const formato = formatoImagen(c.imagen);
+  if (imagenObra) {
+    const formato = formatoImagen(imagenObra);
     if (formato) {
       const caja = 32 * k;
-      const { width, height } = await medidaAjustada(c.imagen, caja);
-      doc.addImage(c.imagen, formato, tableX + tableWidth - width, footerY - caja + 2 * k, width, height);
+      const { width, height } = await medidaAjustada(imagenObra, caja);
+      doc.addImage(imagenObra, formato, tableX + tableWidth - width, footerY - caja + 2 * k, width, height);
     }
   }
 

@@ -1,4 +1,4 @@
-import { copiaConPA, type Certificado } from "../certificado.js";
+import { copiaConPA, imagenDelCertificado, type Certificado } from "../certificado.js";
 import { altoRenglon, formatoImagen, medidaAjustada, nuevoDocumento, rotulo } from "./base.js";
 import { dibujarSinCopyright } from "./sinCopyright.js";
 
@@ -11,6 +11,7 @@ import { dibujarSinCopyright } from "./sinCopyright.js";
  */
 export async function generarSimple(c: Certificado): Promise<Uint8Array> {
   const { doc, W, H, k } = await nuevoDocumento(c);
+  const imagenObra = imagenDelCertificado(c);
   const centro = W / 2;
   const r = (es: string, en: string) => rotulo(c.idioma, es, en);
 
@@ -33,11 +34,11 @@ export async function generarSimple(c: Certificado): Promise<Uint8Array> {
   doc.line(centro - 77 * k, reglaY, centro + 77 * k, reglaY);
 
   let y = reglaY + 11.5 * k;
-  if (c.imagen) {
-    const formato = formatoImagen(c.imagen);
+  if (imagenObra) {
+    const formato = formatoImagen(imagenObra);
     if (formato) {
-      const { width, height } = await medidaAjustada(c.imagen, 110 * k, 75 * k);
-      doc.addImage(c.imagen, formato, centro - width / 2, y, width, height);
+      const { width, height } = await medidaAjustada(imagenObra, 110 * k, 75 * k);
+      doc.addImage(imagenObra, formato, centro - width / 2, y, width, height);
       y += height;
     }
   }

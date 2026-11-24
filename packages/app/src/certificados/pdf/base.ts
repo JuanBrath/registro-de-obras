@@ -1,6 +1,7 @@
 import type { jsPDF } from "jspdf";
 import interRegularUrl from "../../assets/fonts/Inter-Regular.ttf?url";
-import type { Certificado, Idioma, TamanoHoja } from "../certificado.js";
+import { esHojaDoble, type Certificado, type Idioma, type TamanoHoja } from "../certificado.js";
+import { dibujarLadoIzquierdo } from "./ladoIzquierdo.js";
 
 // Medidas de hoja en mm (ancho x alto, vertical).
 const HOJAS: Record<TamanoHoja, [number, number]> = {
@@ -8,6 +9,16 @@ const HOJAS: Record<TamanoHoja, [number, number]> = {
   carta: [215.9, 279.4],
   a5: [148, 210],
 };
+
+// Hoja doble: la hoja apaisada entera (ancho x alto). Cada mitad es una hoja vertical
+// casi A5 (A4) o media Carta, y el certificado se arma en la mitad derecha.
+const HOJAS_DOBLES: Record<Exclude<TamanoHoja, "a5">, [number, number]> = {
+  a4: [297, 210],
+  carta: [279.4, 215.9],
+};
+
+/** Que mitad de la hoja doble se dibuja (solo para la vista previa; al guardar siempre son ambas). */
+export type VistaHoja = "ambas" | "izquierda" | "derecha";
 
 /** Separacion entre renglones de un mismo texto (1 = renglones pegados). */
 export const INTERLINEADO = 1.25;
@@ -34,33 +45,66 @@ const MARGEN_GUIAS = 12;
  * empezara en 0,0. W y H son siempre las medidas de la hoja elegida.
  */
 export async function nuevoDocumento(
-  c: Pick<Certificado, "tamanoHoja" | "guiasCorte" | "idioma">,
+  c: Pick<Certificado, "tamanoHoja" | "guiasCorte" | "idioma"> &
+    Partial<Pick<Certificado, "hojaDoble" | "ladoIzquierdo" | "textoIzquierdo" | "girarFotoIzquierda" | "imagen">> & { vista?: VistaHoja },
 ): Promise<{ doc: jsPDF; W: number; H: number; k: number }> {
   const { default: jsPDF } = await import("jspdf");
-  const [W, H] = HOJAS[c.tamanoHoja];
+  const doble = esHojaDoble({ hojaDoble: c.hojaDoble ?? false, tamanoHoja: c.tamanoHoja });
+  // Hoja doble: (HW, HH) es la hoja entera apaisada; W y H, la mitad en la que se dibuja el certificado.
+  const [HW, HH] = doble ? HOJAS_DOBLES[c.tamanoHoja as "a4" | "carta"] : HOJAS[c.tamanoHoja];
+  const W = doble ? HW / 2 : HW;
+  const H = HH;
+  const vista: VistaHoja = doble ? (c.vista ?? "ambas") : "ambas";
   const m = c.guiasCorte === "ninguna" ? 0 : MARGEN_GUIAS;
-  const real = new jsPDF({ unit: "mm", format: [W + m * 2, H + m * 2], orientation: "portrait" });
+  // Con una sola mitad a la vista, el PDF es de una pagina vertical del ancho de esa mitad.
+  const anchoPagina = vista === "ambas" ? HW : W;
+  const real = new jsPDF({
+    unit: "mm",
+    format: [anchoPagina + m * 2, HH + m * 2],
+    orientation: doble && vista === "ambas" ? "landscape" : "portrait",
+  });
   real.setLineHeightFactor(INTERLINEADO);
   await registrarFuentes(real);
-  if (m) dibujarGuias(real, c, W, H, m);
+  if (m) dibujarGuias(real, c, anchoPagina, HH, m, doble);
   const k = Math.min(W / 210, H / 297);
-  return { doc: m ? desplazado(real, m) : real, W, H, k };
+  if (doble) {
+    // Mitad izquierda: la foto o el texto.
+    if (vista !== "derecha") {
+      await dibujarLadoIzquierdo(desplazado(real, m, m), c as Certificado, W, H, k);
+      real.setLineHeightFactor(INTERLINEADO);
+    }
+    // Mitad derecha: el certificado del modelo. Si solo se ve la izquierda, lo que dibuja el modelo se descarta.
+    if (vista === "izquierda") return { doc: descartado(real), W, H, k };
+    return { doc: desplazado(real, vista === "ambas" ? m + W : m, m), W, H, k };
+  }
+  return { doc: m ? desplazado(real, m, m) : real, W, H, k };
 }
 
-function desplazado(doc: jsPDF, m: number): jsPDF {
+/** Documento que ignora todo lo que se dibuja (texto, lineas, rectangulos, imagenes) pero responde a lo demas. */
+function descartado(doc: jsPDF): jsPDF {
+  return new Proxy(doc, {
+    get(obj, prop) {
+      if (prop === "text" || prop === "line" || prop === "rect" || prop === "addImage") return () => obj;
+      const valor = Reflect.get(obj, prop);
+      return typeof valor === "function" ? valor.bind(obj) : valor;
+    },
+  });
+}
+
+function desplazado(doc: jsPDF, dx: number, dy: number): jsPDF {
   return new Proxy(doc, {
     get(obj, prop) {
       switch (prop) {
         case "text":
-          return (texto: string | string[], x: number, y: number, opciones?: object) => obj.text(texto, x + m, y + m, opciones);
+          return (texto: string | string[], x: number, y: number, opciones?: object) => obj.text(texto, x + dx, y + dy, opciones);
         case "line":
           return (x1: number, y1: number, x2: number, y2: number, estilo?: string) =>
-            obj.line(x1 + m, y1 + m, x2 + m, y2 + m, estilo as never);
+            obj.line(x1 + dx, y1 + dy, x2 + dx, y2 + dy, estilo as never);
         case "rect":
-          return (x: number, y: number, w: number, h: number, estilo?: string) => obj.rect(x + m, y + m, w, h, estilo);
+          return (x: number, y: number, w: number, h: number, estilo?: string) => obj.rect(x + dx, y + dy, w, h, estilo);
         case "addImage":
           return (img: Uint8Array, formato: string, x: number, y: number, w: number, h: number) =>
-            obj.addImage(img, formato, x + m, y + m, w, h);
+            obj.addImage(img, formato, x + dx, y + dy, w, h);
       }
       const valor = Reflect.get(obj, prop);
       return typeof valor === "function" ? valor.bind(obj) : valor;
@@ -70,7 +114,7 @@ function desplazado(doc: jsPDF, m: number): jsPDF {
 
 const NOMBRE_HOJA: Record<TamanoHoja, string> = { a4: "A4", carta: "Carta / Letter", a5: "A5" };
 
-function dibujarGuias(doc: jsPDF, c: Pick<Certificado, "tamanoHoja" | "guiasCorte" | "idioma">, W: number, H: number, m: number) {
+function dibujarGuias(doc: jsPDF, c: Pick<Certificado, "tamanoHoja" | "guiasCorte" | "idioma">, W: number, H: number, m: number, doble = false) {
   doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(0.15);
   if (c.guiasCorte === "recuadro") {
@@ -88,7 +132,7 @@ function dibujarGuias(doc: jsPDF, c: Pick<Certificado, "tamanoHoja" | "guiasCort
       }
     }
   }
-  const medidas = `${NOMBRE_HOJA[c.tamanoHoja]} · ${String(W).replace(".", ",")} × ${String(H).replace(".", ",")} mm`;
+  const medidas = `${NOMBRE_HOJA[c.tamanoHoja]}${doble ? (c.idioma === "en" ? " double sheet" : " hoja doble") : ""} · ${String(W).replace(".", ",")} × ${String(H).replace(".", ",")} mm`;
   const indicacion =
     c.idioma === "en"
       ? `${medidas} · Trim along the guides · Print at actual size (100%)`

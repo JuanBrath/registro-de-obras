@@ -1,4 +1,4 @@
-import { copiaConPA, type Certificado } from "../certificado.js";
+import { copiaConPA, esHojaDoble, imagenDelCertificado, type Certificado } from "../certificado.js";
 import { altoRenglon, fechaLarga, formatoImagen, medidaAjustada, nuevoDocumento, rotulo } from "./base.js";
 import { dibujarSinCopyright } from "./sinCopyright.js";
 
@@ -11,7 +11,11 @@ import { dibujarSinCopyright } from "./sinCopyright.js";
  */
 export async function generarClasico(c: Certificado): Promise<Uint8Array> {
   const { doc, W, H, k } = await nuevoDocumento(c);
+  const imagenObra = imagenDelCertificado(c);
   const ambos = c.idioma === "ambos";
+  // Hoja doble con la foto a la izquierda: el certificado no lleva foto, asi que se separan mas los
+  // bloques para llenar la pagina en vez de dejar el hueco abajo.
+  const esp = esHojaDoble(c) && !imagenObra ? (ambos ? 1.4 : 1.75) : 1;
 
   // Titulos de los campos: con "ambos", español arriba e ingles debajo,
   // un poco mas chico y mas claro.
@@ -60,20 +64,20 @@ export async function generarClasico(c: Certificado): Promise<Uint8Array> {
     doc.text(titulo, W / 2, bannerY + bannerHeight / 2 + 3 * k, { align: "center" });
   }
 
-  let y = bannerY + bannerHeight + 10 * k;
+  let y = bannerY + bannerHeight + 10 * k * esp;
 
-  if (c.imagen) {
-    const formato = formatoImagen(c.imagen);
+  if (imagenObra) {
+    const formato = formatoImagen(imagenObra);
     if (formato) {
       // Con titulos en dos idiomas, o con la fila de serie, la foto se achica
       // un poco para que todo entre en la hoja.
       const altoMaximo = (ambos ? 76 : 85) - (c.serieProyecto ? 12 : 0);
-      const { width, height } = await medidaAjustada(c.imagen, contentWidth, altoMaximo * k);
-      doc.addImage(c.imagen, formato, contentX + (contentWidth - width) / 2, y, width, height);
+      const { width, height } = await medidaAjustada(imagenObra, contentWidth, altoMaximo * k);
+      doc.addImage(imagenObra, formato, contentX + (contentWidth - width) / 2, y, width, height);
       y += height + 10 * k;
     }
   } else {
-    y += 4 * k;
+    y += 4 * k * esp;
   }
 
   // Los campos que no se completaron no aparecen en el certificado. El valor
@@ -92,7 +96,7 @@ export async function generarClasico(c: Certificado): Promise<Uint8Array> {
     doc.setDrawColor(150, 150, 150);
     doc.setLineWidth(0.15 * k);
     doc.line(contentX, y, contentX + contentWidth, y);
-    y += 10 * k;
+    y += 10 * k * esp;
   }
 
   function filaColumnas(todas: { es: string; en: string; valor: string }[]) {
@@ -111,7 +115,7 @@ export async function generarClasico(c: Certificado): Promise<Uint8Array> {
       const lineaY = y + 10 * k + extraTitulos;
       doc.line(contentX + colWidth * i + 6 * k, lineaY, contentX + colWidth * (i + 1) - 6 * k, lineaY);
     });
-    y += 20 * k + extraTitulos;
+    y += 20 * k * esp + extraTitulos;
   }
 
   fila("Artista", "Artist", c.artista);
@@ -138,7 +142,7 @@ export async function generarClasico(c: Certificado): Promise<Uint8Array> {
   // (la imagen de firma si se cargo, o el lugar en blanco para firmar a
   // mano) va arriba de la linea, y el titulo "Firma del Autor" va debajo.
   const anchoFirma = 80 * k;
-  y += 24 * k;
+  y += 24 * k * esp;
   if (c.firmaArtista) {
     const formato = formatoImagen(c.firmaArtista);
     if (formato) {

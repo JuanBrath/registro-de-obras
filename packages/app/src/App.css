@@ -3599,3 +3599,31 @@ button[type="submit"]:disabled {
   border-color: #e5484d;
   font-weight: 700;
 }
+
+/* Hoja doble: elegir que hoja se ve en la vista previa del certificado (el PDF que se guarda siempre lleva las dos). */
+.certificado-selector-vista {
+  display: flex;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.certificado-selector-vista button {
+  padding: 0.35rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9em;
+  cursor: pointer;
+}
+
+.certificado-selector-vista button.activo {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.certificado-opcion:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
