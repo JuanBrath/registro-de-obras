@@ -132,7 +132,7 @@ export function SelectorObras({ elegidas, onChange }: { elegidas: number[]; onCh
       <h3 className="selector-obras-titulo">{t("selecciones.elegirObras")}</h3>
       <p className="dossier-nota">{t("selecciones.elegirObrasAyuda")}</p>
       <div className="obras-toolbar-fila selector-obras-barra">
-        <span className="selecciones-contador-grande" role="status">
+        <span className="selecciones-contador-grande selector-obras-contador" role="status">
           {t("selecciones.elegirObrasContador", { cantidad: elegidas.length, total: obras.length })}
         </span>
         {obras.length > 0 && (
@@ -142,10 +142,10 @@ export function SelectorObras({ elegidas, onChange }: { elegidas: number[]; onCh
               {boton("tarjetas", t("obrasList.vistaTarjetas"))}
               {boton("imagenes", t("selecciones.vistaImagenes"))}
             </div>
-            <MiniaturasSizeSlider columnas={columnas} onChange={cambiarTamano} />
             <button type="button" onClick={() => setVisorEn(0)}>
               {t("selecciones.pantallaCompleta")}
             </button>
+            <MiniaturasSizeSlider columnas={columnas} onChange={cambiarTamano} />
           </>
         )}
       </div>

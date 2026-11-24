@@ -3468,6 +3468,12 @@ button[type="submit"]:disabled {
   font-size: 1.05rem;
 }
 
+/* En el selector, el contador va con el tamaño de letra del resto de la barra. */
+.selecciones-contador-grande.selector-obras-contador {
+  font-size: inherit;
+  font-weight: 600;
+}
+
 /* Botón "ver en pantalla completa" sobre cada obra del selector. */
 .selector-ampliar {
   position: absolute;
