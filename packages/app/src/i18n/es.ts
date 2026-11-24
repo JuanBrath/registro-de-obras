@@ -1239,6 +1239,7 @@ export const es = {
   "selecciones.seleccionesTitulo": "Selecciones",
   "selecciones.nombreGrupoLabel": "Nombre del grupo",
   "selecciones.seleccionesDelGrupo": "Selecciones de este grupo",
+  "selecciones.grupoAyudaElegir": "Tocá las selecciones que querés en este grupo: las que están en azul con ✓ ya forman parte.",
   "selecciones.enOtroGrupo": "hoy en el grupo {{grupo}}",
   "selecciones.sinGrupos": "Todavía no hay grupos. Creá uno con \"+ Nuevo grupo\".",
   "selecciones.deGrupo": "Selecciones del grupo {{grupo}}",

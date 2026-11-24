@@ -18,8 +18,8 @@ A **selection** is a group of artworks you pick by hand, for example the ones yo
 
 At the top of the screen there are two buttons: **Groups** and **Selections**. **Selections** shows the list and lets you create selections. **Groups** shows only the groups you created; a **group** gathers the selections on the same theme (for example "Fairs 2026" or "Landscapes").
 
-1. Under **Groups** click **+ New group**, type the name, tick the selections that make it up and click **Save**.
-2. Click a group to see the selections in it and choose one. With **Add selections to the group** you tick or untick selections (saved at once), change the name or click **Delete group** (the selections are not deleted, they just have no group).
+1. Under **Groups** click **+ New group**, type the name, click the selections that make it up (each one is a button that turns blue with ✓ when it is part of the group; if it is already in another group, it says so under the name) and click **Save**.
+2. Click a group to see the selections in it and choose one. With **Add selections to the group** you add or remove selections by clicking them (saved at once), change the name or click **Delete group** (the selections are not deleted, they just have no group).
 3. You can also assign the group from a selection: open it, choose its **Group** in the drop-down (or "No group") and click **Save**. Each selection belongs to a single group.
 
 The list of selections shows only two rows; if there are more, click **Show more** to unfold them all. When you choose one it goes back to two rows and the chosen one always stays in view.
