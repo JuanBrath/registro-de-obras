@@ -3468,6 +3468,31 @@ button[type="submit"]:disabled {
   font-size: 1.05rem;
 }
 
+/* Pantalla completa: el selector cubre toda la ventana (por encima de la barra superior, por debajo de los modales). */
+.selector-obras-completa {
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+  margin: 0;
+  padding: 1rem 1.5rem 2rem;
+  overflow-y: auto;
+  background: var(--bg);
+}
+
+.selector-obras-completa .selector-obras-barra {
+  position: sticky;
+  top: -1rem;
+  z-index: 3;
+  padding: 0.6rem 0;
+  background: var(--bg);
+}
+
+.obras-tabla-fila-marcada {
+  background: var(--bg);
+  outline: 2px solid var(--azul-marino-borde);
+  outline-offset: -2px;
+}
+
 /* Visor de la Galería: las flechas de desplazamiento van sin el círculo alrededor, solo la flecha. */
 .modal-content-image .lightbox-arrow {
   border: none;

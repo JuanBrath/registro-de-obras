@@ -72,7 +72,8 @@ export function GrillaImagenes({
   thumbs: Record<number, string>;
   columnas: number;
   onCalificar: (obraId: number, n: number) => void;
-  onAbrirFicha: (obraId: number) => void;
+  /** Sin esto (ej. al armar una selección nueva) no se ofrece "Abrir ficha": no hay a dónde ir sin perder lo elegido. */
+  onAbrirFicha?: (obraId: number) => void;
   onError: (mensaje: string) => void;
   onCambio?: (obraId: number) => void;
   seleccion?: { elegidas: Set<number>; yaEnSeleccion: Set<number>; alternar: (obraId: number) => void };
@@ -135,7 +136,7 @@ export function GrillaImagenes({
           items={visibles}
           indiceInicial={indice}
           onCerrar={() => setIndice(null)}
-          onAbrirFicha={onAbrirFicha}
+          onAbrirFicha={onAbrirFicha ?? (() => {})}
           onCalificar={onCalificar}
           onCambio={onCambio}
           onMenuImagen={(e, id) => {
@@ -151,7 +152,7 @@ export function GrillaImagenes({
           y={menu.y}
           onClose={() => setMenu(null)}
           items={[
-            { label: t("selecciones.abrirFicha"), onClick: () => onAbrirFicha(menu.obra.id) },
+            ...(onAbrirFicha ? [{ label: t("selecciones.abrirFicha"), onClick: () => onAbrirFicha(menu.obra.id) }] : []),
             {
               label: t("obraDetail.exportarImagen"),
               onClick: () => conArchivo(menu.obra, t("obraDetail.errorExportarSinArchivo"), () => setExportar(menu.obra)),
