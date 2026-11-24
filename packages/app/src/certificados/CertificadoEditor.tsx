@@ -12,7 +12,8 @@ import { Modal } from "../components/Modal.js";
 import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
 import { detectImageFormat } from "../utils/detectImageFormat.js";
 import { savePdfWithDialogAndPath } from "../utils/savePdfDialog.js";
-import { certificadoVacio, type Certificado, type GuiasCorte, type Idioma, type Modelo, type TamanoHoja } from "./certificado.js";
+import { certificadoVacio, esHojaDoble, type Certificado, type GuiasCorte, type Idioma, type LadoIzquierdo, type Modelo, type TamanoHoja } from "./certificado.js";
+import type { VistaHoja } from "./pdf/base.js";
 import { valoresDeStudio, type DatosStudioCertificado, type FormatoCertificado } from "./datosStudio.js";
 import { generarCertificado } from "./generar.js";
 import { leerImagen } from "./imagen.js";
@@ -89,6 +90,12 @@ export function CertificadoEditor({
   const [tamanoHoja, setTamanoHoja] = useState<TamanoHoja>("a4");
   const [idioma, setIdioma] = useState<Idioma>(idiomaInicial);
   const [guiasCorte, setGuiasCorte] = useState<GuiasCorte>("ninguna");
+  // Hoja doble: certificado a la derecha y, a la izquierda, la foto de la obra o un texto.
+  const [hojaDoble, setHojaDoble] = useState(false);
+  const [ladoIzquierdo, setLadoIzquierdo] = useState<LadoIzquierdo>("imagen");
+  const [textoIzquierdo, setTextoIzquierdo] = useState("");
+  const [girarFotoIzquierda, setGirarFotoIzquierda] = useState(true);
+  const [vistaHoja, setVistaHoja] = useState<VistaHoja>("ambas");
   const [incluirFirma, setIncluirFirma] = useState(false);
   const [incluirLogo, setIncluirLogo] = useState(true);
   // Lo que se completa a mano en los campos que estan vacios en Studio.
@@ -138,6 +145,10 @@ export function CertificadoEditor({
       tamanoHoja,
       idioma,
       guiasCorte,
+      hojaDoble,
+      ladoIzquierdo,
+      textoIzquierdo,
+      girarFotoIzquierda,
     };
     if (!incluirFirma) {
       if (deStudio.firmaArtista) c.firmaArtista = null;
@@ -145,14 +156,14 @@ export function CertificadoEditor({
     }
     if (!incluirLogo && deStudio.logo) c.logo = null;
     return c;
-  }, [manual, deStudio, modelo, sinFirmaGaleria, datosBase.sintografia, tamanoHoja, idioma, guiasCorte, incluirFirma, incluirLogo]);
+  }, [manual, deStudio, modelo, sinFirmaGaleria, datosBase.sintografia, tamanoHoja, idioma, guiasCorte, hojaDoble, ladoIzquierdo, textoIzquierdo, girarFotoIzquierda, incluirFirma, incluirLogo]);
 
   // La vista previa se regenera medio segundo despues de dejar de tocar algo.
   useEffect(() => {
     let cancelado = false;
     const espera = setTimeout(async () => {
       try {
-        const bytes = await generarCertificado(cert);
+        const bytes = await generarCertificado(cert, esHojaDoble(cert) ? vistaHoja : "ambas");
         if (cancelado) return;
         const url = URL.createObjectURL(new Blob([bytes as BlobPart], { type: "application/pdf" }));
         if (urlAnterior.current) URL.revokeObjectURL(urlAnterior.current);
@@ -168,7 +179,7 @@ export function CertificadoEditor({
       clearTimeout(espera);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cert]);
+  }, [cert, vistaHoja]);
 
   useEffect(
     () => () => {
@@ -416,8 +427,45 @@ export function CertificadoEditor({
             <Opciones etiqueta={t("certificado.tamanoHoja")}>
               <Opcion activa={tamanoHoja === "a4"} onClick={() => setTamanoHoja("a4")} titulo="A4" detalle={t("certificado.hojaA4Detalle")} />
               <Opcion activa={tamanoHoja === "carta"} onClick={() => setTamanoHoja("carta")} titulo={t("certificado.hojaCarta")} detalle={t("certificado.hojaCartaDetalle")} />
-              <Opcion activa={tamanoHoja === "a5"} onClick={() => setTamanoHoja("a5")} titulo="A5" detalle={t("certificado.hojaA5Detalle")} />
+              <Opcion activa={tamanoHoja === "a5"} onClick={() => setTamanoHoja("a5")} titulo="A5" detalle={t("certificado.hojaA5Detalle")} deshabilitada={hojaDoble} />
             </Opciones>
+            <Opciones etiqueta={t("certificado.paginas")} ayuda={t("certificado.paginasAyuda")}>
+              <Opcion activa={!hojaDoble} onClick={() => setHojaDoble(false)} titulo={t("certificado.hojaSimple")} detalle={t("certificado.hojaSimpleDetalle")} />
+              <Opcion
+                activa={hojaDoble}
+                onClick={() => {
+                  setHojaDoble(true);
+                  // La hoja doble solo existe en A4 y Carta: si estaba en A5, pasa a A4.
+                  if (tamanoHoja === "a5") setTamanoHoja("a4");
+                }}
+                titulo={t("certificado.hojaDobleOpcion")}
+                detalle={t("certificado.hojaDobleDetalle")}
+              />
+            </Opciones>
+            {hojaDoble && (
+              <div className="certificado-campo">
+                <Opciones etiqueta={t("certificado.ladoIzquierdo")} ayuda={t("certificado.ladoIzquierdoAyuda")}>
+                  <Opcion activa={ladoIzquierdo === "imagen"} onClick={() => setLadoIzquierdo("imagen")} titulo={t("certificado.ladoIzquierdoFoto")} detalle={t("certificado.ladoIzquierdoFotoDetalle")} />
+                  <Opcion activa={ladoIzquierdo === "texto"} onClick={() => setLadoIzquierdo("texto")} titulo={t("certificado.ladoIzquierdoTexto")} detalle={t("certificado.ladoIzquierdoTextoDetalle")} />
+                </Opciones>
+                {ladoIzquierdo === "imagen" ? (
+                  <>
+                    <label className="certificado-casilla">
+                      <input type="checkbox" checked={girarFotoIzquierda} onChange={(e) => setGirarFotoIzquierda(e.target.checked)} />
+                      <span>{t("certificado.girarFoto")}</span>
+                    </label>
+                    <span className="certificado-ayuda">{t("certificado.girarFotoAyuda")}</span>
+                    {!cert.imagen && <span className="certificado-ayuda">{t("certificado.fotoFaltante")}</span>}
+                  </>
+                ) : (
+                  <label className="certificado-campo">
+                    <span className="certificado-etiqueta">{t("certificado.textoIzquierdo")}</span>
+                    <textarea rows={6} value={textoIzquierdo} placeholder={t("certificado.textoIzquierdoEj")} onChange={(e) => setTextoIzquierdo(e.target.value)} />
+                    <span className="certificado-ayuda">{t("certificado.textoIzquierdoAyuda")}</span>
+                  </label>
+                )}
+              </div>
+            )}
             <Opciones etiqueta={t("certificado.idiomaTitulos")} ayuda={t("certificado.idiomaAyuda")}>
               <Opcion activa={idioma === "es"} onClick={() => setIdioma("es")} titulo={t("informes.idiomaEspanol")} detalle="Autor, Año…" />
               <Opcion activa={idioma === "en"} onClick={() => setIdioma("en")} titulo={t("informes.idiomaIngles")} detalle="Artist, Year…" />
@@ -576,6 +624,15 @@ export function CertificadoEditor({
         </section>
 
         <section className="certificado-previa">
+          {esHojaDoble(cert) && (
+            <div className="certificado-selector-vista" role="group" aria-label={t("certificado.vistaQueHoja")}>
+              {([["izquierda", "certificado.vistaIzquierda"], ["ambas", "certificado.vistaAmbas"], ["derecha", "certificado.vistaDerecha"]] as const).map(([valor, clave]) => (
+                <button key={valor} type="button" className={vistaHoja === valor ? "activo" : ""} aria-pressed={vistaHoja === valor} onClick={() => setVistaHoja(valor)}>
+                  {t(clave)}
+                </button>
+              ))}
+            </div>
+          )}
           {vistaPrevia ? (
             <iframe title={t("certificado.vistaPrevia")} src={`${vistaPrevia}#toolbar=0&view=Fit`} />
           ) : (
@@ -661,9 +718,9 @@ function Opciones({ etiqueta, ayuda, children }: { etiqueta: string; ayuda?: str
   );
 }
 
-function Opcion({ activa, onClick, titulo, detalle }: { activa: boolean; onClick: () => void; titulo: string; detalle: string }) {
+function Opcion({ activa, onClick, titulo, detalle, deshabilitada }: { activa: boolean; onClick: () => void; titulo: string; detalle: string; deshabilitada?: boolean }) {
   return (
-    <button type="button" className={`certificado-opcion${activa ? " certificado-opcion-activa" : ""}`} onClick={onClick} aria-pressed={activa}>
+    <button type="button" className={`certificado-opcion${activa ? " certificado-opcion-activa" : ""}`} onClick={onClick} aria-pressed={activa} disabled={deshabilitada}>
       <strong>{titulo}</strong>
       <span>{detalle}</span>
     </button>

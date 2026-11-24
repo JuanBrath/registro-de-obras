@@ -34,6 +34,12 @@ In the **Layout** section:
 - **Label language**: **Español**, **English** or **Ambos / Both**. It only changes the titles of each field; the data comes out as entered.
 - **Cut guides**: **None**, **Corners** (cut marks) or **Outline** (thin line). They are for printing on a larger sheet or on a roll: the PDF comes out a little bigger, with the guides outside the chosen sheet. Print it at actual size (100%) and cut along the guides.
 
+- **Pages**: **Single sheet** (one certificate on a portrait page) or **Double sheet**. The double sheet is a landscape sheet (A4 or Letter) with two pages side by side, like a diptych: the certificate of the chosen layout goes on the **right** and, on the **left**, your choice of:
+  - **Artwork photo**: the artwork image, large and centered. **Rotate the photo to the left** turns it a quarter turn (the top ends up on the left) so a landscape photo fills that half, which is portrait. In this case the photo is no longer repeated inside the certificate.
+  - **Text**: whatever you write (a statement, a poem, a wall text). It is centered and shrunk automatically if it is long; you can write several lines.
+
+  The double sheet only exists in **A4** and **Letter**: two pages don't fit on **A5**, and that option is disabled. With the double sheet, three buttons appear above the preview, **Left page**, **Both pages** and **Right page**, to check each page up close; they only change what you see, and the PDF you save always has both. Print it at actual size (100%) on a landscape sheet.
+
 ## The greyed-out and the enabled data
 
 In **Certificate details**:
