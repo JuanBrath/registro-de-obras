@@ -40,7 +40,13 @@ Puede ser que el programa esté apuntando a otra carpeta de datos, o que un disc
 
 ## macOS no me deja abrir el programa
 
-Como el programa todavía no está firmado con una cuenta de desarrollador de Apple, macOS puede bloquear la primera apertura. Hacé clic derecho (o Control + clic) sobre el programa y elegí **Abrir**.
+Como el programa todavía no está aprobado por Apple (no está firmado con una cuenta de desarrollador), macOS puede bloquear la primera apertura. Con el programa ya copiado en **Aplicaciones**:
+
+1. Abrilo con doble clic. En el aviso tocá **Listo** (no **Trasladar a la papelera**).
+2. Enseguida entrá en **Ajustes del Sistema** y en **Privacidad y seguridad**, y bajá hasta **Seguridad**. El botón aparece solo después de haber intentado abrir el programa, y dura alrededor de una hora.
+3. Tocá **Abrir igualmente** y poné la contraseña de tu Mac. Se hace una sola vez.
+
+Si el botón no aparece, abrí la aplicación **Terminal**, pegá esta línea y apretá Enter: `xattr -dr com.apple.quarantine /Applications/Recer.app`. Después abrí el programa normalmente. Esa línea le quita a este programa la marca de archivo descargado y saltea el control de Apple: usala solo con un instalador que hayas recibido directamente de quien te vendió Recer.
 
 ## La imagen de mi PSD no se ve
 

@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useWorkspace } from "../state/WorkspaceContext.js";
-import { useLanguage } from "../i18n/LanguageContext.js";
+import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
 import { Modal } from "./Modal.js";
 import { NotasLabel } from "./NotasLabel.js";
 import { ESTADOS_OFRECIBLES } from "../utils/estadosOfrecibles.js";
@@ -10,10 +10,13 @@ import { resolveObraImagenParaPdf } from "../utils/resolveObraImagenPdf.js";
 import { resolveMembreteLogoBytes } from "../reports/reportBranding.js";
 import {
   buildDossierPdfBytes,
+  colorDeHoja,
   formatearPrecio,
   medidasEnCm,
   type DossierArtista,
   type DossierObra,
+  type LetraPortada,
+  type TonoHoja,
 } from "../reports/dossierReports.js";
 
 interface FilaObra {
@@ -55,9 +58,47 @@ interface ArtistaFila {
 interface Excepcion {
   hoja: number;
   cantidad: number;
+  /** Color propio de esa hoja; sin definir = el mismo del resto del dossier. */
+  color?: { tono: TonoHoja; intensidad: number };
 }
 
 const MAX_POR_HOJA = 12;
+
+const TONOS: TonoHoja[] = ["blanco", "neutro", "frio", "calido"];
+const COLOR_HOJA_KEY = "dossierColorHoja";
+
+/** Último color usado, para no tener que elegirlo en cada dossier. */
+function cargarColorHoja(): { tono: TonoHoja; intensidad: number } {
+  try {
+    const v = JSON.parse(localStorage.getItem(COLOR_HOJA_KEY) ?? "null");
+    if (v && TONOS.includes(v.tono) && typeof v.intensidad === "number") return { tono: v.tono, intensidad: v.intensidad };
+  } catch {
+    // Sin preferencia guardada: hojas blancas.
+  }
+  return { tono: "blanco", intensidad: 50 };
+}
+
+/** Cómo se ve cada tipografía de portada en pantalla. */
+const ESTILO_LETRA: Record<LetraPortada, CSSProperties> = {
+  inter: { fontFamily: "Inter, sans-serif" },
+  montserrat: { fontFamily: "Montserrat, sans-serif", fontWeight: 700 },
+  times: { fontFamily: "'Times New Roman', Times, serif" },
+  timesCursiva: { fontFamily: "'Times New Roman', Times, serif", fontStyle: "italic" },
+  courier: { fontFamily: "'Courier New', Courier, monospace" },
+};
+const LETRA_PORTADA_KEY = "dossierLetraPortada";
+
+function cargarLetraPortada(): LetraPortada {
+  try {
+    const v = localStorage.getItem(LETRA_PORTADA_KEY);
+    if (v && v in ESTILO_LETRA) return v as LetraPortada;
+  } catch {
+    // Sin preferencia guardada.
+  }
+  return "inter";
+}
+
+const cssColor = (c: [number, number, number] | null) => (c ? `rgb(${c.join(",")})` : "#fff");
 
 
 /** Cuántas hojas de obras salen con esta distribución (para mostrar un resumen). */
@@ -123,6 +164,27 @@ export function DossierModal({
   const [orientacion, setOrientacion] = useState<"horizontal" | "vertical">("horizontal");
   const [obrasPorPagina, setObrasPorPagina] = useState(4);
   const [excepciones, setExcepciones] = useState<Excepcion[]>([]);
+  const [letraPortada, setLetraPortada] = useState<LetraPortada>(cargarLetraPortada);
+  const cambiarLetraPortada = (letra: LetraPortada) => {
+    setLetraPortada(letra);
+    try {
+      localStorage.setItem(LETRA_PORTADA_KEY, letra);
+    } catch {
+      // No se pudo guardar la preferencia.
+    }
+  };
+  const [colorHoja, setColorHoja] = useState(cargarColorHoja);
+  const colorFondo = colorDeHoja(colorHoja.tono, colorHoja.intensidad);
+
+  const cambiarColorHoja = (cambios: Partial<{ tono: TonoHoja; intensidad: number }>) => {
+    const nuevo = { ...colorHoja, ...cambios };
+    setColorHoja(nuevo);
+    try {
+      localStorage.setItem(COLOR_HOJA_KEY, JSON.stringify(nuevo));
+    } catch {
+      // No se pudo guardar la preferencia.
+    }
+  };
 
   useEffect(() => {
     if (!context) return;
@@ -288,6 +350,8 @@ export function DossierModal({
             ].filter((x): x is string => !!x);
 
       const bytes = await buildDossierPdfBytes(artistasPdf, obras, {
+        colorFondo,
+        letraPortada,
         tituloPortada: incluirPortada ? tituloPortada : "",
         subtituloPortada: incluirPortada && nombreSeleccionEnPortada ? seleccionNombre : "",
         textoAdicionalPortada: incluirPortada ? textoAdicionalPortada : "",
@@ -308,6 +372,9 @@ export function DossierModal({
         orientacion,
         obrasPorPagina,
         obrasPorPaginaExcepciones: Object.fromEntries(excepciones.map((e) => [e.hoja, e.cantidad])),
+        coloresPorHoja: Object.fromEntries(
+          excepciones.flatMap((e) => (e.color ? [[e.hoja, colorDeHoja(e.color.tono, e.color.intensidad)]] : [])),
+        ),
         contactoLineas,
         logoBytes,
       });
@@ -369,6 +436,50 @@ export function DossierModal({
         {!cargando && filas.length > 0 && (
           <div className="dossier-cuerpo">
             <section className="dossier-seccion">
+              <h3>{t("dossier.seccionColor")}</h3>
+              <div className="dossier-color">
+                <div className="dossier-color-controles">
+                  <div className="dossier-tonos">
+                    {TONOS.map((tono) => (
+                      <button
+                        key={tono}
+                        type="button"
+                        aria-pressed={colorHoja.tono === tono}
+                        className={colorHoja.tono === tono ? "dossier-tono activo" : "dossier-tono"}
+                        onClick={() => cambiarColorHoja({ tono })}
+                      >
+                        <span className="dossier-tono-muestra" style={{ background: cssColor(colorDeHoja(tono, 100)) }} aria-hidden="true" />
+                        {t(`dossier.tono.${tono}` as TranslationKey)}
+                      </button>
+                    ))}
+                  </div>
+                  <label className={`dossier-intensidad${colorHoja.tono === "blanco" ? " dossier-check-off" : ""}`}>
+                    <span className="field-label">{t("dossier.intensidad")}</span>
+                    <input
+                      type="range"
+                      min={10}
+                      max={100}
+                      step={5}
+                      value={colorHoja.intensidad}
+                      disabled={colorHoja.tono === "blanco"}
+                      onChange={(e) => cambiarColorHoja({ intensidad: Number(e.target.value) })}
+                    />
+                    <span className="dossier-intensidad-valor">{colorHoja.intensidad}%</span>
+                  </label>
+                </div>
+                {/* Muestra de la hoja con el color elegido y los mismos grises de letra del PDF. */}
+                <div
+                  className={`dossier-hoja-muestra${orientacion === "vertical" ? " vertical" : ""}`}
+                  style={{ background: cssColor(colorFondo) }}
+                  aria-hidden="true"
+                >
+                  <strong>{t("dossier.muestraTitulo")}</strong>
+                  <span style={colorFondo ? { color: "rgb(72,72,72)" } : undefined}>{t("dossier.muestraTexto")}</span>
+                </div>
+              </div>
+            </section>
+
+            <section className="dossier-seccion">
               <h3>{t("dossier.seccionFormato")}</h3>
               <div className="dossier-fila">
                 <label className="dossier-campo">
@@ -412,6 +523,47 @@ export function DossierModal({
                       <span>{t("dossier.cantidadObras")}</span>
                       {numero(e.cantidad, 1, MAX_POR_HOJA, (n) => cambiarExcepcion(i, { cantidad: n }))}
                     </label>
+                    <label className="dossier-campo-chico dossier-campo-color">
+                      <span>{t("dossier.colorDeEstaHoja")}</span>
+                      <select
+                        value={e.color?.tono ?? ""}
+                        onChange={(ev) =>
+                          cambiarExcepcion(i, {
+                            color: ev.target.value
+                              ? { tono: ev.target.value as TonoHoja, intensidad: e.color?.intensidad ?? colorHoja.intensidad }
+                              : undefined,
+                          })
+                        }
+                      >
+                        <option value="">{t("dossier.colorIgualAlResto")}</option>
+                        {TONOS.map((tono) => (
+                          <option key={tono} value={tono}>
+                            {t(`dossier.tono.${tono}` as TranslationKey)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    {e.color && e.color.tono !== "blanco" && (
+                      <label className="dossier-intensidad">
+                        <span>{t("dossier.intensidad")}</span>
+                        <input
+                          type="range"
+                          min={10}
+                          max={100}
+                          step={5}
+                          value={e.color.intensidad}
+                          onChange={(ev) => cambiarExcepcion(i, { color: { tono: e.color!.tono, intensidad: Number(ev.target.value) } })}
+                        />
+                        <span className="dossier-intensidad-valor">{e.color.intensidad}%</span>
+                      </label>
+                    )}
+                    {e.color && (
+                      <span
+                        className="dossier-tono-muestra dossier-excepcion-muestra"
+                        style={{ background: cssColor(colorDeHoja(e.color.tono, e.color.intensidad)) }}
+                        aria-hidden="true"
+                      />
+                    )}
                     <button type="button" onClick={() => setExcepciones((prev) => prev.filter((_, k) => k !== i))}>
                       {t("selecciones.quitar")}
                     </button>
@@ -440,6 +592,27 @@ export function DossierModal({
                     <span className="field-label">{t("dossier.textoAdicionalPortada")}</span>
                     <input type="text" value={textoAdicionalPortada} onChange={(e) => setTextoAdicionalPortada(e.target.value)} />
                   </label>
+                  <div className="dossier-campo">
+                    <span className="field-label">{t("dossier.tipografiaPortada")}</span>
+                    <div className="dossier-tonos">
+                      {(Object.keys(ESTILO_LETRA) as LetraPortada[]).map((letra) => (
+                        <button
+                          key={letra}
+                          type="button"
+                          aria-pressed={letraPortada === letra}
+                          className={letraPortada === letra ? "dossier-tono activo" : "dossier-tono"}
+                          style={ESTILO_LETRA[letra]}
+                          onClick={() => cambiarLetraPortada(letra)}
+                        >
+                          {t(`dossier.letra.${letra}` as TranslationKey)}
+                        </button>
+                      ))}
+                    </div>
+                    {/* Muestra del texto de la portada con la letra y el color de hoja elegidos. */}
+                    <div className="dossier-portada-muestra" style={{ ...ESTILO_LETRA[letraPortada], background: cssColor(colorFondo) }}>
+                      {tituloPortada.trim() || seleccionNombre}
+                    </div>
+                  </div>
                   <label className="dossier-campo dossier-campo-chico">
                     <span className="field-label">{t("dossier.tamanoLetraPortada")}</span>
                     {numero(tamanoPortada, 10, 60, setTamanoPortada)}

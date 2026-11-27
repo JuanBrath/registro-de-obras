@@ -58,12 +58,13 @@ Cada foto se guarda con el título de la obra como nombre, y nunca pisa un archi
 ## Generar un dossier
 
 1. Abrí la selección y tocá **Generar dossier PDF**.
-2. En **Formato** elegí el **Tamaño de hoja** (A4 u Oficio), la **Orientación**, el **Idioma** (**Español**, **English** o **Español e inglés (ambos)**) y las **Obras por hoja**. Con **+ Agregar hoja con otra cantidad** podés indicar que una hoja puntual lleve más o menos obras.
-3. En **Portada** elegí el **Texto de la portada** (por defecto el nombre del artista), si querés agregar el nombre de la selección, un **Texto adicional (opcional)** y el **Tamaño de letra (pt)**.
-4. En **Textos** revisá la **Biografía del artista** y el **Statement**. Los dos son editables, valen solo para este dossier y tienen el botón **Ver completo**. El statement arranca vacío; si lo dejás vacío, esa página no sale.
-5. En **Ficha de cada obra** tildá lo que querés mostrar: **Nombre del artista en cada ficha**, **Título y año**, **Técnica**, **Medidas**, **Precio**, **Número de serie (ejemplar)** y **Pruebas de artista**. Para el precio podés editar el texto que va **Después del precio** (por ejemplo "+ IVA") y el que va **Si varias obras comparten ficha** ("c/u").
-6. En **Cierre** elegí si va el **Contacto al final**.
-7. Tocá **Generar PDF**. El dossier se guarda solo.
+2. En **Color de las hojas** elegí **Blanco**, **Neutro**, **Frío** o **Cálido** (tonos pastel) y regulá la **Intensidad** con la palanca; al lado ves una muestra de la hoja. El color se aplica a todas las hojas del dossier y el programa recuerda el último que usaste.
+3. En **Formato** elegí el **Tamaño de hoja** (A4 u Oficio), la **Orientación**, el **Idioma** (**Español**, **English** o **Español e inglés (ambos)**) y las **Obras por hoja**. Con **+ Agregar hoja distinta (cantidad o color)** podés indicar que una hoja de obras puntual lleve más o menos obras y, con **Color de esta hoja**, darle un color y una intensidad propios (con **Igual al resto** usa el del dossier).
+4. En **Portada** elegí el **Texto de la portada** (por defecto el nombre del artista), si querés agregar el nombre de la selección, un **Texto adicional (opcional)**, la **Tipografía** (**Moderna**, **Geométrica**, **Clásica**, **Clásica cursiva** o **Máquina de escribir**, con una muestra debajo) y el **Tamaño de letra (pt)**. La tipografía se aplica a los textos de la portada y el programa recuerda la última que usaste.
+5. En **Textos** revisá la **Biografía del artista** y el **Statement**. Los dos son editables, valen solo para este dossier y tienen el botón **Ver completo**. El statement arranca vacío; si lo dejás vacío, esa página no sale.
+6. En **Ficha de cada obra** tildá lo que querés mostrar: **Nombre del artista en cada ficha**, **Título y año**, **Técnica**, **Medidas**, **Precio**, **Número de serie (ejemplar)** y **Pruebas de artista**. Para el precio podés editar el texto que va **Después del precio** (por ejemplo "+ IVA") y el que va **Si varias obras comparten ficha** ("c/u").
+7. En **Cierre** elegí si va el **Contacto al final**.
+8. Tocá **Generar PDF**. El dossier se guarda solo.
 
 > De cada obra se toman los datos de su copia única o, si es seriada, de la primera copia que esté disponible, en stock, en exhibición, en consignación o en producción. Se descartan las copias vendidas, reservadas, descartadas, destruidas y las de colección del autor.
 

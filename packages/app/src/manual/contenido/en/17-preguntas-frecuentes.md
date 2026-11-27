@@ -40,7 +40,13 @@ The program may be pointing to another data folder, or an external drive may not
 
 ## macOS won't let me open the program
 
-Since the program isn't yet signed with an Apple Developer account, macOS may block the first opening. Right-click (or Control + click) the program and choose **Open**.
+Since the program isn't approved by Apple yet (it isn't signed with a developer account), macOS may block the first opening. With the program already copied to **Applications**:
+
+1. Open it with a double click. In the warning click **Done** (not **Move to Trash**).
+2. Right away go to **System Settings**, then **Privacy & Security**, and scroll down to **Security**. The button only appears after you have tried to open the program, and stays for about an hour.
+3. Click **Open Anyway** and enter your Mac password. You only do this once.
+
+If the button doesn't appear, open the **Terminal** app, paste this line and press Enter: `xattr -dr com.apple.quarantine /Applications/Recer.app`. Then open the program as usual. That line removes the downloaded-file mark from this program and skips Apple's check: use it only with an installer you received directly from whoever sold you Recer.
 
 ## The image of my PSD doesn't show
 

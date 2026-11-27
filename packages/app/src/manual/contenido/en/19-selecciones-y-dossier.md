@@ -58,12 +58,13 @@ Each photo is saved with the artwork's title as its name, and never overwrites a
 ## Generate a dossier
 
 1. Open the selection and click **Generate PDF dossier**.
-2. Under **Format** choose the **Page size** (A4 or Legal (Oficio)), the **Orientation**, the **Language** (**Español**, **English** or **Spanish and English (both)**) and the **Works per page**. With **+ Add page with a different number** you can make a specific page carry more or fewer artworks.
-3. Under **Cover** choose the **Cover text** (by default the artist's name), whether to add the selection name, an **Additional text (optional)** and the **Font size (pt)**.
-4. Under **Texts** review the **Artist biography** and the **Statement**. Both are editable, apply only to this dossier and have the **View full** button. The statement starts empty; if you leave it empty, that page is not included.
-5. Under **Caption for each work** tick what you want to show: **Artist name in each caption**, **Title and year**, **Technique**, **Dimensions**, **Price**, **Edition number** and **Artist's proofs**. For the price you can edit the text that goes **After the price** (for example "+ VAT") and the one for **When several works share a caption** ("each").
-6. Under **Closing page** choose whether the **Contact at the end** is included.
-7. Click **Generate PDF**. The dossier is saved automatically.
+2. Under **Page color** choose **White**, **Neutral**, **Cool** or **Warm** (pastel shades) and set the **Intensity** with the slider; next to it you see a sample of the page. The color applies to every page of the dossier and the program remembers the last one you used.
+3. Under **Format** choose the **Page size** (A4 or Legal (Oficio)), the **Orientation**, the **Language** (**Español**, **English** or **Spanish and English (both)**) and the **Works per page**. With **+ Add a different page (number or color)** you can make a specific artwork page carry more or fewer artworks and, with **Color of this page**, give it its own color and intensity (**Same as the rest** uses the dossier color).
+4. Under **Cover** choose the **Cover text** (by default the artist's name), whether to add the selection name, an **Additional text (optional)**, the **Typeface** (**Modern**, **Geometric**, **Classic**, **Classic italic** or **Typewriter**, with a sample below) and the **Font size (pt)**. The typeface applies to the cover texts and the program remembers the last one you used.
+5. Under **Texts** review the **Artist biography** and the **Statement**. Both are editable, apply only to this dossier and have the **View full** button. The statement starts empty; if you leave it empty, that page is not included.
+6. Under **Caption for each work** tick what you want to show: **Artist name in each caption**, **Title and year**, **Technique**, **Dimensions**, **Price**, **Edition number** and **Artist's proofs**. For the price you can edit the text that goes **After the price** (for example "+ VAT") and the one for **When several works share a caption** ("each").
+7. Under **Closing page** choose whether the **Contact at the end** is included.
+8. Click **Generate PDF**. The dossier is saved automatically.
 
 > For each artwork, the data comes from its single copy or, if it is an edition, from the first copy that is available, in stock, on exhibition, on consignment or in production. Sold, reserved, discarded, destroyed and artist's-collection copies are ignored.
 

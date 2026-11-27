@@ -27,7 +27,52 @@ export interface DossierArtista {
   bios: string[];
 }
 
+/** Tono de las hojas del dossier; "blanco" = sin color. */
+export type TonoHoja = "blanco" | "neutro" | "frio" | "calido";
+
+/** El pastel de cada tono a intensidad máxima. Sobre color, los textos grises van más oscuros (ver grisPara). */
+const PASTELES: Record<Exclude<TonoHoja, "blanco">, [number, number, number]> = {
+  neutro: [199, 199, 199],
+  frio: [178, 208, 232],
+  calido: [237, 199, 162],
+};
+
+/** Color de fondo para un tono y una intensidad de 0 a 100 (mezcla entre el blanco y el pastel); null = hoja blanca. */
+export function colorDeHoja(tono: TonoHoja, intensidad: number): [number, number, number] | null {
+  if (tono === "blanco") return null;
+  const f = Math.min(100, Math.max(0, intensidad)) / 100;
+  if (f === 0) return null;
+  return PASTELES[tono].map((c) => Math.round(255 - (255 - c) * f)) as [number, number, number];
+}
+
+/** Pinta toda la hoja actual. Va antes de dibujar cualquier otra cosa en ella. */
+function pintarFondo(doc: jsPDF, fondo: [number, number, number] | null): void {
+  if (!fondo) return;
+  doc.setFillColor(...fondo);
+  doc.rect(0, 0, doc.internal.pageSize.getWidth(), doc.internal.pageSize.getHeight(), "F");
+}
+
+function agregarHoja(doc: jsPDF, fondo: [number, number, number] | null): void {
+  doc.addPage();
+  pintarFondo(doc, fondo);
+}
+
+/** Tipografías para los textos de la portada. Times y Courier vienen dentro de jsPDF; las otras se incrustan. */
+export type LetraPortada = "inter" | "montserrat" | "times" | "timesCursiva" | "courier";
+
+export const LETRAS_PORTADA: Record<LetraPortada, [familia: string, estilo: string]> = {
+  inter: ["Inter", "normal"],
+  montserrat: ["Montserrat", "bold"],
+  times: ["times", "normal"],
+  timesCursiva: ["times", "italic"],
+  courier: ["courier", "normal"],
+};
+
 export interface DossierOpciones {
+  /** Tipografía de todos los textos de la portada. */
+  letraPortada: LetraPortada;
+  /** Color de fondo de todas las hojas (ver colorDeHoja); null = blancas. */
+  colorFondo: [number, number, number] | null;
   /** Texto principal de la portada (por defecto el nombre del artista); vacío = sin portada. */
   tituloPortada: string;
   /** Segunda línea de la portada (nombre de la selección), o vacío para omitirla. */
@@ -56,6 +101,8 @@ export interface DossierOpciones {
   obrasPorPagina: number;
   /** Excepciones: número de hoja de obras (1, 2, 3…) -> cantidad de obras en esa hoja. */
   obrasPorPaginaExcepciones: Record<number, number>;
+  /** Hojas de obras con color propio (null = blanca); las que no figuran usan colorFondo. */
+  coloresPorHoja: Record<number, [number, number, number] | null>;
   /** Tamaño y orientación de la hoja. */
   formatoPagina: "a4" | "oficio";
   orientacion: "horizontal" | "vertical";
@@ -91,7 +138,9 @@ function gridPara(n: number, vertical: boolean): [number, number] {
   return vertical ? [filas, cols] : [cols, filas];
 }
 const GRIS: [number, number, number] = [110, 110, 110];
+const GRIS_SOBRE_COLOR: [number, number, number] = [72, 72, 72];
 const NEGRO: [number, number, number] = [40, 40, 40];
+const grisPara = (fondo: [number, number, number] | null) => (fondo ? GRIS_SOBRE_COLOR : GRIS);
 
 /** "300 x 450 mm" -> "30 × 45 cm". Si no tiene ese formato se deja tal cual. */
 export function medidasEnCm(texto: string | null): string | null {
@@ -137,6 +186,7 @@ function escribirCaption(
   y: number,
   ancho: number,
   size: number,
+  gris: [number, number, number],
 ): void {
   const c = lineasCaption(obra, o, cadaUno);
   const lh = size * 0.46;
@@ -149,7 +199,7 @@ function escribirCaption(
     cy += lh * 1.9;
   }
   doc.setFont("Inter", "normal");
-  doc.setTextColor(...GRIS);
+  doc.setTextColor(...gris);
   for (const linea of c.gris) {
     for (const l of doc.splitTextToSize(linea, ancho) as string[]) {
       doc.text(l, x, cy);
@@ -182,8 +232,8 @@ async function logoAbajo(doc: jsPDF, logo: Uint8Array | null, y: number, alto: n
   doc.addImage(logo, formato, (W - w) / 2, y, w, h);
 }
 
-function paginaTexto(doc: jsPDF, titulo: string, texto: string | null): void {
-  doc.addPage();
+function paginaTexto(doc: jsPDF, titulo: string, texto: string | null, fondo: [number, number, number] | null): void {
+  agregarHoja(doc, fondo);
   const W = doc.internal.pageSize.getWidth();
   const H = doc.internal.pageSize.getHeight();
   doc.setTextColor(...NEGRO);
@@ -193,12 +243,12 @@ function paginaTexto(doc: jsPDF, titulo: string, texto: string | null): void {
   if (!texto) return;
   doc.setFont("Inter", "normal");
   doc.setFontSize(11);
-  doc.setTextColor(...GRIS);
+  doc.setTextColor(...grisPara(fondo));
   const lineas = doc.splitTextToSize(texto, W - 2 * (M + 30)) as string[];
   let y = 55;
   for (const l of lineas) {
     if (y > H - 20) {
-      doc.addPage();
+      agregarHoja(doc, fondo);
       y = 30;
     }
     doc.text(l, M + 30, y);
@@ -206,8 +256,15 @@ function paginaTexto(doc: jsPDF, titulo: string, texto: string | null): void {
   }
 }
 
-async function paginaObras(doc: jsPDF, lote: DossierObra[], cantidad: number, o: DossierOpciones): Promise<void> {
-  doc.addPage();
+async function paginaObras(
+  doc: jsPDF,
+  lote: DossierObra[],
+  cantidad: number,
+  o: DossierOpciones,
+  fondo: [number, number, number] | null,
+): Promise<void> {
+  agregarHoja(doc, fondo);
+  const gris = grisPara(fondo);
   const W = doc.internal.pageSize.getWidth();
   const H = doc.internal.pageSize.getHeight();
   const [cols, filas] = gridPara(cantidad, H > W);
@@ -241,13 +298,13 @@ async function paginaObras(doc: jsPDF, lote: DossierObra[], cantidad: number, o:
       doc.addImage(ob.imagen.bytes, ob.imagen.formato, cx + (cellW - w) / 2, cy + (boxH - h) / 2, w, h);
     }
     if (altoIndividual > 0) {
-      escribirCaption(doc, ob, o, false, cx, cy + boxH + 4, cellW, 7);
+      escribirCaption(doc, ob, o, false, cx, cy + boxH + 4, cellW, 7, gris);
     }
   }
 
   if (altoCompartida > 0) {
     // Ficha a la derecha, como en los dossiers de galería: una sola para toda la página.
-    escribirCaption(doc, lote[0], o, compartida, W - M - 95, H - M - altoCompartida + 8, 95, size);
+    escribirCaption(doc, lote[0], o, compartida, W - M - 95, H - M - altoCompartida + 8, 95, size, gris);
   }
 }
 
@@ -267,10 +324,12 @@ export async function buildDossierPdfBytes(
   const W = doc.internal.pageSize.getWidth();
   const H = doc.internal.pageSize.getHeight();
   await registerBrandFonts(doc);
+  pintarFondo(doc, o.colorFondo);
 
   if (o.tituloPortada.trim() || o.subtituloPortada.trim() || o.textoAdicionalPortada.trim()) {
     doc.setTextColor(...NEGRO);
-    doc.setFont("Inter", "normal");
+    // Se mantiene para título, subtítulo y texto adicional (el corte de renglones usa sus medidas).
+    doc.setFont(...LETRAS_PORTADA[o.letraPortada]);
     const tam = o.tamanoPortada;
     const ancho = W - 2 * M - 20;
     const titulo = o.tituloPortada.trim() ? (doc.setFontSize(tam), doc.splitTextToSize(o.tituloPortada.trim(), ancho) as string[]) : [];
@@ -283,7 +342,7 @@ export async function buildDossierPdfBytes(
     if (o.subtituloPortada.trim()) {
       const subTam = Math.max(8, Math.round(tam * 0.65));
       doc.setFontSize(subTam);
-      doc.setTextColor(...GRIS);
+      doc.setTextColor(...grisPara(o.colorFondo));
       y += lh * 0.4;
       for (const l of doc.splitTextToSize(o.subtituloPortada.trim(), ancho) as string[]) {
         doc.text(l, W / 2, y, { align: "center" });
@@ -293,7 +352,7 @@ export async function buildDossierPdfBytes(
     if (o.textoAdicionalPortada.trim()) {
       const extraTam = Math.max(8, Math.round(tam * 0.5));
       doc.setFontSize(extraTam);
-      doc.setTextColor(...GRIS);
+      doc.setTextColor(...grisPara(o.colorFondo));
       y += extraTam * 0.46 * 1.2;
       for (const l of doc.splitTextToSize(o.textoAdicionalPortada.trim(), ancho) as string[]) {
         doc.text(l, W / 2, y, { align: "center" });
@@ -320,16 +379,17 @@ export async function buildDossierPdfBytes(
     if (o.incluirBio && !bioHecha.has(ini.artistaId)) {
       bioHecha.add(ini.artistaId);
       const art = artistas.find((a) => a.id === ini.artistaId);
-      for (const bio of art?.bios ?? []) if (bio.trim()) paginaTexto(doc, art!.nombre, bio);
+      for (const bio of art?.bios ?? []) if (bio.trim()) paginaTexto(doc, art!.nombre, bio, o.colorFondo);
     }
     if (!statementHecho && o.statementTextos.some((x) => x.trim())) {
       statementHecho = true;
-      for (const texto of o.statementTextos) if (texto.trim()) paginaTexto(doc, o.statementTitulo, texto.trim());
+      for (const texto of o.statementTextos) if (texto.trim()) paginaTexto(doc, o.statementTitulo, texto.trim(), o.colorFondo);
     }
     let k = 0;
     while (k < tanda.length) {
       const cantidad = Math.max(1, o.obrasPorPaginaExcepciones[hoja] ?? o.obrasPorPagina);
-      await paginaObras(doc, tanda.slice(k, k + cantidad), cantidad, o);
+      const fondo = hoja in o.coloresPorHoja ? o.coloresPorHoja[hoja] : o.colorFondo;
+      await paginaObras(doc, tanda.slice(k, k + cantidad), cantidad, o, fondo);
       k += cantidad;
       hoja++;
     }
@@ -337,10 +397,10 @@ export async function buildDossierPdfBytes(
   }
 
   if (o.contactoLineas.length > 0) {
-    doc.addPage();
+    agregarHoja(doc, o.colorFondo);
     doc.setFont("Inter", "normal");
     doc.setFontSize(11);
-    doc.setTextColor(...GRIS);
+    doc.setTextColor(...grisPara(o.colorFondo));
     let y = H / 2 - (o.contactoLineas.length * 6) / 2;
     for (const l of o.contactoLineas) {
       doc.text(l, W / 2, y, { align: "center" });
