@@ -1,0 +1,711 @@
+%PDF-1.3
+%ºß¬à
+3 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 4 0 R
+>>
+endobj
+4 0 obj
+<<
+/Length 6916
+>>
+stream
+0.5670000000000001 w
+0 G
+BT
+/F2 20 Tf
+23. TL
+0.11 0.165 0.267 rg
+56.6929133858267775 771.0238582677164914 Td
+(Recer - Novedades de la versión 1.4.0) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.431 g
+56.6929133858267775 748.346692913385823 Td
+(28 de noviembre de 2026 - incluye los cambios de las versiones 1.4.0, 1.3.0 y 1.2.1) Tj
+ET
+BT
+/F2 13 Tf
+14.9499999999999993 TL
+0.11 0.165 0.267 rg
+56.6929133858267775 720.0002362204724022 Td
+(1.4.0 · Pantalla de una selección) Tj
+ET
+0.79 0.64 0.28 RG
+56.6929133858267775 712.9136220472440755 m
+538.5826771653544256 712.9136220472440755 l
+S
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 698.7403937007873083 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 698.7403937007873083 Td
+(Al abrir una selección queda solo ella en pantalla: se vuelve con Todas las selecciones \(o con Volver) Tj
+T* (al grupo\).) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 664.7246456692912489 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 664.7246456692912489 Td
+(Arriba, un resumen con el nombre, la cantidad de obras, el grupo y las primeras líneas de las notas.) Tj
+T* (Los campos aparecen al tocar Editar datos, donde también está Eliminar selección.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 630.7088976377951894 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 630.7088976377951894 Td
+(Los documentos quedan juntos bajo Con esta selección podés generar, con Generar dossier PDF) Tj
+T* (destacado.) Tj
+ET
+BT
+/F2 13 Tf
+14.9499999999999993 TL
+0.11 0.165 0.267 rg
+56.6929133858267775 585.3545669291338527 Td
+(1.4.0 · Pantalla de Obras) Tj
+ET
+0.79 0.64 0.28 RG
+56.6929133858267775 578.2679527559054122 m
+538.5826771653544256 578.2679527559054122 l
+S
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 564.0947244094487587 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 564.0947244094487587 Td
+(Nueva obra pasa arriba, junto al título, y el buscador tiene su propio renglón.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 544.2522047244094665 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 544.2522047244094665 Td
+(Los filtros se abren con el botón Filtros. Los que están puestos quedan a la vista y se quitan de a) Tj
+T* (uno o con Limpiar filtros.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 510.2364566929133503 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 510.2364566929133503 Td
+(Selecciones, Seleccionar y Generar informe quedan juntos. Sobre las fotos: cantidad de obras,) Tj
+T* (orden, vistas y tamaño de las miniaturas.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 476.2207086614172908 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 476.2207086614172908 Td
+(Accesos en las fotos: se pueden habilitar Lightroom Classic, Photoshop o los dos. Al pasar el cursor) Tj
+T* (por una foto \(en Columnas, Tarjetas e Imágenes\) aparecen LrC y Ps para abrir el archivo original) Tj
+T* (con un clic.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 428.0317322834645211 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 428.0317322834645211 Td
+(El ícono de Lightroom de la ficha de la obra y del formulario ahora es LrC \(Lightroom Classic\).) Tj
+ET
+BT
+/F2 13 Tf
+14.9499999999999993 TL
+0.11 0.165 0.267 rg
+56.6929133858267775 396.850629921259781 Td
+(1.4.0 · Ventana del dossier) Tj
+ET
+0.79 0.64 0.28 RG
+56.6929133858267775 389.7640157480313974 m
+538.5826771653544256 389.7640157480313974 l
+S
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 375.5907874015747439 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 375.5907874015747439 Td
+(Las opciones se reparten en cuatro pestañas: Hojas, Portada, Textos, y Ficha y cierre. Generar PDF) Tj
+T* (queda siempre a la vista.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 341.5750393700786844 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 341.5750393700786844 Td
+(La portada puede ir en cursiva con cualquiera de las cuatro tipografías \(reemplaza a la opción) Tj
+T* (Clásica cursiva\).) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 307.559291338582625 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 307.559291338582625 Td
+(Línea de tiempo: si en la biografía hay al menos dos renglones seguidos que empiezan con un año) Tj
+T* (o un período, el PDF puede mostrarlos como línea de tiempo. Se activa o desactiva en la pestaña) Tj
+T* (Textos, y se respeta el orden en que están escritos.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 259.3703149606297984 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 259.3703149606297984 Td
+(Botón de ayuda propio, con Recorrido visual de la ventana y Buscar en el manual.) Tj
+ET
+BT
+/F2 13 Tf
+14.9499999999999993 TL
+0.11 0.165 0.267 rg
+56.6929133858267775 228.1892125984251152 Td
+(1.4.0 · Fotos en grande, letra y ayuda) Tj
+ET
+0.79 0.64 0.28 RG
+56.6929133858267775 221.10259842519676 m
+538.5826771653544256 221.10259842519676 l
+S
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 206.9293700787401349 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 206.9293700787401349 Td
+(En las fotos en grande, la calificación se ve como en la vista Imágenes \(por ejemplo, 3 estrellas en) Tj
+T* (un solo botón\) y al tocarla se despliegan las cinco estrellas.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 172.9136220472439618 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 172.9136220472439618 Td
+(Letra de botones, campos y filtros más grande y pareja en Obras, Selecciones y el dossier.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 153.0711023622046696 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 153.0711023622046696 Td
+(El recorrido de ayuda ya no deja lo que explica escondido detrás de la parte fija de arriba.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 133.2285826771652637 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 133.2285826771652637 Td
+(La tecla Esc cierra solo lo que está arriba: cerrar una ayuda o el manual ya no cierra también la) Tj
+T* (ventana de atrás.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 99.2128346456692043 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 99.2128346456692043 Td
+(Manual y recorridos de ayuda actualizados en español e inglés.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 6 0 R
+>>
+endobj
+6 0 obj
+<<
+/Length 3421
+>>
+stream
+0.5670000000000001 w
+0.79 0.64 0.28 RG
+BT
+/F2 13 Tf
+14.9499999999999993 TL
+0.11 0.165 0.267 rg
+56.6929133858267775 771.0238582677164914 Td
+(1.3.0 · Dossier: color de las hojas y tipografía de la portada) Tj
+ET
+0.79 0.64 0.28 RG
+56.6929133858267775 763.9372440944881646 m
+538.5826771653544256 763.9372440944881646 l
+S
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 749.7640157480315111 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 749.7640157480315111 Td
+(Color de las hojas: Blanco, Neutro \(gris\), Frío o Cálido, en tonos pastel, con una palanca para) Tj
+T* (regular la intensidad y una muestra de la hoja. El programa recuerda el último color usado.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 715.7482677165354517 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 715.7482677165354517 Td
+(Sobre hojas de color, los textos grises salen más oscuros para que se lean bien.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 695.9057480314960458 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 695.9057480314960458 Td
+(Las hojas de obras pueden tener un color y una intensidad propios, además de otra cantidad de) Tj
+T* (obras.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 661.8899999999999864 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 661.8899999999999864 Td
+(Se puede elegir la tipografía de la portada \(Moderna, Geométrica, Clásica o Máquina de escribir\),) Tj
+T* (con una muestra en pantalla.) Tj
+ET
+BT
+/F2 13 Tf
+14.9499999999999993 TL
+0.11 0.165 0.267 rg
+56.6929133858267775 616.5356692913385359 Td
+(1.3.0 · Abrir el programa por primera vez) Tj
+ET
+0.79 0.64 0.28 RG
+56.6929133858267775 609.4490551181102092 m
+538.5826771653544256 609.4490551181102092 l
+S
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 595.2758267716535556 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 595.2758267716535556 Td
+(El manual y la guía de instalación explican cómo abrir el programa en las versiones actuales de) Tj
+T* (macOS, desde Privacidad y seguridad \(Abrir igualmente\).) Tj
+ET
+BT
+/F2 13 Tf
+14.9499999999999993 TL
+0.11 0.165 0.267 rg
+56.6929133858267775 549.9214960629921052 Td
+(1.2.1 · Grupos de selecciones) Tj
+ET
+0.79 0.64 0.28 RG
+56.6929133858267775 542.8348818897637784 m
+538.5826771653544256 542.8348818897637784 l
+S
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 528.6616535433070112 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 528.6616535433070112 Td
+(Al armar un grupo, cada selección se muestra como un botón con su nombre y cantidad de obras:) Tj
+T* (se enciende en azul con un tilde cuando forma parte del grupo, y se toca para sumarla o quitarla.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 494.6459055118109518 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 494.6459055118109518 Td
+(Si una selección ya está en otro grupo, se avisa debajo de su nombre.) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+56.6929133858267775 474.8033858267716028 Td
+(-) Tj
+ET
+BT
+/F1 10.5 Tf
+12.0749999999999993 TL
+0.157 g
+70.8661417322834666 474.8033858267716028 Td
+(Una línea de ayuda arriba de la lista explica cómo elegirlas.) Tj
+ET
+endstream
+endobj
+1 0 obj
+<</Type /Pages
+/Kids [3 0 R 5 0 R ]
+/Count 2
+>>
+endobj
+7 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+8 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica-Bold
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+9 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica-Oblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+10 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica-BoldOblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+11 0 obj
+<<
+/Type /Font
+/BaseFont /Courier
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+12 0 obj
+<<
+/Type /Font
+/BaseFont /Courier-Bold
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+13 0 obj
+<<
+/Type /Font
+/BaseFont /Courier-Oblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+14 0 obj
+<<
+/Type /Font
+/BaseFont /Courier-BoldOblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+15 0 obj
+<<
+/Type /Font
+/BaseFont /Times-Roman
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+16 0 obj
+<<
+/Type /Font
+/BaseFont /Times-Bold
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+17 0 obj
+<<
+/Type /Font
+/BaseFont /Times-Italic
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+18 0 obj
+<<
+/Type /Font
+/BaseFont /Times-BoldItalic
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+19 0 obj
+<<
+/Type /Font
+/BaseFont /ZapfDingbats
+/Subtype /Type1
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+20 0 obj
+<<
+/Type /Font
+/BaseFont /Symbol
+/Subtype /Type1
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+2 0 obj
+<<
+/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
+/Font <<
+/F1 7 0 R
+/F2 8 0 R
+/F3 9 0 R
+/F4 10 0 R
+/F5 11 0 R
+/F6 12 0 R
+/F7 13 0 R
+/F8 14 0 R
+/F9 15 0 R
+/F10 16 0 R
+/F11 17 0 R
+/F12 18 0 R
+/F13 19 0 R
+/F14 20 0 R
+>>
+/XObject <<
+>>
+>>
+endobj
+21 0 obj
+<<
+/Producer (jsPDF 4.2.1)
+/CreationDate (D:20261128110926-03'00')
+>>
+endobj
+22 0 obj
+<<
+/Type /Catalog
+/Pages 1 0 R
+/OpenAction [3 0 R /FitH null]
+/PageLayout /OneColumn
+>>
+endobj
+xref
+0 23
+0000000000 65535 f 
+0000010730 00000 n 
+0000012555 00000 n 
+0000000015 00000 n 
+0000000152 00000 n 
+0000007120 00000 n 
+0000007257 00000 n 
+0000010793 00000 n 
+0000010918 00000 n 
+0000011048 00000 n 
+0000011181 00000 n 
+0000011319 00000 n 
+0000011443 00000 n 
+0000011572 00000 n 
+0000011704 00000 n 
+0000011840 00000 n 
+0000011968 00000 n 
+0000012095 00000 n 
+0000012224 00000 n 
+0000012357 00000 n 
+0000012459 00000 n 
+0000012805 00000 n 
+0000012891 00000 n 
+trailer
+<<
+/Size 23
+/Root 22 0 R
+/Info 21 0 R
+/ID [ <26B8BF23C59FE121B782EF3B7BA5D15C> <26B8BF23C59FE121B782EF3B7BA5D15C> ]
+>>
+startxref
+12995
+%%EOF

@@ -21,7 +21,7 @@ When adding an artwork you choose the **Artist** from a list (or add a new one r
 ## When adding artworks
 
 - The **Acquisition method** (direct consignment from the studio, deposit from a private collection, outright purchase by the gallery) and the **Provenance and exhibition history** are added.
-- The artwork search box also searches by artist and by tag, and there is a filter by artist.
+- The artwork search box also searches by artist and by tag, and **Filters** adds the **Artist** one.
 
 ## On each copy
 

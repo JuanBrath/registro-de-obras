@@ -10,6 +10,8 @@ export interface PasoRecorrido {
   targetSelector: string | null;
   titulo: string;
   texto: string;
+  /** Se llama antes de ubicar el paso, para mostrar lo que se va a señalar (ej. cambiar de pestaña). */
+  antes?: () => void;
 }
 
 const MARGEN_RECUADRO_PX = 8;
@@ -17,6 +19,25 @@ const SEPARACION_TARJETA_PX = 16;
 const MARGEN_BORDE_VENTANA_PX = 16;
 const ANCHO_TARJETA_PX = 320;
 const ALTO_TARJETA_ESTIMADO_PX = 180;
+
+/** Franjas que quedan fijas arriba al desplazarse y que taparían lo que se explica. */
+const SELECTOR_FRANJAS_FIJAS = ".app-topbar, .obras-encabezado-fijo, .selecciones-vista-barra";
+
+/**
+ * Hasta dónde llega, medido desde arriba de la ventana, lo que está fijo cuando la pantalla está desplazada.
+ * Devuelve null si el elemento señalado es parte de una de esas franjas (entonces no hay nada que lo tape).
+ */
+function altoFijoSobre(el: Element): number | null {
+  // Dentro de una ventana emergente no la tapan las franjas de la pantalla de atrás.
+  if (el.closest(".modal-content")) return null;
+  let alto = 0;
+  for (const franja of document.querySelectorAll<HTMLElement>(SELECTOR_FRANJAS_FIJAS)) {
+    if (franja.contains(el)) return null;
+    const arriba = parseFloat(getComputedStyle(franja).top) || 0;
+    alto = Math.max(alto, arriba + franja.offsetHeight);
+  }
+  return alto;
+}
 
 /**
  * Recorrido guiado de bienvenida: una tarjeta de texto que va senalando, paso a paso, los
@@ -68,7 +89,17 @@ export function RecorridoInicial({ pasos, onCerrar }: { pasos: PasoRecorrido[]; 
 
   // Al cambiar de paso la pantalla se desplaza sola (hacia arriba o hacia abajo) para dejar a la vista, y centrado,
   // lo que se está explicando. Mientras dura ese desplazamiento el recuadro y la tarjeta acompañan al elemento.
+  // Pasos con "antes": primero se muestra lo que haya que mostrar y recién en la vuelta siguiente se lo ubica.
+  const [preparado, setPreparado] = useState<PasoRecorrido | null>(null);
+  useEffect(() => {
+    if (!paso?.antes) return;
+    paso.antes();
+    const espera = window.setTimeout(() => setPreparado(paso), 30);
+    return () => window.clearTimeout(espera);
+  }, [paso]);
+
   useLayoutEffect(() => {
+    if (paso?.antes && preparado !== paso) return;
     if (!paso?.targetSelector) {
       setRect(null);
       return;
@@ -79,7 +110,15 @@ export function RecorridoInicial({ pasos, onCerrar }: { pasos: PasoRecorrido[]; 
       return;
     }
     setRect(el.getBoundingClientRect());
-    el.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
+    // El desplazamiento descuenta las franjas fijas: lo explicado queda centrado en el espacio que se ve debajo de
+    // ellas y, si no entra entero, empieza justo debajo (así se pierde de vista el final y nunca el principio).
+    const fijo = altoFijoSobre(el);
+    const margen = fijo === null ? 0 : fijo + SEPARACION_TARJETA_PX;
+    const entra = el.getBoundingClientRect().height <= document.documentElement.clientHeight - margen;
+    const estilo = (el as HTMLElement).style;
+    const margenPrevio = estilo.scrollMarginTop;
+    estilo.scrollMarginTop = `${margen}px`;
+    el.scrollIntoView({ block: entra ? "center" : "start", inline: "nearest", behavior: "smooth" });
 
     const medir = () => setRect(el.getBoundingClientRect());
     window.addEventListener("scroll", medir, true);
@@ -93,11 +132,12 @@ export function RecorridoInicial({ pasos, onCerrar }: { pasos: PasoRecorrido[]; 
     };
     cuadro = requestAnimationFrame(seguir);
     return () => {
+      estilo.scrollMarginTop = margenPrevio;
       window.removeEventListener("scroll", medir, true);
       window.removeEventListener("resize", medir);
       cancelAnimationFrame(cuadro);
     };
-  }, [paso]);
+  }, [paso, preparado]);
 
   // Alto real de la tarjeta (varía con el largo del texto) para ubicarla sin salirse de la pantalla.
   useLayoutEffect(() => {
@@ -118,13 +158,13 @@ export function RecorridoInicial({ pasos, onCerrar }: { pasos: PasoRecorrido[]; 
     const limitar = (v: number, min: number, max: number) => Math.min(Math.max(v, min), Math.max(min, max));
     const leftAlineado = limitar(rect.left, m, ancho - m - ANCHO_TARJETA_PX);
     const topAlineado = limitar(rect.top, m, alto - m - altoTarjeta);
-    // Se prueba, en orden, abajo, arriba, a la derecha y a la izquierda del elemento señalado; la primera que
+    // Se prueba, en orden, abajo, a la derecha, a la izquierda y arriba del elemento señalado; la primera que
     // entre entera en la pantalla (sin tapar lo que se explica) es la que se usa.
     const candidatas = [
       { top: rect.bottom + sep, left: leftAlineado, entra: rect.bottom + sep + altoTarjeta <= alto - m },
-      { top: rect.top - sep - altoTarjeta, left: leftAlineado, entra: rect.top - sep - altoTarjeta >= m },
       { top: topAlineado, left: rect.right + sep, entra: rect.right + sep + ANCHO_TARJETA_PX <= ancho - m },
       { top: topAlineado, left: rect.left - sep - ANCHO_TARJETA_PX, entra: rect.left - sep - ANCHO_TARJETA_PX >= m },
+      { top: rect.top - sep - altoTarjeta, left: leftAlineado, entra: rect.top - sep - altoTarjeta >= m },
     ];
     const elegida = candidatas.find((c) => c.entra);
     if (elegida) {

@@ -1,4 +1,5 @@
 import type { jsPDF } from "jspdf";
+import { tramosDeBiografia, type HitoLineaDeTiempo } from "@registro/core";
 import { fittedImageSize, registerBrandFonts } from "../utils/pdfBranding.js";
 
 /** Una obra de la selección, con los datos ya resueltos (formateados) para dibujar. */
@@ -58,19 +59,21 @@ function agregarHoja(doc: jsPDF, fondo: [number, number, number] | null): void {
 }
 
 /** Tipografías para los textos de la portada. Times y Courier vienen dentro de jsPDF; las otras se incrustan. */
-export type LetraPortada = "inter" | "montserrat" | "times" | "timesCursiva" | "courier";
+export type LetraPortada = "inter" | "montserrat" | "times" | "courier";
 
-export const LETRAS_PORTADA: Record<LetraPortada, [familia: string, estilo: string]> = {
-  inter: ["Inter", "normal"],
-  montserrat: ["Montserrat", "bold"],
-  times: ["times", "normal"],
-  timesCursiva: ["times", "italic"],
-  courier: ["courier", "normal"],
+/** Familia y estilo de cada tipografía, derecha y en cursiva. */
+export const LETRAS_PORTADA: Record<LetraPortada, { familia: string; derecha: string; cursiva: string }> = {
+  inter: { familia: "Inter", derecha: "normal", cursiva: "italic" },
+  montserrat: { familia: "Montserrat", derecha: "bold", cursiva: "bolditalic" },
+  times: { familia: "times", derecha: "normal", cursiva: "italic" },
+  courier: { familia: "courier", derecha: "normal", cursiva: "italic" },
 };
 
 export interface DossierOpciones {
   /** Tipografía de todos los textos de la portada. */
   letraPortada: LetraPortada;
+  /** Los textos de la portada en cursiva, con cualquiera de las tipografías. */
+  cursivaPortada: boolean;
   /** Color de fondo de todas las hojas (ver colorDeHoja); null = blancas. */
   colorFondo: [number, number, number] | null;
   /** Texto principal de la portada (por defecto el nombre del artista); vacío = sin portada. */
@@ -82,6 +85,8 @@ export interface DossierOpciones {
   /** Tamaño de letra del texto principal de la portada, en puntos. */
   tamanoPortada: number;
   incluirBio: boolean;
+  /** Los renglones de la biografía que empiezan con un año se dibujan como línea de tiempo. */
+  lineaDeTiempoBio: boolean;
   /** Título de la página de statement (nombre de la selección) y su texto; sin texto = sin página. */
   statementTitulo: string;
   statementTextos: string[];
@@ -232,7 +237,14 @@ async function logoAbajo(doc: jsPDF, logo: Uint8Array | null, y: number, alto: n
   doc.addImage(logo, formato, (W - w) / 2, y, w, h);
 }
 
-function paginaTexto(doc: jsPDF, titulo: string, texto: string | null, fondo: [number, number, number] | null): void {
+/** Página de texto (biografía, statement). Con `conLineaDeTiempo`, los tramos escritos por años van como línea de tiempo. */
+function paginaTexto(
+  doc: jsPDF,
+  titulo: string,
+  texto: string | null,
+  fondo: [number, number, number] | null,
+  conLineaDeTiempo = false,
+): void {
   agregarHoja(doc, fondo);
   const W = doc.internal.pageSize.getWidth();
   const H = doc.internal.pageSize.getHeight();
@@ -241,19 +253,84 @@ function paginaTexto(doc: jsPDF, titulo: string, texto: string | null, fondo: [n
   doc.setFontSize(18);
   doc.text(titulo, M + 30, 40);
   if (!texto) return;
-  doc.setFont("Inter", "normal");
-  doc.setFontSize(11);
-  doc.setTextColor(...grisPara(fondo));
-  const lineas = doc.splitTextToSize(texto, W - 2 * (M + 30)) as string[];
+
+  const x = M + 30;
+  const ancho = W - 2 * x;
+  const gris = grisPara(fondo);
   let y = 55;
-  for (const l of lineas) {
-    if (y > H - 20) {
-      agregarHoja(doc, fondo);
-      y = 30;
+  /** Pasa a otra hoja si el próximo renglón no entra. Devuelve true si la cambió. */
+  const asegurarLugar = (): boolean => {
+    if (y <= H - 20) return false;
+    agregarHoja(doc, fondo);
+    y = 30;
+    return true;
+  };
+  const estiloTexto = () => {
+    doc.setFont("Inter", "normal");
+    doc.setFontSize(11);
+    doc.setTextColor(...gris);
+  };
+  const escribirParrafos = (parrafos: string) => {
+    estiloTexto();
+    for (const l of doc.splitTextToSize(parrafos, ancho) as string[]) {
+      asegurarLugar();
+      doc.text(l, x, y);
+      y += 6;
     }
-    doc.text(l, M + 30, y);
-    y += 6;
-  }
+  };
+
+  /** Fecha a la izquierda, una línea vertical con un punto en cada fecha, y a la derecha lo que pasó. */
+  const escribirLinea = (hitos: HitoLineaDeTiempo[]) => {
+    doc.setFont("Inter", "medium");
+    doc.setFontSize(11);
+    const anchoFecha = Math.max(...hitos.map((h) => doc.getTextWidth(h.fecha)));
+    const xRaya = x + anchoFecha + 6;
+    const xTexto = xRaya + 6;
+    // El punto queda a la altura del centro de las letras del renglón.
+    const alturaPunto = (renglon: number) => renglon - 1.35;
+    let yPuntoAnterior: number | null = null;
+    const raya = (desde: number, hasta: number) => {
+      doc.setDrawColor(...gris);
+      doc.setLineWidth(0.25);
+      doc.line(xRaya, desde, xRaya, hasta);
+    };
+    hitos.forEach((hito, indice) => {
+      estiloTexto();
+      const renglones = hito.entradas.flatMap((e) => doc.splitTextToSize(e, W - x - xTexto) as string[]);
+      // La fecha no queda sola al pie de una hoja.
+      if (asegurarLugar()) yPuntoAnterior = null;
+      if (yPuntoAnterior !== null) raya(yPuntoAnterior, alturaPunto(y));
+      doc.setFont("Inter", "medium");
+      doc.setFontSize(11);
+      doc.setTextColor(...NEGRO);
+      doc.text(hito.fecha, xRaya - 6, y, { align: "right" });
+      doc.setFillColor(...NEGRO);
+      doc.circle(xRaya, alturaPunto(y), 1.1, "F");
+      yPuntoAnterior = alturaPunto(y);
+      estiloTexto();
+      for (const [n, renglon] of (renglones.length > 0 ? renglones : [""]).entries()) {
+        if (n > 0 && asegurarLugar()) {
+          estiloTexto();
+          yPuntoAnterior = null;
+        }
+        if (renglon) doc.text(renglon, xTexto, y);
+        // La raya acompaña los renglones de esta fecha hasta la siguiente.
+        if (indice < hitos.length - 1) {
+          raya(yPuntoAnterior ?? y - 6, alturaPunto(y));
+          yPuntoAnterior = alturaPunto(y);
+        }
+        y += 6;
+      }
+      y += 3;
+    });
+  };
+
+  const tramos = conLineaDeTiempo ? tramosDeBiografia(texto) : [{ tipo: "texto" as const, texto }];
+  tramos.forEach((tramo, indice) => {
+    if (indice > 0) y += 4;
+    if (tramo.tipo === "texto") escribirParrafos(tramo.texto);
+    else escribirLinea(tramo.hitos);
+  });
 }
 
 async function paginaObras(
@@ -329,7 +406,8 @@ export async function buildDossierPdfBytes(
   if (o.tituloPortada.trim() || o.subtituloPortada.trim() || o.textoAdicionalPortada.trim()) {
     doc.setTextColor(...NEGRO);
     // Se mantiene para título, subtítulo y texto adicional (el corte de renglones usa sus medidas).
-    doc.setFont(...LETRAS_PORTADA[o.letraPortada]);
+    const letra = LETRAS_PORTADA[o.letraPortada];
+    doc.setFont(letra.familia, o.cursivaPortada ? letra.cursiva : letra.derecha);
     const tam = o.tamanoPortada;
     const ancho = W - 2 * M - 20;
     const titulo = o.tituloPortada.trim() ? (doc.setFontSize(tam), doc.splitTextToSize(o.tituloPortada.trim(), ancho) as string[]) : [];
@@ -379,7 +457,7 @@ export async function buildDossierPdfBytes(
     if (o.incluirBio && !bioHecha.has(ini.artistaId)) {
       bioHecha.add(ini.artistaId);
       const art = artistas.find((a) => a.id === ini.artistaId);
-      for (const bio of art?.bios ?? []) if (bio.trim()) paginaTexto(doc, art!.nombre, bio, o.colorFondo);
+      for (const bio of art?.bios ?? []) if (bio.trim()) paginaTexto(doc, art!.nombre, bio, o.colorFondo, o.lineaDeTiempoBio);
     }
     if (!statementHecho && o.statementTextos.some((x) => x.trim())) {
       statementHecho = true;

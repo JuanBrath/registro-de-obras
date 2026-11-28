@@ -15,11 +15,11 @@ En **Obras**, tocá la tarjeta de la obra. Arriba está el título; para volver 
 - El **Statement** y las **Notas**: se muestra la primera línea; tocando el nombre del campo ves el texto completo.
 - Más abajo, la lista de **Ejemplares**: las copias de la obra. Ver [Copias y estados](cap:copias).
 
-Debajo de los datos hay cuatro botones: **Editar obra**, **Generar informe**, **Agregar a selección…** (para sumar la obra a una selección; ver [Selecciones y dossier](cap:selecciones-y-dossier)) y **Eliminar obra**. Si hay un archivo original cargado, al lado aparece también el botón **Ps** (**Abrir en Photoshop**) y, si además es una foto digital propia, el botón **Lr** (**Abrir en Lightroom Classic** — ver [Lightroom Classic](cap:lightroom-classic)).
+Debajo de los datos hay cuatro botones: **Editar obra**, **Generar informe**, **Agregar a selección…** (para sumar la obra a una selección; ver [Selecciones y dossier](cap:selecciones-y-dossier)) y **Eliminar obra**. Si hay un archivo original cargado, al lado aparece también el botón **Ps** (**Abrir en Photoshop**) y, si además es una foto digital propia, el botón **LrC** (**Abrir en Lightroom Classic** — ver [Lightroom Classic](cap:lightroom-classic)).
 
 ## El menú del click derecho sobre la imagen
 
-Con click derecho sobre la imagen (la miniatura o la vista en grande) aparece un menú con tres opciones.
+Con click derecho sobre la imagen (la miniatura o la vista en grande) aparece un menú con cuatro opciones.
 
 ### Exportar imagen…
 
@@ -47,7 +47,7 @@ Es lo mismo que hace el botón **Ps** de más arriba: están las dos formas, pod
 
 ### Abrir en Lightroom
 
-Es lo mismo que el botón **Lr** (ver más arriba y [Lightroom Classic](cap:lightroom-classic)), disponible también desde este menú.
+Es lo mismo que el botón **LrC** (ver más arriba y [Lightroom Classic](cap:lightroom-classic)), disponible también desde este menú.
 
 - Si la obra no tiene cargada la **Ubicación del archivo original**, aparece el aviso "No se puede abrir en Lightroom: esta obra no tiene cargado el archivo original (ver "Ubicación del archivo original" en Editar obra)." y no pasa nada más.
 

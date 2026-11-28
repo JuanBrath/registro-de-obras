@@ -1,8 +1,25 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useLanguage } from "../i18n/LanguageContext.js";
-import { useEscapeToDismiss } from "../utils/useEscapeToDismiss.js";
 import { EVENTO_MODAL_ABIERTO } from "../utils/modalAbiertoEvent.js";
+
+/** Capas que pueden estar una encima de otra. La que está más arriba es la única que se cierra con Escape. */
+const SELECTOR_CAPAS = ".modal-backdrop, .recorrido-fondo, .menu-contextual";
+let capaSuperior: Element | null = null;
+// Se anota cuál era la capa de arriba antes de que nadie reaccione a la tecla: este oyente se registra al cargar el
+// programa, así que corre primero. Sin esto, cerrar una ayuda abierta sobre una ventana cerraba también la ventana.
+if (typeof window !== "undefined") {
+  window.addEventListener(
+    "keydown",
+    (e) => {
+      if (e.key !== "Escape") return;
+      const sueltas = document.querySelectorAll(".recorrido-fondo, .menu-contextual");
+      const capas = sueltas.length > 0 ? sueltas : document.querySelectorAll(SELECTOR_CAPAS);
+      capaSuperior = capas[capas.length - 1] ?? null;
+    },
+    true,
+  );
+}
 
 export function Modal({
   children,
@@ -28,7 +45,16 @@ export function Modal({
   // tecla Escape simplemente llama a onClose todo el tiempo que este
   // presente en pantalla — igual que ya se puede cerrar clickeando afuera o
   // en la X.
-  useEscapeToDismiss(true, onClose);
+  const fondoRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const alPulsar = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || capaSuperior !== fondoRef.current) return;
+      e.stopPropagation();
+      onClose();
+    };
+    window.addEventListener("keydown", alPulsar, true);
+    return () => window.removeEventListener("keydown", alPulsar, true);
+  }, [onClose]);
 
   // Avisa que se abrio un modal para que cualquier cartel de ayuda que
   // haya quedado abierto en la pantalla de atras (ver HelpIcon.tsx) se
@@ -48,6 +74,7 @@ export function Modal({
   // label en vez de solo cerrar el modal.
   return createPortal(
     <div
+      ref={fondoRef}
       className="modal-backdrop"
       onClick={(e) => {
         if (e.target === e.currentTarget) {

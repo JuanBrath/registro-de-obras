@@ -40,13 +40,13 @@ Lo que Lightroom no tenga cargado queda vacío. Conviene completar el título y 
 
 ## Abrir una foto en Lightroom desde Recer Studio
 
-También funciona al revés: si una obra tiene cargada su **Ubicación del archivo original** (solo registro personal, fotografía digital), al lado del campo, en el formulario de edición, aparece el botón **Lr** (**Abrir en Lightroom Classic**). En la ficha de la obra (sin entrar a editar) está el mismo botón **Lr** al lado de **Editar obra**, y también se puede pedir con **Abrir en Lightroom** desde el menú del click derecho sobre la imagen — ver [Ficha de la obra](cap:ficha-de-obra). Las tres formas hacen lo mismo: Lightroom pasa a primer plano (se abre solo si no estaba abierto) y, si el complemento está instalado, busca esa foto en el catálogo que tengas abierto y la selecciona en la Biblioteca.
+También funciona al revés: si una obra tiene cargada su **Ubicación del archivo original** (solo registro personal, fotografía digital), al lado del campo, en el formulario de edición, aparece el botón **LrC** (**Abrir en Lightroom Classic**). En la ficha de la obra (sin entrar a editar) está el mismo botón **LrC** al lado de **Editar obra**, y también se puede pedir con **Abrir en Lightroom** desde el menú del click derecho sobre la imagen — ver [Ficha de la obra](cap:ficha-de-obra). Además, en **Obras** podés habilitar un acceso **LrC** sobre las fotos (ver [Obras](cap:obras)). Todas estas formas hacen lo mismo: Lightroom pasa a primer plano (se abre solo si no estaba abierto) y, si el complemento está instalado, busca esa foto en el catálogo que tengas abierto y la selecciona en la Biblioteca.
 
 - Si Lightroom no la encuentra (se movió de carpeta, o pertenece a otro catálogo), el aviso aparece como un cartel dentro de Lightroom.
 - Si acabás de abrir Lightroom, puede tardar unos segundos en revisar el pedido: esperá un momento antes de probar de nuevo.
 - Necesita el complemento instalado y actualizado (ver más abajo); si lo instalaste o actualizaste recién, cerrá y volvé a abrir Lightroom Classic una vez para que empiece a funcionar.
 
-> Al lado del botón **Lr** de la ficha de la obra también puede aparecer el botón **Ps** (**Abrir en Photoshop**), que no tiene relación con Lightroom: abre el archivo original en Adobe Photoshop. Está disponible para cualquier categoría de obra, no solo fotografía — ver [Ficha de la obra](cap:ficha-de-obra).
+> Al lado del botón **LrC** de la ficha de la obra también puede aparecer el botón **Ps** (**Abrir en Photoshop**), que no tiene relación con Lightroom: abre el archivo original en Adobe Photoshop. Está disponible para cualquier categoría de obra, no solo fotografía — ver [Ficha de la obra](cap:ficha-de-obra).
 
 ## Si no se carga nada
 

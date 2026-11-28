@@ -4,11 +4,11 @@ El listado de todas tus obras: cómo buscarlas, filtrarlas, ordenarlas, califica
 
 ## Abrir el listado
 
-En la pantalla de inicio tocá **Obras**. Ves una grilla con una tarjeta por obra. Si todavía no cargaste ninguna, aparece el mensaje "Todavía no cargaste ninguna obra." y podés empezar con **Nueva obra**.
+En la pantalla de inicio tocá **Obras**. Ves tus obras en **Columnas**, **Tarjetas** o **Imágenes**, según lo último que hayas elegido. Si todavía no cargaste ninguna, aparece el mensaje "Todavía no cargaste ninguna obra." y podés empezar con **+ Nueva obra**.
 
 ## Ayuda de la sección
 
-Arriba a la derecha, al lado del botón de cierre ✕, está el botón **?** (**Ayuda de esta sección**). Lo tienen las pantallas principales: **Obras**, **Selecciones**, **Clientes**, **Artistas**, **Ventas**, la **Ficha de la obra**, **Nueva obra** y **Mis datos**. Al tocarlo se despliegan dos opciones: **Recorrido visual** y **Buscar en el manual**. Con **Buscar en el manual** se abre el manual con el buscador listo para escribir; al cerrarlo volvés a la pantalla donde estabas, tal cual la dejaste. Con **Recorrido visual**, el programa hace un recorrido por los botones y opciones de la pantalla, señalando cada uno con una explicación breve de lo que podés hacer con él. Avanzás con **Siguiente**, volvés con **Atrás** y cerrás con **Saltar** o **Entendido**. Solo se explican las opciones que ves en ese momento (por ejemplo, los filtros de etiquetas aparecen cuando alguna obra tiene etiquetas).
+Arriba a la derecha, al lado del botón de cierre ✕, está el botón **?** (**Ayuda de esta sección**). Lo tienen las pantallas principales: **Obras**, **Selecciones**, **Clientes**, **Artistas**, **Ventas**, la **Ficha de la obra**, **Nueva obra** y **Mis datos**, y también la ventana del dossier. Al tocarlo se despliegan dos opciones: **Recorrido visual** y **Buscar en el manual**. Con **Buscar en el manual** se abre el manual con el buscador listo para escribir; al cerrarlo volvés a la pantalla donde estabas, tal cual la dejaste. Con **Recorrido visual**, el programa hace un recorrido por los botones y opciones de la pantalla, señalando cada uno con una explicación breve de lo que podés hacer con él. Avanzás con **Siguiente**, volvés con **Atrás** y cerrás con **Saltar** o **Entendido**. Solo se explican las opciones que ves en ese momento (por ejemplo, cada filtro se explica solo si tenés abierto el panel **Filtros**, y el de etiquetas aparece cuando alguna obra tiene etiquetas).
 
 ## Qué muestra cada tarjeta
 
@@ -27,16 +27,18 @@ El cuadro de búsqueda de arriba busca mientras escribís. En Recer Studio busca
 
 ## Filtrar y ordenar
 
-Debajo de los botones hay varios controles que se combinan entre sí:
+**Ordenar por** está arriba de las obras: **Número de inventario**, **Título** o **Fecha de captura**. Las obras que no tienen ese dato quedan al final. En el mismo renglón ves cuántas obras estás viendo (por ejemplo "24 de 180 obras" cuando hay un filtro).
 
-- **Ordenar por**: **Número de inventario**, **Título** o **Fecha de captura**. Las obras que no tienen ese dato quedan al final.
+Los filtros se abren con el botón **Filtros**, al lado del cuadro de búsqueda; el programa recuerda si lo dejaste abierto o cerrado. Se combinan entre sí:
+
 - **Categoría**: muestra solo las obras de una categoría.
+- **Artista** (en Recer Space): muestra solo las obras de un artista.
 - **Subtipo**: aparece cuando hay obras con subtipo, y se ajusta a la categoría elegida.
-- **Estrellas**: tocá una estrella para ver solo las obras con esa calificación; si tocás la misma estrella otra vez, se quita el filtro. Si dejás apretada una estrella un momento, el programa te pregunta si querés quitar la calificación a todas las obras.
+- **Calificación**: tocá una estrella para ver solo las obras con esa calificación; si tocás la misma estrella otra vez, se quita el filtro. Si dejás apretada una estrella un momento, el programa te pregunta si querés quitar la calificación a todas las obras.
 - **Etiquetas**: elegí una o varias etiquetas para ver las obras que las tengan. Ver [Filtrar por etiquetas](cap:obras).
 - **Selección**: muestra solo las obras de una de tus selecciones. Ver [Selecciones y dossier](cap:selecciones-y-dossier).
 
-La barra con el buscador y los filtros queda **fija en la parte de arriba** mientras te desplazás por las obras (el título se va con el scroll), así siempre ves qué filtros tenés puestos. Los filtros no borran nada: solo cambian lo que ves. Para volver a ver todo, elegí en cada uno la primera opción (**Todas las categorías**, **Todos**) y sacá las estrellas y las etiquetas.
+Aunque cierres el panel, cada filtro puesto queda **a la vista** debajo del buscador, y el botón indica cuántos hay (por ejemplo **Filtros (2)**). Sacás uno con su **×**, o todos juntos con **Limpiar filtros** (no borra lo que escribiste en el buscador). La parte de arriba, con el buscador, los filtros, los botones y las vistas, queda **fija** mientras te desplazás por las obras. Los filtros no borran nada: solo cambian lo que ves.
 
 ## Filtrar por etiquetas
 
@@ -44,7 +46,7 @@ Las **etiquetas** son palabras que le ponés a cada obra para clasificarla (por 
 
 Cómo se usa el filtro:
 
-1. En **Etiquetas**, abrí el desplegable **Agregar etiqueta…**. Ahí aparecen todas las etiquetas que ya usan tus obras.
+1. Tocá **Filtros** y, en **Etiquetas**, abrí el desplegable **Agregar etiqueta…**. Ahí aparecen todas las etiquetas que ya usan tus obras.
 2. Elegí una. Aparece como una pastillita a la derecha del desplegable y el listado se reduce a las obras que tienen esa etiqueta.
 3. Si querés sumar otra, volvé a abrir el desplegable y elegí la siguiente. Cada pastillita se agrega sin reemplazar a las anteriores.
 4. Para sacar una etiqueta del filtro, tocá la **×** de su pastillita. Cuando no queda ninguna, ves todas las obras otra vez.
@@ -61,11 +63,19 @@ Algunas cosas para tener en cuenta:
 
 ## Cambiar el tamaño de las miniaturas
 
-El deslizador **Tamaño de las miniaturas** (junto al cuadro de búsqueda) cambia cuántas obras entran por fila. El programa recuerda tu elección.
+El deslizador **Tamaño de las miniaturas** (arriba de las obras, junto a las vistas) cambia cuántas obras entran por fila. El programa recuerda tu elección.
+
+## Abrir en Lightroom Classic o Photoshop desde la foto
+
+Al lado de **Generar informe**, en **Accesos en las fotos**, están los botones **Lightroom Classic** y **Photoshop**. Tocá el que quieras habilitar (queda con **✓**); podés habilitar uno, los dos o ninguno, y el programa lo recuerda.
+
+Con un botón habilitado, al pasar el cursor por una foto, en las vistas **Columnas**, **Tarjetas** e **Imágenes**, aparece su acceso: **LrC** en el ángulo superior izquierdo y **Ps** en el superior derecho. Un clic abre el archivo original en ese programa, sin abrir la ficha ni ampliar la foto.
+
+Los accesos aparecen solo en las obras que tienen cargada la **Ubicación del archivo original**, y se ocultan mientras estás en el modo **Seleccionar**. Para Lightroom Classic valen las mismas condiciones que desde la ficha (ver [Lightroom Classic](cap:lightroom-classic)). También seguís teniendo estas opciones con el clic derecho sobre la foto.
 
 ## Calificar con estrellas
 
-Tocá una de las cinco estrellas debajo de una obra para calificarla. La calificación se guarda en Recer y, si la obra tiene indicada la **Ubicación del archivo original**, también se escribe en ese archivo (dentro del JPG, o en un archivo auxiliar **.xmp** al lado si es RAW, TIFF, PSD u otro formato) para que la vean programas como Lightroom o Bridge. Si esa segunda parte falla, la calificación igual queda guardada en Recer y se muestra un aviso.
+En **Columnas** y **Tarjetas**, tocá una de las cinco estrellas de la obra para calificarla. En **Imágenes** y en las fotos en grande ves la calificación como "3 ★": tocala para desplegar las estrellas. La calificación se guarda en Recer y, si la obra tiene indicada la **Ubicación del archivo original**, también se escribe en ese archivo (dentro del JPG, o en un archivo auxiliar **.xmp** al lado si es RAW, TIFF, PSD u otro formato) para que la vean programas como Lightroom o Bridge. Si esa segunda parte falla, la calificación igual queda guardada en Recer y se muestra un aviso.
 
 ## Generar un listado en PDF
 
@@ -79,7 +89,7 @@ El listado incluye: nombre de la obra, autor, categoría, subcategoría, cantida
 
 ## Otros botones
 
-- **Nueva obra**: abre el formulario para cargar una obra. Ver [Cargar una obra nueva](cap:nueva-obra).
+- **+ Nueva obra** (arriba a la derecha): abre el formulario para cargar una obra. Ver [Cargar una obra nueva](cap:nueva-obra).
 - **Imágenes** (junto a Columnas y Tarjetas): muestra solo las fotos, en grande, respetando los filtros que tengas puestos. Ver [Vista Imágenes](cap:galeria-de-obras).
 - **Selecciones**: abre tus grupos de obras elegidas a mano, base de los dossiers en PDF. Ver [Selecciones y dossier](cap:selecciones-y-dossier).
 - **Seleccionar**: activa las casillas para tildar obras y guardarlas en una selección. Ver [Selecciones y dossier](cap:selecciones-y-dossier).

@@ -1,54 +1,24 @@
-import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
+import { useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { useLanguage } from "../i18n/LanguageContext.js";
 import { useMasonryGrid } from "../utils/useMasonryGrid.js";
 import { marcarSiMiniaturaMuyVertical } from "../utils/miniaturaVertical.js";
 import { abrirEnPhotoshop } from "../utils/photoshop.js";
 import { pedirAbrirEnLightroom } from "../lightroom/lightroom.js";
-import { StarRating } from "./StarRating.js";
+import { AccesosEditores, type EditoresActivos } from "./AccesosEditores.js";
+import { CalificacionCompacta } from "./CalificacionCompacta.js";
 import { MenuContextual } from "./MenuContextual.js";
 import { ExportarImagenModal } from "./ExportarImagenModal.js";
 import { VisorObras } from "./VisorObras.js";
 import type { ObraRow } from "./ObraVista.js";
 
-/** Nombre de la obra y, en la misma línea, su calificación como "3 ★". Un clic despliega las cinco estrellas y un
- * segundo clic elige cuántas (tocar la misma cantidad otra vez la quita). */
+/** Nombre de la obra y, en la misma línea, su calificación como "3 ★". */
 function PieObra({ titulo, calificacion, onCalificar }: { titulo: string; calificacion: number; onCalificar: (n: number) => void }) {
-  const { t } = useLanguage();
-  const [abierto, setAbierto] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!abierto) return;
-    const cerrar = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setAbierto(false);
-    };
-    document.addEventListener("mousedown", cerrar);
-    return () => document.removeEventListener("mousedown", cerrar);
-  }, [abierto]);
   return (
-    <div className="galeria-foto-pie" ref={ref}>
+    <div className="galeria-foto-pie">
       <span className="galeria-foto-titulo" title={titulo}>
         {titulo}
       </span>
-      <button
-        type="button"
-        className="galeria-foto-calificacion"
-        onClick={() => setAbierto((v) => !v)}
-        aria-label={t("galeria.calificarConEstrellas", { n: calificacion })}
-        title={t("galeria.calificarConEstrellas", { n: calificacion })}
-      >
-        {calificacion} ★
-      </button>
-      {abierto && (
-        <div className="galeria-foto-estrellas-desplegadas">
-          <StarRating
-            value={calificacion}
-            onChange={(n) => {
-              onCalificar(n);
-              setAbierto(false);
-            }}
-          />
-        </div>
-      )}
+      <CalificacionCompacta calificacion={calificacion} onCalificar={onCalificar} />
     </div>
   );
 }
@@ -67,6 +37,7 @@ export function GrillaImagenes({
   onError,
   onCambio,
   seleccion,
+  accesos,
 }: {
   obras: ObraRow[];
   thumbs: Record<number, string>;
@@ -76,6 +47,8 @@ export function GrillaImagenes({
   onAbrirFicha?: (obraId: number) => void;
   onError: (mensaje: string) => void;
   onCambio?: (obraId: number) => void;
+  /** Accesos directos a Lightroom Classic y Photoshop sobre cada foto (solo en Obras). */
+  accesos?: EditoresActivos;
   seleccion?: { elegidas: Set<number>; yaEnSeleccion: Set<number>; alternar: (obraId: number) => void };
 }) {
   const { t } = useLanguage();
@@ -106,7 +79,7 @@ export function GrillaImagenes({
         {visibles.map((obra, i) => {
           const tildada = seleccion?.elegidas.has(obra.id) || seleccion?.yaEnSeleccion.has(obra.id);
           return (
-            <div className="galeria-foto-thumb-wrapper" key={obra.id} data-recorrido={i === 0 ? "obras-obra" : undefined}>
+            <div className="galeria-foto-thumb-wrapper con-accesos" key={obra.id} data-recorrido={i === 0 ? "obras-obra" : undefined}>
               {seleccion && (
                 <input
                   type="checkbox"
@@ -136,6 +109,7 @@ export function GrillaImagenes({
               >
                 <img src={thumbs[obra.id]} alt={obra.titulo} onLoad={(e) => marcarSiMiniaturaMuyVertical(e.currentTarget)} />
               </button>
+              {accesos && !seleccion && <AccesosEditores obra={obra} activos={accesos} onError={onError} />}
               <PieObra titulo={obra.titulo} calificacion={obra.calificacion} onCalificar={(n) => onCalificar(obra.id, n)} />
             </div>
           );

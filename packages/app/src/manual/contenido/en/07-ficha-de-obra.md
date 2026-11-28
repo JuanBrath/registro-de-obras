@@ -15,11 +15,11 @@ In **Artworks**, click the artwork's card. The title is at the top; to go back u
 - The **Statement** and the **Notes**: the first line is shown; click the field name to see the full text.
 - Further down, the list of **Copies**: the copies of the artwork. See [Copies and statuses](cap:copias).
 
-Below the details there are four buttons: **Edit artwork**, **Generate report**, **Add to selection…** (to add the artwork to a selection; see [Selections and dossier](cap:selecciones-y-dossier)) and **Delete artwork**. If there's an original file loaded, the **Ps** button (**Open in Photoshop**) also appears next to them, and, if it's also your own digital photo, the **Lr** button (**Open in Lightroom Classic** — see [Lightroom Classic](cap:lightroom-classic)).
+Below the details there are four buttons: **Edit artwork**, **Generate report**, **Add to selection…** (to add the artwork to a selection; see [Selections and dossier](cap:selecciones-y-dossier)) and **Delete artwork**. If there's an original file loaded, the **Ps** button (**Open in Photoshop**) also appears next to them, and, if it's also your own digital photo, the **LrC** button (**Open in Lightroom Classic** — see [Lightroom Classic](cap:lightroom-classic)).
 
 ## The right-click menu on the image
 
-Right-clicking the image (the thumbnail or the large view) opens a menu with three options.
+Right-clicking the image (the thumbnail or the large view) opens a menu with four options.
 
 ### Export image…
 
@@ -47,7 +47,7 @@ This is the same thing the **Ps** button above does: both ways are there, use wh
 
 ### Open in Lightroom
 
-This is the same as the **Lr** button (see above and [Lightroom Classic](cap:lightroom-classic)), also available from this menu.
+This is the same as the **LrC** button (see above and [Lightroom Classic](cap:lightroom-classic)), also available from this menu.
 
 - If the artwork doesn't have the **Original file location** loaded, the notice "Can't open in Lightroom: this artwork doesn't have the original file loaded (see "Original file location" in Edit artwork)." appears and nothing else happens.
 

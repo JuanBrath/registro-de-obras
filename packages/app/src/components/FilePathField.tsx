@@ -144,7 +144,7 @@ export function FilePathField({
           aria-label={t("filePathField.abrirEnLightroom")}
           title={t("filePathField.abrirEnLightroom")}
         >
-          Lr
+          LrC
         </button>
       )}
       {error && (

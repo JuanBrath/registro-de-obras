@@ -1052,7 +1052,7 @@ export function ObraDetail({
     }
   }
 
-  // Mismo pedido que el boton "Lr" de FilePathField.tsx (en el formulario de
+  // Mismo pedido que el boton "LrC" de FilePathField.tsx (en el formulario de
   // edicion), pero disponible tambien desde la vista de solo lectura (el
   // boton de acá al lado de "Editar obra" y el menú del click derecho sobre
   // la imagen): asi no hace falta entrar a "Editar" para mandar la foto a
@@ -2531,7 +2531,7 @@ export function ObraDetail({
     pasoAyuda(t, "obra-informe", "ayudaObra.informe", t("common.generarInforme")),
     pasoAyuda(t, "obra-seleccion", "ayudaObra.seleccion", t("selecciones.agregarABoton")),
     pasoAyuda(t, "obra-eliminar", "ayudaObra.eliminar", t("obraDetail.eliminarObra")),
-    pasoAyuda(t, "obra-lightroom", "ayudaObra.lightroom", "Lr"),
+    pasoAyuda(t, "obra-lightroom", "ayudaObra.lightroom", "LrC"),
     pasoAyuda(t, "obra-photoshop", "ayudaObra.photoshop", "Ps"),
     pasoAyuda(t, "obra-ejemplares", "ayudaObra.ejemplares", t("obraDetail.ejemplares")),
     pasoAyuda(t, "obra-ver-mas", "ayudaObra.verMas", t("obraDetail.verMenosSeries")),
@@ -2677,7 +2677,7 @@ export function ObraDetail({
                   aria-label={t("filePathField.abrirEnLightroom")}
                   title={t("filePathField.abrirEnLightroom")}
                 >
-                  Lr
+                  LrC
                 </button>
               )}
               {mostrarBotonPhotoshopVista && (

@@ -21,7 +21,7 @@ Al cargar una obra elegís el **Artista** de una lista (o agregás uno nuevo ah�
 ## En la carga de obras
 
 - Se agregan el **Régimen de ingreso** (consignación directa de taller, depósito de colección privada, compra en firme de la galería) y el **Historial de procedencia y exhibiciones**.
-- El buscador de obras también busca por artista y por etiqueta, y hay un filtro por artista.
+- El buscador de obras también busca por artista y por etiqueta, y en **Filtros** se agrega el de **Artista**.
 
 ## En cada copia
 

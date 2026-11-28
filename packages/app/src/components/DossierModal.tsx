@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { tieneLineaDeTiempo } from "@registro/core";
 import { useWorkspace } from "../state/WorkspaceContext.js";
 import { useLanguage, type TranslationKey } from "../i18n/LanguageContext.js";
 import { Modal } from "./Modal.js";
 import { NotasLabel } from "./NotasLabel.js";
+import { AyudaSeccion, pasoAyuda } from "./AyudaSeccion.js";
 import { ESTADOS_OFRECIBLES } from "../utils/estadosOfrecibles.js";
 import { listObraIdsDeSeleccion, proximoNumeroDossier, registrarDossier } from "../data/selecciones.js";
 import { openLocalFile } from "../utils/openExternalUrl.js";
@@ -64,6 +66,10 @@ interface Excepcion {
 
 const MAX_POR_HOJA = 12;
 
+/** Pestañas de la ventana, en el orden en que conviene recorrerlas. */
+const PASOS = ["hojas", "portada", "textos", "ficha"] as const;
+type Paso = (typeof PASOS)[number];
+
 const TONOS: TonoHoja[] = ["blanco", "neutro", "frio", "calido"];
 const COLOR_HOJA_KEY = "dossierColorHoja";
 
@@ -83,14 +89,27 @@ const ESTILO_LETRA: Record<LetraPortada, CSSProperties> = {
   inter: { fontFamily: "Inter, sans-serif" },
   montserrat: { fontFamily: "Montserrat, sans-serif", fontWeight: 700 },
   times: { fontFamily: "'Times New Roman', Times, serif" },
-  timesCursiva: { fontFamily: "'Times New Roman', Times, serif", fontStyle: "italic" },
   courier: { fontFamily: "'Courier New', Courier, monospace" },
 };
 const LETRA_PORTADA_KEY = "dossierLetraPortada";
+const CURSIVA_PORTADA_KEY = "dossierCursivaPortada";
+/** Antes la cursiva era una tipografía aparte ("Clásica cursiva"): quien la tenía elegida la sigue viendo igual. */
+const LETRA_CURSIVA_ANTERIOR = "timesCursiva";
+
+function cargarCursivaPortada(): boolean {
+  try {
+    const v = localStorage.getItem(CURSIVA_PORTADA_KEY);
+    if (v !== null) return v === "1";
+    return localStorage.getItem(LETRA_PORTADA_KEY) === LETRA_CURSIVA_ANTERIOR;
+  } catch {
+    return false;
+  }
+}
 
 function cargarLetraPortada(): LetraPortada {
   try {
     const v = localStorage.getItem(LETRA_PORTADA_KEY);
+    if (v === LETRA_CURSIVA_ANTERIOR) return "times";
     if (v && v in ESTILO_LETRA) return v as LetraPortada;
   } catch {
     // Sin preferencia guardada.
@@ -136,6 +155,15 @@ export function DossierModal({
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [ultimoAbsPath, setUltimoAbsPath] = useState<string | null>(null);
 
+  const [paso, setPaso] = useState<Paso>("hojas");
+  const [excepcionesAbiertas, setExcepcionesAbiertas] = useState(false);
+  // Pestaña en la que se estaba al empezar el recorrido de ayuda, para volver a ella al terminar.
+  const pasoAntesDelRecorrido = useRef<Paso | null>(null);
+  const ventanaRef = useRef<HTMLDivElement>(null);
+  const irA = (nuevo: Paso) => {
+    setPaso(nuevo);
+    ventanaRef.current?.closest(".modal-content")?.scrollTo(0, 0);
+  };
   const [idioma, setIdioma] = useState<Idioma>("es");
   const [incluirPortada, setIncluirPortada] = useState(true);
   const [tituloPortada, setTituloPortada] = useState("");
@@ -147,6 +175,7 @@ export function DossierModal({
   const [biosEs, setBiosEs] = useState<Record<number, string>>({});
   const [biosEn, setBiosEn] = useState<Record<number, string>>({});
   const [incluirStatement, setIncluirStatement] = useState(true);
+  const [lineaDeTiempoBio, setLineaDeTiempoBio] = useState(true);
   const [statementEs, setStatementEs] = useState("");
   const [statementEn, setStatementEn] = useState("");
   // En Studio el nombre del autor ya figura en la portada; en Space cada ficha lo lleva.
@@ -173,6 +202,18 @@ export function DossierModal({
       // No se pudo guardar la preferencia.
     }
   };
+  const [cursivaPortada, setCursivaPortada] = useState(cargarCursivaPortada);
+  const cambiarCursivaPortada = (cursiva: boolean) => {
+    setCursivaPortada(cursiva);
+    try {
+      localStorage.setItem(CURSIVA_PORTADA_KEY, cursiva ? "1" : "0");
+      // También la letra: reemplaza el valor anterior que ya incluía la cursiva.
+      localStorage.setItem(LETRA_PORTADA_KEY, letraPortada);
+    } catch {
+      // No se pudo guardar la preferencia.
+    }
+  };
+  const estiloCursiva: CSSProperties = cursivaPortada ? { fontStyle: "italic" } : {};
   const [colorHoja, setColorHoja] = useState(cargarColorHoja);
   const colorFondo = colorDeHoja(colorHoja.tono, colorHoja.intensidad);
 
@@ -352,11 +393,13 @@ export function DossierModal({
       const bytes = await buildDossierPdfBytes(artistasPdf, obras, {
         colorFondo,
         letraPortada,
+        cursivaPortada,
         tituloPortada: incluirPortada ? tituloPortada : "",
         subtituloPortada: incluirPortada && nombreSeleccionEnPortada ? seleccionNombre : "",
         textoAdicionalPortada: incluirPortada ? textoAdicionalPortada : "",
         tamanoPortada,
         incluirBio,
+        lineaDeTiempoBio,
         statementTitulo: seleccionNombre,
         statementTextos: incluirStatement ? [...(idioma !== "en" ? [statementEs] : []), ...(idioma !== "es" ? [statementEn] : [])] : [],
         incluirNombreArtista,
@@ -410,7 +453,7 @@ export function DossierModal({
       <NotasLabel texto={valor} onChange={onChange}>
         <span className="field-label">{etiqueta}</span>
       </NotasLabel>
-      <textarea rows={4} value={valor} onChange={(e) => onChange(e.target.value)} />
+      <textarea rows={7} value={valor} onChange={(e) => onChange(e.target.value)} />
     </div>
   );
 
@@ -427,15 +470,69 @@ export function DossierModal({
     />
   );
 
+  /** Paso del recorrido que está en una de las pestañas: la abre antes de señalarlo. */
+  const pasoEn = (pestana: Paso, id: string, clave: TranslationKey, titulo: string) => ({
+    ...pasoAyuda(t, id, clave, titulo),
+    antes: () => {
+      pasoAntesDelRecorrido.current ??= paso;
+      setPaso(pestana);
+    },
+  });
+  const pasosAyuda =
+    cargando || filas.length === 0
+      ? []
+      : [
+          pasoEn("hojas", "dossier-pestanas", "ayudaDossier.pestanas", t("dossier.boton")),
+          pasoEn("hojas", "dossier-color", "ayudaDossier.color", t("dossier.seccionColor")),
+          pasoEn("hojas", "dossier-formato", "ayudaDossier.formato", t("dossier.seccionFormato")),
+          pasoEn("hojas", "dossier-excepciones", "ayudaDossier.excepciones", t("dossier.excepcionesTitulo")),
+          pasoEn("hojas", "dossier-muestra", "ayudaDossier.muestra", t("ayudaDossier.muestraTitulo")),
+          pasoEn("portada", "dossier-portada", "ayudaDossier.portada", t("dossier.seccionPortada")),
+          ...(incluirPortada
+            ? [pasoEn("portada", "dossier-tipografia", "ayudaDossier.tipografia", t("dossier.tipografiaPortada"))]
+            : []),
+          pasoEn("textos", "dossier-textos", "ayudaDossier.textos", t("dossier.seccionTextos")),
+          pasoEn("ficha", "dossier-ficha", "ayudaDossier.ficha", t("dossier.seccionFicha")),
+          pasoEn("ficha", "dossier-cierre", "ayudaDossier.cierre", t("dossier.seccionCierre")),
+          pasoEn("ficha", "dossier-generar", "ayudaDossier.generar", t("dossier.generar")),
+        ];
+
   return (
     <Modal onClose={onClose} wide maximizable>
-      <div className="dossier-modal">
-        <h2 className="dossier-titulo">{t("dossier.title", { nombre: seleccionNombre })}</h2>
+      <div className="dossier-modal" ref={ventanaRef}>
+        <div className="dossier-encabezado">
+          <h2 className="dossier-titulo">{t("dossier.title", { nombre: seleccionNombre })}</h2>
+          <AyudaSeccion
+            pasos={pasosAyuda}
+            alCerrarRecorrido={() => {
+              if (pasoAntesDelRecorrido.current) setPaso(pasoAntesDelRecorrido.current);
+              pasoAntesDelRecorrido.current = null;
+            }}
+          />
+        </div>
         {cargando && <p>{t("common.loading")}</p>}
         {!cargando && filas.length === 0 && <p>{t("selecciones.sinObras")}</p>}
         {!cargando && filas.length > 0 && (
-          <div className="dossier-cuerpo">
-            <section className="dossier-seccion">
+          <>
+          <div className="dossier-pestanas" role="tablist" data-recorrido="dossier-pestanas">
+            {PASOS.map((x, i) => (
+              <button
+                key={x}
+                type="button"
+                role="tab"
+                aria-selected={paso === x}
+                className={paso === x ? "dossier-pestana activa" : "dossier-pestana"}
+                onClick={() => irA(x)}
+              >
+                {i + 1}. {t(`dossier.paso.${x}` as TranslationKey)}
+              </button>
+            ))}
+          </div>
+          <div className="dossier-cuerpo" role="tabpanel">
+            {paso === "hojas" && (
+            <div className="dossier-hojas">
+            <div className="dossier-hojas-opciones">
+            <section className="dossier-seccion" data-recorrido="dossier-color">
               <h3>{t("dossier.seccionColor")}</h3>
               <div className="dossier-color">
                 <div className="dossier-color-controles">
@@ -467,19 +564,10 @@ export function DossierModal({
                     <span className="dossier-intensidad-valor">{colorHoja.intensidad}%</span>
                   </label>
                 </div>
-                {/* Muestra de la hoja con el color elegido y los mismos grises de letra del PDF. */}
-                <div
-                  className={`dossier-hoja-muestra${orientacion === "vertical" ? " vertical" : ""}`}
-                  style={{ background: cssColor(colorFondo) }}
-                  aria-hidden="true"
-                >
-                  <strong>{t("dossier.muestraTitulo")}</strong>
-                  <span style={colorFondo ? { color: "rgb(72,72,72)" } : undefined}>{t("dossier.muestraTexto")}</span>
-                </div>
               </div>
             </section>
 
-            <section className="dossier-seccion">
+            <section className="dossier-seccion" data-recorrido="dossier-formato">
               <h3>{t("dossier.seccionFormato")}</h3>
               <div className="dossier-fila">
                 <label className="dossier-campo">
@@ -511,8 +599,18 @@ export function DossierModal({
                   {numero(obrasPorPagina, 1, MAX_POR_HOJA, setObrasPorPagina)}
                 </label>
               </div>
-              <div className="dossier-excepciones">
-                <span className="field-label">{t("dossier.excepcionesTitulo")}</span>
+              <div className="dossier-excepciones" data-recorrido="dossier-excepciones">
+                <button
+                  type="button"
+                  className="dossier-desplegar"
+                  aria-expanded={excepcionesAbiertas}
+                  onClick={() => setExcepcionesAbiertas((v) => !v)}
+                >
+                  {excepcionesAbiertas ? "▾" : "▸"} {t("dossier.excepcionesTitulo")} (
+                  {excepciones.length === 0 ? t("dossier.excepcionesNinguna") : excepciones.length})
+                </button>
+                {excepcionesAbiertas && (
+                <>
                 {excepciones.map((e, i) => (
                   <div className="dossier-fila dossier-excepcion" key={i}>
                     <label className="dossier-campo-chico">
@@ -574,11 +672,29 @@ export function DossierModal({
                     {t("dossier.agregarExcepcion")}
                   </button>
                 </div>
+                </>
+                )}
               </div>
-              <p className="dossier-nota">{t("dossier.resumenHojas", { obras: filas.length, hojas: totalHojas })}</p>
             </section>
+            </div>
 
-            <section className="dossier-seccion">
+            <aside className="dossier-hojas-vista" data-recorrido="dossier-muestra">
+                {/* Muestra de la hoja con el color elegido y los mismos grises de letra del PDF. */}
+                <div
+                  className={`dossier-hoja-muestra${orientacion === "vertical" ? " vertical" : ""}`}
+                  style={{ background: cssColor(colorFondo) }}
+                  aria-hidden="true"
+                >
+                  <strong>{t("dossier.muestraTitulo")}</strong>
+                  <span style={colorFondo ? { color: "rgb(72,72,72)" } : undefined}>{t("dossier.muestraTexto")}</span>
+                </div>
+              <p className="dossier-nota">{t("dossier.resumenHojas", { obras: filas.length, hojas: totalHojas })}</p>
+            </aside>
+            </div>
+            )}
+
+            {paso === "portada" && (
+            <section className="dossier-seccion" data-recorrido="dossier-portada">
               <h3>{t("dossier.seccionPortada")}</h3>
               {check(t("dossier.portada"), incluirPortada, setIncluirPortada)}
               {incluirPortada && (
@@ -592,7 +708,7 @@ export function DossierModal({
                     <span className="field-label">{t("dossier.textoAdicionalPortada")}</span>
                     <input type="text" value={textoAdicionalPortada} onChange={(e) => setTextoAdicionalPortada(e.target.value)} />
                   </label>
-                  <div className="dossier-campo">
+                  <div className="dossier-campo" data-recorrido="dossier-tipografia">
                     <span className="field-label">{t("dossier.tipografiaPortada")}</span>
                     <div className="dossier-tonos">
                       {(Object.keys(ESTILO_LETRA) as LetraPortada[]).map((letra) => (
@@ -601,15 +717,16 @@ export function DossierModal({
                           type="button"
                           aria-pressed={letraPortada === letra}
                           className={letraPortada === letra ? "dossier-tono activo" : "dossier-tono"}
-                          style={ESTILO_LETRA[letra]}
+                          style={{ ...ESTILO_LETRA[letra], ...estiloCursiva }}
                           onClick={() => cambiarLetraPortada(letra)}
                         >
                           {t(`dossier.letra.${letra}` as TranslationKey)}
                         </button>
                       ))}
                     </div>
+                    {check(t("dossier.cursivaPortada"), cursivaPortada, cambiarCursivaPortada)}
                     {/* Muestra del texto de la portada con la letra y el color de hoja elegidos. */}
-                    <div className="dossier-portada-muestra" style={{ ...ESTILO_LETRA[letraPortada], background: cssColor(colorFondo) }}>
+                    <div className="dossier-portada-muestra" style={{ ...ESTILO_LETRA[letraPortada], ...estiloCursiva, background: cssColor(colorFondo) }}>
                       {tituloPortada.trim() || seleccionNombre}
                     </div>
                   </div>
@@ -620,8 +737,10 @@ export function DossierModal({
                 </>
               )}
             </section>
+            )}
 
-            <section className="dossier-seccion">
+            {paso === "textos" && (
+            <section className="dossier-seccion" data-recorrido="dossier-textos">
               <h3>{t("dossier.seccionTextos")}</h3>
               {check(t("dossier.bio"), incluirBio, setIncluirBio)}
               {incluirBio &&
@@ -641,6 +760,18 @@ export function DossierModal({
                       )}
                   </div>
                 ))}
+              {/* Solo se ofrece si alguna biografía que va a salir tiene renglones por años. */}
+              {incluirBio &&
+                artistas.some(
+                  (a) =>
+                    (idioma !== "en" && tieneLineaDeTiempo(biosEs[a.id] ?? "")) ||
+                    (idioma !== "es" && tieneLineaDeTiempo(biosEn[a.id] ?? "")),
+                ) && (
+                  <>
+                    {check(t("dossier.lineaDeTiempo"), lineaDeTiempoBio, setLineaDeTiempoBio)}
+                    <p className="dossier-nota">{t("dossier.lineaDeTiempoNota")}</p>
+                  </>
+                )}
               {check(t("dossier.statement"), incluirStatement, setIncluirStatement)}
               {incluirStatement && (
                 <div className="dossier-textos">
@@ -659,8 +790,11 @@ export function DossierModal({
                 </div>
               )}
             </section>
+            )}
 
-            <section className="dossier-seccion">
+            {paso === "ficha" && (
+            <>
+            <section className="dossier-seccion" data-recorrido="dossier-ficha">
               <h3>{t("dossier.seccionFicha")}</h3>
               <div className="dossier-checks">
                 {check(t("dossier.nombreArtistaFicha"), incluirNombreArtista, setIncluirNombreArtista)}
@@ -687,11 +821,14 @@ export function DossierModal({
               )}
             </section>
 
-            <section className="dossier-seccion">
+            <section className="dossier-seccion" data-recorrido="dossier-cierre">
               <h3>{t("dossier.seccionCierre")}</h3>
               {check(t("dossier.contacto"), incluirContacto, setIncluirContacto)}
             </section>
+            </>
+            )}
           </div>
+          </>
         )}
         {error && <p className="error">{error}</p>}
         {mensaje && (
@@ -704,11 +841,16 @@ export function DossierModal({
             )}
           </p>
         )}
-        <div className="dossier-acciones">
-          <button type="button" onClick={onClose}>
+        <div className="dossier-acciones" data-recorrido="dossier-generar">
+          <button type="button" className="dossier-cerrar" onClick={onClose}>
             {t("common.close")}
           </button>
-          <button type="button" onClick={generar} disabled={generando || cargando || filas.length === 0}>
+          {!cargando && filas.length > 0 && PASOS.indexOf(paso) < PASOS.length - 1 && (
+            <button type="button" onClick={() => irA(PASOS[PASOS.indexOf(paso) + 1])}>
+              {t("dossier.siguiente", { paso: t(`dossier.paso.${PASOS[PASOS.indexOf(paso) + 1]}` as TranslationKey) })}
+            </button>
+          )}
+          <button type="button" className="selecciones-principal" onClick={generar} disabled={generando || cargando || filas.length === 0}>
             {generando ? t("common.saving") : t("dossier.generar")}
           </button>
         </div>

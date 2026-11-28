@@ -2,6 +2,8 @@ import type { jsPDF } from "jspdf";
 import montserratBoldUrl from "../assets/fonts/Montserrat-Bold.ttf?url";
 import interRegularUrl from "../assets/fonts/Inter-Regular.ttf?url";
 import interMediumUrl from "../assets/fonts/Inter-Medium.ttf?url";
+import interItalicUrl from "../assets/fonts/Inter-Italic.ttf?url";
+import montserratBoldItalicUrl from "../assets/fonts/Montserrat-BoldItalic.ttf?url";
 import gsMonogramaUrl from "../assets/brand/rs-monograma.png?url";
 import { detectImageFormat } from "./detectImageFormat.js";
 import { tInforme, type InformeIdioma } from "../reports/informeIdioma.js";
@@ -26,6 +28,8 @@ interface BrandAssets {
   montserratBold: string;
   interRegular: string;
   interMedium: string;
+  interItalic: string;
+  montserratBoldItalic: string;
   logoBytes: Uint8Array;
 }
 
@@ -41,10 +45,14 @@ function loadBrandAssets(): Promise<BrandAssets> {
       fetchBytes(interRegularUrl).then(bytesToBase64),
       fetchBytes(interMediumUrl).then(bytesToBase64),
       fetchBytes(gsMonogramaUrl),
-    ]).then(([montserratBold, interRegular, interMedium, logoBytes]) => ({
+      fetchBytes(interItalicUrl).then(bytesToBase64),
+      fetchBytes(montserratBoldItalicUrl).then(bytesToBase64),
+    ]).then(([montserratBold, interRegular, interMedium, logoBytes, interItalic, montserratBoldItalic]) => ({
       montserratBold,
       interRegular,
       interMedium,
+      interItalic,
+      montserratBoldItalic,
       logoBytes,
     }));
   }
@@ -52,13 +60,17 @@ function loadBrandAssets(): Promise<BrandAssets> {
 }
 
 export async function registerBrandFonts(doc: jsPDF): Promise<void> {
-  const { montserratBold, interRegular, interMedium } = await loadBrandAssets();
+  const { montserratBold, interRegular, interMedium, interItalic, montserratBoldItalic } = await loadBrandAssets();
   doc.addFileToVFS("Montserrat-Bold.ttf", montserratBold);
   doc.addFont("Montserrat-Bold.ttf", "Montserrat", "bold");
   doc.addFileToVFS("Inter-Regular.ttf", interRegular);
   doc.addFont("Inter-Regular.ttf", "Inter", "normal");
   doc.addFileToVFS("Inter-Medium.ttf", interMedium);
   doc.addFont("Inter-Medium.ttf", "Inter", "medium");
+  doc.addFileToVFS("Inter-Italic.ttf", interItalic);
+  doc.addFont("Inter-Italic.ttf", "Inter", "italic");
+  doc.addFileToVFS("Montserrat-BoldItalic.ttf", montserratBoldItalic);
+  doc.addFont("Montserrat-BoldItalic.ttf", "Montserrat", "bolditalic");
 }
 
 /** Dibuja el logo propio (si es una imagen valida) o, en su defecto, el monograma GS, en el tamaño y posicion dados. */

@@ -21,6 +21,7 @@ import { AyudaSeccion } from "../components/AyudaSeccion.js";
 import type { PasoRecorrido } from "../components/RecorridoInicial.js";
 import { CalificacionFilterButton } from "../components/CalificacionFilterButton.js";
 import { StarRating } from "../components/StarRating.js";
+import { AccesosEditores, type EditoresActivos } from "../components/AccesosEditores.js";
 import { GrillaImagenes } from "../components/GrillaImagenes.js";
 import { cargarColumnasGridInicial, guardarColumnasGrid } from "../utils/columnasGrid.js";
 import { marcarSiMiniaturaMuyVertical } from "../utils/miniaturaVertical.js";
@@ -42,6 +43,26 @@ const COLUMNAS_OBRAS_POR_DEFECTO = 4;
 const COLUMNAS_OBRAS_TARJETAS_STORAGE_KEY = "obrasListColumnasGrid";
 const COLUMNAS_OBRAS_COLUMNAS_STORAGE_KEY = "obrasListColumnasGridVistaColumnas";
 const VISTA_OBRAS_STORAGE_KEY = "obrasListVista";
+const FILTROS_ABIERTOS_STORAGE_KEY = "obrasListFiltrosAbiertos";
+
+const ACCESOS_EDITORES_STORAGE_KEY = "obrasListAccesosEditores";
+
+function cargarAccesosEditores(): EditoresActivos {
+  try {
+    const v = JSON.parse(localStorage.getItem(ACCESOS_EDITORES_STORAGE_KEY) ?? "null");
+    return { lightroom: v?.lightroom === true, photoshop: v?.photoshop === true };
+  } catch {
+    return { lightroom: false, photoshop: false };
+  }
+}
+
+function cargarFiltrosAbiertos(): boolean {
+  try {
+    return localStorage.getItem(FILTROS_ABIERTOS_STORAGE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
 
 type VistaObras = "tarjetas" | "columnas" | "imagenes";
 const COLUMNAS_OBRAS_IMAGENES_STORAGE_KEY = "galeriaFotosColumnasGrid";
@@ -113,6 +134,8 @@ export function ObrasList({
     cargarColumnasGridInicial(COLUMNAS_OBRAS_IMAGENES_STORAGE_KEY, COLUMNAS_OBRAS_POR_DEFECTO),
   );
   const [vista, setVista] = useState<VistaObras>(cargarVistaInicial);
+  const [filtrosAbiertos, setFiltrosAbiertos] = useState(cargarFiltrosAbiertos);
+  const [accesos, setAccesos] = useState<EditoresActivos>(cargarAccesosEditores);
   const columnasGridActual =
     vista === "tarjetas" ? columnasGridTarjetas : vista === "imagenes" ? columnasGridImagenes : columnasGridColumnas;
   const objectUrlsRef = useRef<string[]>([]);
@@ -426,11 +449,86 @@ export function ObrasList({
     guardarVista(nueva);
   }
 
+  function alternarAcceso(editor: keyof EditoresActivos) {
+    const nuevo = { ...accesos, [editor]: !accesos[editor] };
+    setAccesos(nuevo);
+    try {
+      localStorage.setItem(ACCESOS_EDITORES_STORAGE_KEY, JSON.stringify(nuevo));
+    } catch {
+      // No se pudo guardar la preferencia.
+    }
+  }
+
+  function alternarFiltros() {
+    const abrir = !filtrosAbiertos;
+    setFiltrosAbiertos(abrir);
+    try {
+      localStorage.setItem(FILTROS_ABIERTOS_STORAGE_KEY, abrir ? "1" : "0");
+    } catch {
+      // No se pudo guardar la preferencia.
+    }
+  }
+
   function handleAbrirInformesMenu() {
     setInformesMenuAbierto(true);
   }
 
   if (!context) return null;
+
+  // Filtros puestos: se muestran siempre (con el panel abierto o cerrado) y cada uno se puede quitar por separado.
+  const filtrosPuestos: { clave: string; texto: string; quitar: () => void }[] = [];
+  if (selectedCategoria) {
+    filtrosPuestos.push({
+      clave: "categoria",
+      texto: t(`categoria.${selectedCategoria}` as TranslationKey),
+      quitar: () => handleCategoriaChange(""),
+    });
+  }
+  if (selectedSubtipo) {
+    const entrada = allSubtipos.find((e) => e.subtipo === selectedSubtipo);
+    filtrosPuestos.push({
+      clave: "subtipo",
+      texto: entrada ? t(subtipoTranslationKey(entrada.categoria, entrada.subtipo)) : selectedSubtipo,
+      quitar: () => setSelectedSubtipo(null),
+    });
+  }
+  if (filtroSeleccionId !== null) {
+    const nombre = seleccionesParaFiltro.find((sel) => sel.id === filtroSeleccionId)?.nombre ?? "";
+    filtrosPuestos.push({
+      clave: "seleccion",
+      texto: `${t("selecciones.filtroLabel")}: ${nombre}`,
+      quitar: () => setFiltroSeleccionId(null),
+    });
+  }
+  if (esGaleria && selectedArtistaId !== null) {
+    filtrosPuestos.push({
+      clave: "artista",
+      texto: allArtistas.find((a) => a.id === selectedArtistaId)?.nombre ?? "",
+      quitar: () => setSelectedArtistaId(null),
+    });
+  }
+  if (calificacionFiltro > 0) {
+    filtrosPuestos.push({
+      clave: "calificacion",
+      texto: `${t("obrasList.colCalificacion")}: ${calificacionFiltro} ★`,
+      quitar: () => setCalificacionFiltro(0),
+    });
+  }
+  for (const tag of selectedTags) {
+    filtrosPuestos.push({
+      clave: `etiqueta:${tag}`,
+      texto: tag,
+      quitar: () => setSelectedTags((prev) => prev.filter((x) => x !== tag)),
+    });
+  }
+
+  function limpiarFiltros() {
+    handleCategoriaChange("");
+    setFiltroSeleccionId(null);
+    setSelectedArtistaId(null);
+    setCalificacionFiltro(0);
+    setSelectedTags([]);
+  }
 
   // Recorrido de ayuda de la sección (botón "?" del encabezado): un paso por botón u opción.
   const paso = (id: string, key: TranslationKey, titulo: string): PasoRecorrido => ({
@@ -439,20 +537,22 @@ export function ObrasList({
     texto: t(key),
   });
   const pasosAyuda: PasoRecorrido[] = [
-    paso("obras-buscar", "ayudaObras.buscar", t("obrasList.ayudaBuscar")),
     paso("obras-nueva", "ayudaObras.nueva", t("workspaceHome.nuevaObra")),
+    paso("obras-buscar", "ayudaObras.buscar", t("obrasList.ayudaBuscar")),
+    paso("obras-filtros", "ayudaObras.filtros", t("obrasList.filtros")),
+    paso("obras-categoria", "ayudaObras.categoria", t("obraForm.categoriaLabel")),
+    paso("obras-subtipo", "ayudaObras.subtipo", t("field.subtipo")),
+    paso("obras-filtro-seleccion", "ayudaObras.filtroSeleccion", t("selecciones.filtroLabel")),
+    paso("obras-artista", "ayudaObras.artista", t("obraForm.artistaLabel")),
+    paso("obras-estrellas", "ayudaObras.estrellas", t("obrasList.colCalificacion")),
+    paso("obras-etiquetas", "ayudaObras.etiquetas", t("obraForm.etiquetasLabel")),
     paso("obras-selecciones", "ayudaObras.selecciones", t("selecciones.boton")),
     paso("obras-seleccionar", "ayudaObras.seleccionar", t("selecciones.seleccionar")),
     paso("obras-informe", "ayudaObras.informe", t("informesObras.generarInforme")),
+    paso("obras-accesos", "ayudaObras.accesos", t("obrasList.accesosTitulo")),
+    paso("obras-orden", "ayudaObras.orden", t("obrasList.ordenarPorLabel")),
     paso("obras-vista", "ayudaObras.vista", t("obrasList.vistaColumnas") + " / " + t("obrasList.vistaTarjetas") + " / " + t("selecciones.vistaImagenes")),
     paso("obras-tamano", "ayudaObras.tamano", t("obrasList.tamanoMiniaturasLabel")),
-    paso("obras-orden", "ayudaObras.orden", t("obrasList.ordenarPorLabel")),
-    paso("obras-artista", "ayudaObras.artista", t("obraForm.artistaLabel")),
-    paso("obras-filtro-seleccion", "ayudaObras.filtroSeleccion", t("selecciones.filtroLabel")),
-    paso("obras-categoria", "ayudaObras.categoria", t("obraForm.categoriaLabel")),
-    paso("obras-subtipo", "ayudaObras.subtipo", t("field.subtipo")),
-    paso("obras-estrellas", "ayudaObras.estrellas", t("obrasList.colCalificacion")),
-    paso("obras-etiquetas", "ayudaObras.etiquetas", t("obraForm.etiquetasLabel")),
     paso("obras-obra", "ayudaObras.obra", t("obrasList.colObra")),
   ];
 
@@ -462,6 +562,9 @@ export function ObrasList({
       <div className="obras-list-header">
         <h1>{t("obrasList.title")}</h1>
         <div className="header-actions">
+          <button type="button" className="selecciones-principal obras-nueva-boton" data-recorrido="obras-nueva" onClick={onNuevaObra}>
+            + {t("workspaceHome.nuevaObra")}
+          </button>
           <AyudaSeccion pasos={pasosAyuda} />
           <button type="button" className="header-close-button" onClick={onBack} aria-label={t("common.back")} title={t("common.back")}>
             ✕
@@ -469,17 +572,129 @@ export function ObrasList({
         </div>
       </div>
 
-      <div className="obras-toolbar">
-        <div className="obras-toolbar-fila">
-          {obras.length > 0 && (
+      <div className="obras-toolbar obras-toolbar-ordenada">
+        {obras.length > 0 && (
+          <div className="obras-toolbar-fila obras-busqueda-fila">
             <div className="buscador-con-ayuda obras-list-buscador-fila-principal" data-recorrido="obras-buscar">
-              <input type="search" className="obras-list-buscador" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
+              <input
+                type="search"
+                className="obras-list-buscador"
+                placeholder={t("obrasList.buscarPlaceholder")}
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+              />
               <HelpIcon fieldKey="busqueda_general" />
             </div>
-          )}
-          <button type="button" data-recorrido="obras-nueva" onClick={onNuevaObra}>
-            {t("workspaceHome.nuevaObra")}
-          </button>
+            <button
+              type="button"
+              data-recorrido="obras-filtros"
+              className={filtrosAbiertos ? "obras-vista-toggle-boton activo" : "obras-vista-toggle-boton"}
+              aria-expanded={filtrosAbiertos}
+              onClick={alternarFiltros}
+            >
+              {t("obrasList.filtros")}
+              {filtrosPuestos.length > 0 && ` (${filtrosPuestos.length})`} {filtrosAbiertos ? "▴" : "▾"}
+            </button>
+          </div>
+        )}
+
+        {obras.length > 0 && filtrosAbiertos && (
+          <div className="obras-filtros-panel">
+            {allCategorias.length > 0 && (
+              <label className="galeria-filtro-artista" data-recorrido="obras-categoria">
+                {t("obraForm.categoriaLabel")}
+                <select value={selectedCategoria ?? ""} onChange={(e) => handleCategoriaChange(e.target.value)}>
+                  <option value="">{t("galeria.todasCategorias")}</option>
+                  {allCategorias.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {t(`categoria.${cat}` as TranslationKey)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+
+            {allSubtipos.length > 0 && (
+              <label className="galeria-filtro-artista" data-recorrido="obras-subtipo">
+                {t("field.subtipo")}
+                <select value={selectedSubtipo ?? ""} onChange={(e) => setSelectedSubtipo(e.target.value || null)}>
+                  <option value="">{t("galeria.todosSubtipos")}</option>
+                  {allSubtipos.map((entry) => (
+                    <option key={`${entry.categoria}:${entry.subtipo}`} value={entry.subtipo}>
+                      {t(subtipoTranslationKey(entry.categoria, entry.subtipo))}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+
+            {seleccionesParaFiltro.length > 0 && (
+              <label className="galeria-filtro-artista" data-recorrido="obras-filtro-seleccion">
+                {t("selecciones.filtroLabel")}
+                <select
+                  value={filtroSeleccionId ?? ""}
+                  onChange={(e) => setFiltroSeleccionId(e.target.value === "" ? null : Number(e.target.value))}
+                >
+                  <option value="">{t("selecciones.filtroTodas")}</option>
+                  {seleccionesParaFiltro.map((sel) => (
+                    <option key={sel.id} value={sel.id}>
+                      {sel.nombre} ({sel.cantidad})
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+
+            {esGaleria && allArtistas.length > 0 && (
+              <label className="galeria-filtro-artista" data-recorrido="obras-artista">
+                {t("obraForm.artistaLabel")}
+                <select value={selectedArtistaId ?? ""} onChange={(e) => setSelectedArtistaId(e.target.value === "" ? null : Number(e.target.value))}>
+                  <option value="">{t("galeria.todosArtistas")}</option>
+                  {allArtistas.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.nombre}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+
+            <div className="obras-filtros-campo" data-recorrido="obras-estrellas">
+              {t("obrasList.colCalificacion")}
+              <CalificacionFilterButton
+                calificacionFiltro={calificacionFiltro}
+                onChange={setCalificacionFiltro}
+                onQuitarATodas={handleQuitarCalificacionATodas}
+              />
+            </div>
+            {allTags.length > 0 && (
+              <div className="obras-filtros-campo" data-recorrido="obras-etiquetas">
+                <span className="galeria-filtro-etiquetas-label">
+                  {t("obraForm.etiquetasLabel")} <HelpIcon fieldKey="filtro_etiquetas_multiple" />
+                </span>
+                <TagFilterPicker opciones={allTags} value={selectedTags} onChange={setSelectedTags} />
+              </div>
+            )}
+          </div>
+        )}
+
+        {filtrosPuestos.length > 0 && (
+          <div className="obras-toolbar-fila obras-filtros-puestos">
+            {filtrosPuestos.map((f) => (
+              <span key={f.clave} className="tag-chip tag-chip-removable">
+                {f.texto}
+                <button type="button" onClick={f.quitar} aria-label={t("obrasList.quitarFiltro", { filtro: f.texto })}>
+                  ×
+                </button>
+              </span>
+            ))}
+            <button type="button" onClick={limpiarFiltros}>
+              {t("obrasList.limpiarFiltros")}
+            </button>
+          </div>
+        )}
+
+        <div className="obras-toolbar-fila obras-acciones-fila">
           <button type="button" data-recorrido="obras-selecciones" onClick={onVerSelecciones}>
             {t("selecciones.boton")}
           </button>
@@ -502,33 +717,25 @@ export function ObrasList({
             </button>
           )}
           {obras.length > 0 && (
-            <div className="obras-vista-columna">
-            <div className="obras-vista-toggle" data-recorrido="obras-vista">
-              <button
-                type="button"
-                className={vista === "columnas" ? "obras-vista-toggle-boton activo" : "obras-vista-toggle-boton"}
-                onClick={() => handleVistaChange("columnas")}
-              >
-                {t("obrasList.vistaColumnas")}
-              </button>
-              <button
-                type="button"
-                className={vista === "tarjetas" ? "obras-vista-toggle-boton activo" : "obras-vista-toggle-boton"}
-                onClick={() => handleVistaChange("tarjetas")}
-              >
-                {t("obrasList.vistaTarjetas")}
-              </button>
-              <button
-                type="button"
-                className={vista === "imagenes" ? "obras-vista-toggle-boton activo" : "obras-vista-toggle-boton"}
-                onClick={() => handleVistaChange("imagenes")}
-              >
-                {t("selecciones.vistaImagenes")}
-              </button>
-            </div>
-            <span className="obras-recorrido-envoltorio" data-recorrido="obras-tamano">
-              <MiniaturasSizeSlider columnas={columnasGridActual} onChange={handleTamanoMiniaturasChange} />
-            </span>
+            <div className="obras-accesos-botones" data-recorrido="obras-accesos">
+              <span>{t("obrasList.accesosTitulo")}</span>
+              {(
+                [
+                  ["lightroom", "Lightroom Classic"],
+                  ["photoshop", "Photoshop"],
+                ] as const
+              ).map(([editor, nombre]) => (
+                <button
+                  key={editor}
+                  type="button"
+                  aria-pressed={accesos[editor]}
+                  className={accesos[editor] ? "obras-vista-toggle-boton activo" : "obras-vista-toggle-boton"}
+                  onClick={() => alternarAcceso(editor)}
+                >
+                  {accesos[editor] ? "✓ " : ""}
+                  {nombre}
+                </button>
+              ))}
             </div>
           )}
         </div>
@@ -578,7 +785,12 @@ export function ObrasList({
         )}
 
         {obras.length > 0 && (
-          <div className="obras-toolbar-fila">
+          <div className="obras-toolbar-fila obras-ver-fila">
+            <span className="obras-cantidad" role="status">
+              {filteredObras.length === obras.length
+                ? t("obrasList.cantidadTotal", { total: obras.length })
+                : t("obrasList.cantidadFiltrada", { n: filteredObras.length, total: obras.length })}
+            </span>
             <label className="galeria-filtro-artista" data-recorrido="obras-orden">
               {t("obrasList.ordenarPorLabel")}
               <select value={ordenPor} onChange={(e) => setOrdenPor(e.target.value as "titulo" | "codigo_inventario" | "fecha_captura")}>
@@ -587,81 +799,34 @@ export function ObrasList({
                 <option value="fecha_captura">{t("obrasList.ordenarPorFechaCaptura")}</option>
               </select>
             </label>
-
-            {esGaleria && allArtistas.length > 0 && (
-              <label className="galeria-filtro-artista" data-recorrido="obras-artista">
-                {t("obraForm.artistaLabel")}
-                <select value={selectedArtistaId ?? ""} onChange={(e) => setSelectedArtistaId(e.target.value === "" ? null : Number(e.target.value))}>
-                  <option value="">{t("galeria.todosArtistas")}</option>
-                  {allArtistas.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.nombre}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-
-            {seleccionesParaFiltro.length > 0 && (
-              <label className="galeria-filtro-artista" data-recorrido="obras-filtro-seleccion">
-                {t("selecciones.filtroLabel")}
-                <select
-                  value={filtroSeleccionId ?? ""}
-                  onChange={(e) => setFiltroSeleccionId(e.target.value === "" ? null : Number(e.target.value))}
-                >
-                  <option value="">{t("selecciones.filtroTodas")}</option>
-                  {seleccionesParaFiltro.map((sel) => (
-                    <option key={sel.id} value={sel.id}>
-                      {sel.nombre} ({sel.cantidad})
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-
-            {allCategorias.length > 0 && (
-              <label className="galeria-filtro-artista" data-recorrido="obras-categoria">
-                {t("obraForm.categoriaLabel")}
-                <select value={selectedCategoria ?? ""} onChange={(e) => handleCategoriaChange(e.target.value)}>
-                  <option value="">{t("galeria.todasCategorias")}</option>
-                  {allCategorias.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {t(`categoria.${cat}` as TranslationKey)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-
-            {allSubtipos.length > 0 && (
-              <label className="galeria-filtro-artista" data-recorrido="obras-subtipo">
-                {t("field.subtipo")}
-                <select value={selectedSubtipo ?? ""} onChange={(e) => setSelectedSubtipo(e.target.value || null)}>
-                  <option value="">{t("galeria.todosSubtipos")}</option>
-                  {allSubtipos.map((entry) => (
-                    <option key={`${entry.categoria}:${entry.subtipo}`} value={entry.subtipo}>
-                      {t(subtipoTranslationKey(entry.categoria, entry.subtipo))}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-
-            <span className="obras-recorrido-envoltorio" data-recorrido="obras-estrellas">
-              <CalificacionFilterButton
-                calificacionFiltro={calificacionFiltro}
-                onChange={setCalificacionFiltro}
-                onQuitarATodas={handleQuitarCalificacionATodas}
-              />
-            </span>
-            {allTags.length > 0 && (
-              <div className="obras-toolbar-etiquetas" data-recorrido="obras-etiquetas">
-                <span className="galeria-filtro-etiquetas-label">
-                  {t("obraForm.etiquetasLabel")} <HelpIcon fieldKey="filtro_etiquetas_multiple" />
-                </span>
-                <TagFilterPicker opciones={allTags} value={selectedTags} onChange={setSelectedTags} />
+            <div className="obras-ver-vistas">
+              <div className="obras-vista-toggle" data-recorrido="obras-vista">
+              <button
+                type="button"
+                className={vista === "columnas" ? "obras-vista-toggle-boton activo" : "obras-vista-toggle-boton"}
+                onClick={() => handleVistaChange("columnas")}
+              >
+                {t("obrasList.vistaColumnas")}
+              </button>
+              <button
+                type="button"
+                className={vista === "tarjetas" ? "obras-vista-toggle-boton activo" : "obras-vista-toggle-boton"}
+                onClick={() => handleVistaChange("tarjetas")}
+              >
+                {t("obrasList.vistaTarjetas")}
+              </button>
+              <button
+                type="button"
+                className={vista === "imagenes" ? "obras-vista-toggle-boton activo" : "obras-vista-toggle-boton"}
+                onClick={() => handleVistaChange("imagenes")}
+              >
+                {t("selecciones.vistaImagenes")}
+              </button>
               </div>
-            )}
+              <span className="obras-recorrido-envoltorio" data-recorrido="obras-tamano">
+                <MiniaturasSizeSlider columnas={columnasGridActual} onChange={handleTamanoMiniaturasChange} />
+              </span>
+            </div>
           </div>
         )}
       </div>
@@ -691,6 +856,7 @@ export function ObrasList({
           onCalificar={handleSetCalificacion}
           onAbrirFicha={(id) => onOpenObra(id)}
           onError={setError}
+          accesos={accesos}
           seleccion={
             modoSeleccion ? { elegidas, yaEnSeleccion: idsEnActiva, alternar: alternarElegida } : undefined
           }
@@ -700,7 +866,7 @@ export function ObrasList({
       {vista === "tarjetas" && (
       <div className="obras-grid" style={{ gridTemplateColumns: `repeat(${columnasGridTarjetas}, 1fr)` }}>
         {filteredObras.map((obra, indice) => (
-          <div className="obra-card-wrapper" key={obra.id} data-recorrido={indice === 0 ? "obras-obra" : undefined}>
+          <div className="obra-card-wrapper con-accesos" key={obra.id} data-recorrido={indice === 0 ? "obras-obra" : undefined}>
             {modoSeleccion && (
               <input
                 type="checkbox"
@@ -736,6 +902,7 @@ export function ObrasList({
             )}
             <ObraTarjetaInfo obra={obra} />
             </button>
+            {!modoSeleccion && <AccesosEditores obra={obra} activos={accesos} onError={setError} />}
             <StarRating value={obra.calificacion} onChange={(n) => handleSetCalificacion(obra.id, n)} />
           </div>
         ))}
@@ -765,23 +932,26 @@ export function ObrasList({
                       {modoSeleccion && (
                         <input type="checkbox" checked={idsEnActiva.has(obra.id) || elegidas.has(obra.id)} disabled={idsEnActiva.has(obra.id)} readOnly />
                       )}
-                      {thumbnails[obra.id] ? (
-                        <img
-                          src={thumbnails[obra.id]}
-                          alt={obra.titulo}
-                          className="obras-tabla-miniatura"
-                          style={{ width: anchoMiniaturaTabla(columnasGridColumnas) }}
-                          onContextMenu={(e) => abrirMenuImagen(e, obra)}
-                        />
-                      ) : (
-                        <span
-                          className="obras-tabla-sin-imagen"
-                          style={{ width: anchoMiniaturaTabla(columnasGridColumnas) }}
-                          onContextMenu={(e) => abrirMenuImagen(e, obra)}
-                        >
-                          {t("obrasList.sinImagen")}
-                        </span>
-                      )}
+                      <span className="obras-tabla-miniatura-caja con-accesos">
+                        {thumbnails[obra.id] ? (
+                          <img
+                            src={thumbnails[obra.id]}
+                            alt={obra.titulo}
+                            className="obras-tabla-miniatura"
+                            style={{ width: anchoMiniaturaTabla(columnasGridColumnas) }}
+                            onContextMenu={(e) => abrirMenuImagen(e, obra)}
+                          />
+                        ) : (
+                          <span
+                            className="obras-tabla-sin-imagen"
+                            style={{ width: anchoMiniaturaTabla(columnasGridColumnas) }}
+                            onContextMenu={(e) => abrirMenuImagen(e, obra)}
+                          >
+                            {t("obrasList.sinImagen")}
+                          </span>
+                        )}
+                        {!modoSeleccion && <AccesosEditores obra={obra} activos={accesos} onError={setError} />}
+                      </span>
                     </td>
                     <td>
                       <strong>{obra.titulo}</strong>

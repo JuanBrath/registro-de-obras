@@ -4,11 +4,11 @@ The list of all your artworks: how to search, filter, sort and rate them, and ho
 
 ## Opening the list
 
-On the home screen click **Artworks**. You see a grid with one card per artwork. If you haven't added any yet, the message "You haven't added any artworks yet." appears and you can start with **New artwork**.
+On the home screen click **Artworks**. You see your artworks in **Columns**, **Cards** or **Images**, whichever you chose last. If you haven't added any yet, the message "You haven't added any artworks yet." appears and you can start with **+ New artwork**.
 
 ## Section help
 
-At the top right, next to the close button ✕, is the **?** button (**Help for this section**). The main screens have it: **Artworks**, **Selections**, **Clients**, **Artists**, **Sales**, the **Artwork sheet**, **New artwork** and **My info**. When you click it, two options unfold: **Visual tour** and **Search the manual**. **Search the manual** opens the manual with the search box ready to type in; when you close it you return to the screen you were on, exactly as you left it. With **Visual tour**, the program takes a tour through the buttons and options on the screen, pointing at each one with a short explanation of what you can do with it. You move forward with **Next**, go back with **Back** and close with **Skip** or **Got it**. Only the options you can see at that moment are explained (for example, the tag filter appears when some artwork has tags).
+At the top right, next to the close button ✕, is the **?** button (**Help for this section**). The main screens have it: **Artworks**, **Selections**, **Clients**, **Artists**, **Sales**, the **Artwork sheet**, **New artwork** and **My info**, and the dossier window too. When you click it, two options unfold: **Visual tour** and **Search the manual**. **Search the manual** opens the manual with the search box ready to type in; when you close it you return to the screen you were on, exactly as you left it. With **Visual tour**, the program takes a tour through the buttons and options on the screen, pointing at each one with a short explanation of what you can do with it. You move forward with **Next**, go back with **Back** and close with **Skip** or **Got it**. Only the options you can see at that moment are explained (for example, each filter is explained only if the **Filters** panel is open, and the tag filter appears when some artwork has tags).
 
 ## What each card shows
 
@@ -27,16 +27,18 @@ The search box at the top searches as you type. In Recer Studio it searches the 
 
 ## Filtering and sorting
 
-Below the buttons there are several controls that combine with each other:
+**Sort by** is above the artworks: **Inventory number**, **Title** or **Capture date**. Artworks that don't have that data go to the end. On the same row you see how many artworks you are viewing (for example "24 of 180 artworks" when a filter is on).
 
-- **Sort by**: **Inventory number**, **Title** or **Capture date**. Artworks that don't have that data go to the end.
+Filters open with the **Filters** button, next to the search box; the program remembers whether you left it open or closed. They combine with each other:
+
 - **Category**: shows only the artworks of one category.
+- **Artist** (in Recer Space): shows only the artworks of one artist.
 - **Subtype**: appears when there are artworks with a subtype, and adjusts to the chosen category.
-- **Stars**: click a star to see only the artworks with that rating; if you click the same star again, the filter is removed. If you hold a star down for a moment, the program asks whether you want to clear the rating from all artworks.
+- **Rating**: click a star to see only the artworks with that rating; if you click the same star again, the filter is removed. If you hold a star down for a moment, the program asks whether you want to clear the rating from all artworks.
 - **Tags**: choose one or several tags to see the artworks that have them. See [Filtering by tags](cap:obras).
 - **Selection**: shows only the artworks of one of your selections. See [Selections and dossier](cap:selecciones-y-dossier).
 
-The bar with the search box and the filters stays **pinned to the top** while you scroll through the artworks (the title scrolls away), so you always see which filters are on. Filters don't delete anything: they only change what you see. To see everything again, choose the first option in each one (**All categories**, **All**) and remove the stars and the tags.
+Even if you close the panel, every filter in use stays **in view** below the search box, and the button shows how many there are (for example **Filters (2)**). Remove one with its **×**, or all of them with **Clear filters** (it keeps what you typed in the search box). The top area, with the search box, filters, buttons and views, stays **pinned** while you scroll through the artworks. Filters don't delete anything: they only change what you see.
 
 ## Filtering by tags
 
@@ -44,7 +46,7 @@ The bar with the search box and the filters stays **pinned to the top** while yo
 
 How to use the filter:
 
-1. In **Tags**, open the **Add tag…** drop-down. There you'll find all the tags your artworks already use.
+1. Click **Filters** and, under **Tags**, open the **Add tag…** drop-down. There you'll find all the tags your artworks already use.
 2. Choose one. It appears as a small pill to the right of the drop-down and the list narrows down to the artworks that have that tag.
 3. If you want to add another, open the drop-down again and choose the next one. Each pill is added without replacing the previous ones.
 4. To remove a tag from the filter, click the **×** on its pill. When none is left, you see all the artworks again.
@@ -61,11 +63,19 @@ A few things to keep in mind:
 
 ## Changing the thumbnail size
 
-The **Thumbnail size** slider (next to the search box) changes how many artworks fit in each row. The program remembers your choice.
+The **Thumbnail size** slider (above the artworks, next to the views) changes how many artworks fit in each row. The program remembers your choice.
+
+## Opening in Lightroom Classic or Photoshop from the photo
+
+Next to **Generate report**, under **Shortcuts on photos**, are the **Lightroom Classic** and **Photoshop** buttons. Click the one you want to turn on (it shows a **✓**); you can turn on one, both or neither, and the program remembers it.
+
+With a button on, when you hover over a photo in the **Columns**, **Cards** and **Images** views, its shortcut appears: **LrC** in the top left corner and **Ps** in the top right one. One click opens the original file in that program, without opening the sheet or enlarging the photo.
+
+The shortcuts only appear on artworks that have an **Original file location**, and they are hidden while you are in **Select** mode. For Lightroom Classic the same conditions as from the artwork sheet apply (see [Lightroom Classic](cap:lightroom-classic)). You still have these options by right-clicking the photo.
 
 ## Rating with stars
 
-Click one of the five stars under an artwork to rate it. The rating is saved in Recer and, if the artwork has an **Original file location**, it is also written into that file (inside the JPG, or in an auxiliary **.xmp** file next to it if it's RAW, TIFF, PSD or another format) so that programs like Lightroom or Bridge can see it. If that second part fails, the rating is still saved in Recer and a notice is shown.
+In **Columns** and **Cards**, click one of the artwork's five stars to rate it. In **Images** and in the large photos you see the rating as "3 ★": click it to unfold the stars. The rating is saved in Recer and, if the artwork has an **Original file location**, it is also written into that file (inside the JPG, or in an auxiliary **.xmp** file next to it if it's RAW, TIFF, PSD or another format) so that programs like Lightroom or Bridge can see it. If that second part fails, the rating is still saved in Recer and a notice is shown.
 
 ## Generating a PDF list
 
@@ -79,7 +89,7 @@ The list includes: artwork name, author, category, subcategory, number of availa
 
 ## Other buttons
 
-- **New artwork**: opens the form to add an artwork. See [Adding a new artwork](cap:nueva-obra).
+- **+ New artwork** (top right): opens the form to add an artwork. See [Adding a new artwork](cap:nueva-obra).
 - **Images** (next to Columns and Cards): shows only the photos, large, respecting the filters you have on. See [Images view](cap:galeria-de-obras).
 - **Selections**: opens your hand-picked groups of artworks, the basis of the PDF dossiers. See [Selections and dossier](cap:selecciones-y-dossier).
 - **Select**: turns on the checkboxes so you can tick artworks and save them to a selection. See [Selections and dossier](cap:selecciones-y-dossier).

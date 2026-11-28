@@ -6,7 +6,7 @@ import { bytesToObjectUrl } from "../utils/imageObjectUrl.js";
 import { formatFechaDDMMYYYY } from "../utils/formatFecha.js";
 import { Modal } from "./Modal.js";
 import { VentaForm } from "./VentaForm.js";
-import { StarRating } from "./StarRating.js";
+import { CalificacionCompacta } from "./CalificacionCompacta.js";
 
 /** Lo mínimo que necesita el visor de cada obra; el resto de los datos los consulta él mismo. */
 export interface ItemVisor {
@@ -247,8 +247,8 @@ export function VisorObras({
             </button>
           )}
           <p className="lightbox-caption">
-            <StarRating value={actual.calificacion} onChange={(n) => onCalificar(actual.id, n)} className="star-rating-lightbox" />
             {actual.titulo}
+            <CalificacionCompacta key={actual.id} calificacion={actual.calificacion} onCalificar={(n) => onCalificar(actual.id, n)} />
             <button
               type="button"
               className={`lightbox-info-button${infoAbierta ? " activo" : ""}`}

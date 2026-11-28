@@ -40,13 +40,13 @@ Whatever Lightroom doesn't have stays empty. It's best to fill in the title and 
 
 ## Opening a photo in Lightroom from Recer Studio
 
-It also works the other way: if an artwork has its **Original file location** filled in (personal records only, digital photography), an **Lr** (**Open in Lightroom Classic**) button appears next to the field in the edit form. On the artwork's sheet (without entering edit mode) the same **Lr** button is next to **Edit artwork**, and you can also ask for it with **Open in Lightroom** from the right-click menu on the image — see [Artwork sheet](cap:ficha-de-obra). All three do the same thing: Lightroom comes to the front (opening it if it wasn't running) and, if the plug-in is installed, searches for that photo in whichever catalog you have open and selects it in the Library.
+It also works the other way: if an artwork has its **Original file location** filled in (personal records only, digital photography), an **LrC** (**Open in Lightroom Classic**) button appears next to the field in the edit form. On the artwork's sheet (without entering edit mode) the same **LrC** button is next to **Edit artwork**, and you can also ask for it with **Open in Lightroom** from the right-click menu on the image — see [Artwork sheet](cap:ficha-de-obra). Also, in **Artworks** you can turn on an **LrC** shortcut on the photos (see [Artworks](cap:obras)). All of these do the same thing: Lightroom comes to the front (opening it if it wasn't running) and, if the plug-in is installed, searches for that photo in whichever catalog you have open and selects it in the Library.
 
 - If Lightroom can't find it (it was moved to another folder, or it belongs to a different catalog), the notice appears as a dialog inside Lightroom.
 - If you just opened Lightroom, it may take a few seconds to check the request: wait a moment before trying again.
 - It needs the plug-in installed and up to date (see below); if you just installed or updated it, quit and reopen Lightroom Classic once for it to start working.
 
-> Next to the **Lr** button on the artwork's sheet, a **Ps** (**Open in Photoshop**) button may also appear, unrelated to Lightroom: it opens the original file in Adobe Photoshop. It's available for any artwork category, not just photography — see [Artwork sheet](cap:ficha-de-obra).
+> Next to the **LrC** button on the artwork's sheet, a **Ps** (**Open in Photoshop**) button may also appear, unrelated to Lightroom: it opens the original file in Adobe Photoshop. It's available for any artwork category, not just photography — see [Artwork sheet](cap:ficha-de-obra).
 
 ## If nothing is loaded
 

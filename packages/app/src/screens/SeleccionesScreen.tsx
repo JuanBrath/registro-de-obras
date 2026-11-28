@@ -174,6 +174,8 @@ export function SeleccionesScreen({
   // Obras tildadas al crear una selección nueva (se muestran todas, sin filtros).
   const [elegidasNueva, setElegidasNueva] = useState<number[]>([]);
   const [confirmarEliminar, setConfirmarEliminar] = useState(false);
+  // Con una selección abierta, nombre, grupo y notas se muestran como texto; los campos aparecen con "Editar datos".
+  const [editando, setEditando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { abrirMenu: abrirMenuImagen, elementos: elementosMenuImagen } = useMenuExportarImagen(setError);
   const [dossierAbierto, setDossierAbierto] = useState(false);
@@ -247,6 +249,7 @@ export function SeleccionesScreen({
   // Carga las obras y el conteo de dossiers al cambiar de selección.
   useEffect(() => {
     setConfirmarEliminar(false);
+    setEditando(false);
     setModoOrden(false);
     if (activaId === null) {
       setObras([]);
@@ -366,6 +369,8 @@ export function SeleccionesScreen({
       if (activaId === null) return;
       await actualizarSeleccion(context.db, activaId, nombre, notas.trim() || null, grupoId);
       await recargarLista();
+      setEditando(false);
+      setConfirmarEliminar(false);
     });
 
   const cambiarVista = (v: Vista) => {
@@ -461,20 +466,39 @@ export function SeleccionesScreen({
   if (!context) return null;
   const activa = selecciones.find((s) => s.id === activaId) ?? null;
 
+  const grupoDeActiva = activa ? (grupos.find((g) => g.id === activa.grupo_id) ?? null) : null;
+  const grupoAbierto = modo === "grupos" ? (grupos.find((g) => g.id === grupoActivoId) ?? null) : null;
+
+  const volverALaLista = () => {
+    setActivaId(null);
+    setListaExpandida(false);
+  };
+
+  const cancelarEdicion = () => {
+    if (!activa) return;
+    setNombre(activa.nombre);
+    setNotas(activa.notas ?? "");
+    setGrupoId(activa.grupo_id);
+    setConfirmarEliminar(false);
+    setEditando(false);
+  };
+
   // Recorrido de ayuda de la sección (botón "?" del encabezado).
   const pasosAyuda = [
-    pasoAyuda(t, "sel-crear", "ayudaSelecciones.crear", t("selecciones.crear")),
     pasoAyuda(t, "sel-modos", "ayudaSelecciones.grupos", t("selecciones.gruposTitulo") + " / " + t("selecciones.seleccionesTitulo")),
+    pasoAyuda(t, "sel-crear", "ayudaSelecciones.crear", t("selecciones.crear")),
     pasoAyuda(t, "sel-lista", "ayudaSelecciones.lista", t("selecciones.existentes")),
+    pasoAyuda(t, "sel-volver", "ayudaSelecciones.volver", t("selecciones.volverALista")),
+    pasoAyuda(t, "sel-editar", "ayudaSelecciones.editar", t("selecciones.editarDatos")),
     pasoAyuda(t, "sel-guardar", "ayudaSelecciones.guardar", t("common.save")),
+    pasoAyuda(t, "sel-eliminar", "ayudaSelecciones.eliminar", t("selecciones.eliminar")),
     pasoAyuda(t, "sel-dossier", "ayudaSelecciones.dossier", t("dossier.boton")),
     pasoAyuda(t, "sel-guardados", "ayudaSelecciones.guardados", t("dossier.guardadosBoton", { cantidad: cantidadDossiers } as never)),
     pasoAyuda(t, "sel-exportar", "ayudaSelecciones.exportar", t("selecciones.exportarFotos")),
     pasoAyuda(t, "sel-informes", "ayudaSelecciones.informes", t("selecciones.informesBoton")),
-    pasoAyuda(t, "sel-eliminar", "ayudaSelecciones.eliminar", t("selecciones.eliminar")),
-    pasoAyuda(t, "obras-vista", "ayudaSelecciones.vista", t("obrasList.vistaTarjetas") + " / " + t("obrasList.vistaColumnas")),
-    pasoAyuda(t, "obras-tamano", "ayudaObras.tamano", t("obrasList.tamanoMiniaturasLabel")),
+    pasoAyuda(t, "obras-vista", "ayudaSelecciones.vista", t("obrasList.vistaColumnas") + " / " + t("obrasList.vistaTarjetas") + " / " + t("selecciones.vistaImagenes")),
     pasoAyuda(t, "sel-orden", "ayudaSelecciones.orden", t("selecciones.ordenarQuitar")),
+    pasoAyuda(t, "obras-tamano", "ayudaObras.tamano", t("obrasList.tamanoMiniaturasLabel")),
     pasoAyuda(t, "sel-obra", "ayudaSelecciones.obra", t("obrasList.colObra")),
   ];
 
@@ -493,6 +517,7 @@ export function SeleccionesScreen({
       {error && <p className="error">{error}</p>}
       </div>
 
+      {!activa && (
       <div className="selecciones-bloque">
         <div className="obras-toolbar-fila selecciones-modos" data-recorrido="sel-modos">
           <button
@@ -525,8 +550,9 @@ export function SeleccionesScreen({
           </button>
         </div>
       </div>
+      )}
 
-      {modo === "grupos" && (
+      {!activa && modo === "grupos" && (
         <div className="selecciones-bloque">
           <div className="obras-toolbar-fila selecciones-grupos" data-recorrido="sel-grupos">
             {grupos.map((g) => (
@@ -579,7 +605,7 @@ export function SeleccionesScreen({
         </div>
       )}
 
-      {modo === "selecciones" && (
+      {!activa && modo === "selecciones" && (
         <div className="selecciones-bloque">
           <div className="selecciones-bloque-crear">
             <button type="button" data-recorrido="sel-crear" onClick={empezarNueva} disabled={nueva}>
@@ -601,7 +627,7 @@ export function SeleccionesScreen({
         </div>
       )}
 
-      {modo === "grupos" && (grupoNuevo || (grupoActivoId !== null && panelGrupoAbierto)) && (
+      {!activa && modo === "grupos" && (grupoNuevo || (grupoActivoId !== null && panelGrupoAbierto)) && (
         <section className="selecciones-bloque selecciones-formulario">
           <label>
             <span className="field-label">{t("selecciones.nombreGrupoLabel")}</span>
@@ -719,83 +745,107 @@ export function SeleccionesScreen({
       )}
 
       {activa && (
-        <section className="selecciones-bloque selecciones-formulario">
-          <div className="selecciones-nombre-grupo">
-          <label>
-            <span className="field-label">{t("selecciones.nombreLabel")}</span>
-            <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} />
-          </label>
-          <label>
-            <span className="field-label">{t("selecciones.grupoLabel")}</span>
-            <select value={grupoId ?? ""} onChange={(e) => setGrupoId(e.target.value === "" ? null : Number(e.target.value))}>
-              <option value="">{t("selecciones.sinGrupo")}</option>
-              {grupos.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.nombre}
-                </option>
-              ))}
-            </select>
-          </label>
-          </div>
-          <label>
-            <div className="selecciones-notas-cabecera">
-              <NotasLabel texto={notas} onChange={setNotas}>
-                <span>{t("selecciones.notasLabel")}</span>
-              </NotasLabel>
+        <section className="selecciones-bloque selecciones-formulario selecciones-abierta">
+          <button type="button" className="selecciones-volver" data-recorrido="sel-volver" onClick={volverALaLista}>
+            ← {grupoAbierto ? t("selecciones.volverAlGrupo", { grupo: grupoAbierto.nombre }) : t("selecciones.volverALista")}
+          </button>
+
+          <div className="selecciones-ficha">
+            <div className="selecciones-ficha-datos">
+              <h2>{activa.nombre}</h2>
+              <p>
+                {t("selecciones.cantidadObras", { cantidad: activa.cantidad })}
+                {grupoDeActiva && <> · {t("selecciones.resumenGrupo", { grupo: grupoDeActiva.nombre })}</>}
+              </p>
+              {activa.notas && !editando && (
+                <p className="selecciones-ficha-notas" title={activa.notas}>
+                  {activa.notas}
+                </p>
+              )}
             </div>
-            <textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2} />
-          </label>
-          <div className="form-actions">
-            <button type="button" data-recorrido="sel-guardar" onClick={guardarDatos} disabled={!nombre.trim()}>
-              {t("common.save")}
-            </button>
-            {!nueva && (
-              <button type="button" onClick={() => setDossierAbierto(true)} disabled={obras.length === 0}>
-                {t("dossier.boton")}
+            {!editando && (
+              <button type="button" data-recorrido="sel-editar" onClick={() => setEditando(true)}>
+                {t("selecciones.editarDatos")}
               </button>
             )}
-            {!nueva && (
+          </div>
+
+          {editando && (
+            <div className="selecciones-edicion">
+              <div className="selecciones-nombre-grupo">
+                <label>
+                  <span className="field-label">{t("selecciones.nombreLabel")}</span>
+                  <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} />
+                </label>
+                <label>
+                  <span className="field-label">{t("selecciones.grupoLabel")}</span>
+                  <select value={grupoId ?? ""} onChange={(e) => setGrupoId(e.target.value === "" ? null : Number(e.target.value))}>
+                    <option value="">{t("selecciones.sinGrupo")}</option>
+                    {grupos.map((g) => (
+                      <option key={g.id} value={g.id}>
+                        {g.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <label>
+                <div className="selecciones-notas-cabecera">
+                  <NotasLabel texto={notas} onChange={setNotas}>
+                    <span>{t("selecciones.notasLabel")}</span>
+                  </NotasLabel>
+                </div>
+                <textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={3} />
+              </label>
+              <div className="form-actions selecciones-edicion-acciones">
+                <button type="button" className="selecciones-principal" data-recorrido="sel-guardar" onClick={guardarDatos} disabled={!nombre.trim()}>
+                  {t("common.save")}
+                </button>
+                <button type="button" onClick={cancelarEdicion}>
+                  {t("common.cancel")}
+                </button>
+                {!confirmarEliminar ? (
+                  <button type="button" className="selecciones-eliminar" data-recorrido="sel-eliminar" onClick={() => setConfirmarEliminar(true)}>
+                    {t("selecciones.eliminar")}
+                  </button>
+                ) : (
+                  <div className="confirm-box selecciones-confirmar-eliminar" role="alertdialog">
+                    <p>{t("selecciones.eliminarPregunta")}</p>
+                    {cantidadDossiers > 0 && (
+                      <p className="selecciones-aviso-dossiers">
+                        ⚠️ {t("selecciones.eliminarAvisoDossiers", { cantidad: cantidadDossiers })}
+                      </p>
+                    )}
+                    <div className="form-actions">
+                      <button type="button" className="boton-peligro" onClick={eliminar}>
+                        {t("selecciones.eliminarConfirmar")}
+                      </button>
+                      <button type="button" onClick={() => setConfirmarEliminar(false)}>
+                        {t("common.cancel")}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="selecciones-generar">
+            <span className="selecciones-generar-titulo">{t("selecciones.generarTitulo")}</span>
+            <div className="form-actions">
+              <button type="button" className="selecciones-principal" data-recorrido="sel-dossier" onClick={() => setDossierAbierto(true)} disabled={obras.length === 0}>
+                {t("dossier.boton")}
+              </button>
               <button type="button" data-recorrido="sel-guardados" onClick={() => setGuardadosAbierto(true)}>
                 {t("dossier.guardadosBoton", { cantidad: cantidadDossiers })}
               </button>
-            )}
-            {!nueva && (
-              <>
-                <button type="button" data-recorrido="sel-exportar" onClick={() => setExportarAbierto(true)} disabled={obras.length === 0}>
-                  {t("selecciones.exportarFotos")}
-                </button>
-                <button type="button" data-recorrido="sel-informes" onClick={abrirInformes} disabled={obras.length === 0}>
-                  {t("selecciones.informesBoton")}
-                </button>
-              </>
-            )}
-            {nueva && (
-              <button type="button" onClick={() => setNueva(false)}>
-                {t("common.cancel")}
+              <button type="button" data-recorrido="sel-exportar" onClick={() => setExportarAbierto(true)} disabled={obras.length === 0}>
+                {t("selecciones.exportarFotos")}
               </button>
-            )}
-            {!nueva && !confirmarEliminar ? (
-              <button type="button" data-recorrido="sel-eliminar" onClick={() => setConfirmarEliminar(true)}>
-                {t("selecciones.eliminar")}
+              <button type="button" data-recorrido="sel-informes" onClick={abrirInformes} disabled={obras.length === 0}>
+                {t("selecciones.informesBoton")}
               </button>
-            ) : !nueva ? (
-              <div className="confirm-box selecciones-confirmar-eliminar" role="alertdialog">
-                <p>{t("selecciones.eliminarPregunta")}</p>
-                {cantidadDossiers > 0 && (
-                  <p className="selecciones-aviso-dossiers">
-                    ⚠️ {t("selecciones.eliminarAvisoDossiers", { cantidad: cantidadDossiers })}
-                  </p>
-                )}
-                <div className="form-actions">
-                  <button type="button" className="boton-peligro" onClick={eliminar}>
-                    {t("selecciones.eliminarConfirmar")}
-                  </button>
-                  <button type="button" onClick={() => setConfirmarEliminar(false)}>
-                    {t("common.cancel")}
-                  </button>
-                </div>
-              </div>
-            ) : null}
+            </div>
           </div>
 
           <div className="selecciones-bloque">

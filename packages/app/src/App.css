@@ -980,15 +980,6 @@ input[type="date"] {
   color: #f5c542;
 }
 
-.star-rating-lightbox {
-  padding: 0;
-  margin-right: 0.5rem;
-}
-
-.star-rating-lightbox .star-rating-star {
-  font-size: 1.3rem;
-}
-
 /* Filtro por calificacion (ver CalificacionFilterButton.tsx): un clic en una
    estrella muestra las obras con esa cantidad o mas, y mantener presionado
    el boton ofrece quitarle la calificacion a todas, asi que necesita quedar
@@ -1054,10 +1045,10 @@ input[type="date"] {
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: -0.02em;
-  font-style: italic;
+  font-style: normal;
   background: #001e36;
   border-color: #001e36;
-  color: #fff;
+  color: #31a8ff;
 }
 
 .link-icon-button-photoshop {
@@ -2786,11 +2777,15 @@ input[type="date"] {
    GaleriaFotos.tsx.
    El tamano de la barra sale de una sola medida (font-size): todo lo de
    adentro (separaciones, rellenos, ancho del regulador) esta en "em", asi que
-   crece o se achica junto con la letra. Vale 14,4 px como minimo (el tamano
-   que se juzgo ideal, el de la letra "Mediana" con 0.72 del tamano base), o
-   0.72rem si la letra elegida es mas grande: con "Chica" y "Mediana" queda en
-   14,4 px y con "Grande" en 17,3 px, asi quien elige letra grande para leer
-   mejor tambien la ve mas grande en la barra. */
+   crece o se achica junto con la letra (ver --letra-barras): con "Chica" y
+   "Mediana" queda en 16,4 px y con "Grande" en 19,7 px, asi quien elige letra
+   grande para leer mejor tambien la ve mas grande en la barra. */
+/* Letra de botones, campos y filtros de Obras, Selecciones y el dossier: un solo valor para las tres.
+   16,4 px como mínimo, o 0.82 del tamaño base si la letra elegida es más grande. */
+:root {
+  --letra-barras: max(16.4px, 0.82rem);
+}
+
 /* Envuelve el titulo (.obras-list-header) junto con la barra de herramientas
    (.obras-toolbar): antes solo la barra quedaba fija al scrollear (pegada
    justo debajo de .app-topbar) y el titulo se iba con el resto del
@@ -2822,7 +2817,7 @@ input[type="date"] {
   padding: 0.55em 0 0.7em;
   background: var(--bg);
   border-bottom: 1px solid var(--border);
-  font-size: max(14.4px, 0.72rem);
+  font-size: var(--letra-barras);
   line-height: 1.3;
 }
 
@@ -3644,7 +3639,7 @@ button[type="submit"]:disabled {
   :is(button, input, select, textarea, label, .field-label):not(.obra-card):not(.galeria-foto-thumb-button):not(
     .star-rating-star
   ):not(.obras-list-header *):not(.obra-card *):not(.obras-tabla *) {
-  font-size: max(14.4px, 0.72rem);
+  font-size: var(--letra-barras);
 }
 .selecciones-pantalla :is(.obras-toolbar-fila, .form-actions) > button:not(.obra-card) {
   padding: 0.28em 0.97em;
@@ -3789,3 +3784,248 @@ button[type="submit"]:disabled {
   border: 1px solid var(--border);
   border-radius: 4px;
 }
+
+/* Selección abierta: volver, resumen, datos editables y documentos, cada cosa en su bloque. */
+.selecciones-abierta { margin-top: 0.75rem; }
+.selecciones-volver { align-self: flex-start; }
+.selecciones-ficha {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+.selecciones-ficha-datos {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.selecciones-ficha-datos h2,
+.selecciones-ficha-datos p { margin: 0; }
+.selecciones-ficha > button { white-space: nowrap; }
+/* Las notas se adelantan en dos renglones; completas se ven al editar. */
+.selecciones-ficha-notas {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  opacity: 0.75;
+  white-space: pre-line;
+}
+.selecciones-edicion {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 640px;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-panel);
+}
+.selecciones-edicion .form-actions { margin-top: 0; }
+.selecciones-edicion-acciones .selecciones-eliminar { margin-left: auto; }
+.selecciones-generar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1rem 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.selecciones-generar-titulo {
+  font-size: 0.85rem;
+  opacity: 0.75;
+}
+.selecciones-generar .form-actions { margin-top: 0; }
+button.selecciones-principal {
+  background: var(--azul-marino);
+  border: 1px solid var(--azul-marino-borde);
+  border-radius: 6px;
+  padding: 0.35em 1em;
+  color: #fff;
+}
+
+/* Obras ordenada: buscar y filtrar, acciones, y sobre las fotos la forma de verlas. */
+.obras-toolbar-ordenada { gap: 0.7em; }
+.obras-list-header .obras-nueva-boton {
+  white-space: nowrap;
+  font-size: var(--letra-barras);
+  line-height: 1.3;
+  padding: 0.28em 0.97em;
+}
+.obras-toolbar .obras-busqueda-fila { flex-wrap: nowrap; gap: 0.75em; }
+.obras-toolbar .obras-busqueda-fila .buscador-con-ayuda.obras-list-buscador-fila-principal {
+  flex: 0 1 30em;
+  max-width: 30em;
+}
+.obras-toolbar .obras-busqueda-fila > button {
+  white-space: nowrap;
+  min-width: 13em;
+}
+.obras-filtros-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(13em, 1fr));
+  gap: 0.8em 1.25em;
+  align-items: start;
+  padding: 0.8em 1em 0.9em;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-panel);
+}
+.obras-toolbar .obras-filtros-panel .galeria-filtro-artista,
+.obras-filtros-campo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3em;
+  margin: 0;
+}
+.obras-filtros-panel .galeria-filtro-artista select { width: 100%; }
+.obras-toolbar .obras-filtros-puestos { gap: 0.5em; }
+.obras-toolbar .obras-acciones-fila {
+  gap: 0.5em 0.9em;
+  padding-top: 0.7em;
+  border-top: 1px solid var(--border);
+}
+.obras-toolbar .obras-ver-fila {
+  padding-top: 0.7em;
+  border-top: 1px solid var(--border);
+}
+.obras-cantidad { opacity: 0.75; }
+.obras-ver-vistas {
+  margin-left: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5em 1.25em;
+}
+.obras-filtros-puestos .tag-chip {
+  background: var(--azul-marino);
+  border-color: var(--azul-marino-borde);
+  color: #fff;
+}
+
+/* Dossier repartido en pestañas, con los botones siempre a la vista abajo. */
+.dossier-pestanas {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+button.dossier-pestana.activa {
+  background: var(--azul-marino);
+  border: 1px solid var(--azul-marino-borde);
+  border-radius: 6px;
+  color: #fff;
+}
+.dossier-cuerpo { min-height: 24rem; }
+.dossier-hojas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 1.25rem;
+}
+.dossier-hojas-opciones {
+  flex: 1 1 24rem;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.dossier-hojas-vista {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  width: 12rem;
+}
+.dossier-hojas-vista .dossier-nota { text-align: center; }
+.dossier-desplegar { align-self: flex-start; }
+.dossier-modal .dossier-acciones {
+  position: sticky;
+  bottom: -1rem;
+  z-index: 3;
+  flex-wrap: wrap;
+  margin-bottom: -0.25rem;
+  padding: 0.8rem 0;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+}
+.dossier-acciones .dossier-cerrar { margin-right: auto; }
+
+/* Calificación compacta ("3 ★"): las estrellas se despliegan por encima. */
+.calificacion-compacta {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+.calificacion-compacta .galeria-foto-estrellas-desplegadas { white-space: nowrap; }
+/* En el visor en grande las estrellas quedan centradas sobre el número, que se ve un poco más grande. */
+.lightbox-caption { gap: 0.75rem; }
+.lightbox-caption .galeria-foto-calificacion { font-size: 0.95rem; }
+.lightbox-caption .galeria-foto-estrellas-desplegadas {
+  right: auto;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Dossier: la misma letra que las barras de Obras y de Selecciones. Quedan igual el título y la muestra de la hoja. */
+.dossier-modal { font-size: var(--letra-barras); line-height: 1.3; }
+.dossier-modal :is(button, input, select, textarea, label, .field-label, .dossier-nota, p) { font-size: var(--letra-barras); }
+.dossier-modal .dossier-acciones button,
+.dossier-modal .dossier-pestanas button { padding: 0.28em 0.97em; }
+.dossier-modal select { padding: 0.21em 0.42em; }
+.dossier-modal .dossier-seccion h3 { font-size: 0.85em; }
+
+/* Obras: accesos a Lightroom Classic y Photoshop sobre las miniaturas. */
+.obras-accesos-botones {
+  margin-left: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5em;
+}
+.obras-toolbar .obras-accesos-botones button { padding: 0.28em 0.97em; }
+.obras-tabla-miniatura-caja {
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+}
+/* Franja sobre la parte de arriba de la foto: solo los botones reciben clics. */
+.accesos-editores {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  right: 6px;
+  z-index: 3;
+  display: flex;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.accesos-editores button {
+  pointer-events: auto;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
+  outline: 1px solid rgba(255, 255, 255, 0.35);
+}
+.accesos-editores .acceso-derecho { margin-left: auto; }
+.con-accesos:hover > .accesos-editores,
+.accesos-editores:focus-within { opacity: 1; }
+/* En miniaturas chicas de la vista en columnas, los botones se achican para entrar los dos. */
+.obras-tabla-miniatura-caja .accesos-editores { top: 2px; left: 2px; right: 2px; }
+.obras-tabla-miniatura-caja .accesos-editores button {
+  width: min(1.5rem, calc(50% - 1px));
+  height: 1.4rem;
+  font-size: 0.6rem;
+}
+
+/* Dossier: título con el botón "?" de ayuda al lado. */
+.dossier-encabezado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+.dossier-encabezado .header-help-button { flex: 0 0 auto; }
+.dossier-modal .dossier-encabezado .header-help-button { padding: 0; }

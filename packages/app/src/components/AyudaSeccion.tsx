@@ -10,14 +10,14 @@ import { RecorridoInicial, type PasoRecorrido } from "./RecorridoInicial.js";
  */
 export const EVENTO_ABRIR_MANUAL = "recer:abrir-manual";
 
-export function AyudaSeccion({ pasos }: { pasos: PasoRecorrido[] }) {
+export function AyudaSeccion({ pasos, alCerrarRecorrido }: { pasos: PasoRecorrido[]; alCerrarRecorrido?: () => void }) {
   const { t } = useLanguage();
   const [pasosActivos, setPasosActivos] = useState<PasoRecorrido[] | null>(null);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   const botonRef = useRef<HTMLButtonElement | null>(null);
 
   function abrirRecorrido() {
-    const visibles = pasos.filter((p) => !p.targetSelector || document.querySelector(p.targetSelector));
+    const visibles = pasos.filter((p) => p.antes || !p.targetSelector || document.querySelector(p.targetSelector));
     if (visibles.length > 0) setPasosActivos(visibles);
   }
 
@@ -45,7 +45,15 @@ export function AyudaSeccion({ pasos }: { pasos: PasoRecorrido[] }) {
         ?
       </button>
       {menu && <MenuContextual anclaDerecha x={menu.x} y={menu.y} onClose={() => setMenu(null)} items={items} />}
-      {pasosActivos && <RecorridoInicial pasos={pasosActivos} onCerrar={() => setPasosActivos(null)} />}
+      {pasosActivos && (
+        <RecorridoInicial
+          pasos={pasosActivos}
+          onCerrar={() => {
+            setPasosActivos(null);
+            alCerrarRecorrido?.();
+          }}
+        />
+      )}
     </>
   );
 }

@@ -49,9 +49,9 @@ for (const { titulo, items } of contenido.secciones) {
   doc.setFontSize(13);
   doc.setTextColor(28, 42, 68);
   doc.text(titulo, M, y);
-  y += 6;
+  y += 7.5;
   doc.setDrawColor(201, 162, 71);
-  doc.line(M, y - 3, M + ancho, y - 3);
+  doc.line(M, y - 5, M + ancho, y - 5);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10.5);
   doc.setTextColor(40);
